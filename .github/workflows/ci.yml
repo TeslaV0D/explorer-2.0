@@ -21,7 +21,7 @@ jobs:
       - run: cargo clippy --workspace --all-targets -- -D warnings
       - run: cargo test --workspace
       - name: Benchmark 100k folder (budgets from PLAN-BASICS)
-        run: cargo run --release -p explorer-fs --example bench -- --files 100000 --runs 5 --assert
+        run: cargo run --release -p explorer-fs --example bench -- --files 100000 --runs 9 --assert
   e2e-linux:
     runs-on: ubuntu-latest
     needs: test

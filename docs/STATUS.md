@@ -1,6 +1,6 @@
 # Zwischenstand
 
-**Stand:** 2026-11-03 · **Phase:** 1 · M0 ✅ · **M1: CI-Run #6 grün (inkl. Windows), letzter Lauf mit getrennter Start-/Daten-Messung ausstehend** · **Branch:** `claude/relaxed-pasteur-ufhh1p`
+**Stand:** 2026-11-03 · **Phase:** 1 · M0 ✅ · **M1: Run #9 komplett grün; Run #10 (stabiler Bench-Gate) ausstehend** · **Branch:** `claude/relaxed-pasteur-ufhh1p`
 
 ## M1 – was gebaut wurde
 - `explorer-fs`: Windows-Fastpath (`FindFirstFileExW` + Large Fetch), portabler std-Pfad, Verbatim-Langpfade, Hintergrund-Loader mit Batches/Abbruch, Watcher mit Debounce.
@@ -14,8 +14,14 @@
 | Voll laden + sortieren (fs-Bench) | **130 ms** | ~250 ms | < 1 s |
 | Sortierung allein | 46 ms | 47 ms (vorher 173 ms) | – |
 | UI: Loader fertig (100k inkl. Format) | 187 ms | 233 ms | < 1 s |
-| UI: Kaltstart bis erster Inhalt | 369–653 ms (ohne GPU, GL-Fehlversuch + Fallback) | 26–37 ms | M8: < 300 ms |
-| UI: erste Zeilen bereit (Loader-Thread) | (Run #8 ausstehend) | 1–1,3 ms | < 100 ms |
+| UI: erste Zeilen bereit (Loader-Thread) | **0,9 ms** (Default) / 1,1 ms (Software) | 1–1,3 ms | < 100 ms |
+| UI: alle 100k bereit (Loader-Thread) | **140 ms** / 146 ms | 277–296 ms | < 1 s |
+| UI: Kaltstart bis erster Inhalt – Default-Renderer (Skia, GL schlägt fehl → Fallback) | **488 ms** | 26 ms | M8: < 300 ms ❌ |
+| UI: Kaltstart bis erster Inhalt – Software-Renderer | **43 ms** | 37 ms | M8: < 300 ms ✅ |
+
+**Renderer-Befund (Run #9):** Auf Systemen ohne GPU-OpenGL (CI-Runner, VMs, RDP) kostet der fehlgeschlagene Skia-GL-Versuch ~450 ms Startzeit. → Entscheidung für M2/M8 nötig (Software-Renderer als Default? GL-Fähigkeit vorab prüfen? D3D zuerst?).
+
+**OS-Stalls auf Windows-CI (Run #8/#9):** Einzelne Läufe brauchen 168–170 ms schon im **rohen** `FindFirstFileExW`-Aufruf (unser Code-Anteil ~0,2 ms) – sporadisch (Run #9: 2 von 6 Läufen), Ursache Fremdlast auf dem Runner (Defender/Indexer nach Massen-Anlage). In Run #8 traf es die Mehrheit → Median kippte. Für Nutzer abgefedert: UI blockiert nie, zeigt „Lädt …“.
 
 **Befund Windows-CI:** Runner hat kein GPU-OpenGL → Slint/Skia meldet „Failed to initialize Skia opengl surface … Falling back“, App läuft trotzdem (Fallback funktioniert = gut für VMs/RDP). Der GL-Versuch kostet Startzeit → TODO: auf Windows D3D zuerst / GL-Versuch vermeiden (M2/M8).
 
@@ -29,10 +35,11 @@
 2. **Adresszeile eingefroren**: Einweg-Bindung `text: current-path` wird von Slint gelöscht, sobald der User tippt → danach nie mehr aktualisiert (auch nicht bei Hoch/Doppelklick). Fix: Zwei-Wege-Bindung `<=>`.
 3. Statusleiste „1 Elemente“ → „1 Element“.
 4. Sortierung zu langsam (173 ms / 100k) → allokationsfrei, 47 ms.
+6. **Flaky Perf-Gate**: Median über 5 Läufe kippte bei sporadischen OS-Stalls auf dem Runner (Beweis: rohe OS-Abfrage selbst 168 ms) → best-of-N-Gate, 9 Läufe, Stalls werden gezählt und ausgegeben.
 5. Messfehler: „first paint“ auf Windows (369 ms) enthielt Fenster-/Renderer-Start. 1. Versuch (Marker „event loop running“) war falsch: Run #7 zeigte, dass Slint den Renderer erst **nach** Loop-Start beim ersten Frame initialisiert (GL-Fehlversuch + Fallback blockiert UI-Thread ~490 ms). Rendering-Notifier als Marker ungeeignet (Software-Renderer/Skia-Software-Fallback unterstützen ihn nicht). **Lösung:** Daten-Latenz wird im Loader-Thread gemessen (`data_ready=`), Kaltstart bis Inhalt separat (`at=`); CI vergleicht Default- vs. Software-Renderer.
 
 ## Offen
-- CI-Run #8 rot: Windows-fs-Bench first_batch_median **174 ms** (Run #6, identischer fs-Code: 1,3 ms). Runner deutlich langsamer (100k Dateien anlegen 120 s statt 85 s) → Verdacht: Defender/Cache direkt nach Massen-Anlage. Budget wird NICHT gelockert; Bench gibt jetzt jeden Lauf + rohe OS-Enumeration aus, Lauf 0 = Kalt-Lauf (ausgewiesen, nicht im Median). Run #9 abwarten → Ursache klären.
+- Run #10: Bench-Gate jetzt **best-of-9** (Fremdlast verlängert nur, verkürzt nie) + Median/Max/OS-Stalls ausgewiesen (D-008). Budgets unverändert (100 ms / 1 s). Grün abwarten → M1 ✅.
 - Fix im Test selbst: E2E-Regex an neues `at=`-Feld angepasst (lokal 13/13 PASS).
 
 ## Nächste Schritte

@@ -25,6 +25,7 @@
 | D-005 | Enumeration Windows: `FindFirstFileExW` (Basic + Large Fetch) statt `NtQueryDirectoryFile` – dokumentierte API, Messung zeigt Budget-Reserve; NtQuery nur bei Bedarf | fix (M1) |
 | D-006 | Watcher: `notify`-Crate (ReadDirectoryChangesW/inotify), eigener Debounce + adaptive Drossel statt notify-debouncer | fix (M1) |
 | D-007 | UI-Sprache vorerst Deutsch hart codiert; i18n später (Slint `@tr`) | vorgeschlagen |
+| D-008 | Perf-Gates in CI auf **best-of-N** (≥ 9 Läufe), Median/Max/OS-Stalls nur ausweisen – Shared-Runner haben sporadische OS-Stalls (gemessen 168 ms im rohen FindFirstFileExW); Budgets selbst unverändert | fix (M1) |
 
 ## Arbeitsumgebung / Constraints
 - Dev-Sandbox ist **Linux**, Zielplattform **Windows**. Windows-Code kann hier nicht ausgeführt werden → Build/Test via GitHub Actions (`windows-latest`); Kernlogik plattformneutral halten, damit sie auch unter Linux testbar ist.
@@ -53,7 +54,8 @@
 - E2E unter Xvfb ohne Window-Manager: `xdotool windowfocus` statt `windowactivate`; Debug-Trace via `EXPLORER2_TRACE=1` (stderr).
 - Trace-Log nie in beobachteten Ordner schreiben, außer zum Testen der Drossel.
 - Trace-Zeilen: `at=` = ms seit Prozessstart (Kaltstart-Messung), `data_ready=` = ms navigate→Daten fertig, gemessen im Loader-Thread (Daten-Latenz, Budget-Check). Slint initialisiert den Renderer erst beim ersten Frame **nach** Loop-Start → „event loop running“ ist KEIN Fenster-bereit-Marker; `set_rendering_notifier` ist bei Software-Renderern nicht verfügbar → nicht als Marker nutzen.
-- GitHub-Runner (Windows) haben kein GPU-OpenGL → Skia fällt zurück (funktioniert, kostet Startzeit).
+- GitHub-Runner (Windows) haben kein GPU-OpenGL → Skia fällt zurück (funktioniert, kostet **~450 ms** Startzeit; Software-Renderer startet in 43 ms).
+- Windows-Runner: sporadische OS-Stalls im Dateisystem (Defender/Indexer nach Massen-Anlage) → Perf immer mit roher OS-Messung daneben auswerten (`bench` gibt pro Lauf `raw: first_entry` aus).
 - Lange CI-Logs: `get_job_logs` mit `return_content=false` → URL per `curl` laden und greppen (tail wird von Cache-Upload-Zeilen geflutet).
 
 ## Referenzen
