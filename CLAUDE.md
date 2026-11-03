@@ -38,7 +38,7 @@
 - **R-001 Ein-Knopf-Reset / „Notausgang“** (2026-11-03, Lehre aus File Pilot, wo nur Windows-Neuinstallation half): Jede Windows-Integration (Win+E, Ordner-Verben/Default-Handler, explorer.exe-Proxy/IFEO, Kontextmenü-Einträge, Autostart, Umgebungsvariablen/PATH, Verknüpfungen, Dateizuordnungen, Hotkeys) muss **mit einem Knopf vollständig rückgängig** zu machen sein – in der App **und** über ein eigenständiges Recovery-Tool, das auch funktioniert, wenn die App selbst nicht startet (inkl. Abgesichertem Modus). Jede Änderung wird vorher mit Originalwert in einem Journal gesichert; Reset stellt exakt den Ursprungszustand her. Pflicht-Test: Integration an → Reset → Registry/Umgebung identisch zum Snapshot vorher. Gilt ab M7, Architektur schon vorher berücksichtigen.
 
 ## Meilenstein-Stand
-- M0 ✅ · M1 ✅ (2026-11-03, Run #10) · M1.5 Renderer-Wahl + Einstellungen + Icon (lokal ✅, CI ausstehend) · danach M2
+- M0 ✅ · M1 ✅ (Run #10) · M1.5 ✅ Renderer-Wahl + Einstellungen + Icon (Run #13) · **M2 in Arbeit**
 - Arbeitsregel (Boss): nächste Stufe erst, wenn die aktuelle vollständig abgeschlossen, getestet und CI-grün ist.
 
 ## Code-Layout (seit M0)
@@ -70,6 +70,8 @@
 - Windows-Runner: sporadische OS-Stalls im Dateisystem bis 1,5 s (Defender/Indexer nach Massen-Anlage, ~2 von 9 Läufen) → Perf immer mit roher OS-Messung daneben auswerten (`bench` gibt pro Lauf `raw: first_entry` aus).
 - Slint: Renderer per `slint::BackendSelector::new().backend_name("winit").renderer_name("skia"|"software").select()` **vor** dem ersten Fenster; `"skia"` fällt selbst zurück, `"skia-opengl"` nicht. `SLINT_BACKEND` gewinnt immer.
 - `xprop` zeigt `_NET_WM_ICON` im Pretty-Modus leer → mit `-notype 32c` Rohdaten lesen (Icon war gesetzt).
+- Mesa für Windows-GL-Tests: **MinGW**-Paket nehmen (26.x MSVC-Paket hat kein Software-OpenGL); App-lokale `opengl32.dll` wird von Probe + Skia genutzt.
+- GPU-Probe-Kosten schwanken je Treiber (Runner 3–67 ms, Mesa-llvmpipe 239 ms) → nur 1. Start zahlt, danach Cache.
 - Sicherheitscheck blockt `rm -rf $VAR` in `bash -c`-Strings → eindeutige Temp-Ordner statt Löschen.
 - Lange CI-Logs: `get_job_logs` mit `return_content=false` → URL per `curl` laden und greppen (tail wird von Cache-Upload-Zeilen geflutet).
 

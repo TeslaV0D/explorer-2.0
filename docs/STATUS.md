@@ -1,6 +1,6 @@
 # Zwischenstand
 
-**Stand:** 2026-11-03 · **Phase:** 1 · M0 ✅ · M1 ✅ · **M1.5 (Renderer-Wahl, Einstellungen, Icon) lokal ✅, CI ausstehend** · danach M2 · **Branch:** `claude/relaxed-pasteur-ufhh1p`
+**Stand:** 2026-11-03 · **Phase:** 1 · M0 ✅ · M1 ✅ · **M1.5 ✅ (CI-Run #13)** · **M2 in Arbeit** · **Branch:** `claude/relaxed-pasteur-ufhh1p`
 
 ## M1.5 – Renderer-Wahl, Einstellungen, Icon (Boss: Option 2 + Schalter)
 - **GPU-Probe** (`explorer-gpu`, Windows/WGL): verstecktes 1×1-Fenster, Legacy-GL-Kontext, prüft `GL_RENDERER`/`GL_VERSION`/`glCreateShader`. Software-GL (GDI Generic, llvmpipe, Microsoft Basic Render) = unbrauchbar, weil langsamer als unser Software-Renderer.
@@ -27,7 +27,20 @@
 | GPU erzwungen (ohne GPU) | 355 ms | ✅ läuft (Skia-Fallback) |
 | Software erzwungen | 45 ms | ✅ |
 | Einstellung aus | 45 ms | ✅ |
-| Mesa-GL | – | ❌ **Testaufbau**: Mesa 26.2.6 MSVC-Paket enthält kein opengl32.dll (bekanntes Upstream-Problem) → auf MinGW-Paket umgestellt, Run #13 |
+| Mesa-GL | – | ❌ **Testaufbau**: Mesa 26.2.6 MSVC-Paket enthält kein opengl32.dll (bekanntes Upstream-Problem) → auf MinGW-Paket umgestellt |
+
+### CI-Run #13 – alles grün ✅
+| Szenario (Windows) | Wahl | Kaltstart bis Inhalt |
+|---|---|---|
+| ohne GPU, 1. Start (Probe 67 ms) | Software („gdi generic“) | 270 ms |
+| ohne GPU, Cache | Software | **55 ms** |
+| forciert GPU ohne GPU | Skia-Fallback, läuft | 502 ms |
+| forciert Software | Software | 56 ms |
+| Einstellung aus | Software | 59 ms |
+| Mesa, auto | Software (llvmpipe erkannt) | 299 ms |
+| Mesa, forciert GPU | **Skia-OpenGL-Surface ok** (GL-Pfad bewiesen) | 485 ms |
+
+Daten-Budgets in allen Szenarien eingehalten (erste Zeilen 0,8–1,4 ms, alle 100k 151–206 ms). Exe-Icon geprüft (Mittelpixel 255/203/69). Hinweis: Probe kostet beim **ersten** Start je nach Treiber 3–239 ms (danach Cache) – echte GPU-Werte nur auf Boss-PC messbar.
 
 ### Bugs/Funde in M1.5
 - E2E-Klickkoordinate „Ausgeblendete“ hätte nach neuem Button den falschen Knopf getroffen → angepasst (x=880).
@@ -77,6 +90,5 @@
 - Fix im Test selbst: E2E-Regex an neues `at=`-Feld angepasst (lokal 13/13 PASS).
 
 ## Nächste Schritte
-1. CI-Umgebungsmatrix (Windows ohne GPU, Mesa-GL, forciert, Setting aus; Linux-GL; Exe-Icon) grün → M1.5 ✅.
-2. M2: UI-Shell (Spalten-Header mit Sortierung, Datei-Icons, Details-Ansicht, Tastaturnavigation).
-3. Boss: Artefakt auf echtem PC mit GPU testen (Einstellungen → Statuszeile zeigt GPU-Namen).
+1. M2: UI-Shell (Spalten-Header mit Sortierung, Datei-Icons, Details-Ansicht, Tastaturnavigation).
+2. Boss: Artefakt auf echtem PC mit GPU testen (Einstellungen → Statuszeile zeigt GPU-Namen).

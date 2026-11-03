@@ -24,13 +24,13 @@ Legende: `[ ]` offen · `[~]` in Arbeit · `[x]` erledigt · Prio P0/P1/P2
   - [x] CI grün inkl. Windows-Benchmark + Windows-UI-Smoke-Test (Run #6)
   - [x] CI grün mit getrennter Start-/Daten-Messung (Run #9: Daten 0,9 ms / 140 ms auf Windows)
   - [x] CI grün mit stabilem Bench-Gate (best-of-9, Run #10: Median 1,17 ms / 115 ms, OS-Stalls 2/9 abgefangen)
-- [~] M1.5 Renderer-Wahl + Einstellungen + Icon (Boss-Auftrag nach M1)
+- [x] M1.5 Renderer-Wahl + Einstellungen + Icon – **abgeschlossen 2026-11-03, CI-Run #13 grün**
   - [x] GPU-Probe (WGL) + Klassifizierung (Software-GL = unbrauchbar), Cache in settings.ini, Hintergrund-Re-Probe
   - [x] Einstellung „Hardwarebeschleunigung verwenden, wenn verfügbar“ (Panel „Einstellungen“), wirkt beim nächsten Start
   - [x] settings.ini (atomar, tolerant), „Ausgeblendete“ wird gespeichert
   - [x] App-Icon (SVG → ICO/PNG), Exe-Icon + Fenster-Icon
   - [x] Linux lokal: 6 Umgebungen (ohne GL, Mesa-GL, forciert GPU/Software, Setting aus) + E2E 20/20
-  - [ ] CI: Windows-Umgebungsmatrix (ohne GPU auto/cached, forciert GPU/Software, Setting aus, Mesa-llvmpipe auto + forciert GPU) + Linux-GL-Check + Exe-Icon-Check grün
+  - [x] CI: Windows-Umgebungsmatrix (7 Szenarien) + Linux-GL-Check + Exe-Icon-Check grün (Run #13)
 - [ ] M2 UI-Shell: Fenster, virtualisierte Liste, Details-Ansicht, Adressleiste
 - [ ] M3 Tabs, Split-View, Sidebar, Verlauf, Tastatur, Session-Restore
 - [ ] M4 Dateioperationen: Queue, Undo/Redo, Clipboard, Drag&Drop, Konfliktdialog
