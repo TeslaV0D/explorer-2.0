@@ -32,6 +32,10 @@
 - Branch: `claude/relaxed-pasteur-ufhh1p`. Kein PR ohne explizite Ansage.
 - User-Präferenz: Anrede „Boss“, Bro-Ton, auf Deutsch antworten, kurz & präzise.
 
+## Meilenstein-Stand
+- M0 ✅ · M1 ✅ (2026-11-03, Run #10) · M2 wartet auf Renderer-Entscheidung
+- Arbeitsregel (Boss): nächste Stufe erst, wenn die aktuelle vollständig abgeschlossen, getestet und CI-grün ist.
+
 ## Code-Layout (seit M0)
 - `crates/core` (`explorer-core`): plattformneutrales Modell, Sortierung (natürlich, Ordner zuerst), Unit-Tests
 - `crates/fs` (`explorer-fs`): `enumerate`/`read_dir` (Windows: `win.rs` FindFirstFileExW; sonst `portable.rs`), `path.rs` (Verbatim/FILETIME, plattformneutral getestet), `loader.rs` (Hintergrund-Load, Batches, Cancel), `watch.rs` (notify + `Debounce`), Benchmark `examples/bench.rs`
@@ -55,7 +59,7 @@
 - Trace-Log nie in beobachteten Ordner schreiben, außer zum Testen der Drossel.
 - Trace-Zeilen: `at=` = ms seit Prozessstart (Kaltstart-Messung), `data_ready=` = ms navigate→Daten fertig, gemessen im Loader-Thread (Daten-Latenz, Budget-Check). Slint initialisiert den Renderer erst beim ersten Frame **nach** Loop-Start → „event loop running“ ist KEIN Fenster-bereit-Marker; `set_rendering_notifier` ist bei Software-Renderern nicht verfügbar → nicht als Marker nutzen.
 - GitHub-Runner (Windows) haben kein GPU-OpenGL → Skia fällt zurück (funktioniert, kostet **~450 ms** Startzeit; Software-Renderer startet in 43 ms).
-- Windows-Runner: sporadische OS-Stalls im Dateisystem (Defender/Indexer nach Massen-Anlage) → Perf immer mit roher OS-Messung daneben auswerten (`bench` gibt pro Lauf `raw: first_entry` aus).
+- Windows-Runner: sporadische OS-Stalls im Dateisystem bis 1,5 s (Defender/Indexer nach Massen-Anlage, ~2 von 9 Läufen) → Perf immer mit roher OS-Messung daneben auswerten (`bench` gibt pro Lauf `raw: first_entry` aus).
 - Lange CI-Logs: `get_job_logs` mit `return_content=false` → URL per `curl` laden und greppen (tail wird von Cache-Upload-Zeilen geflutet).
 
 ## Referenzen

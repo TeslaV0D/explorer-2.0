@@ -1,6 +1,6 @@
 # Zwischenstand
 
-**Stand:** 2026-11-03 · **Phase:** 1 · M0 ✅ · **M1: Run #9 komplett grün; Run #10 (stabiler Bench-Gate) ausstehend** · **Branch:** `claude/relaxed-pasteur-ufhh1p`
+**Stand:** 2026-11-03 · **Phase:** 1 · M0 ✅ · **M1 ✅ (CI-Run #10 komplett grün)** · nächster Meilenstein: **M2 – wartet auf Renderer-Entscheidung (Boss)** · **Branch:** `claude/relaxed-pasteur-ufhh1p`
 
 ## M1 – was gebaut wurde
 - `explorer-fs`: Windows-Fastpath (`FindFirstFileExW` + Large Fetch), portabler std-Pfad, Verbatim-Langpfade, Hintergrund-Loader mit Batches/Abbruch, Watcher mit Debounce.
@@ -39,9 +39,11 @@
 5. Messfehler: „first paint“ auf Windows (369 ms) enthielt Fenster-/Renderer-Start. 1. Versuch (Marker „event loop running“) war falsch: Run #7 zeigte, dass Slint den Renderer erst **nach** Loop-Start beim ersten Frame initialisiert (GL-Fehlversuch + Fallback blockiert UI-Thread ~490 ms). Rendering-Notifier als Marker ungeeignet (Software-Renderer/Skia-Software-Fallback unterstützen ihn nicht). **Lösung:** Daten-Latenz wird im Loader-Thread gemessen (`data_ready=`), Kaltstart bis Inhalt separat (`at=`); CI vergleicht Default- vs. Software-Renderer.
 
 ## Offen
-- Run #10: Bench-Gate jetzt **best-of-9** (Fremdlast verlängert nur, verkürzt nie) + Median/Max/OS-Stalls ausgewiesen (D-008). Budgets unverändert (100 ms / 1 s). Grün abwarten → M1 ✅.
+- ✅ Run #10 grün. Windows-Bench (9 Läufe): erster Batch best 1,1 ms / **Median 1,17 ms** / Max 1,52 s (OS-Stall); voll+sortiert best 101 ms / **Median 115 ms**; OS-Stalls 2/9 (roh 176–314 ms) – Gate hält stabil.
+- UI-Smoke Run #10: Default-Renderer erste Zeilen 1,3 ms, alle 100k 230 ms, **Kaltstart 679 ms**; Software-Renderer 1,3 ms / 190 ms / **Kaltstart 54 ms**.
+- Offen für M2: **Renderer-Entscheidung** (Boss).
 - Fix im Test selbst: E2E-Regex an neues `at=`-Feld angepasst (lokal 13/13 PASS).
 
 ## Nächste Schritte
-1. CI prüfen, ggf. fixen → M1 abschließen.
-2. M2: UI-Shell (Spalten-Header mit Sortierung, Icons, Details-Ansicht ausbauen, Tastaturnavigation Grundlagen).
+1. Boss: Renderer-Entscheidung (Software-Default / GPU-Probe / D3D zuerst).
+2. M2: UI-Shell (Spalten-Header mit Sortierung, Icons, Details-Ansicht ausbauen, Tastaturnavigation Grundlagen) – erst nach Freigabe.
