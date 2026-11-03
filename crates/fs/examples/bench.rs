@@ -74,7 +74,19 @@ fn main() {
     let mut fulls = Vec::new();
     let mut sorts = Vec::new();
     let mut total = 0;
-    for _ in 0..runs {
+    // Run 0 is a cold run: reported, but excluded from the medians (CI runners
+    // show large first-access noise right after creating 100k files).
+    for run in 0..=runs {
+        // Raw enumeration without thread/channel, to isolate the OS call.
+        let raw_start = Instant::now();
+        let mut raw_first = None;
+        explorer_fs::enumerate(&dir, &mut |_| {
+            raw_first.get_or_insert_with(|| raw_start.elapsed());
+            std::ops::ControlFlow::Continue(())
+        })
+        .expect("raw enumerate failed");
+        let raw_all = raw_start.elapsed();
+
         let (tx, rx) = mpsc::channel();
         let start = Instant::now();
         let _h = load_dir(dir.clone(), move |e| {
@@ -106,9 +118,19 @@ fn main() {
         }
         let ts = Instant::now();
         sort_entries(&mut all, SortSpec::default());
-        sorts.push(ts.elapsed());
-        fulls.push(start.elapsed());
-        firsts.push(first_at.unwrap_or_else(|| start.elapsed()));
+        let sort_t = ts.elapsed();
+        let full = start.elapsed();
+        let first = first_at.unwrap_or(full);
+        println!(
+            "run {run}{}: first_batch={first:?} full_sorted={full:?} sort={sort_t:?} | raw: first_entry={:?} all={raw_all:?}",
+            if run == 0 { " (cold, not counted)" } else { "" },
+            raw_first.unwrap_or_default()
+        );
+        if run > 0 {
+            sorts.push(sort_t);
+            fulls.push(full);
+            firsts.push(first);
+        }
     }
     firsts.sort();
     sorts.sort();

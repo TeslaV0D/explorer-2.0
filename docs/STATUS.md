@@ -32,7 +32,7 @@
 5. Messfehler: „first paint“ auf Windows (369 ms) enthielt Fenster-/Renderer-Start. 1. Versuch (Marker „event loop running“) war falsch: Run #7 zeigte, dass Slint den Renderer erst **nach** Loop-Start beim ersten Frame initialisiert (GL-Fehlversuch + Fallback blockiert UI-Thread ~490 ms). Rendering-Notifier als Marker ungeeignet (Software-Renderer/Skia-Software-Fallback unterstützen ihn nicht). **Lösung:** Daten-Latenz wird im Loader-Thread gemessen (`data_ready=`), Kaltstart bis Inhalt separat (`at=`); CI vergleicht Default- vs. Software-Renderer.
 
 ## Offen
-- CI-Run #8 (Daten-Latenz aus Loader-Thread, Default- vs. Software-Renderer auf Windows) abwarten → dann M1 ✅.
+- CI-Run #8 rot: Windows-fs-Bench first_batch_median **174 ms** (Run #6, identischer fs-Code: 1,3 ms). Runner deutlich langsamer (100k Dateien anlegen 120 s statt 85 s) → Verdacht: Defender/Cache direkt nach Massen-Anlage. Budget wird NICHT gelockert; Bench gibt jetzt jeden Lauf + rohe OS-Enumeration aus, Lauf 0 = Kalt-Lauf (ausgewiesen, nicht im Median). Run #9 abwarten → Ursache klären.
 - Fix im Test selbst: E2E-Regex an neues `at=`-Feld angepasst (lokal 13/13 PASS).
 
 ## Nächste Schritte
