@@ -93,6 +93,7 @@
 - Python-Replaces in Dateien mit Windows-Pfaden: **raw strings** (`r"..."`) – `\a`/`\b` werden sonst zu Steuerzeichen.
 - PowerShell 7 hat kein `Get-Clipboard -Format FileDropList` → `shell: powershell` (5.1) für Clipboard-Tests.
 - CI nutzt das **neueste** stable (neue Clippy-Lints, z. B. 1.99 `chunks_exact_to_as_chunks`) → vor dem Push `rustup update stable` lokal.
+- Windows: Pfade können **8.3-Kurznamen** enthalten (`C:\Users\RUNNER~1\…`, z. B. aus `%TEMP%`), Shell/Papierkorb liefern Langnamen → Pfade nie roh vergleichen: Elternordner kanonisieren + case-insensitiv (`undo::same_location`).
 - Papierkorb-Restore immer gegen Snapshot **vor** der Aktion (gleicher Originalpfad kann mehrfach im Papierkorb liegen).
 
 ## Referenzen

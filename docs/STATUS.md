@@ -13,6 +13,8 @@
 - **Perf**: `fsync` pro kopierter Datei hätte Massenkopien vervielfacht → nur noch beim Verschieben (Quelle wird danach gelöscht).
 - **DnD**: TouchArea als Geschwister über der DragArea schluckt den Mausdruck → TouchArea muss *Kind* der DragArea sein.
 - Mehrfachauswahl wäre beim Ziehen verloren gegangen (Klick bei „down“) → bei bereits markierter Zeile wird der Klick erst beim Loslassen angewendet (Explorer-Verhalten).
+- **CI-Run #21**: neuer Clippy-Lint der CI-Toolchain 1.99 (`chunks_exact_to_as_chunks`) → `as_chunks`, MSRV 1.88; lokal jetzt ebenfalls 1.99.
+- **Bug (CI-Run #22, nur Windows)**: Wiederherstellen aus dem Papierkorb fand nichts, weil unser Pfad den 8.3-Kurznamen `RUNNER~1` enthielt, der Papierkorb aber den Langnamen speichert. Hätte echte Nutzer genauso getroffen (Kurznamen aus `%TEMP%`, Groß-/Kleinschreibung). Fix: Elternordner kanonisieren + auf Windows case-insensitiv vergleichen.
 - Testdesign: Pause *vor* der Konfliktfrage blockiert den Job schon vor der Frage → Test pausiert jetzt nach der Frage.
 
 ## M3 – Tabs, Split-View, Seitenleiste, Verlauf, Sitzung

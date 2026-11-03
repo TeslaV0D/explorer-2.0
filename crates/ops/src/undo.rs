@@ -89,11 +89,13 @@ impl TrashSnapshot {
             .duration_since(SystemTime::UNIX_EPOCH)
             .map(|d| d.as_secs() as i64)
             .unwrap_or(0);
+        let want_parent = original.parent().map(canonical).unwrap_or_default();
         let idx = items
             .iter()
             .enumerate()
             .filter(|(_, i)| {
-                i.original_parent.join(&i.name) == original && i.time_deleted >= since_secs
+                i.time_deleted >= since_secs
+                    && same_location(&i.original_parent, &i.name, original, &want_parent)
             })
             .max_by_key(|(_, i)| i.time_deleted)
             .map(|(n, _)| n)
@@ -107,6 +109,46 @@ impl TrashSnapshot {
         let item = items.swap_remove(idx);
         trash::os_limited::restore_all([item])
             .map_err(|e| format!("Wiederherstellen fehlgeschlagen: {e}"))
+    }
+}
+
+/// Canonical form of an existing folder (resolves 8.3 short names like
+/// `RUNNER~1`, symlinks, `.`/`..`); falls back to the path itself.
+fn canonical(p: &Path) -> PathBuf {
+    std::fs::canonicalize(p).unwrap_or_else(|_| p.to_path_buf())
+}
+
+fn names_equal(a: &std::ffi::OsStr, b: &std::ffi::OsStr) -> bool {
+    if cfg!(windows) {
+        a.to_string_lossy().to_lowercase() == b.to_string_lossy().to_lowercase()
+    } else {
+        a == b
+    }
+}
+
+/// Does a trash item (parent + name as recorded by the OS) denote `original`?
+/// Windows records the long path while ours may contain short names, and
+/// compares case-insensitively.
+fn same_location(
+    item_parent: &Path,
+    item_name: &std::ffi::OsStr,
+    original: &Path,
+    want_parent: &Path,
+) -> bool {
+    if item_parent.join(item_name) == original {
+        return true;
+    }
+    let Some(name) = original.file_name() else {
+        return false;
+    };
+    if !names_equal(item_name, name) {
+        return false;
+    }
+    let have = canonical(item_parent);
+    if cfg!(windows) {
+        have.to_string_lossy().to_lowercase() == want_parent.to_string_lossy().to_lowercase()
+    } else {
+        have == want_parent
     }
 }
 
@@ -190,5 +232,39 @@ impl UndoStack {
 
     pub fn can_redo(&self) -> bool {
         !self.redo.is_empty()
+    }
+}
+
+#[cfg(test)]
+mod location_tests {
+    use super::*;
+
+    #[test]
+    fn matches_through_symlinked_or_dotted_parent() {
+        let d = tempfile::tempdir().unwrap();
+        let real = d.path().join("real");
+        std::fs::create_dir(&real).unwrap();
+        let dotted = real.join("..").join("real");
+        let want = canonical(&dotted);
+        assert!(same_location(
+            &real,
+            "a.txt".as_ref(),
+            &dotted.join("a.txt"),
+            &want
+        ));
+        assert!(!same_location(
+            &real,
+            "b.txt".as_ref(),
+            &dotted.join("a.txt"),
+            &want
+        ));
+        let other = d.path().join("other");
+        std::fs::create_dir(&other).unwrap();
+        assert!(!same_location(
+            &other,
+            "a.txt".as_ref(),
+            &dotted.join("a.txt"),
+            &want
+        ));
     }
 }
