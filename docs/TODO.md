@@ -20,7 +20,7 @@ Legende: `[ ]` offen · `[~]` in Arbeit · `[x]` erledigt · Prio P0/P1/P2
   - [x] Natürliche Sortierung allokationsfrei (100k: 173 → 47 ms), deterministisch bei „gleichen“ Namen
   - [x] UI: Laden nie im UI-Thread, Generationszähler gegen veraltete Ergebnisse, Statusleiste, Fehleranzeige, Rückfall auf Elternordner wenn aktueller Ordner verschwindet
   - [x] Benchmark-Tool (`cargo run --release -p explorer-fs --example bench -- --assert`) + CI-Budgets
-  - [x] E2E-Test unter Xvfb (13 Checks) – Skript: siehe STATUS.md
+  - [x] E2E-Test unter Xvfb (13 Checks): `scripts/e2e.sh`, läuft als CI-Job `e2e-linux`
   - [ ] CI grün inkl. Windows-Benchmark + Windows-UI-Smoke-Test
 - [ ] M2 UI-Shell: Fenster, virtualisierte Liste, Details-Ansicht, Adressleiste
 - [ ] M3 Tabs, Split-View, Sidebar, Verlauf, Tastatur, Session-Restore
@@ -33,7 +33,6 @@ Legende: `[ ]` offen · `[~]` in Arbeit · `[x]` erledigt · Prio P0/P1/P2
 ## Technische Schulden / Follow-ups
 - [ ] Exe-Größe 17,2 MB (Budget < 20 MB ok, Ideal < 10 MB verfehlt) → in M2 prüfen: Skia vs. femtovg/Software-Renderer, `opt-level="z"`-Vergleich
 - [ ] Exe-Icon (`.ico` in `explorer2.rc`) – braucht Grafik/Logo
-- [ ] E2E-UI-Skript ins Repo übernehmen (`scripts/e2e.sh`) + Linux-CI-Job mit Xvfb
 - [ ] `NtQueryDirectoryFile` als Alternative zum FindFirstFileExW messen (nur falls Windows-Bench knapp wird)
 - [ ] GitHub-Actions auf Node-24-Versionen heben (checkout@v4 → v5 etc., Deprecation-Warnung in CI)
 

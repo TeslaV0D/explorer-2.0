@@ -36,6 +36,7 @@
 - `crates/fs` (`explorer-fs`): `enumerate`/`read_dir` (Windows: `win.rs` FindFirstFileExW; sonst `portable.rs`), `path.rs` (Verbatim/FILETIME, plattformneutral getestet), `loader.rs` (Hintergrund-Load, Batches, Cancel), `watch.rs` (notify + `Debounce`), Benchmark `examples/bench.rs`
 - `crates/app` (`explorer2`): Slint-UI (`ui/main.slint`), `src/nav.rs` = Navigations-Controller (State im `thread_local` auf UI-Thread, Generationszähler, Refresh-Drossel)
 - CI: `.github/workflows/ci.yml` (fmt, clippy -D warnings, test auf Windows+Linux; Release-Artefakt `explorer2.exe`)
+- E2E lokal: `xvfb-run -a -s "-screen 0 1280x800x24" scripts/e2e.sh $PWD/target/release/explorer2 <workdir>`
 - Lokal prüfen: `cargo fmt --all -- --check && cargo clippy --workspace --all-targets -- -D warnings && cargo test --workspace`
 - Slint-Gotcha: Widgets (`Button`, `ListView`) brauchen `import { … } from "std-widgets.slint";`
 
