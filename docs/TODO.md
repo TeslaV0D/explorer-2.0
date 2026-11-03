@@ -31,7 +31,16 @@ Legende: `[ ]` offen · `[~]` in Arbeit · `[x]` erledigt · Prio P0/P1/P2
   - [x] App-Icon (SVG → ICO/PNG), Exe-Icon + Fenster-Icon
   - [x] Linux lokal: 6 Umgebungen (ohne GL, Mesa-GL, forciert GPU/Software, Setting aus) + E2E 20/20
   - [x] CI: Windows-Umgebungsmatrix (7 Szenarien) + Linux-GL-Check + Exe-Icon-Check grün (Run #13)
-- [ ] M2 UI-Shell: Fenster, virtualisierte Liste, Details-Ansicht, Adressleiste
+- [~] M2 UI-Shell – lokal ✅ (E2E 37/37), CI ausstehend
+  - [x] Details-Ansicht: Spalten Name / Änderungsdatum / Typ / Größe, Klick sortiert (▲▼, 2. Klick dreht), Spaltenbreiten ziehbar, Sortierung gespeichert
+  - [x] Typ-Spalte („Dateiordner“, „PNG-Datei“, „Datei“) + Sortierung nach Typ (echte Shell-Typnamen in M5)
+  - [x] Auswahl wie Explorer: Klick, Strg+Klick, Umschalt+Klick, Klick ins Leere hebt auf; Auswahl bleibt bei Auto-Refresh/Umsortieren erhalten (per Name)
+  - [x] Tastatur: Pfeile, Bild↑↓, Pos1/Ende (+Umschalt/Strg), Strg+A, Strg+Leertaste, Enter, Rücktaste/Alt+↑, F5, Strg+L/Alt+D, Typeahead (inkl. Buchstaben-Zyklus)
+  - [x] Öffnen: Doppelklick/Enter → Ordner navigieren, Dateien mit Standard-App (ShellExecuteW), mehrere Dateien (max. 20)
+  - [x] Breadcrumb-Adressleiste (klickbare Segmente, „…“-Kürzung, Klick ins Leere/Strg+L = Bearbeiten, Esc = zurück)
+  - [x] Nach „Hoch“ ist der Herkunftsordner markiert; Liste hat beim Start Tastaturfokus
+  - [ ] CI grün (inkl. Windows-ShellExecute-Test)
+- [ ] M2-Rest/Politur (später): Spaltenbreiten speichern, Spalten ein/ausblenden, Ansichten Liste/Symbole/Kacheln (Plan 4.2), Gruppieren
 - [ ] M3 Tabs, Split-View, Sidebar, Verlauf, Tastatur, Session-Restore
 - [ ] M4 Dateioperationen: Queue, Undo/Redo, Clipboard, Drag&Drop, Konfliktdialog
 - [ ] M5 Shell-Integration: Icons/Thumbnails, Kontextmenü (Dritte), Properties, Papierkorb, Netzwerk, virtuelle Ordner

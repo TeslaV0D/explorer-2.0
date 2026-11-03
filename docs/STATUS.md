@@ -1,6 +1,24 @@
 # Zwischenstand
 
-**Stand:** 2026-11-03 · **Phase:** 1 · M0 ✅ · M1 ✅ · **M1.5 ✅ (CI-Run #13)** · **M2 in Arbeit** · **Branch:** `claude/relaxed-pasteur-ufhh1p`
+**Stand:** 2026-11-03 · **Phase:** 1 · M0 ✅ · M1 ✅ · M1.5 ✅ · **M2 lokal ✅ (E2E 37/37), CI ausstehend** · **Branch:** `claude/relaxed-pasteur-ufhh1p`
+
+## M2 – Details-Ansicht, Auswahl, Tastatur, Öffnen, Breadcrumb
+- **Details-Ansicht**: Spaltenköpfe Name / Änderungsdatum / Typ / Größe, Klick sortiert (▲▼), Breiten ziehbar; Sortierung in settings.ini.
+- **Auswahl** (`core::selection`): Klick / Strg / Umschalt wie Windows-ListView (Strg+Klick setzt Anker auch beim Abwählen), Klick ins Leere hebt auf; bei Auto-Refresh/Umsortieren per Name übernommen.
+- **Tastatur** (`keys::map_key`): Pfeile, Bild↑↓, Pos1/Ende, Strg+A, Strg+Leertaste, Enter, Rücktaste/Alt+↑, F5, Strg+L/Alt+D, Typeahead.
+- **Öffnen**: Ordner navigieren, Dateien per `ShellExecuteW` (Windows) mit Standard-App; Windows-Test führt echte `.cmd` über Standard-Verb aus.
+- **Breadcrumb** (`core::breadcrumb`): Windows-, UNC- und Unix-Pfade, „…“-Kürzung links; Strg+L/Klick ins Leere = Bearbeiten, Esc = Abbruch.
+- Nach „Hoch“ ist der Herkunftsordner markiert (wie Explorer).
+
+### Tests M2
+- Unit: core 26 (Auswahl, Typeahead, Breadcrumb, Typ-Sortierung, Settings), app 10 (Tasten, Status, Auswahl-Remap, Öffnen).
+- E2E 37/37 (neu 12–26): Sortierreihenfolgen per Spaltenkopf, Richtungswechsel, Persistenz, Pfeile/Umschalt+Ende/Strg+A, **Auswahlfarbe per Pixel**, Typeahead, Enter öffnet Datei (Stub-Öffner), Enter/Doppelklick öffnet Ordner, Rücktaste markiert Herkunftsordner, Strg+L+Esc, Breadcrumb-Klick.
+
+### Funde in M2
+- Testerwartung falsch (nicht Code): Strg+Klick setzt den Auswahl-Anker auch beim Abwählen – wie Windows-ListView; Test korrigiert.
+- Vermeintlicher Render-Bug (fokussierte Zeile „ohne“ Auswahlfarbe) war ein Lesefehler auf verkleinertem Screenshot – Pixelmessung zeigte korrekte Farbe; „Fix“ zurückgenommen, Auswahlfarbe jetzt per Pixel im E2E geprüft.
+- Klick auf die Adressleiste traf nach Breadcrumb-Umbau ein Segment → Explorer-Shortcuts Strg+L/Alt+D ergänzt, E2E nutzt sie.
+- Eigenes Gotcha ignoriert (`viewport-y` deprecated) → `content-y`.
 
 ## M1.5 – Renderer-Wahl, Einstellungen, Icon (Boss: Option 2 + Schalter)
 - **GPU-Probe** (`explorer-gpu`, Windows/WGL): verstecktes 1×1-Fenster, Legacy-GL-Kontext, prüft `GL_RENDERER`/`GL_VERSION`/`glCreateShader`. Software-GL (GDI Generic, llvmpipe, Microsoft Basic Render) = unbrauchbar, weil langsamer als unser Software-Renderer.
@@ -90,5 +108,6 @@ Daten-Budgets in allen Szenarien eingehalten (erste Zeilen 0,8–1,4 ms, alle 10
 - Fix im Test selbst: E2E-Regex an neues `at=`-Feld angepasst (lokal 13/13 PASS).
 
 ## Nächste Schritte
-1. M2: UI-Shell (Spalten-Header mit Sortierung, Datei-Icons, Details-Ansicht, Tastaturnavigation).
-2. Boss: Artefakt auf echtem PC mit GPU testen (Einstellungen → Statuszeile zeigt GPU-Namen).
+1. CI für M2 grün → M2 ✅.
+2. M3: UI-Shell (Spalten-Header mit Sortierung, Datei-Icons, Details-Ansicht, Tastaturnavigation).
+3. Boss: Artefakt auf echtem PC mit GPU testen (Einstellungen → Statuszeile zeigt GPU-Namen).

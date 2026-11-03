@@ -1,8 +1,11 @@
 //! Platform-neutral model: entries, sorting, natural ordering.
 //! No I/O and no OS-specific code here, so it is unit-testable everywhere.
 
+pub mod breadcrumb;
 pub mod renderer;
+pub mod selection;
 pub mod settings;
+pub mod typeahead;
 
 use std::cmp::Ordering;
 
@@ -58,6 +61,49 @@ pub enum SortKey {
     Name,
     Size,
     Modified,
+    /// File type (extension); folders are all "Dateiordner".
+    Type,
+}
+
+impl SortKey {
+    pub fn as_str(self) -> &'static str {
+        match self {
+            SortKey::Name => "name",
+            SortKey::Size => "size",
+            SortKey::Modified => "modified",
+            SortKey::Type => "type",
+        }
+    }
+
+    pub fn parse(s: &str) -> Option<Self> {
+        match s {
+            "name" => Some(SortKey::Name),
+            "size" => Some(SortKey::Size),
+            "modified" => Some(SortKey::Modified),
+            "type" => Some(SortKey::Type),
+            _ => None,
+        }
+    }
+}
+
+/// Extension without dot ("" if none). Leading-dot names (".gitignore") have no extension,
+/// like in Explorer.
+pub fn extension(name: &str) -> &str {
+    match name.rfind('.') {
+        Some(i) if i > 0 && i + 1 < name.len() => &name[i + 1..],
+        _ => "",
+    }
+}
+
+/// Explorer-like type label until real shell type names arrive (M5).
+pub fn type_label(e: &Entry) -> String {
+    if e.is_dir() {
+        return "Dateiordner".to_string();
+    }
+    match extension(&e.name) {
+        "" => "Datei".to_string(),
+        ext => format!("{}-Datei", ext.to_uppercase()),
+    }
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -145,6 +191,14 @@ pub fn sort_entries(entries: &mut [Entry], spec: SortSpec) {
                 .modified
                 .cmp(&b.modified)
                 .then_with(|| natural_cmp(&a.name, &b.name)),
+            SortKey::Type => {
+                // Files without extension ("Datei") sort before typed files, like Explorer.
+                let (ea, eb) = (extension(&a.name), extension(&b.name));
+                (!ea.is_empty())
+                    .cmp(&!eb.is_empty())
+                    .then_with(|| natural_cmp(ea, eb))
+                    .then_with(|| natural_cmp(&a.name, &b.name))
+            }
         };
         let ord = if spec.descending { ord.reverse() } else { ord };
         // Deterministic order for "equal" names (a01 vs a1, File vs file) -> no flicker on reload.
@@ -282,6 +336,43 @@ mod tests {
             },
         );
         assert_eq!(v[1].name, "a.txt");
+    }
+
+    #[test]
+    fn type_labels_and_sort() {
+        assert_eq!(extension("a.TXT"), "TXT");
+        assert_eq!(extension(".gitignore"), "");
+        assert_eq!(extension("archive.tar.gz"), "gz");
+        assert_eq!(extension("noext"), "");
+        assert_eq!(extension("trailingdot."), "");
+        assert_eq!(type_label(&e("x.txt", EntryKind::File, 0)), "TXT-Datei");
+        assert_eq!(type_label(&e("Makefile", EntryKind::File, 0)), "Datei");
+        assert_eq!(type_label(&e("src", EntryKind::Dir, 0)), "Dateiordner");
+        let mut v = vec![
+            e("b.txt", EntryKind::File, 0),
+            e("a.png", EntryKind::File, 0),
+            e("README", EntryKind::File, 0),
+            e("c.TXT", EntryKind::File, 0),
+            e("dir", EntryKind::Dir, 0),
+        ];
+        sort_entries(
+            &mut v,
+            SortSpec {
+                key: SortKey::Type,
+                descending: false,
+                dirs_first: true,
+            },
+        );
+        let names: Vec<_> = v.iter().map(|e| e.name.as_str()).collect();
+        assert_eq!(names, ["dir", "README", "a.png", "b.txt", "c.TXT"]);
+        for k in [
+            SortKey::Name,
+            SortKey::Size,
+            SortKey::Modified,
+            SortKey::Type,
+        ] {
+            assert_eq!(SortKey::parse(k.as_str()), Some(k));
+        }
     }
 
     #[test]

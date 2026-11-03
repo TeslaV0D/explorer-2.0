@@ -1,6 +1,66 @@
 import { Button, ListView, CheckBox } from "std-widgets.slint";
 
-export struct Row { name: string, size: string, modified: string, is-dir: bool, dim: bool }
+export struct Row {
+    name: string,
+    size: string,
+    modified: string,
+    kind: string,
+    is-dir: bool,
+    dim: bool,
+    selected: bool,
+    focused: bool,
+}
+
+export struct Crumb { label: string, path: string }
+
+// Column header cell: click sorts, arrow shows direction.
+component HeaderCell inherits Rectangle {
+    in property <string> label;
+    in property <string> key;
+    in property <string> sort-key;
+    in property <bool> sort-desc;
+    in property <TextHorizontalAlignment> align: left;
+    callback sort(string);
+    background: ta.has-hover ? #eef1f5 : transparent;
+    ta := TouchArea { clicked => { root.sort(root.key); } }
+    HorizontalLayout {
+        padding-left: 8px; padding-right: 8px; spacing: 4px;
+        Text {
+            text: root.label;
+            horizontal-alignment: root.align;
+            horizontal-stretch: 1;
+            vertical-alignment: center;
+            color: #444;
+            overflow: elide;
+        }
+        Text {
+            text: root.sort-key == root.key ? (root.sort-desc ? "▼" : "▲") : "";
+            font-size: 9px;
+            vertical-alignment: center;
+            color: #666;
+        }
+    }
+}
+
+// Drag handle between header cells to resize the column on its left.
+component ResizeHandle inherits Rectangle {
+    in-out property <length> target-width;
+    in property <length> min-col: 50px;
+    width: 6px;
+    Rectangle { x: 2px; width: 1px; background: #d6d9de; }
+    property <length> start-width;
+    ta := TouchArea {
+        mouse-cursor: col-resize;
+        pointer-event(e) => {
+            if (e.kind == PointerEventKind.down) { root.start-width = root.target-width; }
+        }
+        moved => {
+            if (self.pressed) {
+                root.target-width = max(root.min-col, root.start-width + (self.mouse-x - self.pressed-x));
+            }
+        }
+    }
+}
 
 export component MainWindow inherits Window {
     title: "Explorer 2.0";
@@ -9,8 +69,11 @@ export component MainWindow inherits Window {
     preferred-height: 700px;
     min-width: 480px;
     min-height: 320px;
+    forward-focus: list-focus;
 
     in-out property <string> current-path;
+    in property <[Crumb]> crumbs;
+    in-out property <bool> editing-path;
     in property <[Row]> rows;
     in property <string> status;
     in property <string> error;
@@ -18,27 +81,86 @@ export component MainWindow inherits Window {
     in-out property <bool> hw-accel: true;
     in-out property <bool> settings-open;
     in property <string> renderer-status;
+    in property <string> sort-key: "name";
+    in property <bool> sort-desc;
+    in-out property <length> w-date: 140px;
+    in-out property <length> w-type: 130px;
+    in-out property <length> w-size: 90px;
+
     callback navigate(string);
+    callback cancel-edit();
     callback open-row(int);
     callback go-up();
     callback toggle-hidden(bool);
     callback toggle-hw-accel(bool);
+    callback sort-by(string);
+    callback row-pressed(int, bool, bool);
+    callback clear-selection();
+    callback list-key(string, bool, bool, bool, int) -> bool;
+
+    out property <length> row-height: 24px;
 
     public function scroll-top() { list.content-y = 0; }
 
+    // Keeps a keyboard-focused row inside the visible area.
+    public function ensure-visible(i: int) {
+        if (i < 0) { return; }
+        if (i * root.row-height < -list.content-y) {
+            list.content-y = -(i * root.row-height);
+        } else if ((i + 1) * root.row-height > -list.content-y + list.visible-height) {
+            list.content-y = -((i + 1) * root.row-height - list.visible-height);
+        }
+    }
+
+    public function start-edit() {
+        root.editing-path = true;
+        path-edit.focus();
+        path-edit.select-all();
+    }
+
     VerticalLayout {
+        // ---------- toolbar ----------
         HorizontalLayout {
-            padding: 6px; spacing: 6px;
+            padding: 6px; spacing: 6px; height: 44px;
             Button { text: "↑"; width: 36px; clicked => { root.go-up(); } }
-            Rectangle {
-                border-width: 1px; border-color: #c8ccd0; border-radius: 4px; background: white;
+            address := Rectangle {
+                border-width: 1px;
+                border-color: root.editing-path ? #0067c0 : #c8ccd0;
+                border-radius: 4px;
+                background: white;
                 horizontal-stretch: 1;
+                clip: true;
+                if !root.editing-path : HorizontalLayout {
+                    padding-left: 4px; spacing: 0px;
+                    for c[i] in root.crumbs : HorizontalLayout {
+                        spacing: 0px;
+                        if i > 0 : Text { text: "›"; color: #888; vertical-alignment: center; width: 14px; horizontal-alignment: center; }
+                        Rectangle {
+                            width: crumb-text.preferred-width + 10px;
+                            border-radius: 3px;
+                            background: crumb-ta.has-hover ? #e5f1fb : transparent;
+                            crumb-text := Text { text: c.label; vertical-alignment: center; color: #222; }
+                            crumb-ta := TouchArea { clicked => { root.navigate(c.path); } }
+                        }
+                    }
+                    // empty space right of the crumbs → edit mode
+                    Rectangle {
+                        horizontal-stretch: 1;
+                        TouchArea { mouse-cursor: text; clicked => { root.start-edit(); } }
+                    }
+                }
                 path-edit := TextInput {
                     x: 8px; width: parent.width - 16px;
+                    visible: root.editing-path;
                     text <=> root.current-path;
                     single-line: true;
                     vertical-alignment: center;
                     accepted => { root.navigate(self.text); }
+                    key-pressed(e) => {
+                        if (e.text == Key.Escape) { root.cancel-edit(); list-focus.focus(); return accept; }
+                        reject
+                    }
+                    changed has-focus => { if (!self.has-focus && root.editing-path) { root.cancel-edit(); } }
                 }
             }
             CheckBox {
@@ -52,21 +174,78 @@ export component MainWindow inherits Window {
                 checked <=> root.settings-open;
             }
         }
-        list := ListView {
+
+        // ---------- column header ----------
+        Rectangle {
+            height: 26px;
+            background: #fafbfc;
+            Rectangle { y: parent.height - 1px; height: 1px; background: #e3e6ea; }
+            HorizontalLayout {
+                padding-left: 22px;
+                HeaderCell { label: "Name"; key: "name"; sort-key: root.sort-key; sort-desc: root.sort-desc; horizontal-stretch: 1; sort(k) => { root.sort-by(k); } }
+                ResizeHandle { target-width <=> root.w-date; }
+                HeaderCell { label: "Änderungsdatum"; key: "modified"; sort-key: root.sort-key; sort-desc: root.sort-desc; width: root.w-date; sort(k) => { root.sort-by(k); } }
+                ResizeHandle { target-width <=> root.w-type; }
+                HeaderCell { label: "Typ"; key: "type"; sort-key: root.sort-key; sort-desc: root.sort-desc; width: root.w-type; sort(k) => { root.sort-by(k); } }
+                ResizeHandle { target-width <=> root.w-size; }
+                HeaderCell { label: "Größe"; key: "size"; sort-key: root.sort-key; sort-desc: root.sort-desc; width: root.w-size; align: right; sort(k) => { root.sort-by(k); } }
+                Rectangle { width: 14px; }
+            }
+        }
+
+        // ---------- file list ----------
+        list-focus := FocusScope {
             vertical-stretch: 1;
-            for row[i] in root.rows : Rectangle {
-                height: 24px;
-                ta := TouchArea { double-clicked => { root.open-row(i); } }
-                background: ta.has-hover ? #eef3f9 : transparent;
-                HorizontalLayout {
-                    padding-left: 8px; spacing: 12px;
-                    Rectangle { width: 14px; y: 5px; height: 14px; border-radius: 3px; background: row.is-dir ? #e8b730 : #9aa5b1; opacity: row.dim ? 0.45 : 1; }
-                    Text { text: row.name; horizontal-stretch: 1; vertical-alignment: center; overflow: elide; opacity: row.dim ? 0.55 : 1; }
-                    Text { text: row.size; width: 90px; horizontal-alignment: right; vertical-alignment: center; }
-                    Text { text: row.modified; width: 130px; vertical-alignment: center; }
+            key-pressed(e) => {
+                if (root.list-key(e.text, e.modifiers.control, e.modifiers.shift, e.modifiers.alt,
+                                  max(1, floor(list.visible-height / root.row-height) - 1))) {
+                    return accept;
+                }
+                reject
+            }
+            Rectangle {
+                // click on empty space below the rows clears the selection
+                TouchArea { clicked => { list-focus.focus(); root.clear-selection(); } }
+                list := ListView {
+                    for row[i] in root.rows : Rectangle {
+                        height: root.row-height;
+                        background: row.selected ? (list-focus.has-focus ? #cce8ff : #e5e5e5) : (ta.has-hover ? #eef3f9 : transparent);
+                        border-width: row.focused && list-focus.has-focus ? 1px : 0px;
+                        border-color: #0067c0;
+                        ta := TouchArea {
+                            pointer-event(e) => {
+                                if (e.kind == PointerEventKind.down && e.button == PointerEventButton.left) {
+                                    list-focus.focus();
+                                    root.row-pressed(i, e.modifiers.control, e.modifiers.shift);
+                                }
+                            }
+                            double-clicked => { root.open-row(i); }
+                        }
+                        HorizontalLayout {
+                            padding-left: 6px; spacing: 0px;
+                            Rectangle {
+                                width: 20px;
+                                Rectangle {
+                                    width: 14px; height: 14px; border-radius: 3px;
+                                    background: row.is-dir ? #e8b730 : #9aa5b1;
+                                    opacity: row.dim ? 0.45 : 1;
+                                }
+                            }
+                            Text { text: row.name; horizontal-stretch: 1; vertical-alignment: center; overflow: elide; opacity: row.dim ? 0.55 : 1; }
+                            Rectangle { width: 6px; }
+                            Text { text: row.modified; width: root.w-date; vertical-alignment: center; color: #555; overflow: elide; }
+                            Rectangle { width: 6px; }
+                            Text { text: row.kind; width: root.w-type; vertical-alignment: center; color: #555; overflow: elide; }
+                            Rectangle { width: 6px; }
+                            Text { text: row.size; width: root.w-size - 8px; horizontal-alignment: right; vertical-alignment: center; color: #555; }
+                            Rectangle { width: 22px; }
+                        }
+                    }
                 }
             }
         }
+
+        // ---------- status bar ----------
         Rectangle {
             height: 24px; background: #f3f4f6;
             HorizontalLayout {
@@ -76,6 +255,7 @@ export component MainWindow inherits Window {
             }
         }
     }
+
     if root.settings-open : Rectangle {
         x: root.width - self.width - 8px;
         y: 44px;

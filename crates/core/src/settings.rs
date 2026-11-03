@@ -1,6 +1,8 @@
 //! Persistent user settings: simple `key = value` file, robust against
 //! corrupt/unknown content (falls back to defaults per key, never fails).
 
+use crate::SortKey;
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum GpuProbeCache {
     Usable,
@@ -15,6 +17,8 @@ pub struct Settings {
     /// Last GPU probe result, valid only for `gpu_probe_version`.
     pub gpu_probe: Option<GpuProbeCache>,
     pub gpu_probe_version: String,
+    pub sort_key: SortKey,
+    pub sort_desc: bool,
 }
 
 impl Default for Settings {
@@ -24,6 +28,8 @@ impl Default for Settings {
             show_hidden: false,
             gpu_probe: None,
             gpu_probe_version: String::new(),
+            sort_key: SortKey::Name,
+            sort_desc: false,
         }
     }
 }
@@ -67,6 +73,16 @@ impl Settings {
                     }
                 }
                 "gpu_probe_version" => s.gpu_probe_version = v.to_string(),
+                "sort_key" => {
+                    if let Some(key) = SortKey::parse(v) {
+                        s.sort_key = key;
+                    }
+                }
+                "sort_desc" => {
+                    if let Some(b) = parse_bool(v) {
+                        s.sort_desc = b;
+                    }
+                }
                 _ => {} // unknown keys from newer/older versions are ignored
             }
         }
@@ -80,8 +96,18 @@ impl Settings {
             None => "",
         };
         format!(
-            "# Explorer 2.0 settings\nhardware_acceleration = {}\nshow_hidden = {}\ngpu_probe = {probe}\ngpu_probe_version = {}\n",
-            self.hardware_acceleration, self.show_hidden, self.gpu_probe_version
+            "# Explorer 2.0 settings\n\
+             hardware_acceleration = {}\n\
+             show_hidden = {}\n\
+             gpu_probe = {probe}\n\
+             gpu_probe_version = {}\n\
+             sort_key = {}\n\
+             sort_desc = {}\n",
+            self.hardware_acceleration,
+            self.show_hidden,
+            self.gpu_probe_version,
+            self.sort_key.as_str(),
+            self.sort_desc
         )
     }
 
@@ -103,7 +129,9 @@ mod tests {
     fn defaults_on_empty_or_garbage() {
         assert_eq!(Settings::parse(""), Settings::default());
         assert_eq!(
-            Settings::parse("\u{0}\u{1}garbage\n=== \nhardware_acceleration = maybe"),
+            Settings::parse(
+                "\u{0}\u{1}garbage\n=== \nhardware_acceleration = maybe\nsort_key = bogus"
+            ),
             Settings::default()
         );
         assert!(Settings::default().hardware_acceleration);
@@ -116,17 +144,18 @@ mod tests {
             show_hidden: true,
             gpu_probe: Some(GpuProbeCache::Unusable),
             gpu_probe_version: "1.2.3".into(),
+            sort_key: SortKey::Modified,
+            sort_desc: true,
         };
         assert_eq!(Settings::parse(&s.serialize()), s);
     }
 
     #[test]
     fn tolerant_parsing() {
-        let s = Settings::parse(
-            "  # c\nHARDWARE=1\nhardware_acceleration=OFF\nunknown = x\nshow_hidden= yes ",
-        );
+        let s = Settings::parse("  # c\nHARDWARE=1\nhardware_acceleration=OFF\nunknown = x\nshow_hidden= yes \nsort_key=type");
         assert!(!s.hardware_acceleration);
         assert!(s.show_hidden);
+        assert_eq!(s.sort_key, SortKey::Type);
     }
 
     #[test]

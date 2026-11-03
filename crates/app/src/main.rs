@@ -2,7 +2,9 @@
 
 mod config;
 mod gfx;
+mod keys;
 mod nav;
+mod open;
 
 use std::io::Write;
 use std::path::PathBuf;
@@ -48,7 +50,15 @@ fn main() -> Result<(), slint::PlatformError> {
     let settings = config::load();
 
     let win = MainWindow::new()?;
-    nav::init(&win, settings.show_hidden);
+    nav::init(
+        &win,
+        settings.show_hidden,
+        explorer_core::SortSpec {
+            key: settings.sort_key,
+            descending: settings.sort_desc,
+            dirs_first: true,
+        },
+    );
     win.set_hw_accel(settings.hardware_acceleration);
     win.set_renderer_status(gfx::status_text(&renderer).into());
     win.on_toggle_hw_accel({
@@ -85,8 +95,47 @@ fn main() -> Result<(), slint::PlatformError> {
         let w = win.as_weak();
         move |i| {
             if let Some(w) = w.upgrade() {
-                nav::open_row(&w, i as usize);
+                nav::open_entry(&w, i as usize);
             }
+        }
+    });
+    win.on_cancel_edit({
+        let w = win.as_weak();
+        move || {
+            if let Some(w) = w.upgrade() {
+                nav::cancel_edit(&w);
+            }
+        }
+    });
+    win.on_sort_by({
+        let w = win.as_weak();
+        move |k| {
+            if let Some(w) = w.upgrade() {
+                nav::sort_by(&w, k.as_str());
+            }
+        }
+    });
+    win.on_row_pressed({
+        let w = win.as_weak();
+        move |i, ctrl, shift| {
+            if let Some(w) = w.upgrade() {
+                nav::row_pressed(&w, i as usize, ctrl, shift);
+            }
+        }
+    });
+    win.on_clear_selection({
+        let w = win.as_weak();
+        move || {
+            if let Some(w) = w.upgrade() {
+                nav::clear_selection(&w);
+            }
+        }
+    });
+    win.on_list_key({
+        let w = win.as_weak();
+        move |text, ctrl, shift, alt, page| {
+            w.upgrade()
+                .is_some_and(|w| nav::list_key(&w, text.as_str(), ctrl, shift, alt, page))
         }
     });
     win.on_toggle_hidden({

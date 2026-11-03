@@ -38,15 +38,15 @@
 - **R-001 Ein-Knopf-Reset / „Notausgang“** (2026-11-03, Lehre aus File Pilot, wo nur Windows-Neuinstallation half): Jede Windows-Integration (Win+E, Ordner-Verben/Default-Handler, explorer.exe-Proxy/IFEO, Kontextmenü-Einträge, Autostart, Umgebungsvariablen/PATH, Verknüpfungen, Dateizuordnungen, Hotkeys) muss **mit einem Knopf vollständig rückgängig** zu machen sein – in der App **und** über ein eigenständiges Recovery-Tool, das auch funktioniert, wenn die App selbst nicht startet (inkl. Abgesichertem Modus). Jede Änderung wird vorher mit Originalwert in einem Journal gesichert; Reset stellt exakt den Ursprungszustand her. Pflicht-Test: Integration an → Reset → Registry/Umgebung identisch zum Snapshot vorher. Gilt ab M7, Architektur schon vorher berücksichtigen.
 
 ## Meilenstein-Stand
-- M0 ✅ · M1 ✅ (Run #10) · M1.5 ✅ Renderer-Wahl + Einstellungen + Icon (Run #13) · **M2 in Arbeit**
+- M0 ✅ · M1 ✅ (Run #10) · M1.5 ✅ Renderer-Wahl + Einstellungen + Icon (Run #13) · **M2 lokal ✅ (E2E 37/37), CI ausstehend**
 - Arbeitsregel (Boss): nächste Stufe erst, wenn die aktuelle vollständig abgeschlossen, getestet und CI-grün ist.
 
 ## Code-Layout (seit M0)
 - `crates/core` (`explorer-core`): plattformneutrales Modell, Sortierung (natürlich, Ordner zuerst), Unit-Tests
 - `crates/fs` (`explorer-fs`): `enumerate`/`read_dir` (Windows: `win.rs` FindFirstFileExW; sonst `portable.rs`), `path.rs` (Verbatim/FILETIME, plattformneutral getestet), `loader.rs` (Hintergrund-Load, Batches, Cancel), `watch.rs` (notify + `Debounce`), Benchmark `examples/bench.rs`
 - `crates/gpu` (`explorer-gpu`): `probe_opengl()` – Windows-WGL-Probe (verstecktes Fenster, Legacy-Kontext), sonst `NotSupported`; ohne Skia → lokal per `--target x86_64-pc-windows-msvc` prüfbar
-- `crates/core`: zusätzlich `settings.rs` (key=value, tolerant) und `renderer.rs` (`classify_gl`, `decide`, `Reason`, `status_de`)
-- `crates/app` (`explorer2`): Slint-UI (`ui/main.slint`, Einstellungs-Panel), `src/nav.rs` = Navigations-Controller (State im `thread_local` auf UI-Thread, Generationszähler, Refresh-Drossel), `src/gfx.rs` = Renderer-Wahl vor Fenster, `src/config.rs` = settings.ini (`%APPDATA%\Explorer2` / XDG, Override `EXPLORER2_CONFIG_DIR`), atomar + Mutex
+- `crates/core`: zusätzlich `settings.rs` (key=value, tolerant, inkl. Sortierung), `renderer.rs` (`classify_gl`, `decide`, `Reason`, `status_de`), `selection.rs` (Explorer-Auswahlmodell, `remap` für Refresh), `typeahead.rs`, `breadcrumb.rs` (`crumbs`/`fit`, Win/UNC/Unix); `type_label`/`extension`, `SortKey::Type`
+- `crates/app` (`explorer2`): Slint-UI (`ui/main.slint`, Einstellungs-Panel), `src/nav.rs` = Navigations-Controller (State im `thread_local` auf UI-Thread, Generationszähler, Refresh-Drossel), `src/keys.rs` = Tastenbelegung (`map_key`, rein/testbar), `src/open.rs` = Datei öffnen (`ShellExecuteW` / `xdg-open`, Override `EXPLORER2_OPEN_CMD`), `src/gfx.rs` = Renderer-Wahl vor Fenster, `src/config.rs` = settings.ini (`%APPDATA%\Explorer2` / XDG, Override `EXPLORER2_CONFIG_DIR`), atomar + Mutex
 - Icon: `crates/app/res/icon/*.svg` → `scripts/make-icons.sh` → PNGs + `explorer2.ico` (Exe-Ressource) + `icon-256.png` (Fenster-Icon)
 - CI: `.github/workflows/ci.yml` (fmt, clippy -D warnings, test auf Windows+Linux; Release-Artefakt `explorer2.exe`)
 - E2E lokal: `xvfb-run -a -s "-screen 0 1280x800x24" scripts/e2e.sh $PWD/target/release/explorer2 <workdir>`
@@ -72,6 +72,7 @@
 - `xprop` zeigt `_NET_WM_ICON` im Pretty-Modus leer → mit `-notype 32c` Rohdaten lesen (Icon war gesetzt).
 - Mesa für Windows-GL-Tests: **MinGW**-Paket nehmen (26.x MSVC-Paket hat kein Software-OpenGL); App-lokale `opengl32.dll` wird von Probe + Skia genutzt.
 - GPU-Probe-Kosten schwanken je Treiber (Runner 3–67 ms, Mesa-llvmpipe 239 ms) → nur 1. Start zahlt, danach Cache.
+- **UI-Zustände per Pixel messen** (`convert img -format '%[pixel:p{x,y}]' info:`), nie per Augenmaß auf verkleinerten Screenshots – ein vermeintlicher Render-Bug (fokussierte Zeile „ohne“ Auswahlfarbe) war ein Lesefehler.
 - Sicherheitscheck blockt `rm -rf $VAR` in `bash -c`-Strings → eindeutige Temp-Ordner statt Löschen.
 - Lange CI-Logs: `get_job_logs` mit `return_content=false` → URL per `curl` laden und greppen (tail wird von Cache-Upload-Zeilen geflutet).
 

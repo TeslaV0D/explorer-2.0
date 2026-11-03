@@ -12,7 +12,7 @@ explorer-gpu = { path = "../gpu" }
 slint = { version = "1", default-features = false, features = ["std", "compat-1-2", "backend-winit", "renderer-skia-opengl", "renderer-software"] }
 
 [target.'cfg(windows)'.dependencies]
-windows-sys = { version = "0.60", features = ["Win32_System_Console"] }
+windows-sys = { version = "0.60", features = ["Win32_System_Console", "Win32_UI_Shell", "Win32_UI_WindowsAndMessaging"] }
 
 [build-dependencies]
 slint-build = "1"
