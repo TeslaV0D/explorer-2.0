@@ -1,6 +1,6 @@
 # Zwischenstand
 
-**Stand:** 2026-11-03 · **Phase:** 1 · M0 ✅ · M1 ✅ · M1.5 ✅ · M2 ✅ · **M3 lokal ✅ (E2E 60/60), CI ausstehend** · **Branch:** `claude/relaxed-pasteur-ufhh1p`
+**Stand:** 2026-11-03 · **Phase:** 1 · M0 ✅ · M1 ✅ · M1.5 ✅ · M2 ✅ · **M3 ✅ (CI-Run #19)** · M4 wartet auf Freigabe · **Branch:** `claude/relaxed-pasteur-ufhh1p`
 
 ## M3 – Tabs, Split-View, Seitenleiste, Verlauf, Sitzung
 - **Architektur**: `App` → Panes (1–2) → Tabs; jeder Tab eigener Pfad/Auswahl/Loader/Watcher/Verlauf. Hintergrund-Ergebnisse werden per stabiler Tab-ID zugeordnet (Tabs können zwischendurch geschlossen werden) + Generationszähler.
@@ -9,6 +9,12 @@
 - **Verlauf**: ←/→-Buttons, Alt+←/→, Maus-Seitentasten.
 - **Seitenleiste**: Schnellzugriff (Windows Known Folders → auch umgeleitete/OneDrive-Ordner), „Dieser PC“ mit Laufwerken, Füllbalken, „x GB frei von y GB“; Abfrage im Hintergrund, Refresh alle 15 s, keine „Datenträger einlegen“-Dialoge.
 - **Sitzung**: session.ini (entprellt 400 ms + beim Schließen); Start ohne Pfad → Restore inkl. aktiver Pane; Pfad-Argument gewinnt (wie `explorer.exe C:\x`).
+
+### CI-Run #19 – alles grün ✅
+- E2E Linux 60/60 (Drossel: 6 Refreshes / 3 s).
+- Windows: Places-Test mit echten Known Folders + Laufwerken (C:\ mit Füllstand) grün; Laufwerksabfrage 0,17–0,34 ms (2 Laufwerke).
+- Windows-UI-Matrix: normale Starts 66–69 ms (best 65,5 ms, Budget 300), Erststart 255 ms, Daten: erste Zeilen 0,8–2,2 ms, alle 100k 181–246 ms. (Mesa forciert GPU: 992 ms Kaltstart – reiner Testpfad auf Software-GL, Auto wählt dort korrekt Software.)
+- fs-Bench Windows: Median 1,23 ms / 137 ms.
 
 ### Tests M3
 - Unit: core 32 (+History, Session, format_usage), fs 24 (+Places: Anzeigenamen, Füllgrad, XDG-Parser, reale Laufwerke), app 13 (+Tasten für Tabs/Pane/Verlauf, Tab-Titel, Crumb-Budget).
