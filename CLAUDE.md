@@ -52,7 +52,7 @@
 - `cargo fmt` bricht lange Zeilen um → Python-String-Replaces danach prüfen (`assert s.count(old)==1`).
 - E2E unter Xvfb ohne Window-Manager: `xdotool windowfocus` statt `windowactivate`; Debug-Trace via `EXPLORER2_TRACE=1` (stderr).
 - Trace-Log nie in beobachteten Ordner schreiben, außer zum Testen der Drossel.
-- Trace-Zeilen haben `at=<ms seit Prozessstart>`; „event loop running“ markiert Fenster bereit. Daten-Latenz = at(first paint) − max(at(navigate), at(event loop)). Ergebnisse aus `invoke_from_event_loop` laufen erst, wenn die Loop läuft → Kaltstart steckt sonst in „first paint“.
+- Trace-Zeilen: `at=` = ms seit Prozessstart (Kaltstart-Messung), `data_ready=` = ms navigate→Daten fertig, gemessen im Loader-Thread (Daten-Latenz, Budget-Check). Slint initialisiert den Renderer erst beim ersten Frame **nach** Loop-Start → „event loop running“ ist KEIN Fenster-bereit-Marker; `set_rendering_notifier` ist bei Software-Renderern nicht verfügbar → nicht als Marker nutzen.
 - GitHub-Runner (Windows) haben kein GPU-OpenGL → Skia fällt zurück (funktioniert, kostet Startzeit).
 - Lange CI-Logs: `get_job_logs` mit `return_content=false` → URL per `curl` laden und greppen (tail wird von Cache-Upload-Zeilen geflutet).
 

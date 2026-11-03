@@ -59,33 +59,39 @@ jobs:
             if (-not $text.Contains($needle)) { throw "manifest missing: $needle" }
           }
           "$out; size=$((Get-Item $exe).Length) bytes"
-      - name: UI smoke test (real window, 100k folder, Windows fast path)
+      - name: UI smoke test (real window, 100k folder, Windows fast path; default vs software renderer)
         shell: pwsh
         run: |
           $dir = "$env:RUNNER_TEMP\big"
           cargo run --release -q -p explorer-fs --example bench -- --create-in $dir --files 100000
+          $exe = (Resolve-Path "target/release/explorer2.exe").Path
           $env:EXPLORER2_TRACE = "1"
-          $log = "$env:RUNNER_TEMP\ui.log"
-          $p = Start-Process -FilePath (Resolve-Path "target/release/explorer2.exe").Path -ArgumentList "`"$dir`"" -PassThru -RedirectStandardError $log
-          Start-Sleep -Seconds 10
-          $alive = -not $p.HasExited
-          if ($alive) { Stop-Process -Id $p.Id -Force }
-          $text = Get-Content $log -Raw
-          $text
-          if (-not $alive) { throw "explorer2 exited early (exit code $($p.ExitCode))" }
-          if ($text -notmatch 'done gen=1 total=100000 shown=100000') { throw "100k folder not fully loaded" }
-          if ($text -match '(?i)panic') { throw "panic in log" }
-          function At($pattern) {
-            $m = [regex]::Match($text, $pattern + '.*? at=([\d.]+)ms')
-            if (-not $m.Success) { throw "trace line missing: $pattern" }
-            [double]::Parse($m.Groups[1].Value, [cultureinfo]::InvariantCulture)
+          foreach ($backend in @("", "winit-software")) {
+            $env:SLINT_BACKEND = $backend
+            $label = if ($backend) { $backend } else { "default" }
+            $log = "$env:RUNNER_TEMP\ui-$label.log"
+            $p = Start-Process -FilePath $exe -ArgumentList "`"$dir`"" -PassThru -RedirectStandardError $log
+            Start-Sleep -Seconds 10
+            $alive = -not $p.HasExited
+            if ($alive) { Stop-Process -Id $p.Id -Force }
+            $text = Get-Content $log -Raw
+            "----- renderer: $label"
+            $text
+            if (-not $alive) { throw "[$label] explorer2 exited early (exit code $($p.ExitCode))" }
+            if ($text -notmatch 'done gen=1 total=100000 shown=100000') { throw "[$label] 100k folder not fully loaded" }
+            if ($text -match '(?i)panic') { throw "[$label] panic in log" }
+            function Field($line, $name) {
+              $m = [regex]::Match($text, $line + '.*? ' + $name + '=([\d.]+)ms')
+              if (-not $m.Success) { throw "[$label] trace field missing: $line $name" }
+              [double]::Parse($m.Groups[1].Value, [cultureinfo]::InvariantCulture)
+            }
+            # M1 budgets: data latency, measured on the loader thread
+            $first = Field 'first paint gen=1 ' 'data_ready'; $all = Field 'done gen=1 ' 'data_ready'
+            # Cold start to visible content (M8 budget, reported only)
+            $cold = Field 'first paint gen=1 ' 'at'
+            "[$label] first rows ready: $first ms | all 100k ready: $all ms | cold start to content: $cold ms"
+            if ($first -gt 100) { throw "[$label] first rows budget exceeded: $first ms > 100 ms" }
+            if ($all -gt 1000) { throw "[$label] full load budget exceeded: $all ms > 1000 ms" }
           }
-          $nav = At 'navigate gen=1 '; $loop = At 'event loop running'
-          $fp = At 'first paint gen=1 '; $done = At 'done gen=1 '
-          $ready = [Math]::Max($nav, $loop)
-          $latFirst = [Math]::Max(0, $fp - $ready); $latDone = [Math]::Max(0, $done - $ready)
-          "startup (event loop running): $loop ms | first rows after ready: $latFirst ms | all 100k after ready: $latDone ms"
-          if ($latFirst -gt 100) { throw "first rows budget exceeded: $latFirst ms > 100 ms" }
-          if ($latDone -gt 1000) { throw "full load budget exceeded: $latDone ms > 1000 ms" }
       - uses: actions/upload-artifact@v4
         with: { name: explorer2-windows-x64, path: target/release/explorer2.exe }

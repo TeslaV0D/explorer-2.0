@@ -14,8 +14,8 @@
 | Voll laden + sortieren (fs-Bench) | **130 ms** | ~250 ms | < 1 s |
 | Sortierung allein | 46 ms | 47 ms (vorher 173 ms) | – |
 | UI: Loader fertig (100k inkl. Format) | 187 ms | 233 ms | < 1 s |
-| UI: Start bis Event-Loop läuft | 369 ms (ohne GPU, GL-Fallback) | 51 ms (Software-Renderer) | M8: < 300 ms |
-| UI: erste Zeilen nach „bereit“ | ~0 ms (Daten vor Fenster fertig) | 11 ms | < 100 ms |
+| UI: Kaltstart bis erster Inhalt | 369–653 ms (ohne GPU, GL-Fehlversuch + Fallback) | 26–37 ms | M8: < 300 ms |
+| UI: erste Zeilen bereit (Loader-Thread) | (Run #8 ausstehend) | 1–1,3 ms | < 100 ms |
 
 **Befund Windows-CI:** Runner hat kein GPU-OpenGL → Slint/Skia meldet „Failed to initialize Skia opengl surface … Falling back“, App läuft trotzdem (Fallback funktioniert = gut für VMs/RDP). Der GL-Versuch kostet Startzeit → TODO: auf Windows D3D zuerst / GL-Versuch vermeiden (M2/M8).
 
@@ -29,10 +29,10 @@
 2. **Adresszeile eingefroren**: Einweg-Bindung `text: current-path` wird von Slint gelöscht, sobald der User tippt → danach nie mehr aktualisiert (auch nicht bei Hoch/Doppelklick). Fix: Zwei-Wege-Bindung `<=>`.
 3. Statusleiste „1 Elemente“ → „1 Element“.
 4. Sortierung zu langsam (173 ms / 100k) → allokationsfrei, 47 ms.
-5. Messfehler: „first paint“ auf Windows (369 ms) enthielt Fenster-/Renderer-Start → Trace jetzt mit `at=` ab Prozessstart + „event loop running“; CI prüft Daten-Latenz getrennt.
+5. Messfehler: „first paint“ auf Windows (369 ms) enthielt Fenster-/Renderer-Start. 1. Versuch (Marker „event loop running“) war falsch: Run #7 zeigte, dass Slint den Renderer erst **nach** Loop-Start beim ersten Frame initialisiert (GL-Fehlversuch + Fallback blockiert UI-Thread ~490 ms). Rendering-Notifier als Marker ungeeignet (Software-Renderer/Skia-Software-Fallback unterstützen ihn nicht). **Lösung:** Daten-Latenz wird im Loader-Thread gemessen (`data_ready=`), Kaltstart bis Inhalt separat (`at=`); CI vergleicht Default- vs. Software-Renderer.
 
 ## Offen
-- CI-Lauf mit getrennter Messung (Start vs. Daten-Latenz, harte Budgets im Windows-UI-Smoke-Test) abwarten → dann M1 ✅.
+- CI-Run #8 (Daten-Latenz aus Loader-Thread, Default- vs. Software-Renderer auf Windows) abwarten → dann M1 ✅.
 - Fix im Test selbst: E2E-Regex an neues `at=`-Feld angepasst (lokal 13/13 PASS).
 
 ## Nächste Schritte

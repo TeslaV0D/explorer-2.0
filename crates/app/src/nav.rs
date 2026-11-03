@@ -122,6 +122,9 @@ enum Update {
         rows: Vec<Row>,
         hidden: usize,
         done: Option<(usize, Duration)>,
+        /// navigate -> data prepared, measured on the loader thread (independent
+        /// of when the UI thread gets to apply it, e.g. during renderer init).
+        data_ready: Duration,
     },
     Failed(FsError),
 }
@@ -182,6 +185,7 @@ pub fn navigate(win: &MainWindow, target: PathBuf, reason: Reason) {
                     rows,
                     hidden,
                     done: None,
+                    data_ready: t0.elapsed(),
                 }
             }
             LoadEvent::Done { total, .. } => {
@@ -191,6 +195,7 @@ pub fn navigate(win: &MainWindow, target: PathBuf, reason: Reason) {
                     rows,
                     hidden,
                     done: Some((total, t0.elapsed())),
+                    data_ready: t0.elapsed(),
                 }
             }
             LoadEvent::Failed(e) => Update::Failed(e),
@@ -215,6 +220,7 @@ fn apply(win: &MainWindow, gen: u64, path: PathBuf, reason: Reason, upd: Update,
             rows,
             hidden,
             done,
+            data_ready,
         } => {
             let changed = STATE.with_borrow(|s| s.path.as_deref() != Some(path.as_path()));
             let n = entries.len();
@@ -232,8 +238,9 @@ fn apply(win: &MainWindow, gen: u64, path: PathBuf, reason: Reason, upd: Update,
                 None => {
                     win.set_status(format!("Lädt … {}", format_count(n)).into());
                     trace(&format!(
-                        "first paint gen={gen} rows={n} after {:?} at={:.1}ms",
+                        "first paint gen={gen} rows={n} after {:?} data_ready={:.1}ms at={:.1}ms",
                         t0.elapsed(),
+                        data_ready.as_secs_f64() * 1000.0,
                         since_start_ms()
                     ));
                 }
@@ -250,7 +257,8 @@ fn apply(win: &MainWindow, gen: u64, path: PathBuf, reason: Reason, upd: Update,
                     }
                     win.set_status(st.into());
                     trace(&format!(
-                        "done gen={gen} total={total} shown={n} after {took:?} at={:.1}ms",
+                        "done gen={gen} total={total} shown={n} after {took:?} data_ready={:.1}ms at={:.1}ms",
+                        data_ready.as_secs_f64() * 1000.0,
                         since_start_ms()
                     ));
                     trace(&format!("address={}", win.get_current_path()));
