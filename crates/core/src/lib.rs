@@ -7,7 +7,6 @@ use std::cmp::Ordering;
 pub enum EntryKind {
     Dir,
     File,
-    Symlink,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -17,12 +16,37 @@ pub struct Entry {
     pub size: u64,
     /// Seconds since Unix epoch, if known.
     pub modified: Option<i64>,
+    /// Hidden attribute (Windows) / dot-file (Unix).
     pub hidden: bool,
+    /// System attribute (Windows only).
+    pub system: bool,
+    pub readonly: bool,
+    /// Symlink or junction (navigable if `kind == Dir`).
+    pub is_link: bool,
 }
 
 impl Entry {
     pub fn is_dir(&self) -> bool {
         self.kind == EntryKind::Dir
+    }
+}
+
+/// Explorer visibility rules ("Ordneroptionen"). Default = Explorer default (both off).
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
+pub struct ViewFilter {
+    /// "Ausgeblendete Elemente anzeigen" (default off).
+    pub show_hidden: bool,
+    /// Inverse of "Geschützte Systemdateien ausblenden" (default: hidden).
+    pub show_protected_os: bool,
+}
+
+impl ViewFilter {
+    /// Protected OS files = hidden + system. System-only files stay visible, like in Explorer.
+    pub fn is_visible(&self, e: &Entry) -> bool {
+        if e.hidden && e.system && !self.show_protected_os {
+            return false;
+        }
+        !e.hidden || self.show_hidden
     }
 }
 
@@ -51,50 +75,56 @@ impl Default for SortSpec {
     }
 }
 
-/// Natural, case-insensitive comparison: "file2" < "file10".
+/// Natural, case-insensitive comparison: "file2" < "file10". Allocation-free,
+/// with an ASCII fast path (hot loop when sorting 100k+ entries).
 pub fn natural_cmp(a: &str, b: &str) -> Ordering {
-    let (mut ai, mut bi) = (a.chars().peekable(), b.chars().peekable());
-    loop {
-        match (ai.peek().copied(), bi.peek().copied()) {
-            (None, None) => return Ordering::Equal,
-            (None, Some(_)) => return Ordering::Less,
-            (Some(_), None) => return Ordering::Greater,
-            (Some(x), Some(y)) if x.is_ascii_digit() && y.is_ascii_digit() => {
-                let na = take_number(&mut ai);
-                let nb = take_number(&mut bi);
-                let (ta, tb) = (na.trim_start_matches('0'), nb.trim_start_matches('0'));
-                let ord = ta.len().cmp(&tb.len()).then_with(|| ta.cmp(tb));
-                if ord != Ordering::Equal {
-                    return ord;
-                }
+    let (ab, bb) = (a.as_bytes(), b.as_bytes());
+    let (mut i, mut j) = (0, 0);
+    while i < ab.len() && j < bb.len() {
+        let (x, y) = (ab[i], bb[j]);
+        if x.is_ascii_digit() && y.is_ascii_digit() {
+            let si = i;
+            while i < ab.len() && ab[i].is_ascii_digit() {
+                i += 1;
             }
-            (Some(x), Some(y)) => {
-                let ord = x.to_lowercase().cmp(y.to_lowercase());
-                if ord != Ordering::Equal {
-                    return ord;
-                }
-                ai.next();
-                bi.next();
+            let sj = j;
+            while j < bb.len() && bb[j].is_ascii_digit() {
+                j += 1;
             }
+            let (na, nb) = (trim_zeros(&ab[si..i]), trim_zeros(&bb[sj..j]));
+            let ord = na.len().cmp(&nb.len()).then_with(|| na.cmp(nb));
+            if ord != Ordering::Equal {
+                return ord;
+            }
+        } else if x.is_ascii() && y.is_ascii() {
+            let ord = x.to_ascii_lowercase().cmp(&y.to_ascii_lowercase());
+            if ord != Ordering::Equal {
+                return ord;
+            }
+            i += 1;
+            j += 1;
+        } else {
+            // i and j are always on char boundaries (we only skip whole chars / ASCII bytes)
+            let ca = a[i..].chars().next().unwrap_or_default();
+            let cb = b[j..].chars().next().unwrap_or_default();
+            let ord = ca.to_lowercase().cmp(cb.to_lowercase());
+            if ord != Ordering::Equal {
+                return ord;
+            }
+            i += ca.len_utf8();
+            j += cb.len_utf8();
         }
     }
+    (ab.len() - i).cmp(&(bb.len() - j))
 }
 
-fn take_number(it: &mut std::iter::Peekable<std::str::Chars<'_>>) -> String {
-    let mut s = String::new();
-    while let Some(c) = it.peek().copied() {
-        if c.is_ascii_digit() {
-            s.push(c);
-            it.next();
-        } else {
-            break;
-        }
-    }
-    s
+fn trim_zeros(d: &[u8]) -> &[u8] {
+    let n = d.iter().take_while(|&&c| c == b'0').count();
+    &d[n..]
 }
 
 pub fn sort_entries(entries: &mut [Entry], spec: SortSpec) {
-    entries.sort_by(|a, b| {
+    entries.sort_unstable_by(|a, b| {
         if spec.dirs_first && a.is_dir() != b.is_dir() {
             return if a.is_dir() {
                 Ordering::Less
@@ -113,11 +143,9 @@ pub fn sort_entries(entries: &mut [Entry], spec: SortSpec) {
                 .cmp(&b.modified)
                 .then_with(|| natural_cmp(&a.name, &b.name)),
         };
-        if spec.descending {
-            ord.reverse()
-        } else {
-            ord
-        }
+        let ord = if spec.descending { ord.reverse() } else { ord };
+        // Deterministic order for "equal" names (a01 vs a1, File vs file) -> no flicker on reload.
+        ord.then_with(|| a.name.cmp(&b.name))
     });
 }
 
@@ -138,6 +166,19 @@ pub fn format_size(bytes: u64) -> String {
     } else {
         format!("{:.1} {}", v, UNITS[i])
     }
+}
+
+/// Thousands separator, German style: 100000 -> "100.000".
+pub fn format_count(n: usize) -> String {
+    let digits = n.to_string();
+    let mut out = String::with_capacity(digits.len() + digits.len() / 3);
+    for (i, c) in digits.chars().enumerate() {
+        if i > 0 && (digits.len() - i).is_multiple_of(3) {
+            out.push('.');
+        }
+        out.push(c);
+    }
+    out
 }
 
 /// "YYYY-MM-DD HH:MM" in UTC from Unix seconds (local time zone handling comes with the Windows adapter).
@@ -172,7 +213,34 @@ mod tests {
             size,
             modified: None,
             hidden: false,
+            system: false,
+            readonly: false,
+            is_link: false,
         }
+    }
+
+    #[test]
+    fn visibility_rules() {
+        let mut f = e("x", EntryKind::File, 0);
+        let def = ViewFilter::default();
+        assert!(def.is_visible(&f));
+        f.system = true; // system-only stays visible
+        assert!(def.is_visible(&f));
+        f.hidden = true; // hidden+system = protected OS file
+        assert!(!def.is_visible(&f));
+        let show_hidden = ViewFilter {
+            show_hidden: true,
+            show_protected_os: false,
+        };
+        assert!(!show_hidden.is_visible(&f));
+        assert!(ViewFilter {
+            show_hidden: true,
+            show_protected_os: true
+        }
+        .is_visible(&f));
+        f.system = false; // hidden only
+        assert!(!def.is_visible(&f));
+        assert!(show_hidden.is_visible(&f));
     }
 
     #[test]
@@ -181,6 +249,15 @@ mod tests {
         assert_eq!(natural_cmp("File", "file"), Ordering::Equal);
         assert_eq!(natural_cmp("a01", "a1"), Ordering::Equal);
         assert_eq!(natural_cmp("a", "ab"), Ordering::Less);
+        assert_eq!(natural_cmp("ab", "a"), Ordering::Greater);
+        assert_eq!(natural_cmp("", ""), Ordering::Equal);
+        assert_eq!(natural_cmp("x9", "x10"), Ordering::Less);
+        assert_eq!(natural_cmp("x 9", "x10"), Ordering::Less); // ' ' < '1'
+        assert_eq!(natural_cmp("Ärger", "ärger"), Ordering::Equal);
+        assert_eq!(natural_cmp("äb", "äc"), Ordering::Less);
+        assert_eq!(natural_cmp("a🚀2", "a🚀10"), Ordering::Less);
+        assert_eq!(natural_cmp("0", "00"), Ordering::Equal);
+        assert_eq!(natural_cmp("v1.10", "v1.9"), Ordering::Greater);
     }
 
     #[test]
@@ -205,6 +282,20 @@ mod tests {
     }
 
     #[test]
+    fn equal_names_sort_deterministically() {
+        let mut v = vec![
+            e("a1", EntryKind::File, 0),
+            e("a01", EntryKind::File, 0),
+            e("A1", EntryKind::File, 0),
+        ];
+        let mut w = v.clone();
+        w.reverse();
+        sort_entries(&mut v, SortSpec::default());
+        sort_entries(&mut w, SortSpec::default());
+        assert_eq!(v, w);
+    }
+
+    #[test]
     fn size_formatting() {
         assert_eq!(format_size(0), "0 B");
         assert_eq!(format_size(1023), "1023 B");
@@ -212,6 +303,15 @@ mod tests {
         assert_eq!(format_size(1536), "1.5 KB");
         assert_eq!(format_size(5 * 1024 * 1024), "5 MB");
         assert!(format_size(u64::MAX).ends_with("TB"));
+    }
+
+    #[test]
+    fn count_formatting() {
+        assert_eq!(format_count(0), "0");
+        assert_eq!(format_count(999), "999");
+        assert_eq!(format_count(1000), "1.000");
+        assert_eq!(format_count(100_000), "100.000");
+        assert_eq!(format_count(1_234_567), "1.234.567");
     }
 
     #[test]

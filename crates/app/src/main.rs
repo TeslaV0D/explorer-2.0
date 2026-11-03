@@ -1,41 +1,11 @@
 #![cfg_attr(all(windows, not(debug_assertions)), windows_subsystem = "windows")]
 
-use explorer_core::{format_datetime, format_size, sort_entries, Entry, SortSpec};
-use slint::{ModelRc, SharedString, VecModel};
-use std::cell::RefCell;
+mod nav;
+
 use std::io::Write;
-use std::path::{Path, PathBuf};
-use std::rc::Rc;
+use std::path::PathBuf;
 
 slint::include_modules!();
-
-fn fmt_size(e: &Entry) -> String {
-    if e.is_dir() {
-        String::new()
-    } else {
-        format_size(e.size)
-    }
-}
-
-fn load(path: &Path) -> Vec<Entry> {
-    let mut v = explorer_fs::read_dir(path).unwrap_or_default();
-    sort_entries(&mut v, SortSpec::default());
-    v
-}
-
-fn show(win: &MainWindow, path: &Path, entries: &[Entry]) {
-    let rows: Vec<Row> = entries
-        .iter()
-        .map(|e| Row {
-            name: e.name.clone().into(),
-            size: fmt_size(e).into(),
-            modified: e.modified.map(format_datetime).unwrap_or_default().into(),
-            is_dir: e.is_dir(),
-        })
-        .collect();
-    win.set_current_path(SharedString::from(path.to_string_lossy().as_ref()));
-    win.set_rows(ModelRc::new(VecModel::from(rows)));
-}
 
 /// GUI-subsystem exes have no console; attach to the parent's so CLI output
 /// (`--version`) shows up in cmd/PowerShell. Redirected handles stay untouched.
@@ -53,60 +23,59 @@ fn attach_parent_console() {
 fn attach_parent_console() {}
 
 fn main() -> Result<(), slint::PlatformError> {
-    if std::env::args().nth(1).as_deref() == Some("--version") {
+    let arg = std::env::args().nth(1);
+    if arg.as_deref() == Some("--version") {
         attach_parent_console();
         // Never panic on a closed/invalid stdout (GUI subsystem, panic=abort).
         let _ = writeln!(std::io::stdout(), "explorer2 {}", env!("CARGO_PKG_VERSION"));
         return Ok(());
     }
-    let start = std::env::args()
-        .nth(1)
-        .map(PathBuf::from)
+
+    let start = arg
+        .map(|a| PathBuf::from(nav::clean_input(&a)))
         .or_else(|| std::env::current_dir().ok())
         .unwrap_or_else(|| PathBuf::from("."));
-    let win = MainWindow::new()?;
-    let state = Rc::new(RefCell::new((start.clone(), load(&start))));
-    show(&win, &state.borrow().0, &state.borrow().1);
+    let start = explorer_fs::nearest_existing_ancestor(
+        &std::path::absolute(&start).unwrap_or(start.clone()),
+    )
+    .unwrap_or(start);
 
-    let nav = {
-        let (w, st) = (win.as_weak(), state.clone());
-        move |p: PathBuf| {
-            if !p.is_dir() {
-                return;
-            }
-            let entries = load(&p);
-            *st.borrow_mut() = (p.clone(), entries);
+    let win = MainWindow::new()?;
+    nav::init(&win);
+
+    win.on_navigate({
+        let w = win.as_weak();
+        move |s| {
             if let Some(w) = w.upgrade() {
-                show(&w, &st.borrow().0, &st.borrow().1);
+                nav::navigate(&w, PathBuf::from(nav::clean_input(&s)), nav::Reason::User);
             }
         }
-    };
-    win.on_navigate({
-        let nav = nav.clone();
-        move |s| nav(PathBuf::from(s.as_str()))
     });
     win.on_go_up({
-        let (nav, st) = (nav.clone(), state.clone());
+        let w = win.as_weak();
         move || {
-            let parent = st.borrow().0.parent().map(|p| p.to_path_buf());
-            if let Some(p) = parent {
-                nav(p);
+            if let Some(w) = w.upgrade() {
+                nav::go_up(&w);
             }
         }
     });
     win.on_open_row({
-        let (nav, st) = (nav.clone(), state.clone());
+        let w = win.as_weak();
         move |i| {
-            let target = {
-                let s = st.borrow();
-                s.1.get(i as usize)
-                    .filter(|e| e.is_dir())
-                    .map(|e| s.0.join(&e.name))
-            };
-            if let Some(p) = target {
-                nav(p);
+            if let Some(w) = w.upgrade() {
+                nav::open_row(&w, i as usize);
             }
         }
     });
+    win.on_toggle_hidden({
+        let w = win.as_weak();
+        move |on| {
+            if let Some(w) = w.upgrade() {
+                nav::set_show_hidden(&w, on);
+            }
+        }
+    });
+
+    nav::navigate(&win, start, nav::Reason::User);
     win.run()
 }

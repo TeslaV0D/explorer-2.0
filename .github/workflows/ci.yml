@@ -20,6 +20,8 @@ jobs:
       - run: cargo fmt --all -- --check
       - run: cargo clippy --workspace --all-targets -- -D warnings
       - run: cargo test --workspace
+      - name: Benchmark 100k folder (budgets from PLAN-BASICS)
+        run: cargo run --release -p explorer-fs --example bench -- --files 100000 --runs 5 --assert
   build-windows-release:
     runs-on: windows-latest
     needs: test
@@ -41,5 +43,23 @@ jobs:
             if (-not $text.Contains($needle)) { throw "manifest missing: $needle" }
           }
           "$out; size=$((Get-Item $exe).Length) bytes"
+      - name: UI smoke test (real window, 100k folder, Windows fast path)
+        shell: pwsh
+        run: |
+          $dir = "$env:RUNNER_TEMP\big"
+          cargo run --release -q -p explorer-fs --example bench -- --create-in $dir --files 100000
+          $env:EXPLORER2_TRACE = "1"
+          $log = "$env:RUNNER_TEMP\ui.log"
+          $p = Start-Process -FilePath (Resolve-Path "target/release/explorer2.exe").Path -ArgumentList "`"$dir`"" -PassThru -RedirectStandardError $log
+          Start-Sleep -Seconds 10
+          $alive = -not $p.HasExited
+          if ($alive) { Stop-Process -Id $p.Id -Force }
+          $text = Get-Content $log -Raw
+          $text
+          if (-not $alive) { throw "explorer2 exited early (exit code $($p.ExitCode))" }
+          if ($text -notmatch 'done gen=1 total=100000 shown=100000') { throw "100k folder not fully loaded" }
+          if ($text -match '(?i)panic') { throw "panic in log" }
+          $fp = [regex]::Match($text, 'first paint gen=1 rows=\d+ after ([\d.]+)(ms|µs|s)')
+          "first paint: $($fp.Groups[1].Value) $($fp.Groups[2].Value)"
       - uses: actions/upload-artifact@v4
         with: { name: explorer2-windows-x64, path: target/release/explorer2.exe }

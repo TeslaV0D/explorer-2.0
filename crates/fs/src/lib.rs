@@ -1,78 +1,243 @@
-//! Directory enumeration. Portable `std::fs` implementation first;
-//! a Windows fast path (FindFirstFileExW / NtQueryDirectoryFile) comes in M1.
+//! File system layer: fast directory enumeration, background loading, watching.
+//!
+//! - Windows: `FindFirstFileExW` + `FindExInfoBasic` + `FIND_FIRST_EX_LARGE_FETCH`,
+//!   attributes/size/mtime come straight from the find data (no per-file syscall),
+//!   long paths via `\\?\` verbatim prefix.
+//! - Other platforms: portable `std::fs` implementation (used for tests/dev).
 
-use explorer_core::{Entry, EntryKind};
+mod loader;
+pub mod path;
+#[cfg(not(windows))]
+mod portable;
+mod watch;
+#[cfg(windows)]
+mod win;
+
+pub use loader::{load_dir, LoadEvent, LoadHandle};
+pub use watch::{watch_dir, Debounce, DirWatcher};
+
+use explorer_core::Entry;
+use std::fmt;
 use std::io;
-use std::path::Path;
-use std::time::UNIX_EPOCH;
+use std::ops::ControlFlow;
+use std::path::{Path, PathBuf};
 
-/// Reads a directory. Per-entry errors are skipped, not fatal: one broken
-/// entry must never hide the rest of the folder.
-pub fn read_dir(path: &Path) -> io::Result<Vec<Entry>> {
-    let mut out = Vec::new();
-    for item in std::fs::read_dir(path)? {
-        let Ok(item) = item else { continue };
-        let Ok(meta) = item.metadata() else { continue };
-        let ft = meta.file_type();
-        let kind = if ft.is_symlink() {
-            EntryKind::Symlink
-        } else if ft.is_dir() {
-            EntryKind::Dir
-        } else {
-            EntryKind::File
-        };
-        let name = item.file_name().to_string_lossy().into_owned();
-        let modified = meta
-            .modified()
-            .ok()
-            .and_then(|t| t.duration_since(UNIX_EPOCH).ok())
-            .map(|d| d.as_secs() as i64);
-        out.push(Entry {
-            hidden: is_hidden(&name, &meta),
-            name,
-            kind,
-            size: if kind == EntryKind::Dir {
-                0
-            } else {
-                meta.len()
-            },
-            modified,
-        });
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum FsErrorKind {
+    NotFound,
+    PermissionDenied,
+    NotADirectory,
+    Other,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct FsError {
+    pub kind: FsErrorKind,
+    pub message: String,
+}
+
+impl fmt::Display for FsError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.write_str(&self.message)
     }
+}
+
+impl std::error::Error for FsError {}
+
+/// Windows ERROR_DIRECTORY ("The directory name is invalid").
+const WIN_ERROR_DIRECTORY: i32 = 267;
+
+impl From<io::Error> for FsError {
+    fn from(e: io::Error) -> Self {
+        let kind = match e.kind() {
+            io::ErrorKind::NotFound => FsErrorKind::NotFound,
+            io::ErrorKind::PermissionDenied => FsErrorKind::PermissionDenied,
+            io::ErrorKind::NotADirectory => FsErrorKind::NotADirectory,
+            _ if cfg!(windows) && e.raw_os_error() == Some(WIN_ERROR_DIRECTORY) => {
+                FsErrorKind::NotADirectory
+            }
+            _ => FsErrorKind::Other,
+        };
+        let message = match kind {
+            FsErrorKind::NotFound => "Ordner nicht gefunden".to_string(),
+            FsErrorKind::PermissionDenied => "Zugriff verweigert".to_string(),
+            FsErrorKind::NotADirectory => "Kein Ordner".to_string(),
+            FsErrorKind::Other => e.to_string(),
+        };
+        FsError { kind, message }
+    }
+}
+
+/// Streams the entries of `dir` to `f`. `.`/`..` are skipped; a broken single
+/// entry is skipped instead of failing the whole folder. Return
+/// `ControlFlow::Break` from `f` to stop early (cancellation).
+pub fn enumerate(dir: &Path, f: &mut dyn FnMut(Entry) -> ControlFlow<()>) -> Result<(), FsError> {
+    #[cfg(windows)]
+    {
+        win::enumerate(dir, f)
+    }
+    #[cfg(not(windows))]
+    {
+        portable::enumerate(dir, f)
+    }
+}
+
+/// Reads a whole directory (unsorted).
+pub fn read_dir(dir: &Path) -> Result<Vec<Entry>, FsError> {
+    let mut out = Vec::new();
+    enumerate(dir, &mut |e| {
+        out.push(e);
+        ControlFlow::Continue(())
+    })?;
     Ok(out)
 }
 
-#[cfg(windows)]
-fn is_hidden(_name: &str, meta: &std::fs::Metadata) -> bool {
-    use std::os::windows::fs::MetadataExt;
-    const HIDDEN: u32 = 0x2;
-    const SYSTEM: u32 = 0x4;
-    meta.file_attributes() & (HIDDEN | SYSTEM) != 0
-}
-
-#[cfg(not(windows))]
-fn is_hidden(name: &str, _meta: &std::fs::Metadata) -> bool {
-    name.starts_with('.')
+/// First existing directory walking up from `p` (used when the current folder vanishes).
+pub fn nearest_existing_ancestor(p: &Path) -> Option<PathBuf> {
+    p.ancestors()
+        .find(|a| !a.as_os_str().is_empty() && a.is_dir())
+        .map(Path::to_path_buf)
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+    use explorer_core::{sort_entries, SortSpec};
 
     #[test]
-    fn lists_files_and_dirs() {
+    fn lists_files_and_dirs_with_metadata() {
         let d = tempfile::tempdir().unwrap();
         std::fs::write(d.path().join("a.txt"), b"hello").unwrap();
         std::fs::create_dir(d.path().join("sub")).unwrap();
         let mut v = read_dir(d.path()).unwrap();
-        explorer_core::sort_entries(&mut v, Default::default());
+        sort_entries(&mut v, SortSpec::default());
         assert_eq!(v.len(), 2);
         assert!(v[0].is_dir() && v[0].name == "sub");
+        assert_eq!(v[1].name, "a.txt");
         assert_eq!(v[1].size, 5);
+        assert!(v[1].modified.unwrap() > 1_600_000_000);
+        assert!(!v[1].hidden && !v[1].is_link);
     }
 
     #[test]
-    fn missing_dir_is_error_not_panic() {
-        assert!(read_dir(Path::new("/definitely/not/here")).is_err());
+    fn empty_dir_is_ok() {
+        let d = tempfile::tempdir().unwrap();
+        assert!(read_dir(d.path()).unwrap().is_empty());
+    }
+
+    #[test]
+    fn missing_dir_is_not_found() {
+        let d = tempfile::tempdir().unwrap();
+        let err = read_dir(&d.path().join("nope")).unwrap_err();
+        assert_eq!(err.kind, FsErrorKind::NotFound);
+    }
+
+    #[test]
+    fn file_is_not_a_directory() {
+        let d = tempfile::tempdir().unwrap();
+        let f = d.path().join("f.txt");
+        std::fs::write(&f, b"x").unwrap();
+        let err = read_dir(&f).unwrap_err();
+        assert!(
+            matches!(err.kind, FsErrorKind::NotADirectory | FsErrorKind::NotFound),
+            "{err:?}"
+        );
+    }
+
+    #[test]
+    fn unicode_names() {
+        let d = tempfile::tempdir().unwrap();
+        for n in ["Ärger.txt", "日本語.md", "emoji_🚀.bin"] {
+            std::fs::write(d.path().join(n), b"").unwrap();
+        }
+        let mut names: Vec<_> = read_dir(d.path())
+            .unwrap()
+            .into_iter()
+            .map(|e| e.name)
+            .collect();
+        names.sort();
+        assert_eq!(names, ["emoji_🚀.bin", "Ärger.txt", "日本語.md"]);
+    }
+
+    #[test]
+    fn long_paths_over_260_chars() {
+        let d = tempfile::tempdir().unwrap();
+        let mut p = d.path().to_path_buf();
+        while p.as_os_str().len() < 300 {
+            p.push("a_rather_long_directory_name_0123456789");
+        }
+        std::fs::create_dir_all(&p).unwrap();
+        std::fs::write(p.join("deep.txt"), b"1").unwrap();
+        let v = read_dir(&p).unwrap();
+        assert_eq!(v.len(), 1);
+        assert_eq!(v[0].name, "deep.txt");
+    }
+
+    #[test]
+    fn early_break_stops_enumeration() {
+        let d = tempfile::tempdir().unwrap();
+        for i in 0..50 {
+            std::fs::write(d.path().join(format!("{i}.txt")), b"").unwrap();
+        }
+        let mut n = 0;
+        enumerate(d.path(), &mut |_| {
+            n += 1;
+            if n == 10 {
+                ControlFlow::Break(())
+            } else {
+                ControlFlow::Continue(())
+            }
+        })
+        .unwrap();
+        assert_eq!(n, 10);
+    }
+
+    #[test]
+    fn ancestor_fallback() {
+        let d = tempfile::tempdir().unwrap();
+        let gone = d.path().join("x").join("y");
+        assert_eq!(nearest_existing_ancestor(&gone).unwrap(), d.path());
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn dotfiles_hidden_and_symlink_to_dir_navigable() {
+        let d = tempfile::tempdir().unwrap();
+        std::fs::write(d.path().join(".secret"), b"").unwrap();
+        std::fs::create_dir(d.path().join("real")).unwrap();
+        std::os::unix::fs::symlink(d.path().join("real"), d.path().join("link")).unwrap();
+        std::os::unix::fs::symlink(d.path().join("missing"), d.path().join("dangling")).unwrap();
+        let v = read_dir(d.path()).unwrap();
+        let get = |n: &str| v.iter().find(|e| e.name == n).unwrap();
+        assert!(get(".secret").hidden);
+        assert!(get("link").is_link && get("link").is_dir());
+        assert!(get("dangling").is_link && !get("dangling").is_dir());
+    }
+
+    #[cfg(windows)]
+    #[test]
+    fn windows_hidden_and_system_attributes() {
+        use std::os::windows::ffi::OsStrExt;
+        let d = tempfile::tempdir().unwrap();
+        let f = d.path().join("hid.txt");
+        std::fs::write(&f, b"").unwrap();
+        let wide: Vec<u16> = f.as_os_str().encode_wide().chain(Some(0)).collect();
+        // FILE_ATTRIBUTE_HIDDEN | FILE_ATTRIBUTE_SYSTEM
+        let ok = unsafe {
+            windows_sys::Win32::Storage::FileSystem::SetFileAttributesW(wide.as_ptr(), 0x2 | 0x4)
+        };
+        assert_ne!(ok, 0);
+        let v = read_dir(d.path()).unwrap();
+        assert!(v[0].hidden && v[0].system);
+        assert!(!explorer_core::ViewFilter::default().is_visible(&v[0]));
+    }
+
+    #[cfg(windows)]
+    #[test]
+    fn windows_drive_root_lists() {
+        let v = read_dir(Path::new("C:\\")).unwrap();
+        assert!(v
+            .iter()
+            .any(|e| e.name.eq_ignore_ascii_case("Windows") && e.is_dir()));
     }
 }

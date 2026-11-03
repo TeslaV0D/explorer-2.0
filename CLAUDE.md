@@ -22,6 +22,9 @@
 | D-002 | Reihenfolge: Basis → Suche (voidtools-Stil) → Datei-Shortcuts (Sweetch-Stil) | fix (Boss) |
 | D-003 | Explorer-Ersatz in Stufen, jede Stufe reversibel; riskante Hooks (IFEO) zuletzt + opt-in | vorgeschlagen |
 | D-004 | Dokumentation auf Deutsch, Code/Identifier auf Englisch | fix |
+| D-005 | Enumeration Windows: `FindFirstFileExW` (Basic + Large Fetch) statt `NtQueryDirectoryFile` – dokumentierte API, Messung zeigt Budget-Reserve; NtQuery nur bei Bedarf | fix (M1) |
+| D-006 | Watcher: `notify`-Crate (ReadDirectoryChangesW/inotify), eigener Debounce + adaptive Drossel statt notify-debouncer | fix (M1) |
+| D-007 | UI-Sprache vorerst Deutsch hart codiert; i18n später (Slint `@tr`) | vorgeschlagen |
 
 ## Arbeitsumgebung / Constraints
 - Dev-Sandbox ist **Linux**, Zielplattform **Windows**. Windows-Code kann hier nicht ausgeführt werden → Build/Test via GitHub Actions (`windows-latest`); Kernlogik plattformneutral halten, damit sie auch unter Linux testbar ist.
@@ -30,8 +33,8 @@
 
 ## Code-Layout (seit M0)
 - `crates/core` (`explorer-core`): plattformneutrales Modell, Sortierung (natürlich, Ordner zuerst), Unit-Tests
-- `crates/fs` (`explorer-fs`): Verzeichnis-Enumeration (portabel via std; Windows-Fastpath folgt in M1)
-- `crates/app` (`explorer2`): Slint-UI (`ui/main.slint`), Binary
+- `crates/fs` (`explorer-fs`): `enumerate`/`read_dir` (Windows: `win.rs` FindFirstFileExW; sonst `portable.rs`), `path.rs` (Verbatim/FILETIME, plattformneutral getestet), `loader.rs` (Hintergrund-Load, Batches, Cancel), `watch.rs` (notify + `Debounce`), Benchmark `examples/bench.rs`
+- `crates/app` (`explorer2`): Slint-UI (`ui/main.slint`), `src/nav.rs` = Navigations-Controller (State im `thread_local` auf UI-Thread, Generationszähler, Refresh-Drossel)
 - CI: `.github/workflows/ci.yml` (fmt, clippy -D warnings, test auf Windows+Linux; Release-Artefakt `explorer2.exe`)
 - Lokal prüfen: `cargo fmt --all -- --check && cargo clippy --workspace --all-targets -- -D warnings && cargo test --workspace`
 - Slint-Gotcha: Widgets (`Button`, `ListView`) brauchen `import { … } from "std-widgets.slint";`
@@ -42,6 +45,12 @@
 - Sandbox: für Xvfb-UI-Test `libxkbcommon-x11-0` nötig; Start mit `SLINT_BACKEND=winit-software xvfb-run ...`.
 - Windows-Cross-Check lokal möglich für reine Rust-Crates: `cargo clippy -p explorer-core -p explorer-fs --target x86_64-pc-windows-msvc` (App-Crate nicht, wegen Skia/MSVC).
 - CI-Status per GitHub-MCP (`actions_list` / `get_job_logs`), kein `gh`.
+- Slint: `text: prop` auf TextInput ist Einweg und **bricht beim Tippen** → für editierbare Felder immer `text <=> prop` (in-out).
+- Slint: `viewport-y` ist deprecated → `content-y`.
+- Background→UI: `slint::invoke_from_event_loop` + Generationszähler; UI-State im `thread_local!` (Rc nicht Send).
+- `cargo fmt` bricht lange Zeilen um → Python-String-Replaces danach prüfen (`assert s.count(old)==1`).
+- E2E unter Xvfb ohne Window-Manager: `xdotool windowfocus` statt `windowactivate`; Debug-Trace via `EXPLORER2_TRACE=1` (stderr).
+- Trace-Log nie in beobachteten Ordner schreiben, außer zum Testen der Drossel.
 
 ## Referenzen
 - File Pilot: https://filepilot.tech (Panels/Tabs, Inspector, GoTo, Command Palette, pinbare Context-Menu-Einträge, ~2,5 MB Exe)
