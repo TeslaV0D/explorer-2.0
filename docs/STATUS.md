@@ -1,12 +1,20 @@
 # Zwischenstand
 
-**Stand:** 2026-11-03 · **Phase:** 1 · M0 ✅ · M1 ✅ · M1.5 ✅ · M2 ✅ · M3 ✅ (CI-Run #19) · **M4 lokal grün, CI läuft** · **Branch:** `claude/relaxed-pasteur-ufhh1p`
+**Stand:** 2026-11-03 · **Phase:** 1 · M0 ✅ · M1 ✅ · M1.5 ✅ · M2 ✅ · M3 ✅ (CI-Run #19) · **M4 ✅ (CI-Run #26)** · M5 wartet auf Freigabe · **Branch:** `claude/relaxed-pasteur-ufhh1p`
 
 ## M4 – Dateioperationen
 - **Neue Crate `explorer-ops`** (plattformneutral testbar): `exec` (Job-Engine, synchrones `run` + `spawn` im Hintergrund), `undo`, `simple` (Umbenennen, Neuer Ordner), `names` (Windows-Namensregeln, „ - Kopie“, „ (2)“), `clipboard` (CF_HDROP), `win_copy` (CopyFileExW mit Fortschritt/Abbruch).
 - **Sicherheitsregeln**: Kopie in `.<name>.e2part` + Rename; Verschieben über Laufwerke löscht die Quelle erst nach vollständiger, geflushter Kopie; „Ersetzen“ = alte Datei in den Papierkorb (rückgängig machbar); Abbruch räumt Teil-Dateien weg; Fehler pro Element, Job läuft weiter.
 - **App** (`src/fileops.rs`): Zwischenablage (intern + Windows-System-Clipboard), Jobs + Operations-Panel, Konflikt-/Bestätigungsdialog (modal, Tasten R/S/B/A/Esc bzw. Enter/Esc), Inline-Umbenennen, Neuer Ordner, Undo/Redo im Hintergrund, Drag & Drop (Slint 1.18 `DragArea`/`DropArea`), Befehlsleiste. Nach Einfügen/Umbenennen sind die neuen Elemente markiert.
 - **Tests lokal**: ops 18 Integrationstests (+ Disk-Full mit 1-MiB-tmpfs), app 17 Unit (Tasten, Titel, Fortschrittstext, DnD-Regeln), E2E **100/100** (neu 38–52: Umbenennen inkl. Undo/Redo/Esc/Fehler, Neuer Ordner, Kopieren/Einfügen mit Konflikt „Beide behalten“ und „Ersetzen“ + Undo, Ausschneiden, Entf + Wiederherstellen, Umschalt+Entf mit Dialog, DnD verschieben/Strg-kopieren, 60 000-Dateien-Job mit Panel/Pause/Abbruch/Undo).
+
+### CI-Run #26 – alles grün ✅
+- E2E Linux **100/100** (M4-Block 38–52 inkl. DnD, Konflikte, Undo, 60 000-Dateien-Job mit Pause/Abbruch).
+- Windows: ops-Integrationstests 19/19 (inkl. Papierkorb + Wiederherstellen, gesperrte Datei), Clipboard-Interop: Windows (.NET `GetFileDropList`) sieht unsere Dateien inkl. Umlaut, wir lesen Windows-Kopien, Ausschneiden-Flag überlebt.
+- Linux: Disk-Full (1-MiB-tmpfs) → Fehlermeldung, keine Teil-Datei.
+- Windows-UI-Matrix: normale Starts 44–45 ms bis Inhalt, Erststart 636 ms (frische VM), Daten: erste Zeilen 1,3 ms, alle 100k 133–143 ms.
+- Exe 19,7 MB (vorher 17,2) – knapp unter Budget 20 MB → als Schuld vermerkt.
+- Weg dorthin: Run #21 Clippy-1.99-Lint, #22 8.3-Kurznamen, #23 Papierkorb-Anzeigenamen, #24/#25 Clipboard-Test-Cmdlet (s. Funde).
 
 ### Funde in M4
 - **Bug (Integrationstest, flaky 1/15)**: Undo von „Ersetzen“ legte erst die neue Datei in den Papierkorb und stellte dann den *neuesten* Papierkorb-Eintrag mit gleichem Pfad wieder her – also die gerade gelöschte neue Datei statt der alten. Fix: Papierkorb-Snapshot **vor** dem Undo, Wiederherstellen nur daraus.
@@ -165,6 +173,6 @@ Daten-Budgets in allen Szenarien eingehalten (erste Zeilen 0,8–1,4 ms, alle 10
 - Fix im Test selbst: E2E-Regex an neues `at=`-Feld angepasst (lokal 13/13 PASS).
 
 ## Nächste Schritte
-1. CI für M4 grün → M4 ✅ → Freigabe M5 (Boss).
+1. ✅ M4 abgeschlossen (Run #26) → **Freigabe M5 (Boss)**; davor Exe-Größe prüfen (19,7 MB).
 2. M5: Shell-Integration (Icons/Thumbnails, Kontextmenü, Eigenschaften, Papierkorb, OLE-Drag&Drop mit anderen Apps).
 3. Boss: Artefakt auf echtem PC testen (GPU, Kopieren/Einfügen mit dem echten Explorer).
