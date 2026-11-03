@@ -35,20 +35,28 @@ jobs:
           $clip = (Resolve-Path "target/debug/examples/clip.exe").Path
           $d = New-Item -ItemType Directory -Force "$env:RUNNER_TEMP\clip"
           $a = New-Item -ItemType File -Force "$d\a ä.txt"; $b = New-Item -ItemType File -Force "$d\b.txt"
+          Add-Type -AssemblyName System.Windows.Forms
+          function Formats { try { ([System.Windows.Forms.Clipboard]::GetDataObject().GetFormats()) -join ', ' } catch { "error: $_" } }
+          $fail = @()
           # ours -> Windows: PowerShell must see the file list
-          & $clip set $a.FullName $b.FullName; if ($LASTEXITCODE) { throw "clip set failed" }
+          & $clip set $a.FullName $b.FullName; "clip set exit=$LASTEXITCODE"
+          "formats after clip set: $(Formats)"
+          "own reader (new process): $((& $clip get) -join ' | ')"
           $seen = @(Get-Clipboard -Format FileDropList | ForEach-Object FullName)
           "PowerShell sees: $($seen -join ', ')"
-          if ($seen.Count -ne 2 -or $seen[0] -ne $a.FullName -or $seen[1] -ne $b.FullName) { throw "Windows does not see our files" }
+          if ($seen.Count -ne 2 -or $seen[0] -ne $a.FullName -or $seen[1] -ne $b.FullName) { $fail += "Windows does not see our files" }
           # Windows -> ours (Set-Clipboard -Path = what Explorer's "Copy" produces)
           Set-Clipboard -Path $b.FullName
+          "formats after Set-Clipboard: $(Formats)"
           $got = @(& $clip get)
           "clip get: $($got -join ' | ')"
-          if ($got[0] -ne 'copy' -or $got[1] -ne $b.FullName) { throw "we do not read the Windows file clipboard" }
+          if ($got[0] -ne 'copy' -or $got[1] -ne $b.FullName) { $fail += "we do not read the Windows file clipboard" }
           # cut flag (Preferred DropEffect = 2) survives a round trip
           & $clip set --cut $a.FullName
           $got = @(& $clip get)
-          if ($got[0] -ne 'cut' -or $got[1] -ne $a.FullName) { throw "cut flag lost: $($got -join ' | ')" }
+          "cut round trip: $($got -join ' | ')"
+          if ($got[0] -ne 'cut' -or $got[1] -ne $a.FullName) { $fail += "cut flag lost" }
+          if ($fail) { throw ($fail -join '; ') }
           "clipboard interop OK"
       - name: Benchmark 100k folder (budgets from PLAN-BASICS)
         run: cargo run --release -p explorer-fs --example bench -- --files 100000 --runs 9 --assert
