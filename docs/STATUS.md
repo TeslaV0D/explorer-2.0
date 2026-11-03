@@ -1,6 +1,6 @@
 # Zwischenstand
 
-**Stand:** 2026-11-03 · **Phase:** 1 · M0 ✅ · M1 ✅ · M1.5 ✅ · **M2 lokal ✅ (E2E 37/37), CI ausstehend** · **Branch:** `claude/relaxed-pasteur-ufhh1p`
+**Stand:** 2026-11-03 · **Phase:** 1 · M0 ✅ · M1 ✅ · M1.5 ✅ · **M2 ✅ (CI-Run #16)** · M3 wartet auf Freigabe · **Branch:** `claude/relaxed-pasteur-ufhh1p`
 
 ## M2 – Details-Ansicht, Auswahl, Tastatur, Öffnen, Breadcrumb
 - **Details-Ansicht**: Spaltenköpfe Name / Änderungsdatum / Typ / Größe, Klick sortiert (▲▼), Breiten ziehbar; Sortierung in settings.ini.
@@ -9,6 +9,18 @@
 - **Öffnen**: Ordner navigieren, Dateien per `ShellExecuteW` (Windows) mit Standard-App; Windows-Test führt echte `.cmd` über Standard-Verb aus.
 - **Breadcrumb** (`core::breadcrumb`): Windows-, UNC- und Unix-Pfade, „…“-Kürzung links; Strg+L/Klick ins Leere = Bearbeiten, Esc = Abbruch.
 - Nach „Hoch“ ist der Herkunftsordner markiert (wie Explorer).
+
+### CI-Run #16 – alles grün ✅ (Windows)
+| Szenario | Fenster erstellt | Kaltstart bis Inhalt | Hinweis |
+|---|---|---|---|
+| Erststart (kein Cache) | 134 ms | **221 ms** | Software sofort, Probe im Hintergrund (34 ms, „gdi generic“) |
+| Normaler Start 1/2/3 (Cache) | ~6,5 ms | **56 / 55 / 56 ms** | best 54,7 ms (Budget 300) |
+| forciert GPU (ohne GPU) | 6,4 ms | 370 ms | Skia-Fallback |
+| forciert Software / Setting aus | ~6,5 ms | 57 / 54 ms | |
+| Mesa auto | 7,4 ms | 151 ms | Hintergrund-Probe erkennt llvmpipe (260 ms, nicht im Startpfad) |
+| Mesa forciert GPU | 7,6 ms | 458 ms | Skia-OpenGL ok |
+
+Daten in allen Szenarien: erste Zeilen 0,8–1,6 ms, alle 100k 162–285 ms. ShellExecute-Test (echte `.cmd` über Standard-Verb) grün. fs-Bench: Median 1,22 ms / 139 ms.
 
 ### Tests M2
 - Unit: core 26 (Auswahl, Typeahead, Breadcrumb, Typ-Sortierung, Settings), app 10 (Tasten, Status, Auswahl-Remap, Öffnen).
