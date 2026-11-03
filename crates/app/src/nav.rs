@@ -167,8 +167,11 @@ thread_local! {
 /// of the last load (a 300 ms folder refreshes at most every 1.2 s), capped at 10 s.
 /// Prevents a constantly written file (logs, downloads) from pinning a CPU core.
 pub fn refresh_cooldown(last_load: Duration) -> Duration {
-    (last_load * 4).clamp(Duration::from_millis(500), Duration::from_secs(10))
+    (last_load * 4).clamp(MIN_REFRESH_GAP, Duration::from_secs(10))
 }
+
+/// Minimum time between the starts of two watcher refreshes of the same tab.
+pub const MIN_REFRESH_GAP: Duration = Duration::from_millis(500);
 
 /// "1 Element" / "3 Elemente" with German thousands separator.
 pub fn count_label(n: usize) -> String {
@@ -792,7 +795,10 @@ fn apply(
                 }
                 Some((total, took)) => {
                     with_tab(id, |t, _, _| {
-                        t.refresh_allowed_at = Instant::now() + refresh_cooldown(took)
+                        // Expensive loads push the next refresh further out (never earlier).
+                        t.refresh_allowed_at = t
+                            .refresh_allowed_at
+                            .max(Instant::now() + refresh_cooldown(took))
                     });
                     let mut st = count_label(n);
                     if hidden > 0 {
@@ -972,6 +978,9 @@ fn request_refresh(weak: slint::Weak<MainWindow>, id: TabId, watched: PathBuf) {
     let now = Instant::now();
     if now >= allowed_at {
         if let Some(w) = weak.upgrade() {
+            // Spacing is guaranteed between refresh *starts*: events that arrive while
+            // this refresh is still loading must not start another one right away.
+            with_tab(id, |t, _, _| t.refresh_allowed_at = now + MIN_REFRESH_GAP);
             trace("watch: refresh");
             navigate_tab(&w, id, watched, Reason::Refresh, Hist::Keep);
         }

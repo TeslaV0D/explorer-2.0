@@ -20,6 +20,7 @@
 - **Bug (eigener Code-Review)**: neue Tabs haben ihren Pfad schon → Breadcrumbs/Watcher wären nie eingerichtet worden → Setup jetzt auch, wenn noch kein Watcher existiert.
 - Shortcuts kamen nicht an, solange keine Liste fokussiert war → Root-FocusScope als Fallback.
 - E2E-Diagnose verbessert: je Block eigenes Log.
+- **Bug (CI-Run #18)**: Refresh-Drossel garantierte den Abstand nur ab *Ende* eines Refreshs – Events während eines laufenden Refreshs starteten sofort einen zweiten (CI: 8 statt ≤ 7 Refreshes/3 s; seit M3 mehr Schreibvorgänge pro Refresh). Fix: Mindestabstand 500 ms ab *Start*, nach Done nur verlängern. Gemessen: kleinster Abstand 501 ms.
 
 ## M2 – Details-Ansicht, Auswahl, Tastatur, Öffnen, Breadcrumb
 - **Details-Ansicht**: Spaltenköpfe Name / Änderungsdatum / Typ / Größe, Klick sortiert (▲▼), Breiten ziehbar; Sortierung in settings.ini.

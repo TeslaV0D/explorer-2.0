@@ -79,6 +79,7 @@
 - Slint: `changed prop` feuert **nicht** bei der Initialisierung → eine neu instanziierte Repeater-Instanz (z. B. neue Split-Pane) verpasst einen vorher gesetzten Sequenz-Auftrag. Fokus deshalb an Zustand koppeln (`changed active` + `init`), nicht nur an Zähler.
 - Slint: Funktionen von Repeater-Instanzen sind aus Rust nicht aufrufbar → Aufträge (Scroll, Edit, Fokus) über `*-seq`-Zähler in den Modelldaten + `changed`.
 - Slint: Root-`FocusScope` mit `key-pressed` als Fallback, damit Shortcuts auch ohne fokussierte Liste greifen.
+- Drosseln/Rate-Limits immer ab **Start** einer Aktion messen, nicht ab Ende (sonst Überlappung bei langsamer Maschine).
 - E2E: pro Block eigenes Log (`trace-<n>.log`), sonst sind Fehler nachträglich nicht analysierbar; `EXPLORER2_TRACE_KEYS=1` loggt jede Taste mit Pane.
 - Sicherheitscheck blockt `rm -rf $VAR` in `bash -c`-Strings → eindeutige Temp-Ordner statt Löschen.
 - Lange CI-Logs: `get_job_logs` mit `return_content=false` → URL per `curl` laden und greppen (tail wird von Cache-Upload-Zeilen geflutet).
