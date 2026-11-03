@@ -41,7 +41,14 @@ Legende: `[ ]` offen · `[~]` in Arbeit · `[x]` erledigt · Prio P0/P1/P2
   - [x] Nach „Hoch“ ist der Herkunftsordner markiert; Liste hat beim Start Tastaturfokus
   - [x] CI grün (inkl. Windows-ShellExecute-Test, Run #16)
 - [ ] M2-Rest/Politur (später): Spaltenbreiten speichern, Spalten ein/ausblenden, Ansichten Liste/Symbole/Kacheln (Plan 4.2), Gruppieren
-- [ ] M3 Tabs, Split-View, Sidebar, Verlauf, Tastatur, Session-Restore
+- [~] M3 Tabs, Split-View, Sidebar, Verlauf, Session-Restore – lokal ✅ (E2E 60/60), CI ausstehend
+  - [x] Tabs pro Pane: neu (+ / Strg+T, gleicher Ordner), schließen (× / Mittelklick / Strg+W, letzter Tab bleibt), wechseln (Klick / Strg+Tab / Strg+Umschalt+Tab)
+  - [x] Split-View (Button „Zwei Ansichten“ / Strg+\), F6 wechselt Pane, Klick aktiviert, Tastaturfokus folgt aktiver Pane; letzter Tab rechts schließen = Split aus
+  - [x] Verlauf je Tab: ← → Buttons, Alt+←/→, Maus-Seitentasten; „Zurück zum Elternordner“ markiert Herkunftsordner
+  - [x] Seitenleiste: Schnellzugriff (Known Folders/XDG), Laufwerke mit Name, Füllbalken (rot > 90 %), „x GB frei von y GB“, Refresh alle 15 s im Hintergrund
+  - [x] Sitzung: Panes, Tabs, aktive Tabs/Pane, Split in session.ini; Restore beim Start ohne Pfad-Argument; nur sichtbare Tabs laden sofort (lazy); fehlende Ordner → nächster existierender Elternordner
+  - [ ] CI grün
+- [ ] M3-Rest/Politur (später): Tabs per Drag umsortieren/abreißen, Pane-Trenner ziehbar, Sidebar: Netzwerk/Papierkorb/Favoriten anheften, Mittelklick in Sidebar = neuer Tab, Laufwerks-Änderungen per WM_DEVICECHANGE statt Polling
 - [ ] M4 Dateioperationen: Queue, Undo/Redo, Clipboard, Drag&Drop, Konfliktdialog
 - [ ] M5 Shell-Integration: Icons/Thumbnails, Kontextmenü (Dritte), Properties, Papierkorb, Netzwerk, virtuelle Ordner
 - [ ] M6 Ordneroptionen-Parität, Themes, Command Palette, Inspector

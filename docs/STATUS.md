@@ -1,6 +1,25 @@
 # Zwischenstand
 
-**Stand:** 2026-11-03 · **Phase:** 1 · M0 ✅ · M1 ✅ · M1.5 ✅ · **M2 ✅ (CI-Run #16)** · M3 wartet auf Freigabe · **Branch:** `claude/relaxed-pasteur-ufhh1p`
+**Stand:** 2026-11-03 · **Phase:** 1 · M0 ✅ · M1 ✅ · M1.5 ✅ · M2 ✅ · **M3 lokal ✅ (E2E 60/60), CI ausstehend** · **Branch:** `claude/relaxed-pasteur-ufhh1p`
+
+## M3 – Tabs, Split-View, Seitenleiste, Verlauf, Sitzung
+- **Architektur**: `App` → Panes (1–2) → Tabs; jeder Tab eigener Pfad/Auswahl/Loader/Watcher/Verlauf. Hintergrund-Ergebnisse werden per stabiler Tab-ID zugeordnet (Tabs können zwischendurch geschlossen werden) + Generationszähler.
+- **Tabs**: +/Strg+T (gleicher Ordner), ×/Mittelklick/Strg+W, Strg+(Umschalt+)Tab; inaktive Tabs laden erst bei Auswahl; Sortier-/Filterwechsel markiert alle als „stale“, sichtbare laden sofort neu.
+- **Split-View**: „Zwei Ansichten“/Strg+\, F6 wechselt, Klick aktiviert, blaue Akzentlinie = aktive Pane, Tastaturfokus folgt der aktiven Pane.
+- **Verlauf**: ←/→-Buttons, Alt+←/→, Maus-Seitentasten.
+- **Seitenleiste**: Schnellzugriff (Windows Known Folders → auch umgeleitete/OneDrive-Ordner), „Dieser PC“ mit Laufwerken, Füllbalken, „x GB frei von y GB“; Abfrage im Hintergrund, Refresh alle 15 s, keine „Datenträger einlegen“-Dialoge.
+- **Sitzung**: session.ini (entprellt 400 ms + beim Schließen); Start ohne Pfad → Restore inkl. aktiver Pane; Pfad-Argument gewinnt (wie `explorer.exe C:\x`).
+
+### Tests M3
+- Unit: core 32 (+History, Session, format_usage), fs 24 (+Places: Anzeigenamen, Füllgrad, XDG-Parser, reale Laufwerke), app 13 (+Tasten für Tabs/Pane/Verlauf, Tab-Titel, Crumb-Budget).
+- E2E 60/60 (neu 27–37): Sidebar-Klick, Alt+←/→, Maus-Zurück-Taste, Strg+T + unabhängige Navigation, Strg+Tab, Split an/aus, **Fokus wandert in neue Pane**, F6, Klick aktiviert Pane, Session gespeichert/restauriert (inkl. aktiver Pane), **lazy Laden** restaurierter Tabs, Strg+W, letzter Tab bleibt, Pfad-Argument schlägt Session.
+
+### Funde in M3
+- **Bug**: Nach Split blieb der Tastaturfokus in der linken Pane, während die rechte als aktiv galt → F6 „sprang zurück“. Ursache: neue Repeater-Instanz verpasst den Fokus-Auftrag (`changed` feuert nicht bei Init). Fix: Fokus folgt `active` (+ `init`). Per Tasten-Trace (`EXPLORER2_TRACE_KEYS`) nachgewiesen.
+- **Bug**: Restore ignorierte die gespeicherte aktive Pane → behoben, E2E prüft `active_pane=1`.
+- **Bug (eigener Code-Review)**: neue Tabs haben ihren Pfad schon → Breadcrumbs/Watcher wären nie eingerichtet worden → Setup jetzt auch, wenn noch kein Watcher existiert.
+- Shortcuts kamen nicht an, solange keine Liste fokussiert war → Root-FocusScope als Fallback.
+- E2E-Diagnose verbessert: je Block eigenes Log.
 
 ## M2 – Details-Ansicht, Auswahl, Tastatur, Öffnen, Breadcrumb
 - **Details-Ansicht**: Spaltenköpfe Name / Änderungsdatum / Typ / Größe, Klick sortiert (▲▼), Breiten ziehbar; Sortierung in settings.ini.
@@ -123,6 +142,6 @@ Daten-Budgets in allen Szenarien eingehalten (erste Zeilen 0,8–1,4 ms, alle 10
 - Fix im Test selbst: E2E-Regex an neues `at=`-Feld angepasst (lokal 13/13 PASS).
 
 ## Nächste Schritte
-1. CI für M2 grün → M2 ✅.
-2. M3: Tabs, Split-View, Seitenleiste (Schnellzugriff/Laufwerke), Verlauf Zurück/Vor, Session-Restore.
+1. CI für M3 grün → M3 ✅.
+2. M4: Dateioperationen (Kopieren/Verschieben/Löschen/Umbenennen/Neu, Queue mit Fortschritt, Undo, Zwischenablage, Drag&Drop).
 3. Boss: Artefakt auf echtem PC mit GPU testen (Einstellungen → Statuszeile zeigt GPU-Namen).

@@ -22,6 +22,18 @@ pub enum KeyAction {
     Refresh,
     /// Ctrl+L / Alt+D: edit the address bar (Explorer shortcut).
     EditPath,
+    /// Alt+← / Alt+→ (mouse side buttons are handled in the UI).
+    Back,
+    Forward,
+    /// Ctrl+T / Ctrl+W / Ctrl+Tab / Ctrl+Shift+Tab.
+    NewTab,
+    CloseTab,
+    NextTab,
+    PrevTab,
+    /// F6: other pane (split view).
+    SwitchPane,
+    /// Ctrl+\: split view on/off.
+    ToggleSplit,
     TypeChar(char),
 }
 
@@ -34,6 +46,11 @@ const END: char = '\u{F72B}';
 const RETURN: char = '\n';
 const BACKSPACE: char = '\u{8}';
 const F5: char = '\u{F708}';
+const F6: char = '\u{F709}';
+const LEFT: char = '\u{F702}';
+const RIGHT: char = '\u{F703}';
+const TAB: char = '\t';
+const BACKTAB: char = '\u{19}';
 
 pub fn map_key(text: &str, ctrl: bool, shift: bool, alt: bool, page: isize) -> Option<KeyAction> {
     let mut chars = text.chars();
@@ -51,6 +68,14 @@ pub fn map_key(text: &str, ctrl: bool, shift: bool, alt: bool, page: isize) -> O
     };
     match c {
         UP if alt => Some(KeyAction::Up),
+        LEFT if alt => Some(KeyAction::Back),
+        RIGHT if alt => Some(KeyAction::Forward),
+        TAB | BACKTAB if ctrl => Some(if shift || c == BACKTAB {
+            KeyAction::PrevTab
+        } else {
+            KeyAction::NextTab
+        }),
+        F6 => Some(KeyAction::SwitchPane),
         UP => mv(-1),
         DOWN => mv(1),
         PAGE_UP => mv(-page),
@@ -71,6 +96,9 @@ pub fn map_key(text: &str, ctrl: bool, shift: bool, alt: bool, page: isize) -> O
         ' ' if ctrl => Some(KeyAction::ToggleFocused),
         'a' | 'A' if ctrl && !alt => Some(KeyAction::SelectAll),
         'l' | 'L' if ctrl && !alt => Some(KeyAction::EditPath),
+        't' | 'T' if ctrl && !alt => Some(KeyAction::NewTab),
+        'w' | 'W' if ctrl && !alt => Some(KeyAction::CloseTab),
+        '\\' if ctrl && !alt => Some(KeyAction::ToggleSplit),
         'd' | 'D' if alt && !ctrl => Some(KeyAction::EditPath),
         // printable text → type-to-select (no private-use specials, no control chars)
         c if !ctrl && !alt && !c.is_control() && !('\u{E000}'..='\u{F8FF}').contains(&c) => {
@@ -178,6 +206,49 @@ mod tests {
         assert_eq!(
             map_key("d", false, false, false, 1),
             Some(KeyAction::TypeChar('d'))
+        );
+    }
+
+    #[test]
+    fn tab_pane_history_keys() {
+        assert_eq!(
+            map_key("\u{F702}", false, false, true, 1),
+            Some(KeyAction::Back)
+        );
+        assert_eq!(
+            map_key("\u{F703}", false, false, true, 1),
+            Some(KeyAction::Forward)
+        );
+        assert_eq!(map_key("\u{F702}", false, false, false, 1), None); // plain Left: nothing in details view
+        assert_eq!(map_key("t", true, false, false, 1), Some(KeyAction::NewTab));
+        assert_eq!(
+            map_key("w", true, false, false, 1),
+            Some(KeyAction::CloseTab)
+        );
+        assert_eq!(
+            map_key("\t", true, false, false, 1),
+            Some(KeyAction::NextTab)
+        );
+        assert_eq!(
+            map_key("\t", true, true, false, 1),
+            Some(KeyAction::PrevTab)
+        );
+        assert_eq!(
+            map_key("\u{19}", true, true, false, 1),
+            Some(KeyAction::PrevTab)
+        );
+        assert_eq!(map_key("\t", false, false, false, 1), None); // plain Tab = focus navigation
+        assert_eq!(
+            map_key("\u{F709}", false, false, false, 1),
+            Some(KeyAction::SwitchPane)
+        );
+        assert_eq!(
+            map_key("\\", true, false, false, 1),
+            Some(KeyAction::ToggleSplit)
+        );
+        assert_eq!(
+            map_key("t", false, false, false, 1),
+            Some(KeyAction::TypeChar('t'))
         );
     }
 

@@ -1,5 +1,6 @@
 //! Settings file location + atomic, serialized load/modify/save.
 
+use explorer_core::session::Session;
 use explorer_core::settings::Settings;
 use std::path::{Path, PathBuf};
 use std::sync::Mutex;
@@ -58,6 +59,20 @@ pub fn update(f: impl FnOnce(&mut Settings)) -> Result<Settings, String> {
     f(&mut s);
     save_to(&path, &s).map_err(|e| format!("Einstellungen nicht gespeichert: {e}"))?;
     Ok(s)
+}
+
+pub fn load_session() -> Option<Session> {
+    let p = config_dir()?.join("session.ini");
+    Session::parse(&std::fs::read_to_string(p).ok()?)
+}
+
+pub fn save_session(s: &Session) -> Result<(), String> {
+    let _g = LOCK.lock().unwrap_or_else(|e| e.into_inner());
+    let dir = config_dir().ok_or("kein Konfigurationsordner")?;
+    std::fs::create_dir_all(&dir).map_err(|e| e.to_string())?;
+    let tmp = dir.join("session.ini.tmp");
+    std::fs::write(&tmp, s.serialize()).map_err(|e| e.to_string())?;
+    std::fs::rename(&tmp, dir.join("session.ini")).map_err(|e| e.to_string())
 }
 
 #[cfg(test)]

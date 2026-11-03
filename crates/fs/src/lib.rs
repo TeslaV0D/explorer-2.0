@@ -7,6 +7,7 @@
 
 mod loader;
 pub mod path;
+pub mod places;
 #[cfg(not(windows))]
 mod portable;
 mod watch;

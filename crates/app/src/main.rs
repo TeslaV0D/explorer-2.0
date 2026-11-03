@@ -26,6 +26,18 @@ fn attach_parent_console() {
 #[cfg(not(windows))]
 fn attach_parent_console() {}
 
+/// Wires a UI callback to a nav function with an upgraded window handle.
+macro_rules! on {
+    ($win:expr, $setter:ident, |$w:ident $(, $arg:ident)*| $body:expr) => {{
+        let weak = $win.as_weak();
+        $win.$setter(move |$($arg),*| {
+            if let Some($w) = weak.upgrade() {
+                $body;
+            }
+        });
+    }};
+}
+
 fn main() -> Result<(), slint::PlatformError> {
     nav::mark_process_start();
     let arg = std::env::args().nth(1);
@@ -36,30 +48,24 @@ fn main() -> Result<(), slint::PlatformError> {
         return Ok(());
     }
 
-    let start = arg
-        .map(|a| PathBuf::from(nav::clean_input(&a)))
-        .or_else(|| std::env::current_dir().ok())
-        .unwrap_or_else(|| PathBuf::from("."));
-    let start = explorer_fs::nearest_existing_ancestor(
-        &std::path::absolute(&start).unwrap_or(start.clone()),
-    )
-    .unwrap_or(start);
+    // A path on the command line wins over the saved session (like `explorer.exe C:\x`).
+    let start = arg.map(|a| {
+        let p = PathBuf::from(nav::clean_input(&a));
+        let p = std::path::absolute(&p).unwrap_or(p);
+        explorer_fs::nearest_existing_ancestor(&p).unwrap_or(p)
+    });
 
     // Must run before the first window exists (renderer is chosen per process).
     let renderer = gfx::select();
     let settings = config::load();
+    let session = if start.is_none() {
+        config::load_session()
+    } else {
+        None
+    };
 
     let win = MainWindow::new()?;
     nav::trace_line(&format!("window created at={:.1}ms", nav::since_start_ms()));
-    nav::init(
-        &win,
-        settings.show_hidden,
-        explorer_core::SortSpec {
-            key: settings.sort_key,
-            descending: settings.sort_desc,
-            dirs_first: true,
-        },
-    );
     win.set_hw_accel(settings.hardware_acceleration);
     win.set_renderer_status(gfx::status_text(&renderer).into());
     win.on_toggle_hw_accel({
@@ -76,79 +82,91 @@ fn main() -> Result<(), slint::PlatformError> {
         }
     });
 
-    win.on_navigate({
-        let w = win.as_weak();
-        move |s| {
-            if let Some(w) = w.upgrade() {
-                nav::navigate(&w, PathBuf::from(nav::clean_input(&s)), nav::Reason::User);
-            }
-        }
+    on!(win, on_pane_activate, |w, pi| nav::activate_pane(
+        &w,
+        pi as usize
+    ));
+    on!(win, on_navigate, |w, pi, s| nav::navigate(
+        &w,
+        pi as usize,
+        s.as_str()
+    ));
+    on!(win, on_cancel_edit, |_w, pi| nav::cancel_edit(pi as usize));
+    on!(win, on_open_row, |w, pi, row| nav::open_entry(
+        &w,
+        pi as usize,
+        row as usize
+    ));
+    on!(win, on_go_up, |w, pi| nav::go_up(&w, pi as usize));
+    on!(win, on_back, |w, pi| nav::back(&w, pi as usize));
+    on!(win, on_forward, |w, pi| nav::forward(&w, pi as usize));
+    on!(win, on_sort_by, |w, k| nav::sort_by(&w, k.as_str()));
+    on!(win, on_row_pressed, |w, pi, row, ctrl, shift| {
+        nav::row_pressed(&w, pi as usize, row as usize, ctrl, shift)
     });
-    win.on_go_up({
-        let w = win.as_weak();
-        move || {
-            if let Some(w) = w.upgrade() {
-                nav::go_up(&w);
-            }
-        }
-    });
-    win.on_open_row({
-        let w = win.as_weak();
-        move |i| {
-            if let Some(w) = w.upgrade() {
-                nav::open_entry(&w, i as usize);
-            }
-        }
-    });
-    win.on_cancel_edit({
-        let w = win.as_weak();
-        move || {
-            if let Some(w) = w.upgrade() {
-                nav::cancel_edit(&w);
-            }
-        }
-    });
-    win.on_sort_by({
-        let w = win.as_weak();
-        move |k| {
-            if let Some(w) = w.upgrade() {
-                nav::sort_by(&w, k.as_str());
-            }
-        }
-    });
-    win.on_row_pressed({
-        let w = win.as_weak();
-        move |i, ctrl, shift| {
-            if let Some(w) = w.upgrade() {
-                nav::row_pressed(&w, i as usize, ctrl, shift);
-            }
-        }
-    });
-    win.on_clear_selection({
-        let w = win.as_weak();
-        move || {
-            if let Some(w) = w.upgrade() {
-                nav::clear_selection(&w);
-            }
-        }
-    });
+    on!(win, on_clear_selection, |w, pi| nav::clear_selection(
+        &w,
+        pi as usize
+    ));
+    on!(win, on_tab_select, |w, pi, ti| nav::tab_select(
+        &w,
+        pi as usize,
+        ti as usize
+    ));
+    on!(win, on_tab_close, |w, pi, ti| nav::tab_close(
+        &w,
+        pi as usize,
+        ti as usize
+    ));
+    on!(win, on_tab_new, |w, pi| nav::tab_new(&w, pi as usize));
+    on!(win, on_address_resized, |_w, pi, px| nav::address_resized(
+        pi as usize,
+        px
+    ));
+    on!(win, on_toggle_split, |w| nav::toggle_split(&w));
+    on!(win, on_open_place, |w, p| nav::open_place(&w, p.as_str()));
+    on!(win, on_toggle_hidden, |w, on| nav::set_show_hidden(&w, on));
     win.on_list_key({
-        let w = win.as_weak();
-        move |text, ctrl, shift, alt, page| {
-            w.upgrade()
-                .is_some_and(|w| nav::list_key(&w, text.as_str(), ctrl, shift, alt, page))
-        }
-    });
-    win.on_toggle_hidden({
-        let w = win.as_weak();
-        move |on| {
-            if let Some(w) = w.upgrade() {
-                nav::set_show_hidden(&w, on);
-            }
+        let weak = win.as_weak();
+        move |pi, text, ctrl, shift, alt, page| {
+            weak.upgrade().is_some_and(|w| {
+                nav::list_key(&w, pi as usize, text.as_str(), ctrl, shift, alt, page)
+            })
         }
     });
 
-    nav::navigate(&win, start, nav::Reason::User);
+    nav::init(
+        &win,
+        settings.show_hidden,
+        explorer_core::SortSpec {
+            key: settings.sort_key,
+            descending: settings.sort_desc,
+            dirs_first: true,
+        },
+        start,
+        session,
+    );
+
+    // Drives come and go (USB sticks, network shares): refresh the sidebar periodically.
+    let drive_timer = slint::Timer::default();
+    drive_timer.start(
+        slint::TimerMode::Repeated,
+        std::time::Duration::from_secs(15),
+        {
+            let w = win.as_weak();
+            move || {
+                if let Some(w) = w.upgrade() {
+                    nav::refresh_drives(&w);
+                }
+            }
+        },
+    );
+
+    win.window().on_close_requested(|| {
+        nav::save_session_now();
+        slint::CloseRequestResponse::HideWindow
+    });
+
     // Fires once the event loop runs (window + renderer initialized) -> separates
     // startup cost from data latency in traces.
     slint::Timer::single_shot(std::time::Duration::ZERO, || {
@@ -158,5 +176,7 @@ fn main() -> Result<(), slint::PlatformError> {
         ));
     });
     gfx::probe_in_background(&renderer);
-    win.run()
+    let res = win.run();
+    nav::save_session_now();
+    res
 }

@@ -38,15 +38,17 @@
 - **R-001 Ein-Knopf-Reset / „Notausgang“** (2026-11-03, Lehre aus File Pilot, wo nur Windows-Neuinstallation half): Jede Windows-Integration (Win+E, Ordner-Verben/Default-Handler, explorer.exe-Proxy/IFEO, Kontextmenü-Einträge, Autostart, Umgebungsvariablen/PATH, Verknüpfungen, Dateizuordnungen, Hotkeys) muss **mit einem Knopf vollständig rückgängig** zu machen sein – in der App **und** über ein eigenständiges Recovery-Tool, das auch funktioniert, wenn die App selbst nicht startet (inkl. Abgesichertem Modus). Jede Änderung wird vorher mit Originalwert in einem Journal gesichert; Reset stellt exakt den Ursprungszustand her. Pflicht-Test: Integration an → Reset → Registry/Umgebung identisch zum Snapshot vorher. Gilt ab M7, Architektur schon vorher berücksichtigen.
 
 ## Meilenstein-Stand
-- M0 ✅ · M1 ✅ (Run #10) · M1.5 ✅ Renderer-Wahl + Einstellungen + Icon (Run #13) · **M2 ✅ (Run #16)** · M3 wartet auf Freigabe (Boss)
+- M0 ✅ · M1 ✅ (Run #10) · M1.5 ✅ Renderer-Wahl + Einstellungen + Icon (Run #13) · **M2 ✅ (Run #16)** · **M3 lokal ✅ (E2E 60/60), CI ausstehend**
 - Arbeitsregel (Boss): nächste Stufe erst, wenn die aktuelle vollständig abgeschlossen, getestet und CI-grün ist.
 
 ## Code-Layout (seit M0)
 - `crates/core` (`explorer-core`): plattformneutrales Modell, Sortierung (natürlich, Ordner zuerst), Unit-Tests
 - `crates/fs` (`explorer-fs`): `enumerate`/`read_dir` (Windows: `win.rs` FindFirstFileExW; sonst `portable.rs`), `path.rs` (Verbatim/FILETIME, plattformneutral getestet), `loader.rs` (Hintergrund-Load, Batches, Cancel), `watch.rs` (notify + `Debounce`), Benchmark `examples/bench.rs`
 - `crates/gpu` (`explorer-gpu`): `probe_opengl()` – Windows-WGL-Probe (verstecktes Fenster, Legacy-Kontext), sonst `NotSupported`; ohne Skia → lokal per `--target x86_64-pc-windows-msvc` prüfbar
+- `crates/core`: `history.rs` (Zurück/Vor, max. 100), `session.rs` (session.ini: Panes/Tabs/Split/aktive Pane, tolerant)
+- `crates/fs`: `places.rs` – Schnellzugriff (Windows `SHGetKnownFolderPath`, Linux XDG `user-dirs.dirs`), Laufwerke (`GetLogicalDrives`/`GetVolumeInformationW`/`GetDiskFreeSpaceExW`, `SEM_FAILCRITICALERRORS` gegen „Datenträger einlegen“-Dialoge) – `drives()` kann blockieren → nur im Hintergrund
 - `crates/core`: zusätzlich `settings.rs` (key=value, tolerant, inkl. Sortierung), `renderer.rs` (`classify_gl`, `decide`, `Reason`, `status_de`), `selection.rs` (Explorer-Auswahlmodell, `remap` für Refresh), `typeahead.rs`, `breadcrumb.rs` (`crumbs`/`fit`, Win/UNC/Unix); `type_label`/`extension`, `SortKey::Type`
-- `crates/app` (`explorer2`): Slint-UI (`ui/main.slint`, Einstellungs-Panel), `src/nav.rs` = Navigations-Controller (State im `thread_local` auf UI-Thread, Generationszähler, Refresh-Drossel), `src/keys.rs` = Tastenbelegung (`map_key`, rein/testbar), `src/open.rs` = Datei öffnen (`ShellExecuteW` / `xdg-open`, Override `EXPLORER2_OPEN_CMD`), `src/gfx.rs` = Renderer-Wahl vor Fenster, `src/config.rs` = settings.ini (`%APPDATA%\Explorer2` / XDG, Override `EXPLORER2_CONFIG_DIR`), atomar + Mutex
+- `crates/app` (`explorer2`): Slint-UI (`ui/main.slint`, Einstellungs-Panel), `src/nav.rs` = Fenster-Controller: `App` → `Pane` (1–2) → `Tab` (Pfad, Einträge, Auswahl, Loader, Watcher, Verlauf); Async-Ergebnisse per **stabiler Tab-ID** + Generationszähler; inaktive/restaurierte Tabs laden lazy, `stale` nach Sortier-/Filterwechsel; Session-Save entprellt 400 ms + beim Schließen, `src/keys.rs` = Tastenbelegung (`map_key`, rein/testbar), `src/open.rs` = Datei öffnen (`ShellExecuteW` / `xdg-open`, Override `EXPLORER2_OPEN_CMD`), `src/gfx.rs` = Renderer-Wahl vor Fenster, `src/config.rs` = settings.ini (`%APPDATA%\Explorer2` / XDG, Override `EXPLORER2_CONFIG_DIR`), atomar + Mutex
 - Icon: `crates/app/res/icon/*.svg` → `scripts/make-icons.sh` → PNGs + `explorer2.ico` (Exe-Ressource) + `icon-256.png` (Fenster-Icon)
 - CI: `.github/workflows/ci.yml` (fmt, clippy -D warnings, test auf Windows+Linux; Release-Artefakt `explorer2.exe`)
 - E2E lokal: `xvfb-run -a -s "-screen 0 1280x800x24" scripts/e2e.sh $PWD/target/release/explorer2 <workdir>`
@@ -74,6 +76,10 @@
 - GPU-Probe-Kosten schwanken stark (Runner 3–581 ms, Mesa-llvmpipe 239 ms) → deshalb läuft sie nur im Hintergrund.
 - Allererster Start auf frischer Windows-VM zahlt Einmalkosten (Fenster-Erstellung 755 ms statt ~5 ms: Dateicache/Fonts) → Kaltstart-Budget 300 ms wird an normalen Starts (Cache) best-of-3 geprüft, Erststart nur Plausibilität < 1 s und ausgewiesen.
 - **UI-Zustände per Pixel messen** (`convert img -format '%[pixel:p{x,y}]' info:`), nie per Augenmaß auf verkleinerten Screenshots – ein vermeintlicher Render-Bug (fokussierte Zeile „ohne“ Auswahlfarbe) war ein Lesefehler.
+- Slint: `changed prop` feuert **nicht** bei der Initialisierung → eine neu instanziierte Repeater-Instanz (z. B. neue Split-Pane) verpasst einen vorher gesetzten Sequenz-Auftrag. Fokus deshalb an Zustand koppeln (`changed active` + `init`), nicht nur an Zähler.
+- Slint: Funktionen von Repeater-Instanzen sind aus Rust nicht aufrufbar → Aufträge (Scroll, Edit, Fokus) über `*-seq`-Zähler in den Modelldaten + `changed`.
+- Slint: Root-`FocusScope` mit `key-pressed` als Fallback, damit Shortcuts auch ohne fokussierte Liste greifen.
+- E2E: pro Block eigenes Log (`trace-<n>.log`), sonst sind Fehler nachträglich nicht analysierbar; `EXPLORER2_TRACE_KEYS=1` loggt jede Taste mit Pane.
 - Sicherheitscheck blockt `rm -rf $VAR` in `bash -c`-Strings → eindeutige Temp-Ordner statt Löschen.
 - Lange CI-Logs: `get_job_logs` mit `return_content=false` → URL per `curl` laden und greppen (tail wird von Cache-Upload-Zeilen geflutet).
 

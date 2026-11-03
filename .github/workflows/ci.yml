@@ -40,7 +40,7 @@ jobs:
           for mode in gpu auto; do
             xvfb-run -a -s "-screen 0 1280x800x24 +extension GLX" env EXPLORER2_TRACE=1 EGL_LOG_LEVEL=debug EXPLORER2_RENDERER=$mode EXPLORER2_CONFIG_DIR="$RUNNER_TEMP/gl/cfg-$mode" \
               bash -c "./target/release/explorer2 '$RUNNER_TEMP/gl/data' 2> '$RUNNER_TEMP/gl/$mode.log' & P=\$!; sleep 4; kill -0 \$P && echo ALIVE > '$RUNNER_TEMP/gl/$mode.alive'; kill \$P"
-            grep -E "renderer choice|first paint|done gen=1" "$RUNNER_TEMP/gl/$mode.log"
+            grep -E "renderer choice|first paint|done tab=1" "$RUNNER_TEMP/gl/$mode.log"
             test -f "$RUNNER_TEMP/gl/$mode.alive" || { echo "[$mode] app died"; exit 1; }
             ! grep -qi panic "$RUNNER_TEMP/gl/$mode.log" || { echo "[$mode] panic"; exit 1; }
           done
@@ -128,11 +128,11 @@ jobs:
             Write-Host "----- [$label]"
             Write-Host $text
             if (-not $alive) { throw "[$label] explorer2 exited early" }
-            if ($text -notmatch 'done gen=1 total=100000 shown=100000') { throw "[$label] 100k folder not fully loaded" }
+            if ($text -notmatch 'done tab=1 gen=\d+ total=100000 shown=100000') { throw "[$label] 100k folder not fully loaded" }
             if ($text -match '(?i)panic') { throw "[$label] panic in log" }
-            $first = Field $text 'first paint gen=1 ' 'data_ready'
-            $all = Field $text 'done gen=1 ' 'data_ready'
-            $cold = Field $text 'first paint gen=1 ' 'at'
+            $first = Field $text 'first paint tab=1 ' 'data_ready'
+            $all = Field $text 'done tab=1 ' 'data_ready'
+            $cold = Field $text 'first paint tab=1 ' 'at'
             Write-Host "[$label] first rows ready: $first ms | all 100k ready: $all ms | cold start to content: $cold ms"
             if ($first -gt 100) { throw "[$label] first rows budget exceeded: $first ms" }
             if ($all -gt 1000) { throw "[$label] full load budget exceeded: $all ms" }

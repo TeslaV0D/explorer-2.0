@@ -2,8 +2,10 @@
 //! No I/O and no OS-specific code here, so it is unit-testable everywhere.
 
 pub mod breadcrumb;
+pub mod history;
 pub mod renderer;
 pub mod selection;
+pub mod session;
 pub mod settings;
 pub mod typeahead;
 
@@ -225,6 +227,11 @@ pub fn format_size(bytes: u64) -> String {
     }
 }
 
+/// Drive usage line like Explorer: "120 GB frei von 512 GB".
+pub fn format_usage(free: u64, total: u64) -> String {
+    format!("{} frei von {}", format_size(free), format_size(total))
+}
+
 /// Thousands separator, German style: 100000 -> "100.000".
 pub fn format_count(n: usize) -> String {
     let digits = n.to_string();
@@ -397,6 +404,14 @@ mod tests {
         assert_eq!(format_size(1536), "1.5 KB");
         assert_eq!(format_size(5 * 1024 * 1024), "5 MB");
         assert!(format_size(u64::MAX).ends_with("TB"));
+    }
+
+    #[test]
+    fn usage_formatting() {
+        assert_eq!(
+            format_usage(120 * 1024 * 1024 * 1024, 512 * 1024 * 1024 * 1024),
+            "120 GB frei von 512 GB"
+        );
     }
 
     #[test]
