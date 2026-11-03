@@ -9,6 +9,8 @@ export struct Row {
     dim: bool,
     selected: bool,
     focused: bool,
+    // marked for "cut" (Ctrl+X): drawn faded until pasted
+    cut: bool,
 }
 
 export struct Crumb { label: string, path: string }
@@ -39,6 +41,20 @@ export struct PaneData {
     top-seq: int,
     edit-seq: int,
     focus-seq: int,
+    // inline rename (F2): row, start request, initial text, selected byte range end
+    rename-index: int,
+    rename-seq: int,
+    rename-text: string,
+    rename-sel: int,
+}
+
+// A running file operation (copy/move/delete) in the operations panel.
+export struct JobRow {
+    id: int,
+    title: string,
+    detail: string,
+    fraction: float,
+    paused: bool,
 }
 
 // Column header cell: click sorts, arrow shows direction.
@@ -159,8 +175,21 @@ component FilePane inherits Rectangle {
     callback tab-close(int);
     callback tab-new();
     callback address-resized(float);
+    callback rename-commit(string);
+    callback rename-cancel();
+    // drag & drop: row -1 = the folder shown in the pane; result 0 none, 1 copy, 2 move
+    pure callback drag-payload(int) -> data-transfer;
+    pure callback drop-check(int, data-transfer, bool) -> int;
+    callback drop-files(int, data-transfer, bool) -> int;
+
+    function to-action(r: int) -> DragAction {
+        if (r == 1) { return DragAction.copy; }
+        if (r == 2) { return DragAction.move; }
+        return DragAction.none;
+    }
 
     background: #fafafa;
+    property <bool> renaming;
 
     function ensure-visible(i: int) {
         if (i < 0) { return; }
@@ -186,6 +215,21 @@ component FilePane inherits Rectangle {
     changed edit-seq => { root.start-edit(); }
     property <int> focus-seq: root.data.focus-seq;
     changed focus-seq => { list-focus.focus(); }
+    property <int> rename-seq: root.data.rename-seq;
+    changed rename-seq => { root.start-rename(); }
+
+    function start-rename() {
+        rename-edit.text = root.data.rename-text;
+        root.renaming = true;
+        rename-edit.focus();
+        rename-edit.set-selection-offsets(0, root.data.rename-sel);
+    }
+
+    function finish-rename(commit: bool) {
+        if (!root.renaming) { return; }
+        root.renaming = false;
+        if (commit) { root.rename-commit(rename-edit.text); } else { root.rename-cancel(); }
+    }
     // Keyboard focus follows the active pane. A pane created by the split view is
     // instantiated after the request was made, so `changed` alone would miss it.
     changed active => { if (root.active) { list-focus.focus(); } }
@@ -290,7 +334,13 @@ component FilePane inherits Rectangle {
                 }
                 reject
             }
+            pane-drop := DropArea {
+                can-drop(e) => { return root.to-action(root.drop-check(-1, e.data, e.proposed-action == DragAction.copy)); }
+                dropped(e) => { return root.to-action(root.drop-files(-1, e.data, e.proposed-action == DragAction.copy)); }
+            }
             Rectangle {
+                border-width: pane-drop.has-drag ? 2px : 0px;
+                border-color: #0067c0;
                 // click on empty space below the rows clears the selection
                 TouchArea {
                     clicked => { root.activate(); list-focus.focus(); root.clear-selection(); }
@@ -299,43 +349,94 @@ component FilePane inherits Rectangle {
                 list := ListView {
                     for row[i] in root.data.rows : Rectangle {
                         height: root.row-height;
-                        background: row.selected ? (list-focus.has-focus ? #cce8ff : #e5e5e5) : (ta.has-hover ? #eef3f9 : transparent);
+                        background: row-drop.has-drag ? #b3dcff : row.selected ? (list-focus.has-focus ? #cce8ff : #e5e5e5) : (ta.has-hover ? #eef3f9 : transparent);
                         border-width: row.focused && list-focus.has-focus ? 1px : 0px;
+                        opacity: row.cut ? 0.5 : 1;
                         border-color: #0067c0;
-                        ta := TouchArea {
-                            pointer-event(e) => {
-                                if (e.kind == PointerEventKind.down && e.button == PointerEventButton.left) {
-                                    root.activate();
-                                    list-focus.focus();
-                                    root.row-pressed(i, e.modifiers.control, e.modifiers.shift);
-                                }
-                                root.mouse-nav(e);
-                            }
-                            double-clicked => { root.open-row(i); }
+                        // folders accept drops (into the folder)
+                        row-drop := DropArea {
+                            enabled: row.is-dir;
+                            can-drop(e) => { return root.to-action(root.drop-check(i, e.data, e.proposed-action == DragAction.copy)); }
+                            dropped(e) => { return root.to-action(root.drop-files(i, e.data, e.proposed-action == DragAction.copy)); }
                         }
-                        HorizontalLayout {
-                            padding-left: 6px; spacing: 0px;
-                            Rectangle {
-                                width: 20px;
-                                Rectangle {
-                                    width: 14px; height: 14px; border-radius: 3px;
-                                    background: row.is-dir ? #e8b730 : #9aa5b1;
-                                    opacity: row.dim ? 0.45 : 1;
+                        // pressing an already selected row keeps a multi-selection (so it can be
+                        // dragged); the plain click is applied on release instead
+                        property <bool> defer-click;
+                        // the TouchArea must be a child: DragArea filters presses before its children
+                        DragArea {
+                            allow-copy: true;
+                            allow-move: true;
+                            data: root.drag-payload(i);
+                            ta := TouchArea {
+                                pointer-event(e) => {
+                                    if (e.kind == PointerEventKind.down && e.button == PointerEventButton.left) {
+                                        root.activate();
+                                        list-focus.focus();
+                                        if (row.selected && !e.modifiers.control && !e.modifiers.shift) {
+                                            defer-click = true;
+                                        } else {
+                                            root.row-pressed(i, e.modifiers.control, e.modifiers.shift);
+                                        }
+                                    }
+                                    if (e.kind == PointerEventKind.up && e.button == PointerEventButton.left && defer-click) {
+                                        defer-click = false;
+                                        root.row-pressed(i, false, false);
+                                    }
+                                    if (e.kind == PointerEventKind.cancel) { defer-click = false; }
+                                    root.mouse-nav(e);
                                 }
+                                double-clicked => { root.open-row(i); }
                             }
-                            Text { text: row.name; horizontal-stretch: 1; vertical-alignment: center; overflow: elide; opacity: row.dim ? 0.55 : 1; }
-                            Rectangle { width: 6px; }
-                            Text { text: row.modified; width: root.w-date; vertical-alignment: center; color: #555; overflow: elide; }
-                            Rectangle { width: 6px; }
-                            Text { text: row.kind; width: root.w-type; vertical-alignment: center; color: #555; overflow: elide; }
-                            Rectangle { width: 6px; }
-                            Text { text: row.size; width: root.w-size - 8px; horizontal-alignment: right; vertical-alignment: center; color: #555; }
-                            Rectangle { width: 22px; }
+                            HorizontalLayout {
+                                padding-left: 6px; spacing: 0px;
+                                Rectangle {
+                                    width: 20px;
+                                    Rectangle {
+                                        width: 14px; height: 14px; border-radius: 3px;
+                                        background: row.is-dir ? #e8b730 : #9aa5b1;
+                                        opacity: row.dim ? 0.45 : 1;
+                                    }
+                                }
+                                Text { text: row.name; horizontal-stretch: 1; vertical-alignment: center; overflow: elide; opacity: row.dim ? 0.55 : 1; }
+                                Rectangle { width: 6px; }
+                                Text { text: row.modified; width: root.w-date; vertical-alignment: center; color: #555; overflow: elide; }
+                                Rectangle { width: 6px; }
+                                Text { text: row.kind; width: root.w-type; vertical-alignment: center; color: #555; overflow: elide; }
+                                Rectangle { width: 6px; }
+                                Text { text: row.size; width: root.w-size - 8px; horizontal-alignment: right; vertical-alignment: center; color: #555; }
+                                Rectangle { width: 22px; }
+                            }
                         }
                     }
                 }
             }
         }
+    }
+    // inline rename editor, laid over the name cell of the row being renamed
+    if root.renaming : Rectangle {
+        x: 24px;
+        y: list-focus.y + root.data.rename-index * root.row-height + list.content-y + 1px;
+        width: max(80px, root.width - 26px - root.w-date - root.w-type - root.w-size - 50px);
+        height: root.row-height - 2px;
+        background: white;
+        border-width: 1px;
+        border-color: #0067c0;
+    }
+    rename-edit := TextInput {
+        x: 28px;
+        y: list-focus.y + root.data.rename-index * root.row-height + list.content-y + 1px;
+        width: max(80px, root.width - 26px - root.w-date - root.w-type - root.w-size - 50px) - 8px;
+        height: root.row-height - 2px;
+        visible: root.renaming;
+        enabled: root.renaming;
+        single-line: true;
+        vertical-alignment: center;
+        accepted => { root.finish-rename(true); list-focus.focus(); }
+        key-pressed(e) => {
+            if (e.text == Key.Escape) { root.finish-rename(false); list-focus.focus(); return accept; }
+            reject
+        }
+        changed has-focus => { if (!self.has-focus) { root.finish-rename(true); } }
     }
     // active-pane marker (thin accent line on top)
     if root.active : Rectangle { y: 0; height: 2px; background: #0067c0; }
@@ -419,6 +520,34 @@ export component MainWindow inherits Window {
     in-out property <length> w-date: 130px;
     in-out property <length> w-type: 110px;
     in-out property <length> w-size: 80px;
+    // file operations
+    in property <[JobRow]> jobs;
+    in property <bool> can-paste;
+    in property <bool> can-undo;
+    in property <bool> can-redo;
+    in property <bool> has-selection;
+    in property <bool> conflict-open;
+    in property <string> conflict-title;
+    in property <string> conflict-source;
+    in property <string> conflict-target;
+    in property <bool> conflict-dirs;
+    in-out property <bool> conflict-all;
+    in property <bool> confirm-open;
+    in property <string> confirm-text;
+    in property <string> confirm-ok;
+    callback command(string);
+    callback job-pause(int, bool);
+    callback job-cancel(int);
+    callback conflict-answer(int);
+    callback confirm-answer(bool);
+    callback rename-commit(int, string);
+    callback rename-cancel(int);
+    pure callback drag-payload(int, int) -> data-transfer;
+    pure callback drop-check(int, int, data-transfer, bool) -> int;
+    callback drop-files(int, int, data-transfer, bool) -> int;
+
+    changed conflict-open => { if (root.conflict-open) { conflict-focus.focus(); } }
+    changed confirm-open => { if (root.confirm-open) { confirm-focus.focus(); } }
 
     callback pane-activate(int);
     callback navigate(int, string);
@@ -461,6 +590,15 @@ export component MainWindow inherits Window {
                         text: root.split ? "Eine Ansicht" : "Zwei Ansichten";
                         clicked => { root.toggle-split(); }
                     }
+                    Rectangle { width: 6px; }
+                    Button { text: "Neuer Ordner"; clicked => { root.command("new-folder"); } }
+                    Button { text: "Ausschneiden"; enabled: root.has-selection; clicked => { root.command("cut"); } }
+                    Button { text: "Kopieren"; enabled: root.has-selection; clicked => { root.command("copy"); } }
+                    Button { text: "Einfügen"; enabled: root.can-paste; clicked => { root.command("paste"); } }
+                    Button { text: "Umbenennen"; enabled: root.has-selection; clicked => { root.command("rename"); } }
+                    Button { text: "Löschen"; enabled: root.has-selection; clicked => { root.command("delete"); } }
+                    Button { text: "↶"; enabled: root.can-undo; clicked => { root.command("undo"); } }
+                    Button { text: "↷"; enabled: root.can-redo; clicked => { root.command("redo"); } }
                     Rectangle { horizontal-stretch: 1; }
                     CheckBox {
                         text: "Ausgeblendete";
@@ -511,7 +649,36 @@ export component MainWindow inherits Window {
                         tab-close(t) => { root.tab-close(pi, t); }
                         tab-new => { root.tab-new(pi); }
                         address-resized(w) => { root.address-resized(pi, w); }
+                        rename-commit(t) => { root.rename-commit(pi, t); }
+                        rename-cancel => { root.rename-cancel(pi); }
+                        drag-payload(r) => { return root.drag-payload(pi, r); }
+                        drop-check(r, d, c) => { return root.drop-check(pi, r, d, c); }
+                        drop-files(r, d, c) => { return root.drop-files(pi, r, d, c); }
                     }
+                }
+            }
+            // ---------- operations panel ----------
+            for j in root.jobs : Rectangle {
+                height: 48px;
+                background: #f7f8fa;
+                Rectangle { height: 1px; y: 0; background: #e1e4e8; }
+                HorizontalLayout {
+                    padding-left: 10px; padding-right: 8px; padding-top: 4px; padding-bottom: 4px; spacing: 8px;
+                    VerticalLayout {
+                        horizontal-stretch: 1;
+                        spacing: 3px;
+                        Text { text: j.title; overflow: elide; color: #222; }
+                        Rectangle {
+                            height: 6px; border-radius: 3px; background: #dde1e6;
+                            Rectangle {
+                                x: 0; width: parent.width * clamp(j.fraction, 0, 1); border-radius: 3px;
+                                background: j.paused ? #c9a227 : #0067c0;
+                            }
+                        }
+                        Text { text: j.detail; font-size: 11px; color: #555; overflow: elide; }
+                    }
+                    Button { text: j.paused ? "Fortsetzen" : "Pause"; clicked => { root.job-pause(j.id, !j.paused); } }
+                    Button { text: "Abbrechen"; clicked => { root.job-cancel(j.id); } }
                 }
             }
             // ---------- status bar ----------
@@ -521,6 +688,80 @@ export component MainWindow inherits Window {
                     padding-left: 8px; padding-right: 8px; spacing: 16px;
                     Text { text: root.status; vertical-alignment: center; color: #444; }
                     Text { text: root.error; vertical-alignment: center; color: #c0262d; horizontal-stretch: 1; overflow: elide; }
+                }
+            }
+        }
+    }
+
+    // ---------- conflict dialog (modal) ----------
+    Rectangle {
+        visible: root.conflict-open;
+        background: #00000030;
+        TouchArea { }
+        Rectangle {
+            width: 520px;
+            height: conflict-layout.preferred-height;
+            background: white;
+            border-radius: 8px;
+            border-color: #c8ccd0;
+            border-width: 1px;
+            drop-shadow-blur: 16px;
+            drop-shadow-color: #00000050;
+            conflict-focus := FocusScope {
+                key-pressed(e) => {
+                    if (e.text == Key.Escape) { root.conflict-answer(3); return accept; }
+                    if (e.text == "r" || e.text == "R") { root.conflict-answer(0); return accept; }
+                    if (e.text == "s" || e.text == "S") { root.conflict-answer(1); return accept; }
+                    if (e.text == "b" || e.text == "B") { root.conflict-answer(2); return accept; }
+                    if (e.text == "a" || e.text == "A") { root.conflict-all = !root.conflict-all; return accept; }
+                    accept
+                }
+                conflict-layout := VerticalLayout {
+                    padding: 16px; spacing: 8px;
+                    Text { text: root.conflict-title; font-size: 14px; font-weight: 700; wrap: word-wrap; }
+                    Text { text: root.conflict-source; color: #333; wrap: word-wrap; }
+                    Text { text: root.conflict-target; color: #333; wrap: word-wrap; }
+                    CheckBox { text: "Für alle weiteren Konflikte übernehmen"; checked <=> root.conflict-all; }
+                    HorizontalLayout {
+                        spacing: 6px; alignment: end;
+                        Button { text: root.conflict-dirs ? "Zusammenführen" : "Ersetzen"; clicked => { root.conflict-answer(0); } }
+                        Button { text: "Überspringen"; clicked => { root.conflict-answer(1); } }
+                        Button { text: "Beide behalten"; clicked => { root.conflict-answer(2); } }
+                        Button { text: "Abbrechen"; clicked => { root.conflict-answer(3); } }
+                    }
+                }
+            }
+        }
+    }
+
+    // ---------- confirmation dialog (modal) ----------
+    Rectangle {
+        visible: root.confirm-open;
+        background: #00000030;
+        TouchArea { }
+        Rectangle {
+            width: 440px;
+            height: confirm-layout.preferred-height;
+            background: white;
+            border-radius: 8px;
+            border-color: #c8ccd0;
+            border-width: 1px;
+            drop-shadow-blur: 16px;
+            drop-shadow-color: #00000050;
+            confirm-focus := FocusScope {
+                key-pressed(e) => {
+                    if (e.text == Key.Escape) { root.confirm-answer(false); return accept; }
+                    if (e.text == Key.Return) { root.confirm-answer(true); return accept; }
+                    accept
+                }
+                confirm-layout := VerticalLayout {
+                    padding: 16px; spacing: 12px;
+                    Text { text: root.confirm-text; wrap: word-wrap; color: #222; }
+                    HorizontalLayout {
+                        spacing: 6px; alignment: end;
+                        Button { text: root.confirm-ok; clicked => { root.confirm-answer(true); } }
+                        Button { text: "Abbrechen"; clicked => { root.confirm-answer(false); } }
+                    }
                 }
             }
         }

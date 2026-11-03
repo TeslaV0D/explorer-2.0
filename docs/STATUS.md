@@ -1,6 +1,19 @@
 # Zwischenstand
 
-**Stand:** 2026-11-03 · **Phase:** 1 · M0 ✅ · M1 ✅ · M1.5 ✅ · M2 ✅ · **M3 ✅ (CI-Run #19)** · M4 wartet auf Freigabe · **Branch:** `claude/relaxed-pasteur-ufhh1p`
+**Stand:** 2026-11-03 · **Phase:** 1 · M0 ✅ · M1 ✅ · M1.5 ✅ · M2 ✅ · M3 ✅ (CI-Run #19) · **M4 lokal grün, CI läuft** · **Branch:** `claude/relaxed-pasteur-ufhh1p`
+
+## M4 – Dateioperationen
+- **Neue Crate `explorer-ops`** (plattformneutral testbar): `exec` (Job-Engine, synchrones `run` + `spawn` im Hintergrund), `undo`, `simple` (Umbenennen, Neuer Ordner), `names` (Windows-Namensregeln, „ - Kopie“, „ (2)“), `clipboard` (CF_HDROP), `win_copy` (CopyFileExW mit Fortschritt/Abbruch).
+- **Sicherheitsregeln**: Kopie in `.<name>.e2part` + Rename; Verschieben über Laufwerke löscht die Quelle erst nach vollständiger, geflushter Kopie; „Ersetzen“ = alte Datei in den Papierkorb (rückgängig machbar); Abbruch räumt Teil-Dateien weg; Fehler pro Element, Job läuft weiter.
+- **App** (`src/fileops.rs`): Zwischenablage (intern + Windows-System-Clipboard), Jobs + Operations-Panel, Konflikt-/Bestätigungsdialog (modal, Tasten R/S/B/A/Esc bzw. Enter/Esc), Inline-Umbenennen, Neuer Ordner, Undo/Redo im Hintergrund, Drag & Drop (Slint 1.18 `DragArea`/`DropArea`), Befehlsleiste. Nach Einfügen/Umbenennen sind die neuen Elemente markiert.
+- **Tests lokal**: ops 18 Integrationstests (+ Disk-Full mit 1-MiB-tmpfs), app 17 Unit (Tasten, Titel, Fortschrittstext, DnD-Regeln), E2E **100/100** (neu 38–52: Umbenennen inkl. Undo/Redo/Esc/Fehler, Neuer Ordner, Kopieren/Einfügen mit Konflikt „Beide behalten“ und „Ersetzen“ + Undo, Ausschneiden, Entf + Wiederherstellen, Umschalt+Entf mit Dialog, DnD verschieben/Strg-kopieren, 60 000-Dateien-Job mit Panel/Pause/Abbruch/Undo).
+
+### Funde in M4
+- **Bug (Integrationstest, flaky 1/15)**: Undo von „Ersetzen“ legte erst die neue Datei in den Papierkorb und stellte dann den *neuesten* Papierkorb-Eintrag mit gleichem Pfad wieder her – also die gerade gelöschte neue Datei statt der alten. Fix: Papierkorb-Snapshot **vor** dem Undo, Wiederherstellen nur daraus.
+- **Perf**: `fsync` pro kopierter Datei hätte Massenkopien vervielfacht → nur noch beim Verschieben (Quelle wird danach gelöscht).
+- **DnD**: TouchArea als Geschwister über der DragArea schluckt den Mausdruck → TouchArea muss *Kind* der DragArea sein.
+- Mehrfachauswahl wäre beim Ziehen verloren gegangen (Klick bei „down“) → bei bereits markierter Zeile wird der Klick erst beim Loslassen angewendet (Explorer-Verhalten).
+- Testdesign: Pause *vor* der Konfliktfrage blockiert den Job schon vor der Frage → Test pausiert jetzt nach der Frage.
 
 ## M3 – Tabs, Split-View, Seitenleiste, Verlauf, Sitzung
 - **Architektur**: `App` → Panes (1–2) → Tabs; jeder Tab eigener Pfad/Auswahl/Loader/Watcher/Verlauf. Hintergrund-Ergebnisse werden per stabiler Tab-ID zugeordnet (Tabs können zwischendurch geschlossen werden) + Generationszähler.
@@ -149,6 +162,6 @@ Daten-Budgets in allen Szenarien eingehalten (erste Zeilen 0,8–1,4 ms, alle 10
 - Fix im Test selbst: E2E-Regex an neues `at=`-Feld angepasst (lokal 13/13 PASS).
 
 ## Nächste Schritte
-1. CI für M3 grün → M3 ✅.
-2. M4: Dateioperationen (Kopieren/Verschieben/Löschen/Umbenennen/Neu, Queue mit Fortschritt, Undo, Zwischenablage, Drag&Drop).
-3. Boss: Artefakt auf echtem PC mit GPU testen (Einstellungen → Statuszeile zeigt GPU-Namen).
+1. CI für M4 grün → M4 ✅ → Freigabe M5 (Boss).
+2. M5: Shell-Integration (Icons/Thumbnails, Kontextmenü, Eigenschaften, Papierkorb, OLE-Drag&Drop mit anderen Apps).
+3. Boss: Artefakt auf echtem PC testen (GPU, Kopieren/Einfügen mit dem echten Explorer).

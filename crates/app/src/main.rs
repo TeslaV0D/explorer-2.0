@@ -1,6 +1,7 @@
 #![cfg_attr(all(windows, not(debug_assertions)), windows_subsystem = "windows")]
 
 mod config;
+mod fileops;
 mod gfx;
 mod keys;
 mod nav;
@@ -126,6 +127,37 @@ fn main() -> Result<(), slint::PlatformError> {
     on!(win, on_toggle_split, |w| nav::toggle_split(&w));
     on!(win, on_open_place, |w, p| nav::open_place(&w, p.as_str()));
     on!(win, on_toggle_hidden, |w, on| nav::set_show_hidden(&w, on));
+    on!(win, on_command, |w, c| fileops::command(
+        &w,
+        nav::active_pane(),
+        c.as_str()
+    ));
+    on!(win, on_job_pause, |_w, id, p| fileops::job_pause(id, p));
+    on!(win, on_job_cancel, |w, id| fileops::job_cancel(&w, id));
+    on!(win, on_conflict_answer, |w, n| fileops::conflict_answer(
+        &w, n
+    ));
+    on!(win, on_confirm_answer, |w, ok| fileops::confirm_answer(
+        &w, ok
+    ));
+    on!(win, on_rename_commit, |w, pi, t| fileops::rename_commit(
+        &w,
+        pi as usize,
+        t.as_str()
+    ));
+    win.on_drag_payload(|pi, row| fileops::drag_payload(pi as usize, row as usize));
+    win.on_drop_check(|pi, row, data, copy| fileops::drop_check(pi as usize, row, &data, copy));
+    {
+        let weak = win.as_weak();
+        win.on_drop_files(move |pi, row, data, copy| {
+            weak.upgrade()
+                .map(|w| fileops::drop_files(&w, pi as usize, row, &data, copy))
+                .unwrap_or(0)
+        });
+    }
+    on!(win, on_rename_cancel, |_w, pi| fileops::rename_cancel(
+        pi as usize
+    ));
     win.on_list_key({
         let weak = win.as_weak();
         move |pi, text, ctrl, shift, alt, page| {
@@ -135,6 +167,7 @@ fn main() -> Result<(), slint::PlatformError> {
         }
     });
 
+    fileops::init(&win);
     nav::init(
         &win,
         settings.show_hidden,
@@ -163,6 +196,7 @@ fn main() -> Result<(), slint::PlatformError> {
     );
 
     win.window().on_close_requested(|| {
+        fileops::shutdown();
         nav::save_session_now();
         slint::CloseRequestResponse::HideWindow
     });

@@ -56,8 +56,11 @@ struct Tab {
     loader: Option<LoadHandle>,
     watcher: Option<DirWatcher>,
     history: History,
-    /// Name to select once the target folder is loaded (folder we came from on "up").
-    pending_select: Option<String>,
+    /// Names to select once the folder is loaded (folder we came from on "up",
+    /// pasted items, a new folder).
+    pending_select: Vec<String>,
+    /// Start inline rename on this name after the next load (new folder).
+    pending_rename: Option<String>,
     status_base: String,
     /// Needs a reload when it becomes visible (never loaded, or sort/filter changed).
     stale: bool,
@@ -78,7 +81,8 @@ impl Tab {
             loader: None,
             watcher: None,
             history: History::default(),
-            pending_select: None,
+            pending_select: Vec::new(),
+            pending_rename: None,
             status_base: String::new(),
             stale: true,
             refresh_allowed_at: Instant::now(),
@@ -108,6 +112,10 @@ struct Pane {
     focus_seq: i32,
     /// Breadcrumb budget in characters, from the address bar width.
     crumb_chars: usize,
+    rename_index: i32,
+    rename_seq: i32,
+    rename_text: String,
+    rename_sel: i32,
 }
 
 impl Pane {
@@ -121,6 +129,10 @@ impl Pane {
             edit_seq: 0,
             focus_seq: 0,
             crumb_chars: 60,
+            rename_index: -1,
+            rename_seq: 0,
+            rename_text: String::new(),
+            rename_sel: 0,
         }
     }
 
@@ -159,6 +171,8 @@ thread_local! {
     });
     // Separate cell: used inside selection changes, which already borrow APP.
     static TYPEAHEAD: RefCell<TypeAhead> = RefCell::new(TypeAhead::default());
+    /// Paths marked by "cut" (shown faded until pasted or replaced).
+    static CUT: RefCell<std::collections::HashSet<PathBuf>> = RefCell::new(Default::default());
 }
 
 // ---------------------------------------------------------------- helpers
@@ -250,6 +264,7 @@ fn to_row(e: &Entry) -> Row {
         dim: e.hidden,
         selected: false,
         focused: false,
+        cut: false,
     }
 }
 
@@ -335,6 +350,10 @@ fn sync_pane(pi: usize) {
             top_seq: p.top_seq,
             edit_seq: p.edit_seq,
             focus_seq: p.focus_seq,
+            rename_index: p.rename_index,
+            rename_seq: p.rename_seq,
+            rename_text: p.rename_text.as_str().into(),
+            rename_sel: p.rename_sel,
         };
         if pi < app.pane_model.row_count() {
             app.pane_model.set_row_data(pi, data);
@@ -359,7 +378,7 @@ fn sync_all(win: &MainWindow) {
 
 /// Window-level state that depends on the active pane/tab.
 fn sync_window(win: &MainWindow) {
-    let (active, split, path, status) = APP.with_borrow(|app| {
+    let (active, split, path, status, has_sel) = APP.with_borrow(|app| {
         let t = app.panes[app.active_pane].tab();
         (
             app.active_pane,
@@ -369,12 +388,14 @@ fn sync_window(win: &MainWindow) {
                 .map(|p| p.to_string_lossy().into_owned())
                 .unwrap_or_default(),
             status_with_selection(&t.status_base, t.selection.count()),
+            t.selection.count() > 0 || t.selection.focus().is_some(),
         )
     });
     win.set_active_pane(active as i32);
     win.set_split(split);
     win.set_active_path(path.into());
     win.set_status(status.into());
+    win.set_has_selection(has_sel);
     schedule_session_save();
 }
 
@@ -736,7 +757,7 @@ fn apply(
         } => {
             let path_changed = current.as_deref() != Some(path.as_path());
             let n = entries.len();
-            let (pi, focus, needs_setup) = with_tab(id, |t, pi, _| {
+            let (pi, focus, needs_setup, rename_at) = with_tab(id, |t, pi, _| {
                 // New tabs already carry their path → also set up crumbs/watcher on the first load.
                 let needs_setup = path_changed || t.watcher.is_none();
                 let mut sel = if path_changed {
@@ -744,14 +765,38 @@ fn apply(
                 } else {
                     remap_selection(&t.entries, &t.selection, &entries)
                 };
-                // Select the folder we came from (Explorer behaviour on "up"), once fully loaded.
-                if done.is_some() {
-                    if let Some(name) = t.pending_select.take() {
-                        if let Some(i) = entries.iter().position(|e| e.name == name) {
-                            sel.click(i);
+                // Select the folder we came from ("up") or pasted/new items, once fully loaded.
+                let mut rename_at = None;
+                if done.is_some() && !t.pending_select.is_empty() {
+                    let found: Vec<usize> = t
+                        .pending_select
+                        .iter()
+                        .filter_map(|name| entries.iter().position(|e| &e.name == name))
+                        .collect();
+                    if !found.is_empty() {
+                        t.pending_select.clear();
+                        sel.clear();
+                        for (k, &i) in found.iter().enumerate() {
+                            if k == 0 {
+                                sel.click(i);
+                            } else {
+                                sel.ctrl_click(i);
+                            }
                         }
                     }
                 }
+                if done.is_some() {
+                    if let Some(name) = t.pending_rename.take() {
+                        rename_at = entries.iter().position(|e| e.name == name);
+                    }
+                }
+                CUT.with_borrow(|cut| {
+                    if !cut.is_empty() {
+                        for (row, e) in rows.iter_mut().zip(&entries) {
+                            row.cut = cut.contains(&path.join(&e.name));
+                        }
+                    }
+                });
                 for i in sel.selected_indices() {
                     rows[i].selected = true;
                 }
@@ -765,9 +810,9 @@ fn apply(
                 if path_changed {
                     t.path = Some(path.clone());
                 }
-                (pi, focus, needs_setup)
+                (pi, focus, needs_setup, rename_at)
             })
-            .unwrap_or((0, None, false));
+            .unwrap_or((0, None, false, None));
             if needs_setup {
                 let chars =
                     APP.with_borrow(|app| app.panes.get(pi).map(|p| p.crumb_chars).unwrap_or(60));
@@ -826,6 +871,9 @@ fn apply(
             }
             sync_pane(pi);
             sync_window(win);
+            if let Some(i) = rename_at {
+                crate::fileops::begin_rename(win, pi, i);
+            }
         }
         Update::Failed(e) => {
             trace(&format!(
@@ -1059,7 +1107,11 @@ pub fn go_up(win: &MainWindow, pi: usize) {
     let target = with_tab(id, |t, _, _| {
         let p = t.path.as_ref()?;
         let parent = p.parent()?.to_path_buf();
-        t.pending_select = p.file_name().map(|n| n.to_string_lossy().into_owned());
+        t.pending_select = p
+            .file_name()
+            .map(|n| n.to_string_lossy().into_owned())
+            .into_iter()
+            .collect();
         Some(parent)
     })
     .flatten();
@@ -1088,7 +1140,11 @@ fn history_step(win: &MainWindow, pi: usize, back: bool) {
         }?;
         // Going back to the parent selects the folder we came from, like Explorer.
         if cur.parent() == Some(target.as_path()) {
-            t.pending_select = cur.file_name().map(|n| n.to_string_lossy().into_owned());
+            t.pending_select = cur
+                .file_name()
+                .map(|n| n.to_string_lossy().into_owned())
+                .into_iter()
+                .collect();
         }
         Some(target)
     })
@@ -1333,6 +1389,9 @@ pub fn list_key(
     let Some(action) = map_key(text, ctrl, shift, alt, page_rows as isize) else {
         return false;
     };
+    if crate::fileops::blocks_keys(win) {
+        return false; // dialog open or inline rename active
+    }
     if std::env::var_os("EXPLORER2_TRACE_KEYS").is_some() {
         trace(&format!("key pane={pi} action={action:?} page={page_rows}"));
     }
@@ -1410,6 +1469,18 @@ pub fn list_key(
         KeyAction::PrevTab => cycle_tab(win, pi, -1),
         KeyAction::SwitchPane => switch_pane(win),
         KeyAction::ToggleSplit => toggle_split(win),
+        KeyAction::Copy => crate::fileops::command(win, pi, "copy"),
+        KeyAction::Cut => crate::fileops::command(win, pi, "cut"),
+        KeyAction::Paste => crate::fileops::command(win, pi, "paste"),
+        KeyAction::Delete { permanent: false } => crate::fileops::command(win, pi, "delete"),
+        KeyAction::Delete { permanent: true } => {
+            crate::fileops::command(win, pi, "delete-permanent")
+        }
+        KeyAction::Rename => crate::fileops::command(win, pi, "rename"),
+        KeyAction::NewFolder => crate::fileops::command(win, pi, "new-folder"),
+        KeyAction::Undo => crate::fileops::command(win, pi, "undo"),
+        KeyAction::Redo => crate::fileops::command(win, pi, "redo"),
+        KeyAction::Escape => crate::fileops::command(win, pi, "escape"),
         KeyAction::TypeChar(c) => change_selection(win, pi, |sel, entries| {
             let found = TYPEAHEAD.with_borrow_mut(|t| {
                 t.feed(
@@ -1426,6 +1497,147 @@ pub fn list_key(
         }),
     }
     true
+}
+
+// ---------------------------------------------------------------- file-operation support
+
+/// Active pane index.
+pub(crate) fn active_pane() -> usize {
+    APP.with_borrow(|app| app.active_pane)
+}
+
+/// Folder shown in pane `pi`.
+pub(crate) fn pane_dir(pi: usize) -> Option<PathBuf> {
+    let id = active_tab_id(pi)?;
+    with_tab(id, |t, _, _| t.path.clone()).flatten()
+}
+
+/// Selected items of pane `pi` (the focused item if nothing is selected).
+pub(crate) fn selected_paths(pi: usize) -> Vec<PathBuf> {
+    let Some(id) = active_tab_id(pi) else {
+        return Vec::new();
+    };
+    with_tab(id, |t, _, _| {
+        let Some(dir) = t.path.as_ref() else {
+            return Vec::new();
+        };
+        let mut idx = t.selection.selected_indices();
+        if idx.is_empty() {
+            idx.extend(t.selection.focus());
+        }
+        idx.iter()
+            .filter_map(|&i| t.entries.get(i))
+            .map(|e| dir.join(&e.name))
+            .collect()
+    })
+    .unwrap_or_default()
+}
+
+/// Entry `index` of pane `pi`: (full path, name, is_dir).
+pub(crate) fn entry_at(pi: usize, index: usize) -> Option<(PathBuf, String, bool)> {
+    let id = active_tab_id(pi)?;
+    with_tab(id, |t, _, _| {
+        let e = t.entries.get(index)?;
+        Some((t.path.as_ref()?.join(&e.name), e.name.clone(), e.is_dir()))
+    })
+    .flatten()
+}
+
+/// Index of the focused (or first selected) entry of pane `pi`.
+pub(crate) fn focused_index(pi: usize) -> Option<usize> {
+    let id = active_tab_id(pi)?;
+    with_tab(id, |t, _, _| {
+        t.selection
+            .focus()
+            .filter(|&f| t.selection.is_selected(f))
+            .or_else(|| t.selection.selected_indices().first().copied())
+            .or(t.selection.focus())
+    })
+    .flatten()
+}
+
+/// Shows (or hides with `index < 0`) the inline rename editor of pane `pi`.
+pub(crate) fn show_rename(pi: usize, index: i32, text: &str, sel_end: usize) {
+    if index >= 0 {
+        request(pi, |p| {
+            p.scroll_to = index;
+            p.scroll_seq += 1;
+        });
+    }
+    request(pi, |p| {
+        p.rename_index = index;
+        p.rename_text = text.to_string();
+        p.rename_sel = sel_end as i32;
+        if index >= 0 {
+            p.rename_seq += 1;
+        }
+    });
+}
+
+pub(crate) fn focus_pane(pi: usize) {
+    request_focus(pi);
+}
+
+/// Replaces the "cut" marks and repaints the affected rows of all loaded tabs.
+pub(crate) fn set_cut(paths: &[PathBuf]) {
+    CUT.with_borrow_mut(|c| {
+        c.clear();
+        c.extend(paths.iter().cloned());
+    });
+    APP.with_borrow(|app| {
+        CUT.with_borrow(|cut| {
+            for p in &app.panes {
+                for t in &p.tabs {
+                    let Some(dir) = t.path.as_ref() else { continue };
+                    for (i, e) in t.entries.iter().enumerate() {
+                        let want = cut.contains(&dir.join(&e.name));
+                        if let Some(mut row) = t.model.row_data(i) {
+                            if row.cut != want {
+                                row.cut = want;
+                                t.model.set_row_data(i, row);
+                            }
+                        }
+                    }
+                }
+            }
+        })
+    });
+}
+
+/// Reloads every tab that shows one of `dirs`; `select` = names to select per folder.
+pub(crate) fn refresh_dirs(
+    win: &MainWindow,
+    dirs: &[PathBuf],
+    select: &[(PathBuf, Vec<String>)],
+    rename: Option<(&Path, &str)>,
+) {
+    let ids: Vec<TabId> = APP.with_borrow_mut(|app| {
+        let mut ids = Vec::new();
+        for p in &mut app.panes {
+            for t in &mut p.tabs {
+                let Some(path) = t.path.clone() else { continue };
+                if !dirs.contains(&path) {
+                    continue;
+                }
+                if let Some((_, names)) = select.iter().find(|(d, _)| *d == path) {
+                    t.pending_select = names.clone();
+                }
+                if let Some((d, name)) = rename {
+                    if d == path {
+                        t.pending_rename = Some(name.to_string());
+                    }
+                }
+                t.stale = true;
+                ids.push(t.id);
+            }
+        }
+        // only visible tabs reload now; hidden ones are stale and reload when shown
+        ids.retain(|id| app.panes.iter().any(|p| p.tab().id == *id));
+        ids
+    });
+    for id in ids {
+        reload_tab(win, id);
+    }
 }
 
 #[cfg(test)]

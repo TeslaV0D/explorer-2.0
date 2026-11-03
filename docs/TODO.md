@@ -49,7 +49,19 @@ Legende: `[ ]` offen · `[~]` in Arbeit · `[x]` erledigt · Prio P0/P1/P2
   - [x] Sitzung: Panes, Tabs, aktive Tabs/Pane, Split in session.ini; Restore beim Start ohne Pfad-Argument; nur sichtbare Tabs laden sofort (lazy); fehlende Ordner → nächster existierender Elternordner
   - [x] CI grün (Run #19)
 - [ ] M3-Rest/Politur (später): Tabs per Drag umsortieren/abreißen, Pane-Trenner ziehbar, Sidebar: Netzwerk/Papierkorb/Favoriten anheften, Mittelklick in Sidebar = neuer Tab, Laufwerks-Änderungen per WM_DEVICECHANGE statt Polling
-- [ ] M4 Dateioperationen: Queue, Undo/Redo, Clipboard, Drag&Drop, Konfliktdialog
+- [~] M4 Dateioperationen – **lokal komplett grün (E2E 100/100), CI ausstehend**
+  - [x] Crate `explorer-ops`: Jobs Kopieren/Verschieben/Papierkorb/Endgültig löschen im Hintergrund (Fortschritt, Pause, Abbruch), Konflikte (Ersetzen/Zusammenführen, Überspringen, Beide behalten, Abbrechen, „für alle“)
+  - [x] Datensicherheit: Temp-Datei + Rename, Quelle bei Verschieben über Laufwerke erst nach vollständiger + geflushter Kopie löschen, „Ersetzen“ legt Alt-Datei in den Papierkorb, Abbruch hinterlässt keine Teil-Dateien, Fehler pro Element (Job läuft weiter)
+  - [x] Undo/Redo (Strg+Z/Strg+Y, max. 50): Kopie → Papierkorb, Verschieben/Umbenennen → zurück, Papierkorb → wiederherstellen (Snapshot vor dem Undo), endgültig gelöscht = nicht rückgängig
+  - [x] Zwischenablage Strg+C/X/V (+ Strg/Umschalt+Einfg), Windows-kompatibel (CF_HDROP + Preferred DropEffect, Austausch mit Explorer), Ausschneiden blendet Einträge halb aus, Esc hebt auf, Cut wird nur einmal eingefügt
+  - [x] Entf → Papierkorb, Umschalt+Entf → Bestätigungsdialog → endgültig
+  - [x] F2 Inline-Umbenennen (Name ohne Endung markiert), Esc bricht ab, ungültig/vorhanden → Fehlermeldung + Editor bleibt offen; Strg+Umschalt+N „Neuer Ordner“ + sofort Umbenennen
+  - [x] Befehlsleiste (Neuer Ordner, Ausschneiden, Kopieren, Einfügen, Umbenennen, Löschen, ↶, ↷)
+  - [x] Operations-Panel (ab 300 ms Laufzeit): Titel, Balken, „x von y · MB/s · noch n s“, Pause/Fortsetzen, Abbrechen
+  - [x] Drag & Drop in der App: auf Ordnerzeile = hinein, auf Liste = in angezeigten Ordner, Standard Verschieben, Strg = Kopieren; nie in sich selbst/Unterordner; Mehrfachauswahl bleibt beim Ziehen erhalten
+  - [x] Tests: ops 18 Integrationstests (+ Disk-Full per tmpfs in CI, gesperrte Datei auf Windows), E2E 38–52 (40 Checks), CI-Clipboard-Interop mit Windows PowerShell
+  - [ ] CI grün
+- [ ] M4-Rest/Politur (später): DnD mit anderen Apps (OLE, M5), Standard-Aktion je Laufwerk (gleiches Laufwerk = Verschieben, anderes = Kopieren, wie Explorer), Job-Warteschlange (nacheinander statt parallel, pro Laufwerk), Konfliktdialog mit Vorschaubildern, „Kopieren nach…“/„Verschieben nach…“, Fortschritt in der Taskleiste (ITaskbarList3), Papierkorb-Ansicht, Junctions/Hardlinks beim Kopieren sauber behandeln, Alternate Data Streams/ACLs (CopyFileExW kopiert ADS bereits)
 - [ ] M5 Shell-Integration: Icons/Thumbnails, Kontextmenü (Dritte), Properties, Papierkorb, Netzwerk, virtuelle Ordner
 - [ ] M6 Ordneroptionen-Parität, Themes, Command Palette, Inspector
 - [ ] **R-001 Ein-Knopf-Reset** für alle Integrationen (App-Knopf + eigenständiges Recovery-Tool + Journal + CI-Snapshot-Test) – Voraussetzung, bevor irgendeine Integration ausgeliefert wird

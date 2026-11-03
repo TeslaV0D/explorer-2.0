@@ -22,6 +22,11 @@ pub fn get_files() -> Option<ClipFiles> {
     imp::get_files()
 }
 
+/// Empties the system clipboard (Explorer does this after pasting a cut).
+pub fn clear() -> bool {
+    imp::clear()
+}
+
 /// Encodes the CF_HDROP payload: DROPFILES header (20 bytes, wide) + double-NUL list.
 pub fn encode_hdrop(paths: &[PathBuf]) -> Vec<u8> {
     let mut out = Vec::new();
@@ -68,6 +73,9 @@ mod imp {
     }
     pub fn get_files() -> Option<ClipFiles> {
         None
+    }
+    pub fn clear() -> bool {
+        false
     }
 }
 
@@ -201,6 +209,14 @@ mod imp {
         let effect: u32 = if files.cut { 2 } else { 1 };
         put(CF_HDROP as u32, &encode_hdrop(&files.paths))
             && put(drop_effect_format(), &effect.to_le_bytes())
+    }
+
+    pub fn clear() -> bool {
+        let Some(_open) = Open::new() else {
+            return false;
+        };
+        // SAFETY: clipboard is open.
+        unsafe { EmptyClipboard() != 0 }
     }
 
     pub fn get_files() -> Option<ClipFiles> {

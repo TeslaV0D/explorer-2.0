@@ -464,6 +464,13 @@ fn spawned_job_asks_and_waits_for_answer_and_can_pause() {
     };
     assert!(report.errors.is_empty(), "{:?}", report.errors);
     assert_eq!(read(&dst.join("a (2).txt")), b"new");
+    for _ in 0..200 {
+        if h.is_finished() {
+            break;
+        }
+        std::thread::sleep(Duration::from_millis(10));
+    }
+    assert!(h.is_finished());
 }
 
 // ---------------------------------------------------------------- platform specific

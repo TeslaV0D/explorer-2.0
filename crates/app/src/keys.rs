@@ -34,6 +34,22 @@ pub enum KeyAction {
     SwitchPane,
     /// Ctrl+\: split view on/off.
     ToggleSplit,
+    /// File operations (M4).
+    Copy,
+    Cut,
+    Paste,
+    /// Del → trash, Shift+Del → permanent (with confirmation).
+    Delete {
+        permanent: bool,
+    },
+    /// F2
+    Rename,
+    /// Ctrl+Shift+N
+    NewFolder,
+    Undo,
+    Redo,
+    /// Esc: close dialogs / clear cut marks.
+    Escape,
     TypeChar(char),
 }
 
@@ -51,6 +67,10 @@ const LEFT: char = '\u{F702}';
 const RIGHT: char = '\u{F703}';
 const TAB: char = '\t';
 const BACKTAB: char = '\u{19}';
+const DELETE: char = '\u{7F}';
+const F2: char = '\u{F705}';
+const INSERT: char = '\u{F727}';
+const ESCAPE: char = '\u{1B}';
 
 pub fn map_key(text: &str, ctrl: bool, shift: bool, alt: bool, page: isize) -> Option<KeyAction> {
     let mut chars = text.chars();
@@ -99,6 +119,19 @@ pub fn map_key(text: &str, ctrl: bool, shift: bool, alt: bool, page: isize) -> O
         't' | 'T' if ctrl && !alt => Some(KeyAction::NewTab),
         'w' | 'W' if ctrl && !alt => Some(KeyAction::CloseTab),
         '\\' if ctrl && !alt => Some(KeyAction::ToggleSplit),
+        'c' | 'C' if ctrl && !alt && !shift => Some(KeyAction::Copy),
+        'x' | 'X' if ctrl && !alt && !shift => Some(KeyAction::Cut),
+        'v' | 'V' if ctrl && !alt && !shift => Some(KeyAction::Paste),
+        INSERT if ctrl && !shift => Some(KeyAction::Copy),
+        INSERT if shift && !ctrl => Some(KeyAction::Paste),
+        DELETE if shift && !ctrl && !alt => Some(KeyAction::Delete { permanent: true }),
+        DELETE if !ctrl && !alt => Some(KeyAction::Delete { permanent: false }),
+        F2 if !ctrl && !alt => Some(KeyAction::Rename),
+        'n' | 'N' if ctrl && shift && !alt => Some(KeyAction::NewFolder),
+        'z' | 'Z' if ctrl && !alt && !shift => Some(KeyAction::Undo),
+        'y' | 'Y' if ctrl && !alt && !shift => Some(KeyAction::Redo),
+        'z' | 'Z' if ctrl && shift && !alt => Some(KeyAction::Redo),
+        ESCAPE => Some(KeyAction::Escape),
         'd' | 'D' if alt && !ctrl => Some(KeyAction::EditPath),
         // printable text → type-to-select (no private-use specials, no control chars)
         c if !ctrl && !alt && !c.is_control() && !('\u{E000}'..='\u{F8FF}').contains(&c) => {
@@ -266,10 +299,37 @@ mod tests {
             map_key(" ", false, false, false, 1),
             Some(KeyAction::TypeChar(' '))
         );
-        assert_eq!(map_key("x", true, false, false, 1), None); // ctrl+x = cut (M4), not typeahead
+        assert_eq!(map_key("x", true, false, false, 1), Some(KeyAction::Cut)); // not typeahead
         assert_eq!(map_key("\u{F704}", false, false, false, 1), None); // F1
-        assert_eq!(map_key("\u{1b}", false, false, false, 1), None); // Esc
+        assert_eq!(
+            map_key("\u{1b}", false, false, false, 1),
+            Some(KeyAction::Escape)
+        );
         assert_eq!(map_key("", false, false, false, 1), None);
         assert_eq!(map_key("ab", false, false, false, 1), None);
+    }
+
+    #[test]
+    fn file_operation_keys() {
+        let k = |t, c, sh| map_key(t, c, sh, false, 1);
+        assert_eq!(k("c", true, false), Some(KeyAction::Copy));
+        assert_eq!(k("v", true, false), Some(KeyAction::Paste));
+        assert_eq!(k("\u{F727}", true, false), Some(KeyAction::Copy));
+        assert_eq!(k("\u{F727}", false, true), Some(KeyAction::Paste));
+        assert_eq!(
+            k("\u{7F}", false, false),
+            Some(KeyAction::Delete { permanent: false })
+        );
+        assert_eq!(
+            k("\u{7F}", false, true),
+            Some(KeyAction::Delete { permanent: true })
+        );
+        assert_eq!(k("\u{F705}", false, false), Some(KeyAction::Rename));
+        assert_eq!(k("N", true, true), Some(KeyAction::NewFolder));
+        assert_eq!(k("n", true, true), Some(KeyAction::NewFolder));
+        assert_eq!(k("n", true, false), None, "Ctrl+N = new window (later)");
+        assert_eq!(k("z", true, false), Some(KeyAction::Undo));
+        assert_eq!(k("y", true, false), Some(KeyAction::Redo));
+        assert_eq!(k("Z", true, true), Some(KeyAction::Redo));
     }
 }

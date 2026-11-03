@@ -1013,6 +1013,7 @@ dependencies = [
  "explorer-core",
  "explorer-fs",
  "explorer-gpu",
+ "explorer-ops",
  "slint",
  "slint-build",
  "windows-sys 0.60.2",

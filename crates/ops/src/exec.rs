@@ -4,7 +4,8 @@
 //! Safety rules (data must never be lost by a failed or cancelled job):
 //! - copies go to a temp file next to the target and are renamed into place
 //!   only when complete → no half-written file under the real name;
-//! - a move across volumes deletes the source only after its copy succeeded;
+//! - a move across volumes deletes the source only after its copy succeeded
+//!   and was flushed to disk;
 //! - "Replace" moves the old target to the trash first (so it can be undone);
 //! - an error on one item is recorded and the job continues with the next.
 
@@ -120,6 +121,7 @@ impl Control {
 pub struct JobHandle {
     pub control: Control,
     answers: mpsc::Sender<(Choice, bool)>,
+    finished: Arc<AtomicBool>,
 }
 
 impl JobHandle {
@@ -136,6 +138,11 @@ impl JobHandle {
     pub fn answer(&self, choice: Choice, apply_all: bool) {
         let _ = self.answers.send((choice, apply_all));
     }
+
+    /// True once the worker thread is done (after `Event::Finished` was emitted).
+    pub fn is_finished(&self) -> bool {
+        self.finished.load(Ordering::Acquire)
+    }
 }
 
 /// Runs a job on a background thread; events go to `sink` (called on that thread).
@@ -143,6 +150,8 @@ pub fn spawn(spec: JobSpec, mut sink: impl FnMut(Event) + Send + 'static) -> Job
     let control = Control::default();
     let (tx, rx) = mpsc::channel::<(Choice, bool)>();
     let ctl = control.clone();
+    let finished = Arc::new(AtomicBool::new(false));
+    let fin = finished.clone();
     std::thread::Builder::new()
         .name("file-job".into())
         .spawn(move || {
@@ -163,11 +172,13 @@ pub fn spawn(spec: JobSpec, mut sink: impl FnMut(Event) + Send + 'static) -> Job
             let mut emit = |e: Event| (sink_cell.borrow_mut())(e);
             let report = run(&spec, &ctl, &mut emit, &mut ask);
             (sink_cell.borrow_mut())(Event::Finished(report));
+            fin.store(true, Ordering::Release);
         })
         .expect("spawning file job failed");
     JobHandle {
         control,
         answers: tx,
+        finished,
     }
 }
 
@@ -545,7 +556,17 @@ fn copy_one(cx: &mut Ctx, src: &Path, target: &Path, meta: &fs::Metadata) -> io:
         }
     }
     let tmp = temp_name(target);
-    let res = copy_data(cx, src, &tmp, meta).and_then(|()| fs::rename(&tmp, target));
+    let res = copy_data(cx, src, &tmp, meta)
+        .and_then(|()| {
+            // A move deletes the source afterwards → the copy must be on disk first.
+            // Plain copies skip the flush (the source stays; a flush per file would
+            // make copying many small files several times slower).
+            if cx.kind == Kind::Move {
+                fs::OpenOptions::new().write(true).open(&tmp)?.sync_all()?;
+            }
+            Ok(())
+        })
+        .and_then(|()| fs::rename(&tmp, target));
     if res.is_err() {
         let _ = fs::remove_file(&tmp); // never leave partial data behind
     }
@@ -570,7 +591,6 @@ fn copy_data(cx: &mut Ctx, src: &Path, tmp: &Path, meta: &fs::Metadata) -> io::R
         cx.progress.done_bytes += n as u64;
         cx.tick(false);
     }
-    output.sync_all()?;
     drop(output);
     fs::set_permissions(tmp, meta.permissions())?;
     if let Ok(m) = meta.modified() {

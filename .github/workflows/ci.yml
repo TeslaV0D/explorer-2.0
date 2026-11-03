@@ -20,6 +20,36 @@ jobs:
       - run: cargo fmt --all -- --check
       - run: cargo clippy --workspace --all-targets -- -D warnings
       - run: cargo test --workspace
+      - name: Disk full while copying (1 MiB tmpfs) leaves no partial file
+        if: runner.os == 'Linux'
+        run: |
+          sudo mkdir -p /mnt/small && sudo mount -t tmpfs -o size=1m,mode=1777 tmpfs /mnt/small
+          EXPLORER2_SMALL_FS=/mnt/small cargo test -p explorer-ops --test ops disk_full -- --ignored --exact disk_full_reports_error_and_leaves_no_partial_file
+      - name: Clipboard interop with the Windows shell (CF_HDROP + Preferred DropEffect)
+        if: runner.os == 'Windows'
+        # Windows PowerShell 5.1: only it has Get-Clipboard -Format FileDropList / Set-Clipboard -Path
+        shell: powershell
+        run: |
+          $ErrorActionPreference = 'Stop'
+          cargo build -q -p explorer-ops --example clip
+          $clip = (Resolve-Path "target/debug/examples/clip.exe").Path
+          $d = New-Item -ItemType Directory -Force "$env:RUNNER_TEMP\clip"
+          $a = New-Item -ItemType File -Force "$d\a ä.txt"; $b = New-Item -ItemType File -Force "$d\b.txt"
+          # ours -> Windows: PowerShell must see the file list
+          & $clip set $a.FullName $b.FullName; if ($LASTEXITCODE) { throw "clip set failed" }
+          $seen = @(Get-Clipboard -Format FileDropList | ForEach-Object FullName)
+          "PowerShell sees: $($seen -join ', ')"
+          if ($seen.Count -ne 2 -or $seen[0] -ne $a.FullName -or $seen[1] -ne $b.FullName) { throw "Windows does not see our files" }
+          # Windows -> ours (Set-Clipboard -Path = what Explorer's "Copy" produces)
+          Set-Clipboard -Path $b.FullName
+          $got = @(& $clip get)
+          "clip get: $($got -join ' | ')"
+          if ($got[0] -ne 'copy' -or $got[1] -ne $b.FullName) { throw "we do not read the Windows file clipboard" }
+          # cut flag (Preferred DropEffect = 2) survives a round trip
+          & $clip set --cut $a.FullName
+          $got = @(& $clip get)
+          if ($got[0] -ne 'cut' -or $got[1] -ne $a.FullName) { throw "cut flag lost: $($got -join ' | ')" }
+          "clipboard interop OK"
       - name: Benchmark 100k folder (budgets from PLAN-BASICS)
         run: cargo run --release -p explorer-fs --example bench -- --files 100000 --runs 9 --assert
   e2e-linux:

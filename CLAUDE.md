@@ -27,6 +27,8 @@
 | D-007 | UI-Sprache vorerst Deutsch hart codiert; i18n später (Slint `@tr`) | vorgeschlagen |
 | D-009 | Renderer: **GPU-Probe vor Fensterstart** (WGL: GL ≥ 3.0 + `glCreateShader`, Software-GL wie GDI Generic/llvmpipe = unbrauchbar) → Skia (GPU) oder Software. **Probe nie im Startpfad**: ohne Cache Start mit Software + Probe sofort im Hintergrund (gilt ab nächstem Start); mit Cache Re-Probe 5 s nach Start. Ergebnis in settings.ini (pro App-Version). Einstellung „Hardwarebeschleunigung verwenden, wenn verfügbar“ (wie Browser), Override `EXPLORER2_RENDERER=auto|gpu|software`; `SLINT_BACKEND` hat Vorrang | fix (Boss, 2026-11-03) |
 | D-010 | App-Icon: gelber Ordner + blaues Band (Windows-11-Explorer-Anmutung) auf heller abgerundeter Kachel (Apple-Files-Anmutung), Vorwärts-Chevrons = „2.0“; 16–32 px vereinfachte Variante ohne Kachel | fix (M1.5) |
+| D-011 | Dateioperationen datensicher: Temp-Datei + Rename, Quelle erst nach vollständiger + geflushter Kopie löschen, „Ersetzen“ = Papierkorb, Undo aus Report-Journal; fsync nur bei Verschieben | fix (M4) |
+| D-012 | In-App-DnD über Slint 1.18 `DragArea`/`DropArea` (Payload = Pane/Zeile, Auflösung zur Drop-Zeit); OLE-DnD mit anderen Apps erst M5 | fix (M4) |
 | D-008 | Perf-Gates in CI auf **best-of-N** (≥ 9 Läufe), Median/Max/OS-Stalls nur ausweisen – Shared-Runner haben sporadische OS-Stalls (gemessen 168 ms im rohen FindFirstFileExW); Budgets selbst unverändert | fix (M1) |
 
 ## Arbeitsumgebung / Constraints
@@ -38,7 +40,7 @@
 - **R-001 Ein-Knopf-Reset / „Notausgang“** (2026-11-03, Lehre aus File Pilot, wo nur Windows-Neuinstallation half): Jede Windows-Integration (Win+E, Ordner-Verben/Default-Handler, explorer.exe-Proxy/IFEO, Kontextmenü-Einträge, Autostart, Umgebungsvariablen/PATH, Verknüpfungen, Dateizuordnungen, Hotkeys) muss **mit einem Knopf vollständig rückgängig** zu machen sein – in der App **und** über ein eigenständiges Recovery-Tool, das auch funktioniert, wenn die App selbst nicht startet (inkl. Abgesichertem Modus). Jede Änderung wird vorher mit Originalwert in einem Journal gesichert; Reset stellt exakt den Ursprungszustand her. Pflicht-Test: Integration an → Reset → Registry/Umgebung identisch zum Snapshot vorher. Gilt ab M7, Architektur schon vorher berücksichtigen.
 
 ## Meilenstein-Stand
-- M0 ✅ · M1 ✅ (Run #10) · M1.5 ✅ Renderer-Wahl + Einstellungen + Icon (Run #13) · **M2 ✅ (Run #16)** · **M3 ✅ (Run #19)** · M4 wartet auf Freigabe (Boss)
+- M0 ✅ · M1 ✅ (Run #10) · M1.5 ✅ Renderer-Wahl + Einstellungen + Icon (Run #13) · M2 ✅ (Run #16) · M3 ✅ (Run #19) · **M4 lokal grün, CI ausstehend** · M5 erst nach Freigabe (Boss)
 - Arbeitsregel (Boss): nächste Stufe erst, wenn die aktuelle vollständig abgeschlossen, getestet und CI-grün ist.
 
 ## Code-Layout (seit M0)
@@ -48,6 +50,9 @@
 - `crates/core`: `history.rs` (Zurück/Vor, max. 100), `session.rs` (session.ini: Panes/Tabs/Split/aktive Pane, tolerant)
 - `crates/fs`: `places.rs` – Schnellzugriff (Windows `SHGetKnownFolderPath`, Linux XDG `user-dirs.dirs`), Laufwerke (`GetLogicalDrives`/`GetVolumeInformationW`/`GetDiskFreeSpaceExW`, `SEM_FAILCRITICALERRORS` gegen „Datenträger einlegen“-Dialoge) – `drives()` kann blockieren → nur im Hintergrund
 - `crates/core`: zusätzlich `settings.rs` (key=value, tolerant, inkl. Sortierung), `renderer.rs` (`classify_gl`, `decide`, `Reason`, `status_de`), `selection.rs` (Explorer-Auswahlmodell, `remap` für Refresh), `typeahead.rs`, `breadcrumb.rs` (`crumbs`/`fit`, Win/UNC/Unix); `type_label`/`extension`, `SortKey::Type`
+- `crates/ops` (`explorer-ops`): `exec.rs` (Job-Engine: `run` synchron/testbar, `spawn` Thread + `JobHandle` cancel/pause/answer/is_finished, Events Started/Progress/Conflict/Finished, `Report.done` = Undo-Journal), `undo.rs` (`entry_from_report`, `undo`, `TrashSnapshot`, `UndoStack`), `simple.rs` (rename/new_folder), `names.rs`, `clipboard.rs` (CF_HDROP, `examples/clip.rs` für CI-Interop), `win_copy.rs`; Tests `tests/ops.rs`
+- `crates/app/src/fileops.rs`: UI-Seite der Dateioperationen (Clipboard, Jobs/Panel, Dialoge, Rename, Undo/Redo, DnD); nav.rs liefert Helfer (`selected_paths`, `refresh_dirs` mit Nach-Auswahl/-Umbenennen, `show_rename`, `set_cut`)
+- E2E M4: `scripts/e2e-ops.sh` (von e2e.sh aufgerufen, einzeln lauffähig)
 - `crates/app` (`explorer2`): Slint-UI (`ui/main.slint`, Einstellungs-Panel), `src/nav.rs` = Fenster-Controller: `App` → `Pane` (1–2) → `Tab` (Pfad, Einträge, Auswahl, Loader, Watcher, Verlauf); Async-Ergebnisse per **stabiler Tab-ID** + Generationszähler; inaktive/restaurierte Tabs laden lazy, `stale` nach Sortier-/Filterwechsel; Session-Save entprellt 400 ms + beim Schließen, `src/keys.rs` = Tastenbelegung (`map_key`, rein/testbar), `src/open.rs` = Datei öffnen (`ShellExecuteW` / `xdg-open`, Override `EXPLORER2_OPEN_CMD`), `src/gfx.rs` = Renderer-Wahl vor Fenster, `src/config.rs` = settings.ini (`%APPDATA%\Explorer2` / XDG, Override `EXPLORER2_CONFIG_DIR`), atomar + Mutex
 - Icon: `crates/app/res/icon/*.svg` → `scripts/make-icons.sh` → PNGs + `explorer2.ico` (Exe-Ressource) + `icon-256.png` (Fenster-Icon)
 - CI: `.github/workflows/ci.yml` (fmt, clippy -D warnings, test auf Windows+Linux; Release-Artefakt `explorer2.exe`)
@@ -83,6 +88,11 @@
 - E2E: pro Block eigenes Log (`trace-<n>.log`), sonst sind Fehler nachträglich nicht analysierbar; `EXPLORER2_TRACE_KEYS=1` loggt jede Taste mit Pane.
 - Sicherheitscheck blockt `rm -rf $VAR` in `bash -c`-Strings → eindeutige Temp-Ordner statt Löschen.
 - Lange CI-Logs: `get_job_logs` mit `return_content=false` → URL per `curl` laden und greppen (tail wird von Cache-Upload-Zeilen geflutet).
+
+- Slint DnD: TouchArea muss **Kind** der `DragArea` sein (als Geschwister darüber schluckt sie den Druck); `DragAction` ist in Rust nicht öffentlich → Callbacks liefern int (0/1/2), Slint mappt. `pure callback` für `data:`-Bindings.
+- Python-Replaces in Dateien mit Windows-Pfaden: **raw strings** (`r"..."`) – `\a`/`\b` werden sonst zu Steuerzeichen.
+- PowerShell 7 hat kein `Get-Clipboard -Format FileDropList` → `shell: powershell` (5.1) für Clipboard-Tests.
+- Papierkorb-Restore immer gegen Snapshot **vor** der Aktion (gleicher Originalpfad kann mehrfach im Papierkorb liegen).
 
 ## Referenzen
 - File Pilot: https://filepilot.tech (Panels/Tabs, Inspector, GoTo, Command Palette, pinbare Context-Menu-Einträge, ~2,5 MB Exe)

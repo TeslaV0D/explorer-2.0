@@ -215,4 +215,7 @@ $EXE "$W/home/Desktop" > $LOG 2>&1 & PID=$!
 sleep 2
 check "[37] start path opens a single tab" "grep -qF 'layout panes=1 tabs=[1] split=false active_pane=0' $LOG && navigated_to '$W/home/Desktop'"
 kill $PID; wait $PID 2>/dev/null
+
+# ---- M4 file operations (own script, runnable alone)
+"$(dirname "$0")/e2e-ops.sh" "$EXE" "$W" || FAIL=1
 exit $FAIL
