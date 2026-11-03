@@ -54,8 +54,10 @@ pub fn decode_hdrop(data: &[u8]) -> Option<Vec<PathBuf>> {
     }
     let units: Vec<u16> = data
         .get(off..)?
-        .chunks_exact(2)
-        .map(|c| u16::from_le_bytes([c[0], c[1]]))
+        .as_chunks::<2>()
+        .0
+        .iter()
+        .map(|&c| u16::from_le_bytes(c))
         .collect();
     let paths: Vec<PathBuf> = units
         .split(|&u| u == 0)

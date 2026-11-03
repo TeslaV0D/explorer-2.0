@@ -92,6 +92,7 @@
 - Slint DnD: TouchArea muss **Kind** der `DragArea` sein (als Geschwister darüber schluckt sie den Druck); `DragAction` ist in Rust nicht öffentlich → Callbacks liefern int (0/1/2), Slint mappt. `pure callback` für `data:`-Bindings.
 - Python-Replaces in Dateien mit Windows-Pfaden: **raw strings** (`r"..."`) – `\a`/`\b` werden sonst zu Steuerzeichen.
 - PowerShell 7 hat kein `Get-Clipboard -Format FileDropList` → `shell: powershell` (5.1) für Clipboard-Tests.
+- CI nutzt das **neueste** stable (neue Clippy-Lints, z. B. 1.99 `chunks_exact_to_as_chunks`) → vor dem Push `rustup update stable` lokal.
 - Papierkorb-Restore immer gegen Snapshot **vor** der Aktion (gleicher Originalpfad kann mehrfach im Papierkorb liegen).
 
 ## Referenzen

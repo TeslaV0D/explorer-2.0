@@ -6,7 +6,7 @@ members = ["crates/core", "crates/fs", "crates/gpu", "crates/ops", "crates/app"]
 version = "0.0.1"
 edition = "2021"
 license = "MIT"
-rust-version = "1.87"
+rust-version = "1.88"  # slice::as_chunks
 
 [profile.release]
 lto = "fat"
