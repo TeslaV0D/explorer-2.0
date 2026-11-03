@@ -45,6 +45,15 @@ Gehören zur Shell (`explorer.exe`). Kein Ersatz geplant; wir bleiben Dateimanag
 | **Jump List / Taskleiste** | `ICustomDestinationList`, AppUserModelID |
 | **„Öffnen mit“/Dateizuordnung** | Wir sind Ordner-Handler, *nicht* Standard-App für Dateitypen. `UserChoice` ist hash-geschützt → nicht umgehen. |
 
+## R-001: Ein-Knopf-Reset (harte Anforderung, Boss)
+Lehre aus File Pilot: Nach einem Fehler half dort nur eine Windows-Neuinstallation. Das darf bei uns **nie** passieren.
+- **Journal**: Vor jeder Änderung (Registry-Schlüssel/-Werte, IFEO, Win+E-Verb, Kontextmenü, Autostart, Umgebungsvariablen/PATH, Verknüpfungen, Dateizuordnungen, Hotkey-Hooks) wird der **Originalzustand** (Wert, Typ, „existierte nicht“) in ein Journal geschrieben (`%APPDATA%\Explorer2\integration-journal.json` + Kopie in `%ProgramData%` für HKLM-Teile).
+- **Reset-Knopf in der App** („Alle Windows-Integrationen zurücksetzen“): spielt das Journal rückwärts ab, entfernt alle eigenen Schlüssel, startet ggf. `explorer.exe` neu.
+- **Eigenständiges Recovery-Tool** `explorer2-recover.exe` (keine UI-/GPU-Abhängigkeit, Konsole): funktioniert, wenn die App nicht startet, auch im Abgesicherten Modus; zusätzlich mitgeliefertes `.reg`/PowerShell-Fallback-Skript und Startmenü-Eintrag „Explorer 2.0 – Windows-Standard wiederherstellen“.
+- **Selbstheilung**: Startet `explorer.exe`-Proxy (Stufe 3) mehrfach nicht sauber → automatisch auf Windows-Standard zurückfallen.
+- **Deinstallation** ruft denselben Reset auf.
+- **Pflicht-Test in CI (Windows-Runner/VM)**: Snapshot (Registry-Bereiche, Umgebung) → alle Integrationen an → Reset → Snapshot muss **identisch** sein; dazu Test „Journal fehlt/beschädigt“ → Reset nutzt bekannte Standardwerte.
+
 ## Installation & Sicherheit
 - Installer (Inno Setup/WiX) **und** Portable-Modus; HKCU-first, HKLM nur für Stufe 3 (separat bestätigt).
 - **Jede Änderung protokollieren + Rückbau-Funktion** („Alles auf Windows-Standard zurücksetzen“ in Settings und als Standalone-Recovery).

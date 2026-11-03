@@ -84,14 +84,18 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           $rel = Invoke-RestMethod https://api.github.com/repos/pal1000/mesa-dist-win/releases/latest -Headers @{ Authorization = "Bearer $env:GH_TOKEN" }
-          $asset = $rel.assets | Where-Object { $_.name -match 'release-msvc\.7z$' } | Select-Object -First 1
-          if (-not $asset) { throw "mesa-dist-win asset not found" }
+          # MinGW build: Mesa 26.x MSVC builds ship without software OpenGL (known upstream issue)
+          $asset = $rel.assets | Where-Object { $_.name -match 'release-mingw\.7z$' } | Select-Object -First 1
+          if (-not $asset) { throw "test setup: mesa-dist-win mingw asset not found" }
           "Mesa: $($asset.name)"
           Invoke-WebRequest $asset.browser_download_url -OutFile "$env:RUNNER_TEMP\mesa.7z"
           7z x "$env:RUNNER_TEMP\mesa.7z" "-o$env:RUNNER_TEMP\mesa" -y | Out-Null
           $dst = "$env:RUNNER_TEMP\mesa-app"
           New-Item -ItemType Directory $dst -Force | Out-Null
-          Copy-Item "$env:RUNNER_TEMP\mesa\x64\*.dll" $dst
+          $gl = Get-ChildItem "$env:RUNNER_TEMP\mesa" -Recurse -Filter opengl32.dll | Where-Object { $_.DirectoryName -match 'x64' } | Select-Object -First 1
+          if (-not $gl) { throw "test setup: no x64 opengl32.dll in $($asset.name) (not an app failure)" }
+          "Mesa GL dir: $($gl.DirectoryName)"
+          Copy-Item "$($gl.DirectoryName)\*.dll" $dst
           Copy-Item target/release/explorer2.exe $dst
           Get-ChildItem $dst | Format-Table Name, Length
       - name: UI smoke matrix (renderer selection in different environments)

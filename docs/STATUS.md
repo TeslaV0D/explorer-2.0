@@ -19,6 +19,16 @@
 | Einstellung aus | Software, Grund „disabled in settings“ |
 | E2E | 20/20 PASS (neu: Panel speichert Setting, Ausgeblendete persistiert, Neustart respektiert Setting, Fenster-Icon gesetzt) |
 
+### CI-Run #12 (Windows-Umgebungsmatrix)
+| Szenario | Kaltstart bis Inhalt | Ergebnis |
+|---|---|---|
+| Auto, erster Start (Probe 3,4 ms → „gdi generic“) | ~50 ms | ✅ Software (vorher 488–679 ms) |
+| Auto, aus Cache + Hintergrund-Re-Probe | 129 ms | ✅ |
+| GPU erzwungen (ohne GPU) | 355 ms | ✅ läuft (Skia-Fallback) |
+| Software erzwungen | 45 ms | ✅ |
+| Einstellung aus | 45 ms | ✅ |
+| Mesa-GL | – | ❌ **Testaufbau**: Mesa 26.2.6 MSVC-Paket enthält kein opengl32.dll (bekanntes Upstream-Problem) → auf MinGW-Paket umgestellt, Run #13 |
+
 ### Bugs/Funde in M1.5
 - E2E-Klickkoordinate „Ausgeblendete“ hätte nach neuem Button den falschen Knopf getroffen → angepasst (x=880).
 - UI-Statuszeile war englisch → `Reason`-Enum: Englisch für Traces, Deutsch (`status_de`) fürs Panel.
