@@ -36,6 +36,13 @@
 - Lokal prüfen: `cargo fmt --all -- --check && cargo clippy --workspace --all-targets -- -D warnings && cargo test --workspace`
 - Slint-Gotcha: Widgets (`Button`, `ListView`) brauchen `import { … } from "std-widgets.slint";`
 
+## Erkenntnisse / Gotchas
+- Release-Exe ist GUI-Subsystem: nie `println!` (panikt bei fehlendem stdout, `panic=abort` killt App) → `let _ = writeln!(...)`.
+- PowerShell `& exe` wartet bei GUI-Exes nicht → in CI `Start-Process -Wait -RedirectStandardOutput`.
+- Sandbox: für Xvfb-UI-Test `libxkbcommon-x11-0` nötig; Start mit `SLINT_BACKEND=winit-software xvfb-run ...`.
+- Windows-Cross-Check lokal möglich für reine Rust-Crates: `cargo clippy -p explorer-core -p explorer-fs --target x86_64-pc-windows-msvc` (App-Crate nicht, wegen Skia/MSVC).
+- CI-Status per GitHub-MCP (`actions_list` / `get_job_logs`), kein `gh`.
+
 ## Referenzen
 - File Pilot: https://filepilot.tech (Panels/Tabs, Inspector, GoTo, Command Palette, pinbare Context-Menu-Einträge, ~2,5 MB Exe)
 - Everything/voidtools: Name-Index per NTFS MFT + USN-Journal (~1 Mio Dateien in ~1 min, ~100 MB RAM)

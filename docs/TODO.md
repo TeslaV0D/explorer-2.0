@@ -9,7 +9,7 @@ Legende: `[ ]` offen · `[~]` in Arbeit · `[x]` erledigt · Prio P0/P1/P2
 - [ ] Phase-1-Plan von Boss abnehmen lassen / anpassen (läuft implizit weiter, Anpassungen jederzeit)
 
 ## Phase 1 – Basis (Details: `PLAN-BASICS.md`)
-- [~] M0 Repo-Setup: [x] Cargo-Workspace, [x] CI (Windows+Linux), [x] rustfmt/clippy, [x] Skelett-Fenster mit Ordnerliste · [ ] Windows-Manifest (PerMonitorV2, longPathAware) + Icon (`build.rs`/winresource) · [ ] CI-Lauf auf GitHub grün bestätigen
+- [x] M0 Repo-Setup: Cargo-Workspace, CI (Windows+Linux, fmt/clippy/test, Release-Build + Exe-Smoke-Test), Skelett-Fenster, Windows-Manifest (PerMonitorV2, longPathAware, UTF-8) – **abgeschlossen 2026-11-03, CI-Run #3 grün**
 - [ ] M1 fs-Kern: Enumeration (FindFirstFileEx/NtQueryDirectoryFile), Sortierung, Watcher, Benchmarks (100k Dateien)
 - [ ] M2 UI-Shell: Fenster, virtualisierte Liste, Details-Ansicht, Adressleiste
 - [ ] M3 Tabs, Split-View, Sidebar, Verlauf, Tastatur, Session-Restore
@@ -18,6 +18,11 @@ Legende: `[ ]` offen · `[~]` in Arbeit · `[x]` erledigt · Prio P0/P1/P2
 - [ ] M6 Ordneroptionen-Parität, Themes, Command Palette, Inspector
 - [ ] M7 Windows-Integration Stufe 1–3 (siehe `WINDOWS-INTEGRATION.md`) + Verifikationspunkte auf echtem Windows
 - [ ] M8 Installer, Recovery-Tool, Härtung, Beta
+
+## Technische Schulden / Follow-ups
+- [ ] Exe-Größe 17,2 MB (Budget < 20 MB ok, Ideal < 10 MB verfehlt) → in M2 prüfen: Skia vs. femtovg/Software-Renderer, `opt-level="z"`-Vergleich
+- [ ] Exe-Icon (`.ico` in `explorer2.rc`) – braucht Grafik/Logo
+- [ ] GitHub-Actions auf Node-24-Versionen heben (checkout@v4 → v5 etc., Deprecation-Warnung in CI)
 
 ## Phase 2 – Systemweite Suche (voidtools/Everything-Stil)  *(später, nur beschrieben)*
 - [ ] NTFS-Index über MFT-Scan + USN-Journal-Live-Updates (Dienst/Admin-Helper nötig, Alternative: Verzeichnis-Walk für FAT/Netz)
