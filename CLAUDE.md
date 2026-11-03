@@ -52,6 +52,9 @@
 - `cargo fmt` bricht lange Zeilen um → Python-String-Replaces danach prüfen (`assert s.count(old)==1`).
 - E2E unter Xvfb ohne Window-Manager: `xdotool windowfocus` statt `windowactivate`; Debug-Trace via `EXPLORER2_TRACE=1` (stderr).
 - Trace-Log nie in beobachteten Ordner schreiben, außer zum Testen der Drossel.
+- Trace-Zeilen haben `at=<ms seit Prozessstart>`; „event loop running“ markiert Fenster bereit. Daten-Latenz = at(first paint) − max(at(navigate), at(event loop)). Ergebnisse aus `invoke_from_event_loop` laufen erst, wenn die Loop läuft → Kaltstart steckt sonst in „first paint“.
+- GitHub-Runner (Windows) haben kein GPU-OpenGL → Skia fällt zurück (funktioniert, kostet Startzeit).
+- Lange CI-Logs: `get_job_logs` mit `return_content=false` → URL per `curl` laden und greppen (tail wird von Cache-Upload-Zeilen geflutet).
 
 ## Referenzen
 - File Pilot: https://filepilot.tech (Panels/Tabs, Inspector, GoTo, Command Palette, pinbare Context-Menu-Einträge, ~2,5 MB Exe)

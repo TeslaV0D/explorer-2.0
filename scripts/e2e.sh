@@ -39,7 +39,7 @@ sleep 3
 touch $W/watch/sub/new_file.txt; sleep 2; shot s2_refresh
 check "[2] auto-refresh picks up new file" "grep -q 'done gen=2 total=2' $LOG"
 rm -rf $W/watch/sub; sleep 2; shot s3_deleted
-check "[3] deleted folder -> parent" "grep -qE 'navigate gen=[0-9]+ User $W/watch\$' $LOG"
+check "[3] deleted folder -> parent" "grep -qE 'navigate gen=[0-9]+ User $W/watch at=' $LOG"
 focus; xdotool mousemove 400 20 click 1; sleep 0.3
 xdotool key ctrl+a; xdotool type --delay 5 "$W/does/not/exist"; xdotool key Return; sleep 1.5; shot s4_invalid
 check "[4] invalid path -> NotFound error" "grep -q 'failed gen=[0-9]* NotFound $W/does/not/exist' $LOG"
@@ -49,7 +49,7 @@ BEFORE=$(grep -c "navigate" $LOG)
 xdotool mousemove 1040 20 click 1; sleep 1.5; shot s5_hidden
 check "[5] hidden toggle reloads" "[ \$(grep -c navigate $LOG) -gt $BEFORE ] && grep -q 'total=2 shown=2' $LOG"
 xdotool mousemove 24 20 click 1; sleep 1; shot s6_up
-check "[6] go up to e2e" "grep -qE 'navigate gen=[0-9]+ User $W\$' $LOG"
+check "[6] go up to e2e" "grep -qE 'navigate gen=[0-9]+ User $W at=' $LOG"
 ADDR=$(grep '^\[trace\] address=' $LOG | tail -1)
 check "[6b] address bar follows navigation after typing" '[ "$ADDR" = "[trace] address=$W" ]' 
 echo "== [7] throttle: own trace.log in watched folder (write-feedback loop)"

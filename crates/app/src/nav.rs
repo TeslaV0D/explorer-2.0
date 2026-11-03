@@ -70,8 +70,28 @@ pub fn count_label(n: usize) -> String {
     }
 }
 
+static PROCESS_START: std::sync::OnceLock<Instant> = std::sync::OnceLock::new();
+
+/// Call first thing in `main` so traces can report time since process start.
+pub fn mark_process_start() {
+    PROCESS_START.get_or_init(Instant::now);
+}
+
+/// Milliseconds since process start (for `at=` trace fields).
+pub fn since_start_ms() -> f64 {
+    PROCESS_START
+        .get_or_init(Instant::now)
+        .elapsed()
+        .as_secs_f64()
+        * 1000.0
+}
+
 fn trace_enabled() -> bool {
     std::env::var_os("EXPLORER2_TRACE").is_some()
+}
+
+pub fn trace_line(msg: &str) {
+    trace(msg);
 }
 
 fn trace(msg: &str) {
@@ -141,8 +161,9 @@ pub fn navigate(win: &MainWindow, target: PathBuf, reason: Reason) {
         win.set_error("".into());
     }
     trace(&format!(
-        "navigate gen={gen} {reason:?} {}",
-        target.display()
+        "navigate gen={gen} {reason:?} {} at={:.1}ms",
+        target.display(),
+        since_start_ms()
     ));
     let weak = win.as_weak();
     let path = target.clone();
@@ -211,8 +232,9 @@ fn apply(win: &MainWindow, gen: u64, path: PathBuf, reason: Reason, upd: Update,
                 None => {
                     win.set_status(format!("Lädt … {}", format_count(n)).into());
                     trace(&format!(
-                        "first paint gen={gen} rows={n} after {:?}",
-                        t0.elapsed()
+                        "first paint gen={gen} rows={n} after {:?} at={:.1}ms",
+                        t0.elapsed(),
+                        since_start_ms()
                     ));
                 }
                 Some((total, took)) => {
@@ -228,7 +250,8 @@ fn apply(win: &MainWindow, gen: u64, path: PathBuf, reason: Reason, upd: Update,
                     }
                     win.set_status(st.into());
                     trace(&format!(
-                        "done gen={gen} total={total} shown={n} after {took:?}"
+                        "done gen={gen} total={total} shown={n} after {took:?} at={:.1}ms",
+                        since_start_ms()
                     ));
                     trace(&format!("address={}", win.get_current_path()));
                 }

@@ -23,6 +23,7 @@ fn attach_parent_console() {
 fn attach_parent_console() {}
 
 fn main() -> Result<(), slint::PlatformError> {
+    nav::mark_process_start();
     let arg = std::env::args().nth(1);
     if arg.as_deref() == Some("--version") {
         attach_parent_console();
@@ -77,5 +78,13 @@ fn main() -> Result<(), slint::PlatformError> {
     });
 
     nav::navigate(&win, start, nav::Reason::User);
+    // Fires once the event loop runs (window + renderer initialized) -> separates
+    // startup cost from data latency in traces.
+    slint::Timer::single_shot(std::time::Duration::ZERO, || {
+        nav::trace_line(&format!(
+            "event loop running at={:.1}ms",
+            nav::since_start_ms()
+        ));
+    });
     win.run()
 }

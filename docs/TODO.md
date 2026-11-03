@@ -21,7 +21,8 @@ Legende: `[ ]` offen · `[~]` in Arbeit · `[x]` erledigt · Prio P0/P1/P2
   - [x] UI: Laden nie im UI-Thread, Generationszähler gegen veraltete Ergebnisse, Statusleiste, Fehleranzeige, Rückfall auf Elternordner wenn aktueller Ordner verschwindet
   - [x] Benchmark-Tool (`cargo run --release -p explorer-fs --example bench -- --assert`) + CI-Budgets
   - [x] E2E-Test unter Xvfb (13 Checks): `scripts/e2e.sh`, läuft als CI-Job `e2e-linux`
-  - [ ] CI grün inkl. Windows-Benchmark + Windows-UI-Smoke-Test
+  - [x] CI grün inkl. Windows-Benchmark + Windows-UI-Smoke-Test (Run #6)
+  - [ ] CI grün mit getrennter Start-/Daten-Messung (harte Budgets)
 - [ ] M2 UI-Shell: Fenster, virtualisierte Liste, Details-Ansicht, Adressleiste
 - [ ] M3 Tabs, Split-View, Sidebar, Verlauf, Tastatur, Session-Restore
 - [ ] M4 Dateioperationen: Queue, Undo/Redo, Clipboard, Drag&Drop, Konfliktdialog
@@ -32,6 +33,7 @@ Legende: `[ ]` offen · `[~]` in Arbeit · `[x]` erledigt · Prio P0/P1/P2
 
 ## Technische Schulden / Follow-ups
 - [ ] Exe-Größe 17,2 MB (Budget < 20 MB ok, Ideal < 10 MB verfehlt) → in M2 prüfen: Skia vs. femtovg/Software-Renderer, `opt-level="z"`-Vergleich
+- [ ] Windows-Renderer: GL-Fallback kostet Startzeit auf GPU-losen Systemen → D3D zuerst prüfen; Kaltstart-Budget < 300 ms (M8)
 - [ ] Exe-Icon (`.ico` in `explorer2.rc`) – braucht Grafik/Logo
 - [ ] `NtQueryDirectoryFile` als Alternative zum FindFirstFileExW messen (nur falls Windows-Bench knapp wird)
 - [ ] GitHub-Actions auf Node-24-Versionen heben (checkout@v4 → v5 etc., Deprecation-Warnung in CI)

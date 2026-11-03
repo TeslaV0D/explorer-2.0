@@ -75,7 +75,17 @@ jobs:
           if (-not $alive) { throw "explorer2 exited early (exit code $($p.ExitCode))" }
           if ($text -notmatch 'done gen=1 total=100000 shown=100000') { throw "100k folder not fully loaded" }
           if ($text -match '(?i)panic') { throw "panic in log" }
-          $fp = [regex]::Match($text, 'first paint gen=1 rows=\d+ after ([\d.]+)(ms|µs|s)')
-          "first paint: $($fp.Groups[1].Value) $($fp.Groups[2].Value)"
+          function At($pattern) {
+            $m = [regex]::Match($text, $pattern + '.*? at=([\d.]+)ms')
+            if (-not $m.Success) { throw "trace line missing: $pattern" }
+            [double]::Parse($m.Groups[1].Value, [cultureinfo]::InvariantCulture)
+          }
+          $nav = At 'navigate gen=1 '; $loop = At 'event loop running'
+          $fp = At 'first paint gen=1 '; $done = At 'done gen=1 '
+          $ready = [Math]::Max($nav, $loop)
+          $latFirst = [Math]::Max(0, $fp - $ready); $latDone = [Math]::Max(0, $done - $ready)
+          "startup (event loop running): $loop ms | first rows after ready: $latFirst ms | all 100k after ready: $latDone ms"
+          if ($latFirst -gt 100) { throw "first rows budget exceeded: $latFirst ms > 100 ms" }
+          if ($latDone -gt 1000) { throw "full load budget exceeded: $latDone ms > 1000 ms" }
       - uses: actions/upload-artifact@v4
         with: { name: explorer2-windows-x64, path: target/release/explorer2.exe }
