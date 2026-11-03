@@ -15,6 +15,9 @@
 - E2E 37/37 (neu 12–26): Sortierreihenfolgen per Spaltenkopf, Richtungswechsel, Persistenz, Pfeile/Umschalt+Ende/Strg+A, **Auswahlfarbe per Pixel**, Typeahead, Enter öffnet Datei (Stub-Öffner), Enter/Doppelklick öffnet Ordner, Rücktaste markiert Herkunftsordner, Strg+L+Esc, Breadcrumb-Klick.
 
 ### Funde in M2
+- **CI-Run #15 rot (2 Ursachen):**
+  1. E2E [26]: Testfehler – Breadcrumb navigierte korrekt zur Wurzel `/` (kurzer CI-Pfad → kein „…“), Prüfmuster `//*` passte nie → Vorfahren-Prüfung korrigiert (Gegenfälle getestet).
+  2. Windows-Erststart 1666 ms: GPU-Probe **581 ms** (vorher 3–67 ms) + Fenster-Erstellung 755 ms (frische VM). → **Design-Fix**: Probe läuft nie mehr im Startpfad (ohne Cache: sofort Software, Probe im Hintergrund, gilt ab nächstem Start). Neuer Trace „window created“. Budget-Prüfung: normale Starts best-of-3 < 300 ms (hart), Erststart < 1 s (Plausibilität, ausgewiesen).
 - Testerwartung falsch (nicht Code): Strg+Klick setzt den Auswahl-Anker auch beim Abwählen – wie Windows-ListView; Test korrigiert.
 - Vermeintlicher Render-Bug (fokussierte Zeile „ohne“ Auswahlfarbe) war ein Lesefehler auf verkleinertem Screenshot – Pixelmessung zeigte korrekte Farbe; „Fix“ zurückgenommen, Auswahlfarbe jetzt per Pixel im E2E geprüft.
 - Klick auf die Adressleiste traf nach Breadcrumb-Umbau ein Segment → Explorer-Shortcuts Strg+L/Alt+D ergänzt, E2E nutzt sie.
@@ -109,5 +112,5 @@ Daten-Budgets in allen Szenarien eingehalten (erste Zeilen 0,8–1,4 ms, alle 10
 
 ## Nächste Schritte
 1. CI für M2 grün → M2 ✅.
-2. M3: UI-Shell (Spalten-Header mit Sortierung, Datei-Icons, Details-Ansicht, Tastaturnavigation).
+2. M3: Tabs, Split-View, Seitenleiste (Schnellzugriff/Laufwerke), Verlauf Zurück/Vor, Session-Restore.
 3. Boss: Artefakt auf echtem PC mit GPU testen (Einstellungen → Statuszeile zeigt GPU-Namen).

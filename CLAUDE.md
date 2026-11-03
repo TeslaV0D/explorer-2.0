@@ -25,7 +25,7 @@
 | D-005 | Enumeration Windows: `FindFirstFileExW` (Basic + Large Fetch) statt `NtQueryDirectoryFile` – dokumentierte API, Messung zeigt Budget-Reserve; NtQuery nur bei Bedarf | fix (M1) |
 | D-006 | Watcher: `notify`-Crate (ReadDirectoryChangesW/inotify), eigener Debounce + adaptive Drossel statt notify-debouncer | fix (M1) |
 | D-007 | UI-Sprache vorerst Deutsch hart codiert; i18n später (Slint `@tr`) | vorgeschlagen |
-| D-009 | Renderer: **GPU-Probe vor Fensterstart** (WGL: GL ≥ 3.0 + `glCreateShader`, Software-GL wie GDI Generic/llvmpipe = unbrauchbar) → Skia (GPU) oder Software. Ergebnis gecacht in settings.ini (pro App-Version), Hintergrund-Re-Probe 5 s nach Start. Einstellung „Hardwarebeschleunigung verwenden, wenn verfügbar“ (wie Browser), Override `EXPLORER2_RENDERER=auto|gpu|software`; `SLINT_BACKEND` hat Vorrang | fix (Boss, 2026-11-03) |
+| D-009 | Renderer: **GPU-Probe vor Fensterstart** (WGL: GL ≥ 3.0 + `glCreateShader`, Software-GL wie GDI Generic/llvmpipe = unbrauchbar) → Skia (GPU) oder Software. **Probe nie im Startpfad**: ohne Cache Start mit Software + Probe sofort im Hintergrund (gilt ab nächstem Start); mit Cache Re-Probe 5 s nach Start. Ergebnis in settings.ini (pro App-Version). Einstellung „Hardwarebeschleunigung verwenden, wenn verfügbar“ (wie Browser), Override `EXPLORER2_RENDERER=auto|gpu|software`; `SLINT_BACKEND` hat Vorrang | fix (Boss, 2026-11-03) |
 | D-010 | App-Icon: gelber Ordner + blaues Band (Windows-11-Explorer-Anmutung) auf heller abgerundeter Kachel (Apple-Files-Anmutung), Vorwärts-Chevrons = „2.0“; 16–32 px vereinfachte Variante ohne Kachel | fix (M1.5) |
 | D-008 | Perf-Gates in CI auf **best-of-N** (≥ 9 Läufe), Median/Max/OS-Stalls nur ausweisen – Shared-Runner haben sporadische OS-Stalls (gemessen 168 ms im rohen FindFirstFileExW); Budgets selbst unverändert | fix (M1) |
 
@@ -71,7 +71,8 @@
 - Slint: Renderer per `slint::BackendSelector::new().backend_name("winit").renderer_name("skia"|"software").select()` **vor** dem ersten Fenster; `"skia"` fällt selbst zurück, `"skia-opengl"` nicht. `SLINT_BACKEND` gewinnt immer.
 - `xprop` zeigt `_NET_WM_ICON` im Pretty-Modus leer → mit `-notype 32c` Rohdaten lesen (Icon war gesetzt).
 - Mesa für Windows-GL-Tests: **MinGW**-Paket nehmen (26.x MSVC-Paket hat kein Software-OpenGL); App-lokale `opengl32.dll` wird von Probe + Skia genutzt.
-- GPU-Probe-Kosten schwanken je Treiber (Runner 3–67 ms, Mesa-llvmpipe 239 ms) → nur 1. Start zahlt, danach Cache.
+- GPU-Probe-Kosten schwanken stark (Runner 3–581 ms, Mesa-llvmpipe 239 ms) → deshalb läuft sie nur im Hintergrund.
+- Allererster Start auf frischer Windows-VM zahlt Einmalkosten (Fenster-Erstellung 755 ms statt ~5 ms: Dateicache/Fonts) → Kaltstart-Budget 300 ms wird an normalen Starts (Cache) best-of-3 geprüft, Erststart nur Plausibilität < 1 s und ausgewiesen.
 - **UI-Zustände per Pixel messen** (`convert img -format '%[pixel:p{x,y}]' info:`), nie per Augenmaß auf verkleinerten Screenshots – ein vermeintlicher Render-Bug (fokussierte Zeile „ohne“ Auswahlfarbe) war ein Lesefehler.
 - Sicherheitscheck blockt `rm -rf $VAR` in `bash -c`-Strings → eindeutige Temp-Ordner statt Löschen.
 - Lange CI-Logs: `get_job_logs` mit `return_content=false` → URL per `curl` laden und greppen (tail wird von Cache-Upload-Zeilen geflutet).

@@ -122,7 +122,8 @@ xdotool mousemove 300 $(row_y 1) click --repeat 2 --delay 80 1; sleep 1.2
 check "[25] double-click opens a folder" "grep -qE 'navigate gen=[0-9]+ User $M/Musik at=' $LOG"
 xdotool mousemove 62 21 click 1; sleep 1.2
 NAVP=$(grep -oE 'navigate gen=[0-9]+ User .* at=' $LOG | tail -1 | sed -E 's/navigate gen=[0-9]+ User (.*) at=/\1/')
-OK=0; case "$M/Musik" in "$NAVP"/*) OK=1;; esac
+# "$NAVP" must be a proper ancestor; the root "/" counts too (short CI paths show no "…")
+OK=0; [ -n "$NAVP" ] && [ "$NAVP" != "$M/Musik" ] && case "$M/Musik/" in "${NAVP%/}/"*) OK=1;; esac
 check "[26] breadcrumb click navigates to an ancestor ($NAVP)" "[ $OK = 1 ]"
 check "[26b] process alive" "kill -0 $PID"
 kill $PID; wait $PID 2>/dev/null

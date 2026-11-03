@@ -7,6 +7,9 @@
 
 use explorer_core::renderer::ProbeResult;
 
+/// Whether `probe_opengl` can give a real answer on this platform.
+pub const PROBE_SUPPORTED: bool = cfg!(windows);
+
 /// Probes for a usable hardware OpenGL driver. Never panics.
 pub fn probe_opengl() -> ProbeResult {
     #[cfg(windows)]

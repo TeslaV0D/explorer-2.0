@@ -50,6 +50,7 @@ fn main() -> Result<(), slint::PlatformError> {
     let settings = config::load();
 
     let win = MainWindow::new()?;
+    nav::trace_line(&format!("window created at={:.1}ms", nav::since_start_ms()));
     nav::init(
         &win,
         settings.show_hidden,
@@ -156,6 +157,6 @@ fn main() -> Result<(), slint::PlatformError> {
             nav::since_start_ms()
         ));
     });
-    gfx::refresh_probe_in_background(&renderer);
+    gfx::probe_in_background(&renderer);
     win.run()
 }

@@ -1,4 +1,9 @@
 //! Renderer selection ("Hardwarebeschleunigung") before the window is created.
+//!
+//! The GPU probe never runs on the startup path: without a cached result the app
+//! starts with the software renderer right away and probes in the background; the
+//! result applies from the next start. With a cached result, a delayed background
+//! re-probe keeps the cache fresh (driver installed/removed).
 
 use crate::config;
 use crate::nav::{since_start_ms, trace_line};
@@ -10,11 +15,20 @@ use std::time::{Duration, Instant};
 
 const VERSION: &str = env!("CARGO_PKG_VERSION");
 
+/// When to run the background probe after start.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum BackgroundProbe {
+    None,
+    /// No cache yet: probe immediately (result for the next start).
+    Now,
+    /// Cache used: re-probe later to keep it fresh.
+    Later,
+}
+
 pub struct Selection {
     pub choice: RendererChoice,
     pub reason: Reason,
-    /// Probe result came from the cache → refresh it in the background.
-    pub used_cache: bool,
+    pub background: BackgroundProbe,
 }
 
 /// Human-readable status for the settings panel.
@@ -28,7 +42,7 @@ pub fn select() -> Selection {
         let sel = Selection {
             choice: RendererChoice::PlatformDefault,
             reason: Reason::ToolkitEnv,
-            used_cache: false,
+            background: BackgroundProbe::None,
         };
         trace_line(&format!(
             "renderer choice={:?} reason=\"{}\" at={:.1}ms",
@@ -42,32 +56,29 @@ pub fn select() -> Selection {
     let env_override = std::env::var("EXPLORER2_RENDERER")
         .ok()
         .and_then(|v| RendererOverride::parse(&v));
-    let mut used_cache = false;
-    let mut probe_ms = 0.0;
+    let mut background = BackgroundProbe::None;
     let (choice, reason) = decide(
         env_override,
         settings.hardware_acceleration,
         || match settings.cached_probe(VERSION) {
             Some(GpuProbeCache::Usable) => {
-                used_cache = true;
+                background = BackgroundProbe::Later;
                 ProbeResult::Usable {
                     renderer: "cached".into(),
                     version: "cached".into(),
                 }
             }
             Some(GpuProbeCache::Unusable) => {
-                used_cache = true;
+                background = BackgroundProbe::Later;
                 ProbeResult::Unusable {
                     reason: "cached probe".into(),
                 }
             }
-            None => {
-                let p0 = Instant::now();
-                let r = explorer_gpu::probe_opengl();
-                probe_ms = p0.elapsed().as_secs_f64() * 1000.0;
-                store_probe(&r);
-                r
+            None if explorer_gpu::PROBE_SUPPORTED => {
+                background = BackgroundProbe::Now;
+                ProbeResult::Pending
             }
+            None => ProbeResult::NotSupported,
         },
     );
     let renderer = match choice {
@@ -89,14 +100,14 @@ pub fn select() -> Selection {
         }
     }
     trace_line(&format!(
-        "renderer choice={choice:?} reason=\"{reason}\" cached={used_cache} probe_ms={probe_ms:.1} select_ms={:.1} at={:.1}ms",
+        "renderer choice={choice:?} reason=\"{reason}\" background={background:?} select_ms={:.1} at={:.1}ms",
         t0.elapsed().as_secs_f64() * 1000.0,
         since_start_ms()
     ));
     Selection {
         choice,
         reason,
-        used_cache,
+        background,
     }
 }
 
@@ -104,7 +115,7 @@ fn store_probe(r: &ProbeResult) {
     let cache = match r {
         ProbeResult::Usable { .. } => GpuProbeCache::Usable,
         ProbeResult::Unusable { .. } => GpuProbeCache::Unusable,
-        ProbeResult::NotSupported => return,
+        ProbeResult::NotSupported | ProbeResult::Pending => return,
     };
     if let Err(e) = config::update(|s| {
         s.gpu_probe = Some(cache);
@@ -114,22 +125,25 @@ fn store_probe(r: &ProbeResult) {
     }
 }
 
-/// Keeps the cached probe fresh (driver installed/removed) without paying for
-/// it on the startup path: re-probes a few seconds after start, applies next start.
-pub fn refresh_probe_in_background(sel: &Selection) {
-    if !sel.used_cache {
-        return;
-    }
+/// Runs the GPU probe off the UI thread (see module docs).
+pub fn probe_in_background(sel: &Selection) {
+    let delay = match sel.background {
+        BackgroundProbe::None => return,
+        BackgroundProbe::Now => Duration::ZERO,
+        BackgroundProbe::Later => Duration::from_secs(5),
+    };
     let _ = std::thread::Builder::new()
-        .name("gpu-reprobe".into())
-        .spawn(|| {
-            std::thread::sleep(Duration::from_secs(5));
+        .name("gpu-probe".into())
+        .spawn(move || {
+            std::thread::sleep(delay);
             let before = config::load().gpu_probe;
+            let p0 = Instant::now();
             let r = explorer_gpu::probe_opengl();
+            let probe_ms = p0.elapsed().as_secs_f64() * 1000.0;
             store_probe(&r);
             let after = config::load().gpu_probe;
             trace_line(&format!(
-                "background re-probe: {r:?} changed={}",
+                "background probe: {r:?} probe_ms={probe_ms:.1} changed={} applies_next_start=true",
                 before != after
             ));
         });

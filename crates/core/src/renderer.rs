@@ -31,6 +31,9 @@ pub enum ProbeResult {
     },
     /// No probe on this platform → keep the toolkit's own default.
     NotSupported,
+    /// No cached result yet: start with software now, probe in the background
+    /// (result applies from the next start). Keeps the probe off the startup path.
+    Pending,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -87,6 +90,8 @@ pub enum Reason {
     },
     NoUsableGpu(String),
     NoProbe,
+    /// First start: GPU check runs in the background.
+    ProbePending,
     /// `SLINT_BACKEND` set by the user/developer: toolkit decides.
     ToolkitEnv,
 }
@@ -100,6 +105,7 @@ impl std::fmt::Display for Reason {
             Reason::Gpu { renderer, version } => write!(f, "GPU: {renderer} (OpenGL {version})"),
             Reason::NoUsableGpu(r) => write!(f, "no usable GPU: {r}"),
             Reason::NoProbe => f.write_str("no GPU probe on this platform"),
+            Reason::ProbePending => f.write_str("GPU probe pending (background)"),
             Reason::ToolkitEnv => f.write_str("SLINT_BACKEND set"),
         }
     }
@@ -119,6 +125,9 @@ pub fn status_de(choice: RendererChoice, reason: &Reason) -> String {
         Reason::Gpu { .. } => "geeignete GPU erkannt".to_string(),
         Reason::NoUsableGpu(_) => "keine geeignete GPU gefunden".to_string(),
         Reason::NoProbe => "keine GPU-Prüfung auf diesem System".to_string(),
+        Reason::ProbePending => {
+            "GPU-Prüfung läuft im Hintergrund – gilt ab dem nächsten Start".to_string()
+        }
         Reason::ToolkitEnv => "per SLINT_BACKEND festgelegt".to_string(),
     };
     format!("Aktuell: {what} ({why})")
@@ -144,6 +153,7 @@ pub fn decide(
         }
         ProbeResult::Unusable { reason } => (RendererChoice::Software, Reason::NoUsableGpu(reason)),
         ProbeResult::NotSupported => (RendererChoice::PlatformDefault, Reason::NoProbe),
+        ProbeResult::Pending => (RendererChoice::Software, Reason::ProbePending),
     }
 }
 
@@ -210,6 +220,14 @@ mod tests {
 
         assert_eq!(decide(None, true, usable).0, RendererChoice::Gpu);
         assert_eq!(decide(None, true, unusable).0, RendererChoice::Software);
+        assert_eq!(
+            decide(None, true, || ProbeResult::NotSupported).0,
+            RendererChoice::PlatformDefault
+        );
+        assert_eq!(
+            decide(None, true, || ProbeResult::Pending),
+            (RendererChoice::Software, Reason::ProbePending)
+        );
         assert_eq!(
             decide(None, true, || ProbeResult::NotSupported).0,
             RendererChoice::PlatformDefault
