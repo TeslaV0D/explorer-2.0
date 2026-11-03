@@ -1,0 +1,41 @@
+import { Button, ListView } from "std-widgets.slint";
+
+export struct Row { name: string, size: string, modified: string, is-dir: bool }
+
+export component MainWindow inherits Window {
+    title: "Explorer 2.0";
+    preferred-width: 1100px;
+    preferred-height: 700px;
+    min-width: 480px;
+    min-height: 320px;
+
+    in property <string> current-path;
+    in property <[Row]> rows;
+    callback navigate(string);
+    callback open-row(int);
+    callback go-up();
+
+    VerticalLayout {
+        HorizontalLayout {
+            padding: 6px; spacing: 6px;
+            Button { text: "↑"; clicked => { root.go-up(); } }
+            path-edit := TextInput {
+                text: root.current-path;
+                single-line: true;
+                accepted => { root.navigate(self.text); }
+            }
+        }
+        ListView {
+            for row[i] in root.rows : Rectangle {
+                height: 24px;
+                TouchArea { double-clicked => { root.open-row(i); } }
+                HorizontalLayout {
+                    padding-left: 8px; spacing: 12px;
+                    Text { text: row.is-dir ? "📁 " + row.name : "   " + row.name; horizontal-stretch: 1; vertical-alignment: center; }
+                    Text { text: row.size; width: 90px; horizontal-alignment: right; vertical-alignment: center; }
+                    Text { text: row.modified; width: 140px; vertical-alignment: center; }
+                }
+            }
+        }
+    }
+}

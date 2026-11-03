@@ -1,18 +1,20 @@
 # Zwischenstand
 
-**Stand:** 2026-11-03 · **Phase:** 1 – Planung · **Branch:** `claude/relaxed-pasteur-ufhh1p`
+**Stand:** 2026-11-03 · **Phase:** 1 – M0 fast fertig · **Branch:** `claude/relaxed-pasteur-ufhh1p`
 
 ## Erledigt
-- Repo-Analyse: nur LICENSE vorhanden, Greenfield.
-- Referenzen ausgewertet: File Pilot (Panels/Tabs, Inspector, GoTo, Command Palette, ~2,5 MB), Sweetch (Kreismenü, .NET, MIT), Everything (MFT+USN, ~100 MB / 1 Mio Dateien).
-- Doku angelegt: `CLAUDE.md` (Memory), `PROJECT`, `PLAN-BASICS`, `WINDOWS-INTEGRATION`, `TODO`, `STATUS`.
-- Windows-Integration in 5 Stufen durchdacht (Registry-Verben → Win+E → explorer.exe-Proxy → Dialoge (Grenze) → Shell bleibt).
+- Planung + Doku (siehe `CLAUDE.md`), D-001 = **Rust + Slint**.
+- M0-Skelett: Cargo-Workspace (`core`, `fs`, `app`), CI-Workflow, Slint-Fenster mit Pfadleiste, „Hoch“-Button, Ordnerliste (Doppelklick öffnet Ordner).
+- Lokal grün (Linux): `cargo fmt --check`, `clippy -D warnings`, `cargo test` (Sortierung/natürliche Reihenfolge, Verzeichnis-Lesen inkl. Fehlerfall). `cargo check` für die UI läuft durch.
 
-## Offen / blockiert
-- **Entscheidung D-001 (Stack/UI-Framework)** – ohne die kein M0-Start. Empfehlung: Rust + Slint.
-- Windows-Verifikation der ⚠️-Punkte nicht möglich in der Linux-Sandbox → CI + manuelle Tests durch Boss.
+## Nicht verifiziert
+- UI wurde nur *kompiliert*, nicht visuell gestartet (kein Display in der Sandbox).
+- Windows-Build/CI-Lauf noch nicht gesehen – erster Push triggert ihn.
+
+## Offen
+- Windows-Manifest (DPI/Langpfade) + Exe-Icon.
+- Skia-Renderer auf Windows-CI bestätigen; falls Build zu schwer/langsam → Fallback `renderer-femtovg` oder nur Software.
 
 ## Nächste Schritte
-1. Boss: Plan lesen, D-001 entscheiden, Prioritäten anpassen.
-2. M0: Workspace + CI + Fenster-Skelett.
-3. M1: fs-Kern + Benchmarks.
+1. CI-Ergebnis prüfen, Manifest ergänzen → M0 abschließen.
+2. M1: Windows-Fastpath für Enumeration (`FindFirstFileExW`), Watcher, Benchmark mit 100k Dateien.

@@ -18,7 +18,7 @@
 ## Entscheidungen (Decision Log)
 | ID | Entscheidung | Status |
 |---|---|---|
-| D-001 | Stack: Rust-Kern + `windows`-crate (Win32/COM), UI-Framework noch offen (Empfehlung: Slint, Alternativen egui / C#+WinUI3) | **offen – Boss entscheidet** |
+| D-001 | Stack: **Rust + Slint** (Skia-OpenGL-Renderer, Software-Fallback) + `windows`-crate (Win32/COM) für Shell-Integration | **fix (Boss, 2026-11-03)** |
 | D-002 | Reihenfolge: Basis → Suche (voidtools-Stil) → Datei-Shortcuts (Sweetch-Stil) | fix (Boss) |
 | D-003 | Explorer-Ersatz in Stufen, jede Stufe reversibel; riskante Hooks (IFEO) zuletzt + opt-in | vorgeschlagen |
 | D-004 | Dokumentation auf Deutsch, Code/Identifier auf Englisch | fix |
@@ -27,6 +27,14 @@
 - Dev-Sandbox ist **Linux**, Zielplattform **Windows**. Windows-Code kann hier nicht ausgeführt werden → Build/Test via GitHub Actions (`windows-latest`); Kernlogik plattformneutral halten, damit sie auch unter Linux testbar ist.
 - Branch: `claude/relaxed-pasteur-ufhh1p`. Kein PR ohne explizite Ansage.
 - User-Präferenz: Anrede „Boss“, Bro-Ton, auf Deutsch antworten, kurz & präzise.
+
+## Code-Layout (seit M0)
+- `crates/core` (`explorer-core`): plattformneutrales Modell, Sortierung (natürlich, Ordner zuerst), Unit-Tests
+- `crates/fs` (`explorer-fs`): Verzeichnis-Enumeration (portabel via std; Windows-Fastpath folgt in M1)
+- `crates/app` (`explorer2`): Slint-UI (`ui/main.slint`), Binary
+- CI: `.github/workflows/ci.yml` (fmt, clippy -D warnings, test auf Windows+Linux; Release-Artefakt `explorer2.exe`)
+- Lokal prüfen: `cargo fmt --all -- --check && cargo clippy --workspace --all-targets -- -D warnings && cargo test --workspace`
+- Slint-Gotcha: Widgets (`Button`, `ListView`) brauchen `import { … } from "std-widgets.slint";`
 
 ## Referenzen
 - File Pilot: https://filepilot.tech (Panels/Tabs, Inspector, GoTo, Command Palette, pinbare Context-Menu-Einträge, ~2,5 MB Exe)

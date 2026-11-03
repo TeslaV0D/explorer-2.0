@@ -1,0 +1,11 @@
+[package]
+name = "explorer-fs"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+explorer-core = { path = "../core" }
+
+[dev-dependencies]
+tempfile = "3"

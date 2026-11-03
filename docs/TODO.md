@@ -5,11 +5,11 @@ Legende: `[ ]` offen · `[~]` in Arbeit · `[x]` erledigt · Prio P0/P1/P2
 ## Jetzt (Planung)
 - [x] Projektstruktur + Doku-Dateien anlegen (CLAUDE.md, PROJECT, PLAN-BASICS, WINDOWS-INTEGRATION, TODO, STATUS)
 - [x] Referenzen recherchiert (File Pilot, Sweetch, Everything)
-- [ ] **D-001 entscheiden: UI-Framework/Stack** (Boss)
-- [ ] Phase-1-Plan von Boss abnehmen lassen / anpassen
+- [x] D-001 entschieden: Rust + Slint
+- [ ] Phase-1-Plan von Boss abnehmen lassen / anpassen (läuft implizit weiter, Anpassungen jederzeit)
 
 ## Phase 1 – Basis (Details: `PLAN-BASICS.md`)
-- [ ] M0 Repo-Setup: Cargo-Workspace, Lizenz-Check, CI (Windows+Linux), Manifest (DPI/longPath), rustfmt/clippy
+- [~] M0 Repo-Setup: [x] Cargo-Workspace, [x] CI (Windows+Linux), [x] rustfmt/clippy, [x] Skelett-Fenster mit Ordnerliste · [ ] Windows-Manifest (PerMonitorV2, longPathAware) + Icon (`build.rs`/winresource) · [ ] CI-Lauf auf GitHub grün bestätigen
 - [ ] M1 fs-Kern: Enumeration (FindFirstFileEx/NtQueryDirectoryFile), Sortierung, Watcher, Benchmarks (100k Dateien)
 - [ ] M2 UI-Shell: Fenster, virtualisierte Liste, Details-Ansicht, Adressleiste
 - [ ] M3 Tabs, Split-View, Sidebar, Verlauf, Tastatur, Session-Restore
