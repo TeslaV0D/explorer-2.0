@@ -18,7 +18,7 @@ export component MainWindow inherits Window {
     VerticalLayout {
         HorizontalLayout {
             padding: 6px; spacing: 6px;
-            Button { text: "↑"; clicked => { root.go-up(); } }
+            Button { text: "↑"; width: 36px; clicked => { root.go-up(); } }
             path-edit := TextInput {
                 text: root.current-path;
                 single-line: true;
@@ -31,9 +31,10 @@ export component MainWindow inherits Window {
                 TouchArea { double-clicked => { root.open-row(i); } }
                 HorizontalLayout {
                     padding-left: 8px; spacing: 12px;
-                    Text { text: row.is-dir ? "📁 " + row.name : "   " + row.name; horizontal-stretch: 1; vertical-alignment: center; }
+                    Rectangle { width: 14px; y: 5px; height: 14px; border-radius: 3px; background: row.is-dir ? #e8b730 : #9aa5b1; }
+                    Text { text: row.name; horizontal-stretch: 1; vertical-alignment: center; overflow: elide; }
                     Text { text: row.size; width: 90px; horizontal-alignment: right; vertical-alignment: center; }
-                    Text { text: row.modified; width: 140px; vertical-alignment: center; }
+                    Text { text: row.modified; width: 130px; vertical-alignment: center; }
                 }
             }
         }

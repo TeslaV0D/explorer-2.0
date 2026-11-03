@@ -28,5 +28,16 @@ jobs:
       - uses: dtolnay/rust-toolchain@stable
       - uses: Swatinem/rust-cache@v2
       - run: cargo build --release -p explorer2
+      - name: Smoke test exe (starts, prints version, manifest embedded)
+        shell: pwsh
+        run: |
+          $exe = "target/release/explorer2.exe"
+          $out = & $exe --version
+          if ($LASTEXITCODE -ne 0 -or $out -notmatch '^explorer2 \d+\.\d+\.\d+') { throw "bad --version output: $out" }
+          $text = [System.Text.Encoding]::UTF8.GetString([System.IO.File]::ReadAllBytes($exe))
+          foreach ($needle in 'PerMonitorV2','longPathAware') {
+            if (-not $text.Contains($needle)) { throw "manifest missing: $needle" }
+          }
+          "$out; size=$((Get-Item $exe).Length) bytes"
       - uses: actions/upload-artifact@v4
         with: { name: explorer2-windows-x64, path: target/release/explorer2.exe }

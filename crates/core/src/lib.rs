@@ -121,6 +121,46 @@ pub fn sort_entries(entries: &mut [Entry], spec: SortSpec) {
     });
 }
 
+/// Human-readable size, Explorer-style in the list ("1 KB", "3,4 MB" uses '.').
+pub fn format_size(bytes: u64) -> String {
+    const UNITS: [&str; 5] = ["B", "KB", "MB", "GB", "TB"];
+    if bytes < 1024 {
+        return format!("{bytes} B");
+    }
+    let mut v = bytes as f64;
+    let mut i = 0;
+    while v >= 1024.0 && i < UNITS.len() - 1 {
+        v /= 1024.0;
+        i += 1;
+    }
+    if v >= 100.0 || (v - v.round()).abs() < 0.05 {
+        format!("{:.0} {}", v, UNITS[i])
+    } else {
+        format!("{:.1} {}", v, UNITS[i])
+    }
+}
+
+/// "YYYY-MM-DD HH:MM" in UTC from Unix seconds (local time zone handling comes with the Windows adapter).
+pub fn format_datetime(unix_secs: i64) -> String {
+    let days = unix_secs.div_euclid(86_400);
+    let rem = unix_secs.rem_euclid(86_400);
+    // Howard Hinnant's civil_from_days
+    let z = days + 719_468;
+    let era = z.div_euclid(146_097);
+    let doe = z.rem_euclid(146_097);
+    let yoe = (doe - doe / 1460 + doe / 36_524 - doe / 146_096) / 365;
+    let doy = doe - (365 * yoe + yoe / 4 - yoe / 100);
+    let mp = (5 * doy + 2) / 153;
+    let d = doy - (153 * mp + 2) / 5 + 1;
+    let m = if mp < 10 { mp + 3 } else { mp - 9 };
+    let y = yoe + era * 400 + i64::from(m <= 2);
+    format!(
+        "{y:04}-{m:02}-{d:02} {:02}:{:02}",
+        rem / 3600,
+        rem % 3600 / 60
+    )
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -162,5 +202,26 @@ mod tests {
             },
         );
         assert_eq!(v[1].name, "a.txt");
+    }
+
+    #[test]
+    fn size_formatting() {
+        assert_eq!(format_size(0), "0 B");
+        assert_eq!(format_size(1023), "1023 B");
+        assert_eq!(format_size(1024), "1 KB");
+        assert_eq!(format_size(1536), "1.5 KB");
+        assert_eq!(format_size(5 * 1024 * 1024), "5 MB");
+        assert!(format_size(u64::MAX).ends_with("TB"));
+    }
+
+    #[test]
+    fn datetime_formatting() {
+        assert_eq!(format_datetime(0), "1970-01-01 00:00");
+        assert_eq!(
+            format_datetime(951_782_400 + 3600 * 13 + 60 * 5),
+            "2000-02-29 13:05"
+        );
+        assert_eq!(format_datetime(-1), "1969-12-31 23:59");
+        assert_eq!(format_datetime(1_793_686_008), "2026-11-03 06:06");
     }
 }

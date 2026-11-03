@@ -1,6 +1,6 @@
 #![cfg_attr(all(windows, not(debug_assertions)), windows_subsystem = "windows")]
 
-use explorer_core::{sort_entries, Entry, SortSpec};
+use explorer_core::{format_datetime, format_size, sort_entries, Entry, SortSpec};
 use slint::{ModelRc, SharedString, VecModel};
 use std::cell::RefCell;
 use std::path::{Path, PathBuf};
@@ -10,10 +10,10 @@ slint::include_modules!();
 
 fn fmt_size(e: &Entry) -> String {
     if e.is_dir() {
-        return String::new();
+        String::new()
+    } else {
+        format_size(e.size)
     }
-    let kb = e.size.div_ceil(1024);
-    format!("{kb} KB")
 }
 
 fn load(path: &Path) -> Vec<Entry> {
@@ -28,7 +28,7 @@ fn show(win: &MainWindow, path: &Path, entries: &[Entry]) {
         .map(|e| Row {
             name: e.name.clone().into(),
             size: fmt_size(e).into(),
-            modified: e.modified.map(|m| m.to_string()).unwrap_or_default().into(),
+            modified: e.modified.map(format_datetime).unwrap_or_default().into(),
             is_dir: e.is_dir(),
         })
         .collect();
@@ -37,6 +37,10 @@ fn show(win: &MainWindow, path: &Path, entries: &[Entry]) {
 }
 
 fn main() -> Result<(), slint::PlatformError> {
+    if std::env::args().nth(1).as_deref() == Some("--version") {
+        println!("explorer2 {}", env!("CARGO_PKG_VERSION"));
+        return Ok(());
+    }
     let start = std::env::args()
         .nth(1)
         .map(PathBuf::from)
