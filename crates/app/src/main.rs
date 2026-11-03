@@ -1,5 +1,7 @@
 #![cfg_attr(all(windows, not(debug_assertions)), windows_subsystem = "windows")]
 
+mod config;
+mod gfx;
 mod nav;
 
 use std::io::Write;
@@ -41,8 +43,27 @@ fn main() -> Result<(), slint::PlatformError> {
     )
     .unwrap_or(start);
 
+    // Must run before the first window exists (renderer is chosen per process).
+    let renderer = gfx::select();
+    let settings = config::load();
+
     let win = MainWindow::new()?;
-    nav::init(&win);
+    nav::init(&win, settings.show_hidden);
+    win.set_hw_accel(settings.hardware_acceleration);
+    win.set_renderer_status(gfx::status_text(&renderer).into());
+    win.on_toggle_hw_accel({
+        let w = win.as_weak();
+        move |on| {
+            let res = config::update(|s| s.hardware_acceleration = on);
+            nav::trace_line(&format!(
+                "settings: hardware_acceleration={on} saved={}",
+                res.is_ok()
+            ));
+            if let (Err(e), Some(w)) = (res, w.upgrade()) {
+                w.set_error(e.into());
+            }
+        }
+    });
 
     win.on_navigate({
         let w = win.as_weak();
@@ -86,5 +107,6 @@ fn main() -> Result<(), slint::PlatformError> {
             nav::since_start_ms()
         ));
     });
+    gfx::refresh_probe_in_background(&renderer);
     win.run()
 }

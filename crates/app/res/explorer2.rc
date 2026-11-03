@@ -1,2 +1,4 @@
 #define RT_MANIFEST 24
+// Lowest-ID icon becomes the exe icon (Explorer, taskbar, Alt+Tab).
+1 ICON "icon/explorer2.ico"
 1 RT_MANIFEST "explorer2.manifest"

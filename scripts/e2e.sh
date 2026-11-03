@@ -8,7 +8,7 @@ EXE=$1; W=$2; LOG=$W/trace.log; FAIL=0
 pass() { echo "PASS  $1"; }
 fail() { echo "FAIL  $1"; FAIL=1; }
 check() { if eval "$2"; then pass "$1"; else fail "$1"; fi; }
-mkdir -p $W; rm -rf $W/big $W/watch $W/*.png; mkdir -p $W/big $W/watch/sub/inner
+mkdir -p $W; rm -rf $W/big $W/watch $W/config $W/*.png; mkdir -p $W/big $W/watch/sub/inner
 python3 - "$W/big" <<'PY'
 import os,sys
 d=sys.argv[1]
@@ -18,7 +18,8 @@ for i in range(100000):
     else: open(p,'w').close()
 PY
 echo "hi" > $W/watch/a.txt; touch $W/watch/.hidden
-export EXPLORER2_TRACE=1 SLINT_BACKEND=winit-software
+export EXPLORER2_TRACE=1 SLINT_BACKEND=winit-software EXPLORER2_CONFIG_DIR=$W/config
+CFG=$W/config/settings.ini
 shot() { command -v import >/dev/null && import -window root "$W/$1.png" || true; }
 focus() { xdotool windowfocus --sync "$(xdotool search --name 'Explorer 2.0' | head -1)"; }
 ms() { grep -oE "after [0-9.]+(ms|µs|s)" | head -1 | awk '{v=$2; if (v ~ /µs/) {sub(/µs/,"",v); v/=1000} else if (v ~ /ms/) {sub(/ms/,"",v)} else {sub(/s/,"",v); v*=1000}; print int(v)}'; }
@@ -46,7 +47,7 @@ check "[4] invalid path -> NotFound error" "grep -q 'failed gen=[0-9]* NotFound 
 ADDR=$(grep '^\[trace\] address=' $LOG | tail -1)
 check "[4b] address bar restored to current folder" '[ "$ADDR" = "[trace] address=$W/watch" ]' 
 BEFORE=$(grep -c "navigate" $LOG)
-xdotool mousemove 1040 20 click 1; sleep 1.5; shot s5_hidden
+xdotool mousemove 880 21 click 1; sleep 1.5; shot s5_hidden
 check "[5] hidden toggle reloads" "[ \$(grep -c navigate $LOG) -gt $BEFORE ] && grep -q 'total=2 shown=2' $LOG"
 xdotool mousemove 24 20 click 1; sleep 1; shot s6_up
 check "[6] go up to e2e" "grep -qE 'navigate gen=[0-9]+ User $W at=' $LOG"
@@ -57,6 +58,27 @@ N0=$(grep -c "watch: refresh$" $LOG); sleep 3; N1=$(grep -c "watch: refresh$" $L
 echo "refreshes in 3 s: $((N1-N0))"
 check "[7] <= 7 refreshes in 3 s (was ~30 before fix)" "[ $((N1-N0)) -le 7 ]"
 check "process alive" "kill -0 $PID"
+echo "== [8] settings panel: disable hardware acceleration"
+xdotool mousemove 1043 21 click 1; sleep 0.8; shot s8_panel
+xdotool mousemove 735 93 click 1; sleep 0.8; shot s8_toggled
+check "[8] setting saved to settings.ini" "grep -qx 'hardware_acceleration = false' $CFG"
+check "[9] show_hidden persisted" "grep -qx 'show_hidden = true' $CFG"
 kill $PID; wait $PID 2>/dev/null
 check "no panic in log" "! grep -qi panic $LOG"
+
+echo "== [10] restart honours settings (no SLINT_BACKEND -> app decides)"
+env -u SLINT_BACKEND $EXE $W/watch > $LOG 2>&1 & PID=$!
+sleep 3; shot s10_restart
+check "[10] renderer software because disabled in settings" "grep -q 'renderer choice=Software reason=\"hardware acceleration disabled in settings\"' $LOG"
+check "[10b] hidden files still shown after restart" "grep -q 'done gen=1 total=2 shown=2' $LOG"
+check "[10c] process alive" "kill -0 $PID"
+xprop -id "$(xdotool search --name 'Explorer 2.0' | head -1)" -notype 32c _NET_WM_ICON > $W/icon.txt 2>/dev/null
+check "[11] window icon set (yellow folder)" "python3 -c \"
+import sys
+v=[int(x) for x in open('$W/icon.txt').read().split('=',1)[1].replace(chr(10),'').split(',')]
+w,h=v[0],v[1]; p=v[2+(h//2+20)*w+w//2]
+r,g,b=(p>>16)&255,(p>>8)&255,p&255
+sys.exit(0 if w>=32 and r>200 and g>150 and b<120 else 1)\""
+kill $PID; wait $PID 2>/dev/null
+check "[10d] no panic" "! grep -qi panic $LOG"
 exit $FAIL

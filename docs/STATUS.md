@@ -1,6 +1,28 @@
 # Zwischenstand
 
-**Stand:** 2026-11-03 · **Phase:** 1 · M0 ✅ · **M1 ✅ (CI-Run #10 komplett grün)** · nächster Meilenstein: **M2 – wartet auf Renderer-Entscheidung (Boss)** · **Branch:** `claude/relaxed-pasteur-ufhh1p`
+**Stand:** 2026-11-03 · **Phase:** 1 · M0 ✅ · M1 ✅ · **M1.5 (Renderer-Wahl, Einstellungen, Icon) lokal ✅, CI ausstehend** · danach M2 · **Branch:** `claude/relaxed-pasteur-ufhh1p`
+
+## M1.5 – Renderer-Wahl, Einstellungen, Icon (Boss: Option 2 + Schalter)
+- **GPU-Probe** (`explorer-gpu`, Windows/WGL): verstecktes 1×1-Fenster, Legacy-GL-Kontext, prüft `GL_RENDERER`/`GL_VERSION`/`glCreateShader`. Software-GL (GDI Generic, llvmpipe, Microsoft Basic Render) = unbrauchbar, weil langsamer als unser Software-Renderer.
+- **Entscheidung** (`core::renderer::decide`): Override `EXPLORER2_RENDERER` > Einstellung aus → Software > Probe (gecacht) → Skia-GPU oder Software. `SLINT_BACKEND` gesetzt → Toolkit entscheidet.
+- **Cache**: Ergebnis in `settings.ini` (pro App-Version), Hintergrund-Re-Probe 5 s nach Start (Treiber neu/entfernt → wirkt beim nächsten Start). Erster Start zahlt die Probe einmal.
+- **Einstellungen-Panel**: „Hardwarebeschleunigung verwenden, wenn verfügbar“ + Statuszeile („Aktuell: Software-Rendering (keine geeignete GPU gefunden)“). `settings.ini` atomar geschrieben, tolerant gelesen; „Ausgeblendete“ wird ebenfalls gespeichert.
+- **Icon**: gelber Ordner + blaues Band auf heller Kachel; Exe-Icon (ICO 16–256) + Fenster-Icon.
+
+### Getestete Umgebungen (lokal, Linux/Xvfb)
+| Umgebung | Ergebnis |
+|---|---|
+| ohne GL, auto | Plattform-Default, läuft |
+| ohne GL, forciert GPU | Skia (Fallback), läuft |
+| forciert Software | läuft |
+| Mesa-GL (llvmpipe), auto / forciert GPU | läuft; GPU-Modus lädt nachweislich EGL/Mesa (58–62 Treiberzeilen), Software-Modus 0 |
+| Einstellung aus | Software, Grund „disabled in settings“ |
+| E2E | 20/20 PASS (neu: Panel speichert Setting, Ausgeblendete persistiert, Neustart respektiert Setting, Fenster-Icon gesetzt) |
+
+### Bugs/Funde in M1.5
+- E2E-Klickkoordinate „Ausgeblendete“ hätte nach neuem Button den falschen Knopf getroffen → angepasst (x=880).
+- UI-Statuszeile war englisch → `Reason`-Enum: Englisch für Traces, Deutsch (`status_de`) fürs Panel.
+- Vermeintlich fehlendes Fenster-Icon war ein `xprop`-Anzeigeproblem (Rohdaten: 256×256, gelb) → als E2E-Check [11] abgesichert.
 
 ## M1 – was gebaut wurde
 - `explorer-fs`: Windows-Fastpath (`FindFirstFileExW` + Large Fetch), portabler std-Pfad, Verbatim-Langpfade, Hintergrund-Loader mit Batches/Abbruch, Watcher mit Debounce.
@@ -45,5 +67,6 @@
 - Fix im Test selbst: E2E-Regex an neues `at=`-Feld angepasst (lokal 13/13 PASS).
 
 ## Nächste Schritte
-1. Boss: Renderer-Entscheidung (Software-Default / GPU-Probe / D3D zuerst).
-2. M2: UI-Shell (Spalten-Header mit Sortierung, Icons, Details-Ansicht ausbauen, Tastaturnavigation Grundlagen) – erst nach Freigabe.
+1. CI-Umgebungsmatrix (Windows ohne GPU, Mesa-GL, forciert, Setting aus; Linux-GL; Exe-Icon) grün → M1.5 ✅.
+2. M2: UI-Shell (Spalten-Header mit Sortierung, Datei-Icons, Details-Ansicht, Tastaturnavigation).
+3. Boss: Artefakt auf echtem PC mit GPU testen (Einstellungen → Statuszeile zeigt GPU-Namen).

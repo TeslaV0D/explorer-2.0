@@ -989,12 +989,21 @@ dependencies = [
 ]
 
 [[package]]
+name = "explorer-gpu"
+version = "0.0.1"
+dependencies = [
+ "explorer-core",
+ "windows-sys 0.60.2",
+]
+
+[[package]]
 name = "explorer2"
 version = "0.0.1"
 dependencies = [
  "embed-resource",
  "explorer-core",
  "explorer-fs",
+ "explorer-gpu",
  "slint",
  "slint-build",
  "windows-sys 0.60.2",

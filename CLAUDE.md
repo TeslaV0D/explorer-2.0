@@ -25,6 +25,8 @@
 | D-005 | Enumeration Windows: `FindFirstFileExW` (Basic + Large Fetch) statt `NtQueryDirectoryFile` – dokumentierte API, Messung zeigt Budget-Reserve; NtQuery nur bei Bedarf | fix (M1) |
 | D-006 | Watcher: `notify`-Crate (ReadDirectoryChangesW/inotify), eigener Debounce + adaptive Drossel statt notify-debouncer | fix (M1) |
 | D-007 | UI-Sprache vorerst Deutsch hart codiert; i18n später (Slint `@tr`) | vorgeschlagen |
+| D-009 | Renderer: **GPU-Probe vor Fensterstart** (WGL: GL ≥ 3.0 + `glCreateShader`, Software-GL wie GDI Generic/llvmpipe = unbrauchbar) → Skia (GPU) oder Software. Ergebnis gecacht in settings.ini (pro App-Version), Hintergrund-Re-Probe 5 s nach Start. Einstellung „Hardwarebeschleunigung verwenden, wenn verfügbar“ (wie Browser), Override `EXPLORER2_RENDERER=auto|gpu|software`; `SLINT_BACKEND` hat Vorrang | fix (Boss, 2026-11-03) |
+| D-010 | App-Icon: gelber Ordner + blaues Band (Windows-11-Explorer-Anmutung) auf heller abgerundeter Kachel (Apple-Files-Anmutung), Vorwärts-Chevrons = „2.0“; 16–32 px vereinfachte Variante ohne Kachel | fix (M1.5) |
 | D-008 | Perf-Gates in CI auf **best-of-N** (≥ 9 Läufe), Median/Max/OS-Stalls nur ausweisen – Shared-Runner haben sporadische OS-Stalls (gemessen 168 ms im rohen FindFirstFileExW); Budgets selbst unverändert | fix (M1) |
 
 ## Arbeitsumgebung / Constraints
@@ -33,13 +35,16 @@
 - User-Präferenz: Anrede „Boss“, Bro-Ton, auf Deutsch antworten, kurz & präzise.
 
 ## Meilenstein-Stand
-- M0 ✅ · M1 ✅ (2026-11-03, Run #10) · M2 wartet auf Renderer-Entscheidung
+- M0 ✅ · M1 ✅ (2026-11-03, Run #10) · M1.5 Renderer-Wahl + Einstellungen + Icon (lokal ✅, CI ausstehend) · danach M2
 - Arbeitsregel (Boss): nächste Stufe erst, wenn die aktuelle vollständig abgeschlossen, getestet und CI-grün ist.
 
 ## Code-Layout (seit M0)
 - `crates/core` (`explorer-core`): plattformneutrales Modell, Sortierung (natürlich, Ordner zuerst), Unit-Tests
 - `crates/fs` (`explorer-fs`): `enumerate`/`read_dir` (Windows: `win.rs` FindFirstFileExW; sonst `portable.rs`), `path.rs` (Verbatim/FILETIME, plattformneutral getestet), `loader.rs` (Hintergrund-Load, Batches, Cancel), `watch.rs` (notify + `Debounce`), Benchmark `examples/bench.rs`
-- `crates/app` (`explorer2`): Slint-UI (`ui/main.slint`), `src/nav.rs` = Navigations-Controller (State im `thread_local` auf UI-Thread, Generationszähler, Refresh-Drossel)
+- `crates/gpu` (`explorer-gpu`): `probe_opengl()` – Windows-WGL-Probe (verstecktes Fenster, Legacy-Kontext), sonst `NotSupported`; ohne Skia → lokal per `--target x86_64-pc-windows-msvc` prüfbar
+- `crates/core`: zusätzlich `settings.rs` (key=value, tolerant) und `renderer.rs` (`classify_gl`, `decide`, `Reason`, `status_de`)
+- `crates/app` (`explorer2`): Slint-UI (`ui/main.slint`, Einstellungs-Panel), `src/nav.rs` = Navigations-Controller (State im `thread_local` auf UI-Thread, Generationszähler, Refresh-Drossel), `src/gfx.rs` = Renderer-Wahl vor Fenster, `src/config.rs` = settings.ini (`%APPDATA%\Explorer2` / XDG, Override `EXPLORER2_CONFIG_DIR`), atomar + Mutex
+- Icon: `crates/app/res/icon/*.svg` → `scripts/make-icons.sh` → PNGs + `explorer2.ico` (Exe-Ressource) + `icon-256.png` (Fenster-Icon)
 - CI: `.github/workflows/ci.yml` (fmt, clippy -D warnings, test auf Windows+Linux; Release-Artefakt `explorer2.exe`)
 - E2E lokal: `xvfb-run -a -s "-screen 0 1280x800x24" scripts/e2e.sh $PWD/target/release/explorer2 <workdir>`
 - Lokal prüfen: `cargo fmt --all -- --check && cargo clippy --workspace --all-targets -- -D warnings && cargo test --workspace`
@@ -60,6 +65,9 @@
 - Trace-Zeilen: `at=` = ms seit Prozessstart (Kaltstart-Messung), `data_ready=` = ms navigate→Daten fertig, gemessen im Loader-Thread (Daten-Latenz, Budget-Check). Slint initialisiert den Renderer erst beim ersten Frame **nach** Loop-Start → „event loop running“ ist KEIN Fenster-bereit-Marker; `set_rendering_notifier` ist bei Software-Renderern nicht verfügbar → nicht als Marker nutzen.
 - GitHub-Runner (Windows) haben kein GPU-OpenGL → Skia fällt zurück (funktioniert, kostet **~450 ms** Startzeit; Software-Renderer startet in 43 ms).
 - Windows-Runner: sporadische OS-Stalls im Dateisystem bis 1,5 s (Defender/Indexer nach Massen-Anlage, ~2 von 9 Läufen) → Perf immer mit roher OS-Messung daneben auswerten (`bench` gibt pro Lauf `raw: first_entry` aus).
+- Slint: Renderer per `slint::BackendSelector::new().backend_name("winit").renderer_name("skia"|"software").select()` **vor** dem ersten Fenster; `"skia"` fällt selbst zurück, `"skia-opengl"` nicht. `SLINT_BACKEND` gewinnt immer.
+- `xprop` zeigt `_NET_WM_ICON` im Pretty-Modus leer → mit `-notype 32c` Rohdaten lesen (Icon war gesetzt).
+- Sicherheitscheck blockt `rm -rf $VAR` in `bash -c`-Strings → eindeutige Temp-Ordner statt Löschen.
 - Lange CI-Logs: `get_job_logs` mit `return_content=false` → URL per `curl` laden und greppen (tail wird von Cache-Upload-Zeilen geflutet).
 
 ## Referenzen

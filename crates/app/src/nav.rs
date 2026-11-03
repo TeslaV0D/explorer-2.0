@@ -110,7 +110,8 @@ pub fn clean_input(s: &str) -> String {
     t.trim().to_string()
 }
 
-pub fn init(win: &MainWindow) {
+pub fn init(win: &MainWindow, show_hidden: bool) {
+    STATE.with_borrow_mut(|s| s.filter.show_hidden = show_hidden);
     let model = STATE.with_borrow(|s| s.model.clone());
     win.set_rows(ModelRc::from(model));
     win.set_show_hidden(STATE.with_borrow(|s| s.filter.show_hidden));
@@ -363,6 +364,9 @@ pub fn open_row(win: &MainWindow, index: usize) {
 }
 
 pub fn set_show_hidden(win: &MainWindow, on: bool) {
+    if let Err(e) = crate::config::update(|s| s.show_hidden = on) {
+        win.set_error(e.into());
+    }
     let cur = STATE.with_borrow_mut(|s| {
         s.filter.show_hidden = on;
         s.path.clone()

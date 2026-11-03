@@ -30,10 +30,23 @@ jobs:
       - uses: dtolnay/rust-toolchain@stable
       - uses: Swatinem/rust-cache@v2
       - name: UI deps
-        run: sudo apt-get update && sudo apt-get install -y libfontconfig1-dev libxkbcommon-dev libxkbcommon-x11-0 libwayland-dev libx11-dev xvfb xdotool imagemagick
+        run: sudo apt-get update && sudo apt-get install -y libfontconfig1-dev libxkbcommon-dev libxkbcommon-x11-0 libwayland-dev libx11-dev xvfb xdotool imagemagick libgl1-mesa-dri libegl1 libgl1 x11-utils
       - run: cargo build --release -p explorer2
       - name: E2E UI test (Xvfb)
         run: xvfb-run -a -s "-screen 0 1280x800x24" scripts/e2e.sh "$PWD/target/release/explorer2" "$RUNNER_TEMP/e2e"
+      - name: GL environment check (Mesa GL under Xvfb, forced GPU + auto)
+        run: |
+          mkdir -p "$RUNNER_TEMP/gl/data" && touch "$RUNNER_TEMP/gl/data/a.txt"
+          for mode in gpu auto; do
+            xvfb-run -a -s "-screen 0 1280x800x24 +extension GLX" env EXPLORER2_TRACE=1 EGL_LOG_LEVEL=debug EXPLORER2_RENDERER=$mode EXPLORER2_CONFIG_DIR="$RUNNER_TEMP/gl/cfg-$mode" \
+              bash -c "./target/release/explorer2 '$RUNNER_TEMP/gl/data' 2> '$RUNNER_TEMP/gl/$mode.log' & P=\$!; sleep 4; kill -0 \$P && echo ALIVE > '$RUNNER_TEMP/gl/$mode.alive'; kill \$P"
+            grep -E "renderer choice|first paint|done gen=1" "$RUNNER_TEMP/gl/$mode.log"
+            test -f "$RUNNER_TEMP/gl/$mode.alive" || { echo "[$mode] app died"; exit 1; }
+            ! grep -qi panic "$RUNNER_TEMP/gl/$mode.log" || { echo "[$mode] panic"; exit 1; }
+          done
+          n=$(grep -ciE "libEGL" "$RUNNER_TEMP/gl/gpu.log" || true)
+          echo "EGL driver lines in forced-GPU run: $n"
+          test "$n" -gt 0 || { echo "GL path not taken in forced-GPU run"; exit 1; }
       - name: Upload screenshots on failure
         if: failure()
         uses: actions/upload-artifact@v4
@@ -59,39 +72,102 @@ jobs:
             if (-not $text.Contains($needle)) { throw "manifest missing: $needle" }
           }
           "$out; size=$((Get-Item $exe).Length) bytes"
-      - name: UI smoke test (real window, 100k folder, Windows fast path; default vs software renderer)
+          # Exe icon must be ours (yellow folder), not the generic default icon
+          Add-Type -AssemblyName System.Drawing
+          $bmp = [System.Drawing.Icon]::ExtractAssociatedIcon($exe).ToBitmap()
+          $px = $bmp.GetPixel([int]($bmp.Width / 2), [int]($bmp.Height / 2))
+          "exe icon $($bmp.Width)x$($bmp.Height), center pixel R=$($px.R) G=$($px.G) B=$($px.B)"
+          if (-not ($px.R -gt 200 -and $px.G -gt 150 -and $px.B -lt 120)) { throw "exe icon is not the Explorer 2.0 folder icon" }
+      - name: Fetch Mesa OpenGL (simulated GPU driver for the GL path test)
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          $rel = Invoke-RestMethod https://api.github.com/repos/pal1000/mesa-dist-win/releases/latest -Headers @{ Authorization = "Bearer $env:GH_TOKEN" }
+          $asset = $rel.assets | Where-Object { $_.name -match 'release-msvc\.7z$' } | Select-Object -First 1
+          if (-not $asset) { throw "mesa-dist-win asset not found" }
+          "Mesa: $($asset.name)"
+          Invoke-WebRequest $asset.browser_download_url -OutFile "$env:RUNNER_TEMP\mesa.7z"
+          7z x "$env:RUNNER_TEMP\mesa.7z" "-o$env:RUNNER_TEMP\mesa" -y | Out-Null
+          $dst = "$env:RUNNER_TEMP\mesa-app"
+          New-Item -ItemType Directory $dst -Force | Out-Null
+          Copy-Item "$env:RUNNER_TEMP\mesa\x64\*.dll" $dst
+          Copy-Item target/release/explorer2.exe $dst
+          Get-ChildItem $dst | Format-Table Name, Length
+      - name: UI smoke matrix (renderer selection in different environments)
         shell: pwsh
         run: |
           $dir = "$env:RUNNER_TEMP\big"
           cargo run --release -q -p explorer-fs --example bench -- --create-in $dir --files 100000
           $exe = (Resolve-Path "target/release/explorer2.exe").Path
-          $env:EXPLORER2_TRACE = "1"
-          foreach ($backend in @("", "winit-software")) {
-            $env:SLINT_BACKEND = $backend
-            $label = if ($backend) { $backend } else { "default" }
+          $mesaExe = "$env:RUNNER_TEMP\mesa-app\explorer2.exe"
+          function Field([string]$text, [string]$line, [string]$name) {
+            $m = [regex]::Match($text, $line + '.*? ' + $name + '=([\d.]+)ms')
+            if (-not $m.Success) { throw "trace field missing: $line $name" }
+            [double]::Parse($m.Groups[1].Value, [cultureinfo]::InvariantCulture)
+          }
+          function Invoke-App([string]$label, [string]$app, [hashtable]$vars, [int]$seconds = 8) {
             $log = "$env:RUNNER_TEMP\ui-$label.log"
-            $p = Start-Process -FilePath $exe -ArgumentList "`"$dir`"" -PassThru -RedirectStandardError $log
-            Start-Sleep -Seconds 10
-            $alive = -not $p.HasExited
-            if ($alive) { Stop-Process -Id $p.Id -Force }
+            $vars['EXPLORER2_TRACE'] = '1'
+            $saved = @{}
+            foreach ($k in @($vars.Keys)) { $saved[$k] = [Environment]::GetEnvironmentVariable($k); [Environment]::SetEnvironmentVariable($k, $vars[$k]) }
+            try {
+              $p = Start-Process -FilePath $app -ArgumentList "`"$dir`"" -PassThru -RedirectStandardError $log
+              Start-Sleep -Seconds $seconds
+              $alive = -not $p.HasExited
+              if ($alive) { Stop-Process -Id $p.Id -Force }
+            } finally {
+              foreach ($k in @($vars.Keys)) { [Environment]::SetEnvironmentVariable($k, $saved[$k]) }
+            }
+            Start-Sleep -Milliseconds 300
             $text = Get-Content $log -Raw
-            "----- renderer: $label"
-            $text
-            if (-not $alive) { throw "[$label] explorer2 exited early (exit code $($p.ExitCode))" }
+            Write-Host "----- [$label]"
+            Write-Host $text
+            if (-not $alive) { throw "[$label] explorer2 exited early" }
             if ($text -notmatch 'done gen=1 total=100000 shown=100000') { throw "[$label] 100k folder not fully loaded" }
             if ($text -match '(?i)panic') { throw "[$label] panic in log" }
-            function Field($line, $name) {
-              $m = [regex]::Match($text, $line + '.*? ' + $name + '=([\d.]+)ms')
-              if (-not $m.Success) { throw "[$label] trace field missing: $line $name" }
-              [double]::Parse($m.Groups[1].Value, [cultureinfo]::InvariantCulture)
-            }
-            # M1 budgets: data latency, measured on the loader thread
-            $first = Field 'first paint gen=1 ' 'data_ready'; $all = Field 'done gen=1 ' 'data_ready'
-            # Cold start to visible content (M8 budget, reported only)
-            $cold = Field 'first paint gen=1 ' 'at'
-            "[$label] first rows ready: $first ms | all 100k ready: $all ms | cold start to content: $cold ms"
-            if ($first -gt 100) { throw "[$label] first rows budget exceeded: $first ms > 100 ms" }
-            if ($all -gt 1000) { throw "[$label] full load budget exceeded: $all ms > 1000 ms" }
+            $first = Field $text 'first paint gen=1 ' 'data_ready'
+            $all = Field $text 'done gen=1 ' 'data_ready'
+            $cold = Field $text 'first paint gen=1 ' 'at'
+            Write-Host "[$label] first rows ready: $first ms | all 100k ready: $all ms | cold start to content: $cold ms"
+            if ($first -gt 100) { throw "[$label] first rows budget exceeded: $first ms" }
+            if ($all -gt 1000) { throw "[$label] full load budget exceeded: $all ms" }
+            return @{ text = $text; cold = $cold }
           }
+          function Expect($r, [string]$pattern, [string]$what) {
+            if ($r.text -notmatch $pattern) { throw "expected: $what (pattern: $pattern)" }
+            Write-Host "  ok: $what"
+          }
+
+          # 1) No GPU (runner), auto, first start: probe runs, picks software, fast cold start
+          $cfgA = "$env:RUNNER_TEMP\cfg-auto"
+          $r = Invoke-App 'auto-fresh' $exe @{ EXPLORER2_CONFIG_DIR = $cfgA }
+          Expect $r 'renderer choice=Software reason="no usable GPU' 'probe rejects runner GL'
+          Expect $r 'cached=false' 'probe ran (no cache yet)'
+          if ($r.cold -gt 300) { throw "[auto-fresh] cold start budget exceeded: $($r.cold) ms > 300 ms" }
+          # 2) Second start: cached probe, background re-probe keeps cache fresh
+          $r = Invoke-App 'auto-cached' $exe @{ EXPLORER2_CONFIG_DIR = $cfgA } 9
+          Expect $r 'cached=true' 'probe result from cache'
+          Expect $r 'background re-probe: Unusable' 'background re-probe ran'
+          if ($r.cold -gt 300) { throw "[auto-cached] cold start budget exceeded: $($r.cold) ms > 300 ms" }
+          # 3) Forced GPU without GPU: Skia falls back by itself, app keeps working
+          $r = Invoke-App 'forced-gpu' $exe @{ EXPLORER2_CONFIG_DIR = "$env:RUNNER_TEMP\cfg-gpu"; EXPLORER2_RENDERER = 'gpu' }
+          Expect $r 'renderer choice=Gpu reason="forced' 'GPU forced'
+          # 4) Forced software
+          $r = Invoke-App 'forced-software' $exe @{ EXPLORER2_CONFIG_DIR = "$env:RUNNER_TEMP\cfg-sw"; EXPLORER2_RENDERER = 'software' }
+          Expect $r 'renderer choice=Software reason="forced' 'software forced'
+          # 5) Setting off (browser-style switch)
+          $cfgOff = "$env:RUNNER_TEMP\cfg-off"
+          New-Item -ItemType Directory $cfgOff -Force | Out-Null
+          Set-Content "$cfgOff\settings.ini" "hardware_acceleration = false"
+          $r = Invoke-App 'setting-off' $exe @{ EXPLORER2_CONFIG_DIR = $cfgOff }
+          Expect $r 'reason="hardware acceleration disabled in settings"' 'setting honoured'
+          # 6) Simulated GL driver (Mesa llvmpipe next to the exe), auto: software GL must be rejected
+          $r = Invoke-App 'mesa-auto' $mesaExe @{ EXPLORER2_CONFIG_DIR = "$env:RUNNER_TEMP\cfg-mesa" }
+          Expect $r 'reason="no usable GPU: software OpenGL \(llvmpipe\)"' 'probe classifies llvmpipe as software GL'
+          # 7) Simulated GL driver, forced GPU: Skia's OpenGL surface must initialise (real GL path)
+          $r = Invoke-App 'mesa-forced-gpu' $mesaExe @{ EXPLORER2_CONFIG_DIR = "$env:RUNNER_TEMP\cfg-mesa-gpu"; EXPLORER2_RENDERER = 'gpu' }
+          if ($r.text -match 'Failed to initialize Skia opengl surface') { throw "[mesa-forced-gpu] Skia GL surface failed even with an OpenGL 4.x driver" }
+          Write-Host "  ok: Skia OpenGL surface initialised on Mesa (GL path works)"
       - uses: actions/upload-artifact@v4
         with: { name: explorer2-windows-x64, path: target/release/explorer2.exe }

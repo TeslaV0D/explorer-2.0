@@ -4,6 +4,7 @@ export struct Row { name: string, size: string, modified: string, is-dir: bool, 
 
 export component MainWindow inherits Window {
     title: "Explorer 2.0";
+    icon: @image-url("../res/icon/icon-256.png");
     preferred-width: 1100px;
     preferred-height: 700px;
     min-width: 480px;
@@ -14,10 +15,14 @@ export component MainWindow inherits Window {
     in property <string> status;
     in property <string> error;
     in-out property <bool> show-hidden;
+    in-out property <bool> hw-accel: true;
+    in-out property <bool> settings-open;
+    in property <string> renderer-status;
     callback navigate(string);
     callback open-row(int);
     callback go-up();
     callback toggle-hidden(bool);
+    callback toggle-hw-accel(bool);
 
     public function scroll-top() { list.content-y = 0; }
 
@@ -41,6 +46,11 @@ export component MainWindow inherits Window {
                 checked <=> root.show-hidden;
                 toggled => { root.toggle-hidden(self.checked); }
             }
+            Button {
+                text: "Einstellungen";
+                checkable: true;
+                checked <=> root.settings-open;
+            }
         }
         list := ListView {
             vertical-stretch: 1;
@@ -63,6 +73,34 @@ export component MainWindow inherits Window {
                 padding-left: 8px; padding-right: 8px; spacing: 16px;
                 Text { text: root.status; vertical-alignment: center; color: #444; }
                 Text { text: root.error; vertical-alignment: center; color: #c0262d; horizontal-stretch: 1; overflow: elide; }
+            }
+        }
+    }
+    if root.settings-open : Rectangle {
+        x: root.width - self.width - 8px;
+        y: 44px;
+        width: 380px;
+        height: settings-layout.preferred-height;
+        background: #ffffff;
+        border-color: #c8ccd0;
+        border-width: 1px;
+        border-radius: 6px;
+        drop-shadow-blur: 12px;
+        drop-shadow-color: #00000040;
+        settings-layout := VerticalLayout {
+            padding: 14px;
+            spacing: 8px;
+            Text { text: "Einstellungen"; font-size: 15px; font-weight: 700; }
+            CheckBox {
+                text: "Hardwarebeschleunigung verwenden, wenn verfügbar";
+                checked <=> root.hw-accel;
+                toggled => { root.toggle-hw-accel(self.checked); }
+            }
+            Text { text: "Änderung wird beim nächsten Start wirksam."; font-size: 11px; color: #666; }
+            Text { text: root.renderer-status; font-size: 11px; color: #444; wrap: word-wrap; }
+            HorizontalLayout {
+                alignment: end;
+                Button { text: "Schließen"; clicked => { root.settings-open = false; } }
             }
         }
     }
