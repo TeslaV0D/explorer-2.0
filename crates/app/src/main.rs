@@ -3,6 +3,7 @@
 use explorer_core::{format_datetime, format_size, sort_entries, Entry, SortSpec};
 use slint::{ModelRc, SharedString, VecModel};
 use std::cell::RefCell;
+use std::io::Write;
 use std::path::{Path, PathBuf};
 use std::rc::Rc;
 
@@ -36,9 +37,26 @@ fn show(win: &MainWindow, path: &Path, entries: &[Entry]) {
     win.set_rows(ModelRc::new(VecModel::from(rows)));
 }
 
+/// GUI-subsystem exes have no console; attach to the parent's so CLI output
+/// (`--version`) shows up in cmd/PowerShell. Redirected handles stay untouched.
+#[cfg(windows)]
+fn attach_parent_console() {
+    // SAFETY: plain Win32 call without pointers; failure (no parent console) is fine.
+    unsafe {
+        let _ = windows_sys::Win32::System::Console::AttachConsole(
+            windows_sys::Win32::System::Console::ATTACH_PARENT_PROCESS,
+        );
+    }
+}
+
+#[cfg(not(windows))]
+fn attach_parent_console() {}
+
 fn main() -> Result<(), slint::PlatformError> {
     if std::env::args().nth(1).as_deref() == Some("--version") {
-        println!("explorer2 {}", env!("CARGO_PKG_VERSION"));
+        attach_parent_console();
+        // Never panic on a closed/invalid stdout (GUI subsystem, panic=abort).
+        let _ = writeln!(std::io::stdout(), "explorer2 {}", env!("CARGO_PKG_VERSION"));
         return Ok(());
     }
     let start = std::env::args()
