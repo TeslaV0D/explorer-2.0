@@ -42,8 +42,11 @@ jobs:
           & $clip set $a.FullName $b.FullName; "clip set exit=$LASTEXITCODE"
           "formats after clip set: $(Formats)"
           "own reader (new process): $((& $clip get) -join ' | ')"
-          $seen = @(Get-Clipboard -Format FileDropList | ForEach-Object FullName)
-          "PowerShell sees: $($seen -join ', ')"
+          # .NET API = what other Windows apps use (CF_HDROP); the Get-Clipboard cmdlet
+          # returned nothing here although FileDrop was listed (cmdlet quirk, kept as info only)
+          $seen = @([System.Windows.Forms.Clipboard]::GetFileDropList())
+          "Windows (.NET GetFileDropList) sees: $($seen -join ', ')"
+          "Get-Clipboard -Format FileDropList (info): $((Get-Clipboard -Format FileDropList -ErrorAction SilentlyContinue | ForEach-Object { "$_" }) -join ', ')"
           if ($seen.Count -ne 2 -or $seen[0] -ne $a.FullName -or $seen[1] -ne $b.FullName) { $fail += "Windows does not see our files" }
           # Windows -> ours (Set-Clipboard -Path = what Explorer's "Copy" produces)
           Set-Clipboard -Path $b.FullName

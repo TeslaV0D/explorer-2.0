@@ -92,6 +92,7 @@
 - Slint DnD: TouchArea muss **Kind** der `DragArea` sein (als Geschwister darüber schluckt sie den Druck); `DragAction` ist in Rust nicht öffentlich → Callbacks liefern int (0/1/2), Slint mappt. `pure callback` für `data:`-Bindings.
 - Python-Replaces in Dateien mit Windows-Pfaden: **raw strings** (`r"..."`) – `\a`/`\b` werden sonst zu Steuerzeichen.
 - PowerShell 7 hat kein `Get-Clipboard -Format FileDropList` → `shell: powershell` (5.1) für Clipboard-Tests.
+- Windows PowerShell 5.1 `Get-Clipboard -Format FileDropList` lieferte in CI leer, obwohl `FileDrop` auf dem Clipboard lag → für Tests `[System.Windows.Forms.Clipboard]::GetFileDropList()` (= Weg anderer Apps) nutzen.
 - CI nutzt das **neueste** stable (neue Clippy-Lints, z. B. 1.99 `chunks_exact_to_as_chunks`) → vor dem Push `rustup update stable` lokal.
 - Windows: Pfade können **8.3-Kurznamen** enthalten (`C:\Users\RUNNER~1\…`, z. B. aus `%TEMP%`), Shell/Papierkorb liefern Langnamen → Pfade nie roh vergleichen: Elternordner kanonisieren + case-insensitiv (`undo::same_location`).
 - Windows-Papierkorb (`trash`-Crate): `TrashItem.name` ist der **Anzeigename** (Endung bei Standard-Einstellung ausgeblendet: „weg“ statt „weg.txt“) und wird beim Restore als Zielname benutzt → Abgleich über Stamm + Endung der `$R…`-Datei (`item.id`), vor `restore_all` `item.name` auf den echten Namen setzen.
