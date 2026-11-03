@@ -15,6 +15,7 @@
 - Mehrfachauswahl wäre beim Ziehen verloren gegangen (Klick bei „down“) → bei bereits markierter Zeile wird der Klick erst beim Loslassen angewendet (Explorer-Verhalten).
 - **CI-Run #21**: neuer Clippy-Lint der CI-Toolchain 1.99 (`chunks_exact_to_as_chunks`) → `as_chunks`, MSRV 1.88; lokal jetzt ebenfalls 1.99.
 - **Bug (CI-Run #22, nur Windows)**: Wiederherstellen aus dem Papierkorb fand nichts, weil unser Pfad den 8.3-Kurznamen `RUNNER~1` enthielt, der Papierkorb aber den Langnamen speichert. Hätte echte Nutzer genauso getroffen (Kurznamen aus `%TEMP%`, Groß-/Kleinschreibung). Fix: Elternordner kanonisieren + auf Windows case-insensitiv vergleichen.
+- **Bug (CI-Run #23, nur Windows)**: Ordner wurden jetzt gefunden, Dateien nicht: Der Papierkorb meldet den *Anzeigenamen*, und der blendet bekannte Endungen aus („weg“ statt „weg.txt“). Der Restore hätte die Datei sogar **ohne Endung** zurückgelegt. Fix: Abgleich über Namensstamm + Endung der `$R…`-Datei, Restore mit echtem Originalnamen.
 - Testdesign: Pause *vor* der Konfliktfrage blockiert den Job schon vor der Frage → Test pausiert jetzt nach der Frage.
 
 ## M3 – Tabs, Split-View, Seitenleiste, Verlauf, Sitzung

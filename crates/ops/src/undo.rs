@@ -95,7 +95,7 @@ impl TrashSnapshot {
             .enumerate()
             .filter(|(_, i)| {
                 i.time_deleted >= since_secs
-                    && same_location(&i.original_parent, &i.name, original, &want_parent)
+                    && same_location(&i.original_parent, &i.name, &i.id, original, &want_parent)
             })
             .max_by_key(|(_, i)| i.time_deleted)
             .map(|(n, _)| n)
@@ -106,7 +106,12 @@ impl TrashSnapshot {
                 original.display()
             ));
         }
-        let item = items.swap_remove(idx);
+        let mut item = items.swap_remove(idx);
+        // Restore under the real name (Windows reports a display name that may
+        // lack the extension, and the restore would use it as the target name).
+        if let Some(n) = original.file_name() {
+            item.name = n.to_os_string();
+        }
         trash::os_limited::restore_all([item])
             .map_err(|e| format!("Wiederherstellen fehlgeschlagen: {e}"))
     }
@@ -118,12 +123,39 @@ fn canonical(p: &Path) -> PathBuf {
     std::fs::canonicalize(p).unwrap_or_else(|_| p.to_path_buf())
 }
 
-fn names_equal(a: &std::ffi::OsStr, b: &std::ffi::OsStr) -> bool {
-    if cfg!(windows) {
-        a.to_string_lossy().to_lowercase() == b.to_string_lossy().to_lowercase()
+fn eq_name(a: &str, b: &str, windows: bool) -> bool {
+    if windows {
+        a.to_lowercase() == b.to_lowercase()
     } else {
         a == b
     }
+}
+
+/// Does the trash item's name denote `original_name`? On Windows the recycle bin
+/// reports the *display* name, which hides known extensions by default
+/// ("weg" for "weg.txt"); its id (`…\$Recycle.Bin\…\$R1A2B3C.txt`) keeps the
+/// extension, so stem + id extension identify the file (pure → tested).
+pub fn trash_name_matches(
+    item_name: &str,
+    item_id: &str,
+    original_name: &str,
+    windows: bool,
+) -> bool {
+    if eq_name(item_name, original_name, windows) {
+        return true;
+    }
+    if !windows {
+        return false;
+    }
+    let orig = Path::new(original_name);
+    let (Some(stem), Some(ext)) = (orig.file_stem(), orig.extension()) else {
+        return false;
+    };
+    let id_ext = Path::new(item_id)
+        .extension()
+        .map(|e| e.to_string_lossy().into_owned());
+    eq_name(item_name, &stem.to_string_lossy(), true)
+        && id_ext.is_some_and(|e| eq_name(&e, &ext.to_string_lossy(), true))
 }
 
 /// Does a trash item (parent + name as recorded by the OS) denote `original`?
@@ -132,6 +164,7 @@ fn names_equal(a: &std::ffi::OsStr, b: &std::ffi::OsStr) -> bool {
 fn same_location(
     item_parent: &Path,
     item_name: &std::ffi::OsStr,
+    item_id: &std::ffi::OsStr,
     original: &Path,
     want_parent: &Path,
 ) -> bool {
@@ -141,7 +174,12 @@ fn same_location(
     let Some(name) = original.file_name() else {
         return false;
     };
-    if !names_equal(item_name, name) {
+    if !trash_name_matches(
+        &item_name.to_string_lossy(),
+        &item_id.to_string_lossy(),
+        &name.to_string_lossy(),
+        cfg!(windows),
+    ) {
         return false;
     }
     let have = canonical(item_parent);
@@ -249,12 +287,14 @@ mod location_tests {
         assert!(same_location(
             &real,
             "a.txt".as_ref(),
+            "".as_ref(),
             &dotted.join("a.txt"),
             &want
         ));
         assert!(!same_location(
             &real,
             "b.txt".as_ref(),
+            "".as_ref(),
             &dotted.join("a.txt"),
             &want
         ));
@@ -263,8 +303,40 @@ mod location_tests {
         assert!(!same_location(
             &other,
             "a.txt".as_ref(),
+            "".as_ref(),
             &dotted.join("a.txt"),
             &want
         ));
+    }
+
+    #[test]
+    fn windows_display_names_without_extension() {
+        let id = r"C:\$Recycle.Bin\S-1-5-21\$RAB12CD.txt";
+        assert!(trash_name_matches("weg.txt", id, "weg.txt", true));
+        assert!(
+            trash_name_matches("weg", id, "weg.txt", true),
+            "extension hidden"
+        );
+        assert!(
+            trash_name_matches("WEG", id, "weg.txt", true),
+            "case-insensitive"
+        );
+        assert!(!trash_name_matches(
+            "weg",
+            r"C:\$Recycle.Bin\S\$RAB12CD.md",
+            "weg.txt",
+            true
+        ));
+        assert!(
+            !trash_name_matches("weg", id, "weg.txt", false),
+            "only on Windows"
+        );
+        assert!(trash_name_matches(
+            "Ordner",
+            r"C:\$Recycle.Bin\S\$RAB12CD",
+            "Ordner",
+            true
+        ));
+        assert!(!trash_name_matches("andere", id, "weg.txt", true));
     }
 }
