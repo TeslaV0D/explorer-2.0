@@ -5,13 +5,19 @@ edition.workspace = true
 license.workspace = true
 build = "build.rs"
 
+[features]
+# GPU renderer (D-009): Skia today; FemtoVG is evaluated (smaller exe, D-015: only if nothing gets worse)
+default = ["gpu-skia"]
+gpu-skia = ["slint/renderer-skia-opengl"]
+gpu-femtovg = ["slint/renderer-femtovg"]
+
 [dependencies]
 explorer-core = { path = "../core" }
 explorer-fs = { path = "../fs" }
 explorer-gpu = { path = "../gpu" }
 explorer-ops = { path = "../ops" }
 explorer-shell = { path = "../shell" }
-slint = { version = "1", default-features = false, features = ["std", "compat-1-2", "backend-winit", "renderer-skia-opengl", "renderer-software", "raw-window-handle-06"] }
+slint = { version = "1", default-features = false, features = ["std", "compat-1-2", "backend-winit", "renderer-software", "raw-window-handle-06"] }
 
 [target.'cfg(windows)'.dependencies]
 raw-window-handle = "0.6"

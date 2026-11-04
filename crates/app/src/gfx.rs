@@ -82,7 +82,8 @@ pub fn select() -> Selection {
         },
     );
     let renderer = match choice {
-        RendererChoice::Gpu => Some("skia"), // "skia" still falls back by itself if the probe was wrong
+        // "skia" falls back to software by itself if the probe was wrong
+        RendererChoice::Gpu => Some(gpu_renderer()),
         RendererChoice::Software => Some("software"),
         RendererChoice::PlatformDefault => None,
     };
@@ -100,9 +101,10 @@ pub fn select() -> Selection {
         }
     }
     trace_line(&format!(
-        "renderer choice={choice:?} reason=\"{reason}\" background={background:?} select_ms={:.1} at={:.1}ms",
+        "renderer choice={choice:?} reason=\"{reason}\" background={background:?} select_ms={:.1} at={:.1}ms gpu_renderer={}",
         t0.elapsed().as_secs_f64() * 1000.0,
-        since_start_ms()
+        since_start_ms(),
+        gpu_renderer()
     ));
     Selection {
         choice,
@@ -147,4 +149,17 @@ pub fn probe_in_background(sel: &Selection) {
                 before != after
             ));
         });
+}
+
+/// GPU renderer compiled in (Cargo features `gpu-skia` / `gpu-femtovg`);
+/// with both, `EXPLORER2_GPU_RENDERER=skia|femtovg` picks one (comparison builds).
+pub fn gpu_renderer() -> &'static str {
+    let want = std::env::var("EXPLORER2_GPU_RENDERER").ok();
+    match want.as_deref() {
+        Some("femtovg") if cfg!(feature = "gpu-femtovg") => "femtovg",
+        Some("skia") if cfg!(feature = "gpu-skia") => "skia",
+        _ if cfg!(feature = "gpu-skia") => "skia",
+        _ if cfg!(feature = "gpu-femtovg") => "femtovg",
+        _ => "software",
+    }
 }
