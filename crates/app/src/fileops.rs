@@ -221,6 +221,17 @@ pub fn command(win: &MainWindow, pi: usize, cmd: &str) {
             }
         }
         "new-folder" => new_folder(win, pi),
+        "properties" => {
+            let paths = nav::selected_paths(pi);
+            let paths = if paths.is_empty() {
+                nav::pane_dir(pi).into_iter().collect()
+            } else {
+                paths
+            };
+            if let Err(e) = explorer_shell::show_properties(window_handle(win), &paths) {
+                win.set_error(e.into());
+            }
+        }
         "undo" => run_undo(win),
         "redo" => run_redo(win),
         "escape" => {
@@ -312,6 +323,74 @@ fn paste(win: &MainWindow, pi: usize) {
         label,
         false,
     );
+}
+
+// ---------------------------------------------------------------- context menu
+
+/// Native window handle (HWND) for shell dialogs/menus; 0 if unavailable.
+fn window_handle(win: &MainWindow) -> isize {
+    #[cfg(windows)]
+    {
+        use raw_window_handle::{HasWindowHandle, RawWindowHandle};
+        let h = win.window().window_handle();
+        match h.window_handle().map(|w| w.as_raw()) {
+            Ok(RawWindowHandle::Win32(w)) => w.hwnd.get(),
+            _ => 0,
+        }
+    }
+    #[cfg(not(windows))]
+    {
+        let _ = win;
+        0
+    }
+}
+
+/// Right-click / Shift+F10 on row `row` (-1 = folder background) at window position (x, y).
+pub fn context_menu(win: &MainWindow, pi: usize, row: i32, x: f32, y: f32) {
+    nav::activate_pane(win, pi);
+    if row >= 0 && !nav::is_selected(pi, row as usize) {
+        // Explorer: right-click on an unselected item selects just that item
+        nav::row_pressed(win, pi, row as usize, false, false);
+    }
+    let Some(dir) = nav::pane_dir(pi) else { return };
+    let items = if row >= 0 {
+        nav::selected_paths(pi)
+    } else {
+        Vec::new()
+    };
+    trace(&format!(
+        "context menu pane={pi} row={row} items={}",
+        items.len()
+    ));
+    if !explorer_shell::SHELL_SUPPORTED {
+        return; // no shell menu on this platform (own fallback menu: later)
+    }
+    let hwnd = window_handle(win);
+    let at = explorer_shell::client_to_screen(hwnd, x, y, win.window().scale_factor());
+    let outcome = explorer_shell::show_context_menu(hwnd, &dir, &items, at);
+    trace(&format!("context menu result {outcome:?}"));
+    use explorer_shell::{MenuOutcome, OwnVerb};
+    match outcome {
+        MenuOutcome::Own(v) => {
+            let cmd = match v {
+                OwnVerb::Rename => "rename",
+                OwnVerb::Delete => "delete",
+                OwnVerb::Cut => "cut",
+                OwnVerb::Copy => "copy",
+                OwnVerb::Paste => "paste",
+                OwnVerb::NewFolder => "new-folder",
+            };
+            command(win, pi, cmd);
+        }
+        MenuOutcome::Shell(_) => {
+            // shell commands (Send to → ZIP, "New" items, …) may change the folder;
+            // the watcher catches it too, this makes it immediate
+            nav::refresh_dirs(win, &[dir], &[], None);
+        }
+        MenuOutcome::Failed(e) => win.set_error(format!("Kontextmenü: {e}").into()),
+        MenuOutcome::Dismissed => {}
+    }
+    nav::focus_pane(pi);
 }
 
 // ---------------------------------------------------------------- drag & drop

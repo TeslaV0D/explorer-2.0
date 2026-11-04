@@ -1009,6 +1009,7 @@ dependencies = [
 name = "explorer-shell"
 version = "0.0.1"
 dependencies = [
+ "windows",
  "windows-sys 0.60.2",
 ]
 
@@ -1022,6 +1023,7 @@ dependencies = [
  "explorer-gpu",
  "explorer-ops",
  "explorer-shell",
+ "raw-window-handle",
  "slint",
  "slint-build",
  "windows-sys 0.60.2",
@@ -3858,6 +3860,7 @@ dependencies = [
  "num-traits",
  "once_cell",
  "pin-weak",
+ "raw-window-handle",
  "slint-macros",
  "unicode-segmentation",
  "vtable",

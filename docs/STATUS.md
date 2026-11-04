@@ -15,6 +15,13 @@
 - Linux: keine Shell → Fallback-Quadrate und eigene Typnamen wie bisher.
 - Tests: shell 8 Unit (Schlüsselregeln, Registry unter Konkurrenz, Pixel-Konvertierung) + Windows-Test mit echten Icons (16/32 px, Ordner ≠ txt, eigene Exe), core +1 (Typ-Sortierung), app +3; CI-UI-Matrix prüft „icons loaded“ + Shell-Typnamen.
 
+### M5.3 Kontextmenü / M5.4 Eigenschaften
+- `explorer-shell::menu`: Shell-Kontextmenü über `IShellFolder::GetUIObjectOf` (Auswahl) bzw. `CreateViewObject` (Ordner-Hintergrund) → `IContextMenu`, Untermenüs (Senden an, Öffnen mit, Neu) über Window-Subclassing + `IContextMenu2/3::HandleMenuMsg(2)`. Ausführung per Position (`MAKEINTRESOURCE`).
+- Eigene Verben statt Shell: Umbenennen, Löschen, Ausschneiden/Kopieren/Einfügen, Neuer Ordner → laufen über unsere Engine (Undo, Fortschritt, Konfliktdialog). Alles andere (Erweiterungen Dritter) führt die Shell aus, danach Refresh.
+- Rechtsklick wie Explorer: nicht markierte Zeile wird markiert, Mehrfachauswahl bleibt; leere Fläche = Ordner-Hintergrund; Shift+F10/Menü-Taste an der fokussierten Zeile; Alt+Enter = Eigenschaften (eine Datei: `SHObjectProperties`, mehrere: `SHMultiFileProperties`).
+- Windows-Test: Menü wird gebaut (ohne Anzeige) und muss die Verben open/delete/rename/properties enthalten; Hintergrund-Menü nicht leer. E2E Linux 53–53d (UI-Pfad).
+- CI-Run #28: Shell-Icons und Typnamen laufen auf Windows (Runner englisch: „File folder“); nur ein App-Test erwartete fest den Linux-Fallback → plattformbewusst gemacht.
+
 ## M4 – Dateioperationen
 - **Neue Crate `explorer-ops`** (plattformneutral testbar): `exec` (Job-Engine, synchrones `run` + `spawn` im Hintergrund), `undo`, `simple` (Umbenennen, Neuer Ordner), `names` (Windows-Namensregeln, „ - Kopie“, „ (2)“), `clipboard` (CF_HDROP), `win_copy` (CopyFileExW mit Fortschritt/Abbruch).
 - **Sicherheitsregeln**: Kopie in `.<name>.e2part` + Rename; Verschieben über Laufwerke löscht die Quelle erst nach vollständiger, geflushter Kopie; „Ersetzen“ = alte Datei in den Papierkorb (rückgängig machbar); Abbruch räumt Teil-Dateien weg; Fehler pro Element, Job läuft weiter.

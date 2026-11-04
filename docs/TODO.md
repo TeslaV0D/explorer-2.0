@@ -66,8 +66,8 @@ Legende: `[ ]` offen · `[~]` in Arbeit · `[x]` erledigt · Prio P0/P1/P2
   - [x] M5.0 Exe-Größe: `opt-level="s"` (Linux 22,9 → 19,6 MB; Sortieren 100k +6–10 ms, Rest im Rauschen), CI-Gate < 20 MB
   - [~] M5.1 Echte Icons (lokal grün, CI ausstehend): Shell-Icons (`SHGetFileInfoW`/`IShellItemImageFactory`), Cache pro Endung + individuell für .exe/.lnk/.ico/.url, im Hintergrund, Overlays (Verknüpfung) – Linux: Fallback wie bisher
   - [~] M5.2 Shell-Typnamen (lokal grün, CI ausstehend; Typ-Sortierung nach angezeigtem Namen) („Textdokument“, „JPEG-Bild“) per `SHGetFileInfoW(SHGFI_TYPENAME|USEFILEATTRIBUTES)`, gecacht pro Endung
-  - [ ] M5.3 Kontextmenü: `IContextMenu` (inkl. Erweiterungen Dritter, „Senden an“, „Öffnen mit“ via IContextMenu2/3), Rechtsklick auf Auswahl / leere Fläche (Ordner-Hintergrund), eigene Einträge davor (Kopieren/Einfügen/… über unsere Engine)
-  - [ ] M5.4 Eigenschaften (`SHObjectProperties`, Alt+Enter), „Öffnen mit…“
+  - [~] M5.3 Kontextmenü (lokal grün, CI ausstehend; Linux: nur UI-Pfad, eigenes Fallback-Menü später): `IContextMenu` (inkl. Erweiterungen Dritter, „Senden an“, „Öffnen mit“ via IContextMenu2/3), Rechtsklick auf Auswahl / leere Fläche (Ordner-Hintergrund), eigene Einträge davor (Kopieren/Einfügen/… über unsere Engine)
+  - [~] M5.4 Eigenschaften (`SHObjectProperties`/`SHMultiFileProperties`, Alt+Enter; „Öffnen mit“ kommt über das Shell-Menü) – CI ausstehend
   - [ ] M5.5 OLE-Drag&Drop mit anderen Apps: Ziehen aus der App (`DoDragDrop` + `SHCreateDataObject`), Ablegen in die App (`RegisterDragDrop`, Winit-Handler ersetzen), Standard-Aktion je Laufwerk wie Explorer
   - [ ] M5.6 Virtuelle Orte: Papierkorb-Ansicht (Wiederherstellen/Leeren), „Dieser PC“, Netzwerk/UNC, Bibliotheken – über Shell-Namespace (`IShellFolder`/`IEnumIDList`), schneller Pfad bleibt für normale Ordner
   - [ ] M5.7 Thumbnails (für spätere Symbol-Ansicht vorbereitet, Cache)

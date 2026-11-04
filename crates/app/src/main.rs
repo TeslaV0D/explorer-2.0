@@ -138,6 +138,9 @@ fn main() -> Result<(), slint::PlatformError> {
         first,
         count
     ));
+    on!(win, on_context_menu, |w, pi, row, x, y| {
+        fileops::context_menu(&w, pi as usize, row, x, y)
+    });
     on!(win, on_job_pause, |_w, id, p| fileops::job_pause(id, p));
     on!(win, on_job_cancel, |w, id| fileops::job_cancel(&w, id));
     on!(win, on_conflict_answer, |w, n| fileops::conflict_answer(

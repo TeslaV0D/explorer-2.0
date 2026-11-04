@@ -11,9 +11,10 @@ explorer-fs = { path = "../fs" }
 explorer-gpu = { path = "../gpu" }
 explorer-ops = { path = "../ops" }
 explorer-shell = { path = "../shell" }
-slint = { version = "1", default-features = false, features = ["std", "compat-1-2", "backend-winit", "renderer-skia-opengl", "renderer-software"] }
+slint = { version = "1", default-features = false, features = ["std", "compat-1-2", "backend-winit", "renderer-skia-opengl", "renderer-software", "raw-window-handle-06"] }
 
 [target.'cfg(windows)'.dependencies]
+raw-window-handle = "0.6"
 windows-sys = { version = "0.60", features = ["Win32_System_Console", "Win32_UI_Shell", "Win32_UI_WindowsAndMessaging"] }
 
 [build-dependencies]

@@ -116,6 +116,8 @@ struct Pane {
     rename_seq: i32,
     rename_text: String,
     rename_sel: i32,
+    menu_seq: i32,
+    menu_row: i32,
 }
 
 impl Pane {
@@ -133,6 +135,8 @@ impl Pane {
             rename_seq: 0,
             rename_text: String::new(),
             rename_sel: 0,
+            menu_seq: 0,
+            menu_row: -1,
         }
     }
 
@@ -362,6 +366,8 @@ fn sync_pane(pi: usize) {
             rename_seq: p.rename_seq,
             rename_text: p.rename_text.as_str().into(),
             rename_sel: p.rename_sel,
+            menu_seq: p.menu_seq,
+            menu_row: p.menu_row,
         };
         if pi < app.pane_model.row_count() {
             app.pane_model.set_row_data(pi, data);
@@ -1509,6 +1515,15 @@ pub fn list_key(
         KeyAction::Undo => crate::fileops::command(win, pi, "undo"),
         KeyAction::Redo => crate::fileops::command(win, pi, "redo"),
         KeyAction::Escape => crate::fileops::command(win, pi, "escape"),
+        KeyAction::ContextMenu => {
+            // the UI computes the position of the focused row and calls back
+            let row = focused_index(pi).map(|i| i as i32).unwrap_or(-1);
+            request(pi, |p| {
+                p.menu_row = row;
+                p.menu_seq += 1;
+            });
+        }
+        KeyAction::Properties => crate::fileops::command(win, pi, "properties"),
         KeyAction::TypeChar(c) => change_selection(win, pi, |sel, entries| {
             let found = TYPEAHEAD.with_borrow_mut(|t| {
                 t.feed(
@@ -1550,6 +1565,13 @@ pub(crate) fn active_pane() -> usize {
 pub(crate) fn pane_dir(pi: usize) -> Option<PathBuf> {
     let id = active_tab_id(pi)?;
     with_tab(id, |t, _, _| t.path.clone()).flatten()
+}
+
+/// Is row `index` of pane `pi` selected?
+pub(crate) fn is_selected(pi: usize, index: usize) -> bool {
+    active_tab_id(pi)
+        .and_then(|id| with_tab(id, |t, _, _| t.selection.is_selected(index)))
+        .unwrap_or(false)
 }
 
 /// Selected items of pane `pi` (the focused item if nothing is selected).
@@ -1760,9 +1782,14 @@ mod tests {
             vis.iter().map(|e| e.name.as_str()).collect::<Vec<_>>(),
             ["dir", "b.txt"]
         );
-        assert_eq!(rows[0].kind, "Dateiordner");
+        if explorer_shell::SHELL_SUPPORTED {
+            // shell names depend on the Windows display language ("File folder" / "Dateiordner")
+            assert!(!rows[0].kind.is_empty() && rows[0].kind != rows[1].kind);
+        } else {
+            assert_eq!(rows[0].kind, "Dateiordner");
+            assert_eq!(rows[1].kind, "TXT-Datei");
+        }
         assert_eq!(rows[1].size, "2 KB");
-        assert_eq!(rows[1].kind, "TXT-Datei");
         assert_eq!(rows[1].modified, "1970-01-01 00:00");
         let show = ViewFilter {
             show_hidden: true,

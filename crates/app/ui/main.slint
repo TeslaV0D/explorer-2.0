@@ -48,6 +48,9 @@ export struct PaneData {
     rename-seq: int,
     rename-text: string,
     rename-sel: int,
+    // context menu from the keyboard (Shift+F10): row to anchor it at (-1 = background)
+    menu-seq: int,
+    menu-row: int,
 }
 
 // A running file operation (copy/move/delete) in the operations panel.
@@ -180,6 +183,14 @@ component FilePane inherits Rectangle {
     callback rename-commit(string);
     callback rename-cancel();
     in property <[image]> icons;
+    // right-click / Shift+F10: row (-1 = folder background), window position in px
+    callback context-menu(int, float, float);
+    property <int> menu-seq: root.data.menu-seq;
+    changed menu-seq => {
+        root.context-menu(root.data.menu-row,
+            (list-focus.absolute-position.x + 60px) / 1px,
+            (list-focus.absolute-position.y + max(0, root.data.menu-row) * root.row-height + list.content-y + root.row-height - 4px) / 1px);
+    }
     // visible rows changed (first index, count) → per-file icons are loaded lazily
     callback viewport(int, int);
     property <int> vp-first: max(0, floor(-list.content-y / root.row-height));
@@ -353,7 +364,14 @@ component FilePane inherits Rectangle {
                 // click on empty space below the rows clears the selection
                 TouchArea {
                     clicked => { root.activate(); list-focus.focus(); root.clear-selection(); }
-                    pointer-event(e) => { root.mouse-nav(e); }
+                    pointer-event(e) => {
+                        if (e.kind == PointerEventKind.up && e.button == PointerEventButton.right) {
+                            root.activate();
+                            list-focus.focus();
+                            root.context-menu(-1, (self.absolute-position.x + self.mouse-x) / 1px, (self.absolute-position.y + self.mouse-y) / 1px);
+                        }
+                        root.mouse-nav(e);
+                    }
                 }
                 list := ListView {
                     for row[i] in root.data.rows : Rectangle {
@@ -392,6 +410,11 @@ component FilePane inherits Rectangle {
                                         root.row-pressed(i, false, false);
                                     }
                                     if (e.kind == PointerEventKind.cancel) { defer-click = false; }
+                                    if (e.kind == PointerEventKind.up && e.button == PointerEventButton.right) {
+                                        root.activate();
+                                        list-focus.focus();
+                                        root.context-menu(i, (self.absolute-position.x + self.mouse-x) / 1px, (self.absolute-position.y + self.mouse-y) / 1px);
+                                    }
                                     root.mouse-nav(e);
                                 }
                                 double-clicked => { root.open-row(i); }
@@ -540,6 +563,7 @@ export component MainWindow inherits Window {
     in property <[JobRow]> jobs;
     in property <[image]> icons;
     callback viewport(int, int, int);
+    callback context-menu(int, int, float, float);
     in property <bool> can-paste;
     in property <bool> can-undo;
     in property <bool> can-redo;
@@ -671,6 +695,7 @@ export component MainWindow inherits Window {
                         rename-cancel => { root.rename-cancel(pi); }
                         icons: root.icons;
                         viewport(f, n) => { root.viewport(pi, f, n); }
+                        context-menu(r, x, y) => { root.context-menu(pi, r, x, y); }
                         drag-payload(r) => { return root.drag-payload(pi, r); }
                         drop-check(r, d, c) => { return root.drop-check(pi, r, d, c); }
                         drop-files(r, d, c) => { return root.drop-files(pi, r, d, c); }

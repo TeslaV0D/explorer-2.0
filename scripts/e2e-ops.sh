@@ -130,6 +130,19 @@ for dy in 8 16; do xdotool mousemove $LIST_X $(( $(row_y 2) + dy )); sleep 0.05;
 xdotool mousemove $LIST_X 500; sleep 0.3; xdotool mouseup 1; sleep 1
 check "[49c] drop in the same folder does nothing" "[ -f '$SRC/b.txt' ] && ! grep -q 'drop pane=0 row=-1 n=1 action=2' $LOG"
 
+echo "-- context menu (Linux: no shell menu, the UI path is checked)"
+# rows: 0 Ordner, 1 Projekt, 2 b.txt
+xdotool mousemove $LIST_X $(row_y 0) click 1; sleep 0.3
+xdotool mousemove $LIST_X $(row_y 2) click 3; sleep 0.6
+check "[53] right-click on an unselected row selects it and opens the menu" "last 'context menu pane' | grep -q 'row=2 items=1' && sel_is 'count=1 focus=b.txt'"
+xdotool mousemove $LIST_X 500 click 3; sleep 0.5
+check "[53b] right-click on empty space = folder background menu" "last 'context menu pane' | grep -q 'row=-1 items=0'"
+xdotool key shift+F10; sleep 0.5
+check "[53c] Shift+F10 opens the menu at the focused row" "last 'context menu pane' | grep -q 'row=2 items=1'"
+xdotool key ctrl+a; sleep 0.3; xdotool mousemove $LIST_X $(row_y 1) click 3; sleep 0.5
+check "[53d] right-click inside a multi-selection keeps it" "last 'context menu pane' | grep -q 'row=1 items=3' && sel_is 'count=3 '"
+xdotool mousemove $LIST_X $(row_y 2) click 1; sleep 0.3
+
 echo "-- long job: operations panel, pause, cancel, undo"
 python3 - "$R/many" <<'PY'
 import os,sys

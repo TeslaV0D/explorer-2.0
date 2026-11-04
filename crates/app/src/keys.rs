@@ -50,6 +50,10 @@ pub enum KeyAction {
     Redo,
     /// Esc: close dialogs / clear cut marks.
     Escape,
+    /// Shift+F10 / menu key: context menu of the selection.
+    ContextMenu,
+    /// Alt+Enter: properties dialog.
+    Properties,
     TypeChar(char),
 }
 
@@ -71,6 +75,8 @@ const DELETE: char = '\u{7F}';
 const F2: char = '\u{F705}';
 const INSERT: char = '\u{F727}';
 const ESCAPE: char = '\u{1B}';
+const F10: char = '\u{F70D}';
+const MENU: char = '\u{F735}';
 
 pub fn map_key(text: &str, ctrl: bool, shift: bool, alt: bool, page: isize) -> Option<KeyAction> {
     let mut chars = text.chars();
@@ -110,7 +116,10 @@ pub fn map_key(text: &str, ctrl: bool, shift: bool, alt: bool, page: isize) -> O
             extend: shift,
             focus_only: ctrl && !shift,
         }),
+        RETURN if alt => Some(KeyAction::Properties),
         RETURN => Some(KeyAction::Open),
+        F10 if shift => Some(KeyAction::ContextMenu),
+        MENU => Some(KeyAction::ContextMenu),
         BACKSPACE if !ctrl && !alt => Some(KeyAction::Up),
         F5 => Some(KeyAction::Refresh),
         ' ' if ctrl => Some(KeyAction::ToggleFocused),
@@ -331,5 +340,16 @@ mod tests {
         assert_eq!(k("z", true, false), Some(KeyAction::Undo));
         assert_eq!(k("y", true, false), Some(KeyAction::Redo));
         assert_eq!(k("Z", true, true), Some(KeyAction::Redo));
+        assert_eq!(k("\u{F70D}", false, true), Some(KeyAction::ContextMenu));
+        assert_eq!(k("\u{F735}", false, false), Some(KeyAction::ContextMenu));
+        assert_eq!(
+            map_key("\n", false, false, true, 1),
+            Some(KeyAction::Properties)
+        );
+        assert_eq!(
+            k("\u{F70D}", false, false),
+            None,
+            "plain F10 = menu bar (later)"
+        );
     }
 }
