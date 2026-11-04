@@ -40,7 +40,7 @@
 - **Bug (CI #32/#33, UI-Matrix)**: OLE-Drop-Target wurde nie registriert („Invalid window handle“) – der Timer lief, bevor Slint das native Fenster erzeugt hatte → Ablegen aus anderen Apps wäre tot gewesen. Fix: Registrierung wiederholt bis HWND existiert (50 ms, max. 5 s), sonst Rückfall auf In-App-DnD.
 - Neu: **Windows-E2E mit echter Tastatur/Maus** (`scripts/e2e-windows.ps1`, CI-Schritt im Release-Job, Screenshots bei Fehler).
 
-### M6.1a Ordneroptionen (lokal grün, CI ausstehend)
+### M6.1a Ordneroptionen ✅ (CI-Run #49)
 - Einstellungs-Panel, Abschnitt „Ordneroptionen“ (in settings.ini: `show_extensions`, `show_protected`, `single_click`):
   - **Dateinamenerweiterungen anzeigen** (Standard an): aus → Endung nur bei *bekannten* Typen ausgeblendet (Windows: `HKCR\.ext` existiert, gecacht; Ordner, `.gitignore`, `ende.` nie). F2 bearbeitet dann nur den angezeigten Namen, die Endung wird beim Speichern wieder angehängt („x.txt“ tippen → „x.txt.txt“, wie Explorer); bei Fehler bleibt der getippte Text ohne Endung im Editor (keine doppelte Endung).
   - **Geschützte Systemdateien anzeigen** (Standard aus): versteckt+System bleibt auch bei „Ausgeblendete“ unsichtbar.
