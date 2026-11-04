@@ -1,6 +1,6 @@
 # Zwischenstand
 
-**Stand:** 2026-11-03 · **Phase:** 1 · M0 ✅ · M1 ✅ · M1.5 ✅ · M2 ✅ · M3 ✅ (CI-Run #19) · M4 ✅ (CI-Run #26) · **M5.0–M5.5 ✅ (CI-Run #37)** · **Branch:** `claude/relaxed-pasteur-ufhh1p`
+**Stand:** 2026-11-04 · **Phase:** 1 · M0–M5 ✅ · **M6 ✅ komplett (CI-Run #58)** · nächster Schritt: R-001 / M7 (Freigabe Boss) · **Branch:** `claude/relaxed-pasteur-ufhh1p`
 
 ## M5 – Shell-Integration (läuft, Freigabe Boss 2026-11-04)
 ### CI-Run #37 – alles grün ✅ (M5.0–M5.5)
@@ -40,7 +40,7 @@
 - **Bug (CI #32/#33, UI-Matrix)**: OLE-Drop-Target wurde nie registriert („Invalid window handle“) – der Timer lief, bevor Slint das native Fenster erzeugt hatte → Ablegen aus anderen Apps wäre tot gewesen. Fix: Registrierung wiederholt bis HWND existiert (50 ms, max. 5 s), sonst Rückfall auf In-App-DnD.
 - Neu: **Windows-E2E mit echter Tastatur/Maus** (`scripts/e2e-windows.ps1`, CI-Schritt im Release-Job, Screenshots bei Fehler).
 
-### M6.4 Farbschemata (CI ausstehend)
+### M6.4 Farbschemata ✅ (CI-Run #58) → **M6 komplett**
 - Einstellungen → **Farbschema: Wie Windows / Hell / Dunkel** (+ Befehlspalette „Farbschema: …“), Häkchen **„Windows-Akzentfarbe verwenden“**; gespeichert in settings.ini (`theme`, `system_accent`).
 - **Alle Farben zentral** in `core::theme::tokens` (37 Tokens) → Slint-Global `Theme`; main.slint hat keine Hex-Farbe mehr. Hell = exakt der bisherige Look (Auswahl weiterhin #cce8ff).
 - Akzent: Auswahl, Hover, aktueller Ort, Ablageziel übernehmen den **Farbton** des Windows-Akzents bei gleicher Helligkeit (Gelb wird nicht grell); Fokusrahmen/aktive Pane/Fortschritt nutzen Windows' eigene Schattierung (AccentPalette „Dark 1“ hell, „Light 2“ dunkel), bei Bedarf auf Kontrast ≥ 4,5 nachgedunkelt/-aufgehellt.
@@ -48,6 +48,7 @@
 - Kein Hell-Aufblitzen: Schema wird vor dem ersten Bild gesetzt (Registry-Lesen ~0,01 ms im Startpfad).
 - Tests: core-Unit (WCAG-Kontrast aller Text-/Hintergrund-Paare für 12 Akzente × hell/dunkel inkl. Gelb/Weiß/Schwarz, Akzent-Rahmen ≥ 3:1, HSL-Rundlauf, AccentPalette/ABGR-Format, Settings-Rundlauf), Linux-E2E [70]–[70k] per **Pixelmessung** (Liste #fafafa → #191919, Auswahl #1c3f63, Seitenleiste #202020, Std-Button dunkel, Neustart startet dunkel, System dunkel + grüner Akzent → grüne Auswahl, Akzent-Häkchen aus → Blau), Windows-E2E W37–W40 mit **echter Registry** (live dunkel/hell, live Akzentwechsel, Titelleiste; Registry danach exakt wiederhergestellt).
 - **CI #57:** funktional alles grün (Windows-E2E inkl. W37–W40, Linux-E2E 180/180), rot nur das Erststart-Gate mit 2709 ms. Ursache: **VM**, nicht M6.4. Schon *vor* dem ersten Theme-Code war `window created` bei 612 statt 144 ms (#56), die Hintergrund-Probe bei 521 statt 70 ms (7×) und run→Event-Loop bei 2011 statt 406 ms. Theme-Init kostet 0,49 ms, Linux First Paint 10 → 9 ms. Der Abbruch am Erststart hatte aber die echte Budget-Messung (normaler Start < 300 ms) verhindert → CI sammelt Zeit-Gates jetzt und wirft erst am Ende der Matrix, mit VM-Kennzahl `probe_ms` im Log.
+- **CI #58 grün** (normale VM, `probe_ms` 84,5): Erststart 677 ms (#56 ohne M6.4: 633), normaler Start best-of-3 **102 ms** (#56: 94,5; Budget 300), Windows-E2E inkl. W37–W40 grün.
 
 ### M6.3 Befehlspalette ✅ (CI-Run #55)
 - **Strg+Shift+P** öffnet ein Suchfeld oben mittig; ↑/↓/Bild↑/Bild↓ wählen, Enter führt aus, Esc/Klick daneben schließt.
