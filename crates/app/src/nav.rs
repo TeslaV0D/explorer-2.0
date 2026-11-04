@@ -2345,6 +2345,12 @@ pub fn list_key(
         trace(&format!("key pane={pi} action={action:?} page={page_rows}"));
     }
     activate_pane(win, pi);
+    run_action(win, pi, action);
+    true
+}
+
+/// Executes a list action in pane `pi` (keys and the command palette).
+pub fn run_action(win: &MainWindow, pi: usize, action: KeyAction) {
     match action {
         KeyAction::Move {
             delta,
@@ -2362,6 +2368,7 @@ pub fn list_key(
         KeyAction::SelectAll => change_selection(win, pi, |sel, _| sel.select_all()),
         KeyAction::View(m) => set_view(win, m),
         KeyAction::ToggleInspector => crate::inspector::toggle(win),
+        KeyAction::Palette => crate::palette::open(win),
         KeyAction::ToggleFocused => change_selection(win, pi, |sel, _| {
             if let Some(f) = sel.focus() {
                 sel.ctrl_click(f);
@@ -2456,7 +2463,6 @@ pub fn list_key(
             }
         }),
     }
-    true
 }
 
 /// The list of pane `pi` scrolled/resized: load per-file icons of the visible rows.
@@ -2636,6 +2642,44 @@ pub(crate) fn inspect_target() -> Option<InspectTarget> {
             direct: explorer_core::inspect::totals(&t.entries),
         }
     })
+}
+
+/// Places for the palette's ">" mode: (label, path) of the sidebar places,
+/// drives, virtual places and recently visited folders (deduplicated).
+pub(crate) fn palette_places() -> Vec<(String, String)> {
+    let mut out: Vec<(String, String)> = Vec::new();
+    let mut push = |label: String, path: String| {
+        if !path.is_empty() && !out.iter().any(|(_, p)| *p == path) {
+            out.push((label, path));
+        }
+    };
+    APP.with_borrow(|app| {
+        for m in [&app.place_model, &app.drive_model] {
+            for i in 0..m.row_count() {
+                if let Some(p) = m.row_data(i) {
+                    push(p.label.to_string(), p.path.to_string());
+                }
+            }
+        }
+        for v in VirtualPlace::ALL {
+            push(
+                v.label().to_string(),
+                v.path().to_string_lossy().into_owned(),
+            );
+        }
+        for p in &app.panes {
+            for t in &p.tabs {
+                for h in t.path.iter().chain(t.history.recent()) {
+                    let label = VirtualPlace::from_path(h)
+                        .map(|v| v.label().to_string())
+                        .or_else(|| h.file_name().map(|n| n.to_string_lossy().into_owned()))
+                        .unwrap_or_else(|| h.to_string_lossy().into_owned());
+                    push(label, h.to_string_lossy().into_owned());
+                }
+            }
+        }
+    });
+    out
 }
 
 /// Name shown for entry `index` of pane `pi` (may lack a hidden extension).

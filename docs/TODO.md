@@ -89,7 +89,8 @@ Legende: `[ ]` offen · `[~]` in Arbeit · `[x]` erledigt · Prio P0/P1/P2
     - [x] M6.1c Ansicht pro Ordner merken (`views.ini`, max. 5000 Ordner, älteste fallen raus; Windows ohne Groß/Klein) + „Aktuelle Ansicht für alle Ordner“; Ansicht pro Tab → zwei Panes können verschieden aussehen – CI-Run #51
   - [x] M6.2 Inspector (Alt+P / „Details“): Vorschau (Shell-Bild 256 px, Text erste 40 Zeilen), Name/Typ/Größe/Geändert/Erstellt/Attribute/Pfad (markier- und kopierbar), Bildmaße aus dem Dateikopf (PNG/JPEG/GIF/BMP/WebP), Mehrfachauswahl mit Summen, Ordnergröße im Hintergrund (abbrechbar, keine Links, max. 500.000 Einträge, nie ganze Laufwerke; offener Ordner nur direkter Inhalt) – CI-Run #52
     - [ ] Später: Inspector-Breite verstellbar; Metadaten aus Shell-Eigenschaften (Autor, Länge von Videos/Audio, EXIF)
-  - [ ] M6.3 Befehlspalette (Strg+Shift+P)
+  - [~] M6.3 Befehlspalette (Strg+Shift+P): zentrales Befehlsverzeichnis (`core::commands`, 45 Befehle mit Kürzel + Bedingung), unscharfe Suche (Umlaute/Groß-Klein egal, Wortanfänge zählen), nicht verfügbare Befehle grau, zuletzt benutzte oben (settings.ini), „>“ = Orte (Schnellzugriff, Laufwerke, virtuelle Orte, zuletzt besuchte Ordner) – lokal grün, CI ausstehend
+    - [ ] Später: frei belegbare Tastenkürzel auf Basis des Befehlsverzeichnisses
   - [ ] M6.4 Farbschemata (Hell/Dunkel/System, Akzentfarbe)
 - [ ] **R-001 Ein-Knopf-Reset** für alle Integrationen (App-Knopf + eigenständiges Recovery-Tool + Journal + CI-Snapshot-Test) – Voraussetzung, bevor irgendeine Integration ausgeliefert wird
 - [ ] M7 Windows-Integration Stufe 1–3 (siehe `WINDOWS-INTEGRATION.md`) + Verifikationspunkte auf echtem Windows

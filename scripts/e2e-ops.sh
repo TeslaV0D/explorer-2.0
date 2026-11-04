@@ -330,6 +330,27 @@ check "[68e] multi-selection: totals incl. the selected folder" "last 'inspector
 check "[68f] the inspector state is saved" "grep -q 'inspector = true' $W/config-ops/settings.ini"
 xdotool key alt+p; sleep 0.6
 check "[68g] Alt+P closes it again" "last 'inspector open' | grep -q 'false'"
+echo "-- M6.3: command palette"
+PL=$R/pal; mkdir -p "$PL"; echo x > "$PL/x.txt"
+goto "$PL"
+xdotool key ctrl+shift+6; sleep 0.5   # [67d] made large icons the default
+xdotool key ctrl+shift+p; sleep 0.5
+check "[69] Ctrl+Shift+P opens the palette" "last 'palette open' >/dev/null && grep -q 'palette open' $LOG"
+xdotool type --delay 40 "neord"; sleep 0.5
+check "[69b] fuzzy: 'neord' finds 'Neuer Ordner' first" "last 'palette query' | grep -qF 'first=Some(\"Neuer Ordner\")'"
+xdotool key Return; sleep 1.2
+check "[69c] Enter runs it (same path as Ctrl+Shift+N: folder + inline rename)" "last 'palette run' | grep -q 'new-folder' && [ -d '$PL/Neuer Ordner' ] && last 'rename start' | grep -q 'Neuer Ordner'"
+xdotool key Escape; sleep 0.4
+xdotool key ctrl+shift+p; sleep 0.4; xdotool type --delay 40 "ansicht gro"; sleep 0.4; xdotool key Return; sleep 1
+check "[69d] 'Ansicht: Große Symbole' from the palette" "last 'palette run' | grep -q 'view-large' && last 'view mode' | grep -q 'mode=large'"
+xdotool key ctrl+shift+p; sleep 0.5
+check "[69e] recently used commands come first" "last 'palette query' | grep -qF 'first=Some(\"Ansicht: Große Symbole\")' && grep -q 'recent_commands = view-large,new-folder' $W/config-ops/settings.ini"
+xdotool key Escape; sleep 0.4
+check "[69f] Esc closes without running anything" "last 'palette close' >/dev/null && last 'palette run' | grep -q 'view-large'"
+xdotool key ctrl+shift+6; sleep 0.6
+xdotool key ctrl+shift+p; sleep 0.4; xdotool type --delay 40 ">papier"; sleep 0.5; xdotool key Return; sleep 1.2
+check "[69g] '>' jumps to places" "last 'palette go' | grep -q '::papierkorb' && last 'navigate tab' | grep -q '::papierkorb'"
+xdotool key alt+Left; sleep 1
 check "[52] process alive" "kill -0 $PID"
 kill $PID; wait $PID 2>/dev/null
 check "[52b] no panic" "! grep -qi panic $LOG"

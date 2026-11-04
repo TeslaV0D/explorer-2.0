@@ -280,6 +280,12 @@ Write-Host "inspector: $(Last 'inspector done')"
 Check "[W35] inspector: picture size + the shell's preview image" { (Last 'inspector done') -match 'image=true' -and (Last 'inspector done') -match 'Abmessungen=120 × 80 Pixel' }
 Keys '%p'; Start-Sleep -Milliseconds 500
 Check "[W35b] Alt+P closes the inspector" { (Last 'inspector open') -match 'false' }
+# M6.3: command palette
+Keys '^+p'; Start-Sleep -Milliseconds 600
+Keys 'neuer ordner'; Start-Sleep -Milliseconds 400
+Keys '{ENTER}'; Start-Sleep -Milliseconds 1200
+Check "[W36] palette: 'neuer ordner' + Enter creates a folder" { (Last 'palette run') -match 'new-folder' -and (Test-Path "$pics\Neuer Ordner") }
+Keys '{ESC}'; Start-Sleep -Milliseconds 400
 Check "[W30] Ctrl+Shift+6 = details again" { (Last 'view mode') -match 'mode=details' }
 if ($shared) { Remove-SmbShare -Name 'e2efreigabe' -Force -ErrorAction SilentlyContinue }
 

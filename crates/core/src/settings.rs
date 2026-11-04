@@ -28,6 +28,8 @@ pub struct Settings {
     pub single_click: bool,
     /// Inspector (details pane) shown.
     pub inspector: bool,
+    /// Command palette: most recently used command ids, newest first.
+    pub recent_commands: Vec<String>,
 }
 
 impl Default for Settings {
@@ -44,6 +46,7 @@ impl Default for Settings {
             show_protected: false,
             single_click: false,
             inspector: false,
+            recent_commands: Vec::new(),
         }
     }
 }
@@ -107,6 +110,14 @@ impl Settings {
                         }
                     }
                 }
+                "recent_commands" => {
+                    s.recent_commands = v
+                        .split(',')
+                        .map(str::trim)
+                        .filter(|x| !x.is_empty())
+                        .map(String::from)
+                        .collect();
+                }
                 "view" => {
                     if let Some(m) = crate::view::ViewMode::parse(v) {
                         s.view = m;
@@ -136,7 +147,8 @@ impl Settings {
              show_extensions = {}\n\
              show_protected = {}\n\
              single_click = {}\n\
-             inspector = {}\n",
+             inspector = {}\n\
+             recent_commands = {}\n",
             self.hardware_acceleration,
             self.show_hidden,
             self.gpu_probe_version,
@@ -146,7 +158,8 @@ impl Settings {
             self.show_extensions,
             self.show_protected,
             self.single_click,
-            self.inspector
+            self.inspector,
+            self.recent_commands.join(",")
         )
     }
 
@@ -190,6 +203,7 @@ mod tests {
             show_protected: true,
             single_click: true,
             inspector: true,
+            recent_commands: vec!["paste".into(), "inspector".into()],
         };
         assert_eq!(Settings::parse(&s.serialize()), s);
     }

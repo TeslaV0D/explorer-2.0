@@ -33,6 +33,11 @@ impl History {
     }
 
     /// Returns the target to go back to; `current` moves to the forward stack.
+    /// Visited places, most recent first (for "recent folders").
+    pub fn recent(&self) -> impl Iterator<Item = &PathBuf> {
+        self.back.iter().rev().chain(self.forward.iter().rev())
+    }
+
     pub fn back(&mut self, current: PathBuf) -> Option<PathBuf> {
         let target = self.back.pop()?;
         self.forward.push(current);

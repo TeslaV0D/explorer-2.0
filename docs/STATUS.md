@@ -40,6 +40,14 @@
 - **Bug (CI #32/#33, UI-Matrix)**: OLE-Drop-Target wurde nie registriert („Invalid window handle“) – der Timer lief, bevor Slint das native Fenster erzeugt hatte → Ablegen aus anderen Apps wäre tot gewesen. Fix: Registrierung wiederholt bis HWND existiert (50 ms, max. 5 s), sonst Rückfall auf In-App-DnD.
 - Neu: **Windows-E2E mit echter Tastatur/Maus** (`scripts/e2e-windows.ps1`, CI-Schritt im Release-Job, Screenshots bei Fehler).
 
+### M6.3 Befehlspalette (lokal grün, CI ausstehend)
+- **Strg+Shift+P** öffnet ein Suchfeld oben mittig; ↑/↓/Bild↑/Bild↓ wählen, Enter führt aus, Esc/Klick daneben schließt.
+- `core::commands` (rein, getestet): **ein** Verzeichnis aller 45 Befehle (ID, deutscher Name, Kürzel, Bedingung: Auswahl / echter Ordner / Einfügen möglich / Rückgängig / Wiederholen / Papierkorb), `fuzzy_score` (Teilfolge, Umlaute gefaltet, Wortanfänge + aufeinanderfolgende Treffer zählen), `rank` (zuletzt benutzte zuerst), `push_recent`.
+- Ausführung über dieselben Wege wie die Tasten: `nav::run_action` (aus `list_key` herausgelöst) bzw. `fileops::command`; Unit-Test stellt sicher, dass jeder Befehl des Verzeichnisses ausgeführt wird.
+- Nicht verfügbare Befehle grau (Enter → „Hier nicht möglich“); zuletzt benutzte (8) in settings.ini (`recent_commands`).
+- „>“-Modus: Orte aus Seitenleiste, Laufwerken, virtuellen Orten und dem Verlauf aller Tabs.
+- Tests: Unit, Linux-E2E [69]–[69g] (168/168), Windows-E2E W36.
+
 ### M6.2 Inspector ✅ (CI-Run #52)
 - Rechte Seitenleiste (280 px), **Alt+P** oder Knopf „Details“, Zustand in settings.ini (`inspector`).
 - Inhalt: Vorschau (Windows-Vorschaubild 256 px bzw. großes Icon; Textdateien: erste 40 Zeilen, UTF-8/BOM, Binär erkannt), Titel + Typ, Größe (ab 1 KB mit Bytes), Geändert, Erstellt, Attribute, Abmessungen (aus dem Dateikopf, `core::inspect::image_size`), Pfad als markierbarer Text (kopieren).

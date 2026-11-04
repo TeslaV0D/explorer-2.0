@@ -9,6 +9,7 @@ mod inspector;
 mod keys;
 mod nav;
 mod open;
+mod palette;
 mod thumbs;
 
 use std::io::Write;
@@ -256,6 +257,10 @@ fn main() -> Result<(), slint::PlatformError> {
         settings.view,
     );
     inspector::init(&win, settings.inspector);
+    palette::init(&win, settings.recent_commands.clone());
+    on!(win, on_pal_query, |w, t| palette::query(&w, t.as_str()));
+    on!(win, on_pal_run, |w, i| palette::run(&w, i));
+    on!(win, on_pal_close, |w| palette::close(&w));
     nav::trace_line(&format!("init done at={:.1}ms", nav::since_start_ms()));
 
     // Drives come and go (USB sticks, network shares): refresh the sidebar periodically.

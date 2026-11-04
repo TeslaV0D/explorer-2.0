@@ -3,6 +3,7 @@
 
 pub mod address;
 pub mod breadcrumb;
+pub mod commands;
 pub mod display;
 pub mod history;
 pub mod inspect;
