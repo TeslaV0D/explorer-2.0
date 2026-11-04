@@ -198,35 +198,46 @@ fn bitmap_bits(hbm: HBITMAP) -> Option<(u32, u32, Vec<u8>)> {
     }
 }
 
-/// The shell's image for a file (thumbnail, or its icon) fitting `px`×`px`.
-pub fn thumbnail(path: &Path, px: u32) -> Option<Icon> {
+/// The shell's image for a file fitting `px`×`px`: a real preview if a
+/// thumbnail provider has one (`preview = true`), else the file's icon.
+/// Machines without providers (e.g. Windows Server) only get icons.
+pub fn thumbnail(path: &Path, px: u32) -> Option<crate::thumbs::Thumb> {
     use windows::core::HSTRING;
     use windows::Win32::Foundation::SIZE;
     use windows::Win32::UI::Shell::{
-        IShellItemImageFactory, SHCreateItemFromParsingName, SIIGBF_RESIZETOFIT,
+        IShellItemImageFactory, SHCreateItemFromParsingName, SIIGBF, SIIGBF_ICONONLY,
+        SIIGBF_RESIZETOFIT, SIIGBF_THUMBNAILONLY,
     };
     init_thread();
-    // SAFETY: COM calls with valid arguments; the returned bitmap is deleted below.
-    let hbm = unsafe {
-        let f: IShellItemImageFactory =
-            SHCreateItemFromParsingName(&HSTRING::from(path.as_os_str()), None).ok()?;
-        f.GetImage(
-            SIZE {
-                cx: px as i32,
-                cy: px as i32,
-            },
-            SIIGBF_RESIZETOFIT,
-        )
-        .ok()?
+    // SAFETY: COM calls with valid arguments.
+    let f: IShellItemImageFactory =
+        unsafe { SHCreateItemFromParsingName(&HSTRING::from(path.as_os_str()), None) }.ok()?;
+    let size = SIZE {
+        cx: px as i32,
+        cy: px as i32,
     };
-    let raw = hbm.0 as HBITMAP;
-    let bits = bitmap_bits(raw);
-    unsafe { DeleteObject(raw) };
-    let (w, h, bgra) = bits?;
-    Some(Icon {
-        width: w,
-        height: h,
-        rgba: crate::thumbs::premultiplied_bgra_to_rgba(&bgra),
+    let get = |flags: SIIGBF| -> Option<Icon> {
+        // SAFETY: valid factory; the returned bitmap is deleted right after copying.
+        let hbm = unsafe { f.GetImage(size, flags) }.ok()?;
+        let raw = hbm.0 as HBITMAP;
+        let bits = bitmap_bits(raw);
+        unsafe { DeleteObject(raw) };
+        let (w, h, bgra) = bits?;
+        Some(Icon {
+            width: w,
+            height: h,
+            rgba: crate::thumbs::premultiplied_bgra_to_rgba(&bgra),
+        })
+    };
+    if let Some(image) = get(SIIGBF(SIIGBF_RESIZETOFIT.0 | SIIGBF_THUMBNAILONLY.0)) {
+        return Some(crate::thumbs::Thumb {
+            image,
+            preview: true,
+        });
+    }
+    get(SIIGBF(SIIGBF_RESIZETOFIT.0 | SIIGBF_ICONONLY.0)).map(|image| crate::thumbs::Thumb {
+        image,
+        preview: false,
     })
 }
 
@@ -287,7 +298,18 @@ mod tests {
         }
         let bmp = dir.join("rot.bmp");
         std::fs::write(&bmp, &b).unwrap();
-        let t = thumbnail(&bmp, 96).expect("thumbnail of a bmp");
+        let thumb = thumbnail(&bmp, 96).expect("thumbnail or icon of a bmp");
+        let t = thumb.image;
+        if !thumb.preview {
+            // no thumbnail provider on this machine (GitHub's Windows Server
+            // runners): the icon fallback is the right answer here
+            eprintln!(
+                "no picture thumbnail provider: got the icon ({}x{})",
+                t.width, t.height
+            );
+            assert!(t.width > 16 && t.width <= 96, "large icon: {}", t.width);
+            return;
+        }
         assert!(
             t.width <= 96 && t.height <= 96 && t.width > 0,
             "{}x{}",
@@ -304,6 +326,8 @@ mod tests {
         let txt = dir.join("a.txt");
         std::fs::write(&txt, "x").unwrap();
         let i = thumbnail(&txt, 48).expect("files without preview get their icon");
+        assert!(!i.preview, "a text file has no picture preview");
+        let i = i.image;
         assert!(
             i.width > 16 && i.width <= 48,
             "large icon, not the 16 px one: {}",

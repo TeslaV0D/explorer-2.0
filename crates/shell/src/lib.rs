@@ -32,7 +32,7 @@ pub use menu::{
     client_to_screen, menu_entries, own_verb, show_context_menu, show_properties, MenuEntry,
     MenuOutcome, OwnVerb,
 };
-pub use thumbs::{premultiplied_bgra_to_rgba, thumbnail};
+pub use thumbs::{premultiplied_bgra_to_rgba, thumbnail, Thumb};
 pub use types::{type_name, TypeNames};
 
 /// Screen pixels → window-client pixels (Windows); identity elsewhere.

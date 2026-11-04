@@ -47,6 +47,8 @@ struct Ui {
     requested: HashSet<u32>,
     queue: Option<Shared>,
     loaded_total: usize,
+    /// Real content previews among them (the rest are large icons).
+    previews: usize,
 }
 
 thread_local! {
@@ -59,6 +61,7 @@ thread_local! {
         requested: HashSet::new(),
         queue: None,
         loaded_total: 0,
+        previews: 0,
     });
 }
 
@@ -82,9 +85,10 @@ fn worker(shared: Shared) {
     loop {
         let (id, key) = next_job(&shared);
         let img = thumbnail(&key.path, key.px).map(|t| {
-            let mut buf = slint::SharedPixelBuffer::<slint::Rgba8Pixel>::new(t.width, t.height);
-            buf.make_mut_bytes().copy_from_slice(&t.rgba);
-            buf
+            let (w, h) = (t.image.width, t.image.height);
+            let mut buf = slint::SharedPixelBuffer::<slint::Rgba8Pixel>::new(w, h);
+            buf.make_mut_bytes().copy_from_slice(&t.image.rgba);
+            (buf, t.preview)
         });
         let _ = slint::invoke_from_event_loop(move || loaded(id, img));
     }
@@ -114,9 +118,9 @@ fn skipped(id: u32) {
     });
 }
 
-fn loaded(id: u32, img: Option<slint::SharedPixelBuffer<slint::Rgba8Pixel>>) {
+fn loaded(id: u32, img: Option<(slint::SharedPixelBuffer<slint::Rgba8Pixel>, bool)>) {
     UI.with_borrow_mut(|u| {
-        let Some(buf) = img else {
+        let Some((buf, preview)) = img else {
             return; // no image: keep `requested`, the tile shows its icon
         };
         let bytes = buf.as_bytes().len();
@@ -129,6 +133,7 @@ fn loaded(id: u32, img: Option<slint::SharedPixelBuffer<slint::Rgba8Pixel>>) {
         u.lru.retain(|&x| x != id);
         u.lru.push_back(id);
         u.loaded_total += 1;
+        u.previews += preview as usize;
         // over budget: forget the least recently shown (they reload when visible)
         while u.bytes > BUDGET_BYTES && u.lru.len() > 1 {
             let Some(old) = u.lru.pop_front() else { break };
@@ -138,10 +143,11 @@ fn loaded(id: u32, img: Option<slint::SharedPixelBuffer<slint::Rgba8Pixel>>) {
                 u.model.set_row_data(old as usize, slint::Image::default());
             }
         }
-        if u.loaded_total == 1 || u.loaded_total.is_multiple_of(50) {
+        if u.loaded_total <= 20 || u.loaded_total.is_multiple_of(50) {
             crate::nav::trace_line(&format!(
-                "thumbs loaded n={} kept={} bytes={}",
+                "thumbs loaded n={} previews={} kept={} bytes={}",
                 u.loaded_total,
+                u.previews,
                 u.lru.len(),
                 u.bytes
             ));

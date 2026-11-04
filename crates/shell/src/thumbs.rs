@@ -5,9 +5,17 @@
 use crate::icons::Icon;
 use std::path::Path;
 
+/// An image for the icon view.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct Thumb {
+    pub image: Icon,
+    /// A real preview of the content (not just the file type's icon).
+    pub preview: bool,
+}
+
 /// Image of `path` that fits into `px`×`px` (blocking; worker thread).
 /// `None` without shell support or if the shell has nothing.
-pub fn thumbnail(path: &Path, px: u32) -> Option<Icon> {
+pub fn thumbnail(path: &Path, px: u32) -> Option<Thumb> {
     #[cfg(windows)]
     {
         crate::win::thumbnail(path, px)

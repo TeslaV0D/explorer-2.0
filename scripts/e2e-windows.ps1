@@ -250,7 +250,15 @@ if ($geo -match ' x=([\d.]+) y=([\d.]+) .* item_w=([\d.]+)') {
   $px = $shot.GetPixel(0, 0); $shot.Dispose()
   Write-Host "tile 0 center pixel: $px"
   Shot "w28-icons"
-  Check "[W28c] the picture's tile shows its red thumbnail" { $px.R -gt 180 -and $px.G -lt 90 -and $px.B -lt 90 }
+  $tl = Last 'thumbs loaded'; Write-Host "thumbs: $tl"
+  if ($tl -match 'previews=0 ') {
+    # GitHub's Windows Server runners have no picture thumbnail provider: the
+    # shell hands out icons, the tile must then show the (non-background) icon
+    Write-Host "NOTE  no thumbnail provider on this machine - checking the icon fallback"
+    Check "[W28c] the picture's tile shows the shell image (icon fallback)" { -not ($px.R -gt 240 -and $px.G -gt 240 -and $px.B -gt 240) }
+  } else {
+    Check "[W28c] the picture's tile shows its red thumbnail" { $px.R -gt 180 -and $px.G -lt 90 -and $px.B -lt 90 }
+  }
 } else { Fail "[W28c] no geometry trace" }
 Click ([int]($gx + 2 + 128 + 62)) ([int]($gy + 60))
 Check "[W29] click on a tile selects it" { (Last 'selection pane') -match 'focus=text\.txt' }
