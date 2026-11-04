@@ -102,7 +102,8 @@ jobs:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
       - uses: Swatinem/rust-cache@v2
-      - run: cargo build --release -p explorer2
+      - id: build
+        run: cargo build --release -p explorer2
       - name: Smoke test exe (starts, prints version, manifest embedded)
         shell: pwsh
         run: |
@@ -237,6 +238,9 @@ jobs:
           if ($r.text -match 'Failed to initialize Skia opengl surface') { throw "[mesa-forced-gpu] Skia GL surface failed even with an OpenGL 4.x driver" }
           Write-Host "  ok: Skia OpenGL surface initialised on Mesa (GL path works)"
       - name: "Windows E2E (real keyboard + mouse: rename, undo, clipboard, recycle bin, context menu, properties, OLE drag)"
+        # also after a red timing gate in the smoke matrix: the functional
+        # results are needed either way (the job stays red)
+        if: (success() || failure()) && steps.build.outcome == 'success'
         shell: powershell
         run: |
           New-Item -ItemType Directory -Force "$env:RUNNER_TEMP\e2e-win" | Out-Null
