@@ -72,7 +72,7 @@ Legende: `[ ]` offen · `[~]` in Arbeit · `[x]` erledigt · Prio P0/P1/P2
   - [~] M5.6 Virtuelle Orte (schneller Pfad bleibt für normale Ordner):
     - [x] M5.6a Papierkorb-Ansicht: Liste (Gelöscht am, Ursprünglicher Ort, Größe), Wiederherstellen, endgültig löschen, leeren, Ablegen auf Papierkorb = löschen, Seitenleiste, Adress-Aliase (CI-Run #39)
     - [x] M5.6b „Dieser PC“: Laufwerke mit Speicherplatz, Klick auf Überschrift in der Seitenleiste, „Hoch“ vom Laufwerk → Dieser PC (CI-Run #39)
-    - [~] M5.6c Netzwerk: `\\server` → Freigaben (`NetShareEnum`, ohne Admin-Freigaben `C$`/`IPC$`), Kommentar in „Typ“, Anmeldedialog (`WNetAddConnection3W`) bei Zugriff verweigert – einmal pro Ordner, „Hoch“ von Freigabe → Server, Breadcrumb `\\nas › film` – lokal grün, CI ausstehend
+    - [x] M5.6c Netzwerk: `\\server` → Freigaben (`NetShareEnum`, ohne Admin-Freigaben `C$`/`IPC$`), Kommentar in „Typ“, Anmeldedialog (`WNetAddConnection3W`) bei Zugriff verweigert – einmal pro Ordner, „Hoch“ von Freigabe → Server, Breadcrumb `\\nas › film` (CI-Run #41)
     - [ ] M5.6d Bibliotheken / weitere Shell-Orte (`IShellFolder`), echtes Papierkorb-/PC-Icon
     - [ ] Später: Undo für „Wiederherstellen“, Shell-Kontextmenü im Papierkorb
   - [ ] M5.7 Thumbnails (für spätere Symbol-Ansicht vorbereitet, Cache)

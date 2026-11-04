@@ -44,7 +44,7 @@
 - **R-001 Ein-Knopf-Reset / „Notausgang“** (2026-11-03, Lehre aus File Pilot, wo nur Windows-Neuinstallation half): Jede Windows-Integration (Win+E, Ordner-Verben/Default-Handler, explorer.exe-Proxy/IFEO, Kontextmenü-Einträge, Autostart, Umgebungsvariablen/PATH, Verknüpfungen, Dateizuordnungen, Hotkeys) muss **mit einem Knopf vollständig rückgängig** zu machen sein – in der App **und** über ein eigenständiges Recovery-Tool, das auch funktioniert, wenn die App selbst nicht startet (inkl. Abgesichertem Modus). Jede Änderung wird vorher mit Originalwert in einem Journal gesichert; Reset stellt exakt den Ursprungszustand her. Pflicht-Test: Integration an → Reset → Registry/Umgebung identisch zum Snapshot vorher. Gilt ab M7, Architektur schon vorher berücksichtigen.
 
 ## Meilenstein-Stand
-- M0 ✅ · M1 ✅ (Run #10) · M1.5 ✅ Renderer-Wahl + Einstellungen + Icon (Run #13) · M2 ✅ (Run #16) · M3 ✅ (Run #19) · M4 ✅ (Run #26) · **M5 läuft: M5.0–M5.5 ✅ (Run #37), M5.6a/b ✅ (Run #39)**, M5.6c Netzwerk in CI
+- M0 ✅ · M1 ✅ (Run #10) · M1.5 ✅ Renderer-Wahl + Einstellungen + Icon (Run #13) · M2 ✅ (Run #16) · M3 ✅ (Run #19) · M4 ✅ (Run #26) · **M5 läuft: M5.0–M5.5 ✅ (Run #37), M5.6a/b ✅ (Run #39), M5.6c ✅ (Run #41)**, nächster Schritt M5.6d Bibliotheken/Shell-Orte
 - Arbeitsregel (Boss): nächste Stufe erst, wenn die aktuelle vollständig abgeschlossen, getestet und CI-grün ist.
 
 ## Code-Layout (seit M0)
@@ -108,6 +108,7 @@
 - Slint erzeugt das native Fenster erst **irgendwann nach** Event-Loop-Start (nicht zwingend im ersten Timer) → HWND-abhängiges Setup (Drop-Target) mit Wiederholung, bis `window_handle` ≠ 0 (CI #32/#33: „Invalid window handle“).
 - OLE-Drag nur starten, wenn die Primärtaste **noch gedrückt** ist (`primary_button_down`) – sonst wartet OLE auf die nächste Eingabe und legt beim nächsten Mausbewegen ab.
 - Windows-Dialogtitel (Eigenschaften) zeigen Namen **ohne** bekannte Endung („a Properties“) → Tests nicht auf „a.txt“ matchen.
+- PowerShell `New-SmbShare`: Kommentar heißt `-Description` (nicht `-Remark`, das ist der NetAPI-Name); Runner hat nur Admin-Freigaben → für Netzwerk-Tests eigene Freigabe anlegen.
 - Windows-E2E: `scripts/e2e-windows.ps1` (SendKeys + SetCursorPos/mouse_event, Fenster maximiert, Runner-Bildschirm 1024×768, DPI 1.0); Foreground-Lock mit Alt-Druck vor `SetForegroundWindow` umgehen.
 - Papierkorb-Restore immer gegen Snapshot **vor** der Aktion (gleicher Originalpfad kann mehrfach im Papierkorb liegen).
 
