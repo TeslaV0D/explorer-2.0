@@ -54,6 +54,8 @@ pub enum KeyAction {
     ContextMenu,
     /// Alt+Enter: properties dialog.
     Properties,
+    /// Alt+P: inspector (Explorer's preview pane shortcut).
+    ToggleInspector,
     /// Ctrl+Shift+1/2/3/6: icon sizes / details (Explorer).
     View(explorer_core::view::ViewMode),
     TypeChar(char),
@@ -165,6 +167,7 @@ pub fn map_key_grid(
         'z' | 'Z' if ctrl && shift && !alt => Some(KeyAction::Redo),
         ESCAPE => Some(KeyAction::Escape),
         'd' | 'D' if alt && !ctrl => Some(KeyAction::EditPath),
+        'p' | 'P' if alt && !ctrl => Some(KeyAction::ToggleInspector),
         // printable text → type-to-select (no private-use specials, no control chars)
         c if !ctrl && !alt && !c.is_control() && !('\u{E000}'..='\u{F8FF}').contains(&c) => {
             Some(KeyAction::TypeChar(c))

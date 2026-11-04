@@ -40,6 +40,14 @@
 - **Bug (CI #32/#33, UI-Matrix)**: OLE-Drop-Target wurde nie registriert („Invalid window handle“) – der Timer lief, bevor Slint das native Fenster erzeugt hatte → Ablegen aus anderen Apps wäre tot gewesen. Fix: Registrierung wiederholt bis HWND existiert (50 ms, max. 5 s), sonst Rückfall auf In-App-DnD.
 - Neu: **Windows-E2E mit echter Tastatur/Maus** (`scripts/e2e-windows.ps1`, CI-Schritt im Release-Job, Screenshots bei Fehler).
 
+### M6.2 Inspector (lokal grün, CI ausstehend)
+- Rechte Seitenleiste (280 px), **Alt+P** oder Knopf „Details“, Zustand in settings.ini (`inspector`).
+- Inhalt: Vorschau (Windows-Vorschaubild 256 px bzw. großes Icon; Textdateien: erste 40 Zeilen, UTF-8/BOM, Binär erkannt), Titel + Typ, Größe (ab 1 KB mit Bytes), Geändert, Erstellt, Attribute, Abmessungen (aus dem Dateikopf, `core::inspect::image_size`), Pfad als markierbarer Text (kopieren).
+- Mehrfachauswahl: Anzahl, Größe der Dateien, Gesamt inkl. Ordnerinhalt. Ordner: Inhalt + Gesamtgröße live im Hintergrund (`fs::dir_stats`: abbrechbar, Links/Junctions werden nicht verfolgt, unlesbare Ordner gezählt, Grenze 500.000 Einträge).
+- Bewusst ohne Plattenlauf: der *offene* Ordner zeigt nur seinen direkten Inhalt (sonst würde `C:\` beim Öffnen die ganze Platte zählen); ganze Laufwerke werden nie automatisch gezählt.
+- Entprellt (120 ms), Generationszähler verwirft veraltete Ergebnisse, laufende Zählung wird bei neuer Auswahl abgebrochen.
+- Tests: Unit (`core::inspect`, `fs::stats` inkl. Symlink-Schleife + Grenze), Linux-E2E [68]–[68g] (161/161), Windows-E2E W35/W35b (echtes Vorschaubild + Maße des PNG).
+
 ### M6.1c Ansicht pro Ordner ✅ (CI-Run #51) → **M6.1 komplett**
 - `core::views::FolderViews` (rein, getestet): Ordner → Ansicht, LRU bis 5000, Windows case-insensitiv, toleranter Parser; Datei `views.ini` (`modus<TAB>pfad`, atomar geschrieben).
 - Ansicht hängt jetzt am **Tab** (beim Navigieren: gemerkte Ansicht des Ordners, sonst Standard); `PaneData` trägt Modus + Kachelmaße → linke und rechte Pane können verschieden aussehen. Umschalten merkt die Ansicht für den Ordner.

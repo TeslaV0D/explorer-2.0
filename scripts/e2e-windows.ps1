@@ -273,6 +273,13 @@ for ($i = 1; $i -le 12; $i++) {
 [W]::mouse_event(0x04, 0, 0, 0, [UIntPtr]::Zero); Start-Sleep -Milliseconds 600
 Check "[W34] rubber band selects both tiles" { (Last 'band done') -match 'hits=2' -and (Last 'selection pane') -match 'count=2 ' }
 Keys '^+6'; Start-Sleep -Milliseconds 800
+# M6.2: inspector (rows in $pics: 0 rot.png, 1 text.txt)
+Keys '%p'; Start-Sleep -Milliseconds 1000
+Click $LISTX (RowY 0); Start-Sleep -Milliseconds 2000
+Write-Host "inspector: $(Last 'inspector done')"
+Check "[W35] inspector: picture size + the shell's preview image" { (Last 'inspector done') -match 'image=true' -and (Last 'inspector done') -match 'Abmessungen=120 × 80 Pixel' }
+Keys '%p'; Start-Sleep -Milliseconds 500
+Check "[W35b] Alt+P closes the inspector" { (Last 'inspector open') -match 'false' }
 Check "[W30] Ctrl+Shift+6 = details again" { (Last 'view mode') -match 'mode=details' }
 if ($shared) { Remove-SmbShare -Name 'e2efreigabe' -Force -ErrorAction SilentlyContinue }
 

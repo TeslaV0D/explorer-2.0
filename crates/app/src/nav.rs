@@ -803,6 +803,7 @@ fn sync_window(win: &MainWindow) {
     win.set_status(status.into());
     win.set_has_selection(has_sel);
     win.set_active_place(place.into());
+    crate::inspector::changed(win);
     schedule_session_save();
 }
 
@@ -2360,6 +2361,7 @@ pub fn list_key(
         }),
         KeyAction::SelectAll => change_selection(win, pi, |sel, _| sel.select_all()),
         KeyAction::View(m) => set_view(win, m),
+        KeyAction::ToggleInspector => crate::inspector::toggle(win),
         KeyAction::ToggleFocused => change_selection(win, pi, |sel, _| {
             if let Some(f) = sel.focus() {
                 sel.ctrl_click(f);
@@ -2587,6 +2589,53 @@ pub(crate) fn selected_paths(pi: usize) -> Vec<PathBuf> {
             .collect()
     })
     .unwrap_or_default()
+}
+
+/// What the inspector shows: the selected items of the active pane, or the
+/// folder itself when nothing is selected.
+pub(crate) struct InspectTarget {
+    /// Changes whenever the shown content may change (pane, tab, load, selection).
+    pub key: String,
+    /// Real folder of the tab (`None` in virtual places).
+    pub dir: Option<PathBuf>,
+    /// Tab title (folder name / place label).
+    pub title: String,
+    /// (path if real, entry, name as listed, type as listed)
+    pub items: Vec<(Option<PathBuf>, Entry, String, String)>,
+    /// Direct content of the folder (files, folders, bytes of the files).
+    pub direct: (usize, usize, u64),
+}
+
+pub(crate) fn inspect_target() -> Option<InspectTarget> {
+    let pi = APP.with_borrow(|app| app.active_pane);
+    let id = active_tab_id(pi)?;
+    with_tab(id, |t, _, _| {
+        let dir = t
+            .path
+            .clone()
+            .filter(|p| !explorer_core::places::is_placeholder(p) && !is_server(p));
+        let sel = t.selection.selected_indices();
+        let items = sel
+            .iter()
+            .filter_map(|&i| {
+                let e = t.entries.get(i)?;
+                let row = t.model.row_data(i)?;
+                let path = match &t.virtual_data {
+                    VirtualData::Targets(m) | VirtualData::Library(_, m) => m.get(&e.name).cloned(),
+                    VirtualData::Trash(_) => None,
+                    VirtualData::None => dir.as_ref().map(|d| d.join(&e.name)),
+                };
+                Some((path, e.clone(), row.name.to_string(), row.kind.to_string()))
+            })
+            .collect();
+        InspectTarget {
+            key: format!("{pi}/{id}/{}/{:?}/{}", t.gen, sel, t.entries.len()),
+            dir,
+            title: t.title(),
+            items,
+            direct: explorer_core::inspect::totals(&t.entries),
+        }
+    })
 }
 
 /// Name shown for entry `index` of pane `pi` (may lack a hidden extension).

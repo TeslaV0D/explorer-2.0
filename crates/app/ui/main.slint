@@ -19,6 +19,9 @@ export struct Row {
 
 export struct Crumb { label: string, path: string }
 
+// One fact in the inspector ("Größe" → "12,3 KB").
+export struct InfoRow { key: string, value: string }
+
 export struct TabInfo { title: string, path: string }
 
 export struct PlaceItem {
@@ -926,6 +929,15 @@ export component MainWindow inherits Window {
     in property <string> view-mode: "details";
     in property <[image]> thumbs;
     callback apply-view-all();
+    // inspector (details pane, Alt+P)
+    in property <bool> insp-open;
+    in property <string> insp-title;
+    in property <string> insp-subtitle;
+    in property <image> insp-image;
+    in property <bool> insp-has-image;
+    in property <string> insp-text;
+    in property <[InfoRow]> insp-rows;
+    callback toggle-inspector();
     callback zoom(bool);
     callback set-view(string);
     // sort menu: column (direction kept) / direction
@@ -1029,6 +1041,12 @@ export component MainWindow inherits Window {
                         toggled => { root.toggle-hidden(self.checked); }
                     }
                     Button {
+                        text: "Details";
+                        checkable: true;
+                        checked: root.insp-open;
+                        clicked => { root.toggle-inspector(); }
+                    }
+                    Button {
                         text: "Einstellungen";
                         checkable: true;
                         checked <=> root.settings-open;
@@ -1093,6 +1111,45 @@ export component MainWindow inherits Window {
                         drag-payload(r) => { return root.drag-payload(pi, r); }
                         drop-check(r, d, c) => { return root.drop-check(pi, r, d, c); }
                         drop-files(r, d, c) => { return root.drop-files(pi, r, d, c); }
+                    }
+                }
+                // ---------- inspector ----------
+                if root.insp-open : Rectangle {
+                    width: 280px;
+                    background: #f7f8fa;
+                    Rectangle { x: 0; width: 1px; background: #e1e4e8; }
+                    ScrollView {
+                        x: 1px; width: parent.width - 1px;
+                        VerticalLayout {
+                            padding: 12px; spacing: 8px;
+                            alignment: start;
+                            if root.insp-has-image : Rectangle {
+                                height: 200px;
+                                background: #ffffff;
+                                border-radius: 4px;
+                                Image { width: parent.width - 16px; height: parent.height - 16px; source: root.insp-image; image-fit: contain; }
+                            }
+                            if root.insp-text != "" : Rectangle {
+                                height: min(220px, insp-pre.preferred-height + 16px);
+                                background: #ffffff;
+                                border-radius: 4px;
+                                clip: true;
+                                insp-pre := Text {
+                                    x: 8px; y: 8px; width: parent.width - 16px;
+                                    text: root.insp-text; font-size: 11px; color: #333;
+                                    wrap: no-wrap; overflow: elide; vertical-alignment: top;
+                                }
+                            }
+                            Text { text: root.insp-title; font-size: 14px; font-weight: 700; color: #222; wrap: word-wrap; }
+                            Text { text: root.insp-subtitle; font-size: 11px; color: #666; wrap: word-wrap; }
+                            Rectangle { height: 1px; background: #e3e6ea; }
+                            for r in root.insp-rows : VerticalLayout {
+                                spacing: 1px;
+                                Text { text: r.key; font-size: 11px; color: #666; }
+                                // read-only input: the value can be selected and copied (paths)
+                                TextInput { text: r.value; read-only: true; font-size: 12px; color: #222; wrap: word-wrap; single-line: false; }
+                            }
+                        }
                     }
                 }
             }

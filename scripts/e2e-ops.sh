@@ -311,6 +311,25 @@ check "[67d] 'Aktuelle Ansicht für alle Ordner' makes it the default" "last 'vi
 goto "$VB"
 check "[67e] … so the other folder now opens with large icons" "! last 'geometry pane=0' | grep -q 'cols=1 '"
 xdotool key ctrl+shift+6; sleep 0.8
+echo "-- M6.2: inspector"
+I=$R/insp; mkdir -p "$I/Ordner/tief"; convert -size 640x480 xc:'#3070c0' "$I/bild.png"
+printf 'Zeile eins\nZeile zwei\n' > "$I/notiz.txt"; head -c 3000 /dev/zero > "$I/Ordner/a.bin"; head -c 7000 /dev/zero > "$I/Ordner/tief/b.bin"
+goto "$I"
+xdotool key ctrl+shift+6; sleep 0.6   # [67d] made large icons the default
+# rows: 0 Ordner, 1 bild.png, 2 notiz.txt
+xdotool key alt+p; sleep 1.2
+check "[68] Alt+P opens the inspector; nothing selected = the folder's direct content (no tree walk)" "last 'inspector open' | grep -q 'true' && last 'inspector rows' | grep -q 'Inhalt=2 Dateien, 1 Ordner'"
+xdotool mousemove $LIST_X $(row_y 2) click 1; sleep 1
+check "[68b] text file: preview + size" "last 'inspector done' | grep -q 'text=true' && last 'inspector done' | grep -q 'Größe=22 B'"
+xdotool mousemove $LIST_X $(row_y 1) click 1; sleep 1
+check "[68c] picture: dimensions from the file header" "last 'inspector done' | grep -q 'Abmessungen=640 × 480 Pixel'"
+xdotool mousemove $LIST_X $(row_y 0) click 1; sleep 1.2
+check "[68d] folder: files, subfolders and total size" "last 'inspector done' | grep -q 'Inhalt=2 Dateien, 1 Ordner' && last 'inspector done' | grep -q 'Gesamtgröße=9.8 KB'"
+xdotool key ctrl+a; sleep 1.2
+check "[68e] multi-selection: totals incl. the selected folder" "last 'inspector gen' | grep -q '3 Elemente' && last 'inspector done' | grep -q 'Gesamt=4 Dateien, 2 Ordner'"
+check "[68f] the inspector state is saved" "grep -q 'inspector = true' $W/config-ops/settings.ini"
+xdotool key alt+p; sleep 0.6
+check "[68g] Alt+P closes it again" "last 'inspector open' | grep -q 'false'"
 check "[52] process alive" "kill -0 $PID"
 kill $PID; wait $PID 2>/dev/null
 check "[52b] no panic" "! grep -qi panic $LOG"

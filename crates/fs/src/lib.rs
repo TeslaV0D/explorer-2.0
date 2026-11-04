@@ -9,6 +9,8 @@ mod loader;
 pub mod network;
 pub mod path;
 pub mod places;
+mod stats;
+pub use stats::{dir_stats, DirStats};
 #[cfg(not(windows))]
 mod portable;
 mod watch;

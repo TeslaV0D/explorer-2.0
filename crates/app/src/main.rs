@@ -5,6 +5,7 @@ mod dnd;
 mod fileops;
 mod gfx;
 mod icons;
+mod inspector;
 mod keys;
 mod nav;
 mod open;
@@ -212,6 +213,7 @@ fn main() -> Result<(), slint::PlatformError> {
     fileops::init(&win);
     icons::init(&win);
     thumbs::init(&win);
+    on!(win, on_toggle_inspector, |w| inspector::toggle(&w));
     on!(win, on_zoom, |w, up| nav::zoom(&w, up));
     on!(win, on_set_view, |w, v| nav::set_view_named(&w, v.as_str()));
     on!(win, on_apply_view_all, |w| nav::apply_view_all(&w));
@@ -253,6 +255,7 @@ fn main() -> Result<(), slint::PlatformError> {
         session,
         settings.view,
     );
+    inspector::init(&win, settings.inspector);
     nav::trace_line(&format!("init done at={:.1}ms", nav::since_start_ms()));
 
     // Drives come and go (USB sticks, network shares): refresh the sidebar periodically.

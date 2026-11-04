@@ -26,6 +26,8 @@ pub struct Settings {
     pub show_extensions: bool,
     pub show_protected: bool,
     pub single_click: bool,
+    /// Inspector (details pane) shown.
+    pub inspector: bool,
 }
 
 impl Default for Settings {
@@ -41,6 +43,7 @@ impl Default for Settings {
             show_extensions: true,
             show_protected: false,
             single_click: false,
+            inspector: false,
         }
     }
 }
@@ -94,11 +97,12 @@ impl Settings {
                         s.sort_desc = b;
                     }
                 }
-                "show_extensions" | "show_protected" | "single_click" => {
+                "show_extensions" | "show_protected" | "single_click" | "inspector" => {
                     if let Some(b) = parse_bool(v) {
                         match k {
                             "show_extensions" => s.show_extensions = b,
                             "show_protected" => s.show_protected = b,
+                            "inspector" => s.inspector = b,
                             _ => s.single_click = b,
                         }
                     }
@@ -131,7 +135,8 @@ impl Settings {
              view = {}\n\
              show_extensions = {}\n\
              show_protected = {}\n\
-             single_click = {}\n",
+             single_click = {}\n\
+             inspector = {}\n",
             self.hardware_acceleration,
             self.show_hidden,
             self.gpu_probe_version,
@@ -140,7 +145,8 @@ impl Settings {
             self.view.as_str(),
             self.show_extensions,
             self.show_protected,
-            self.single_click
+            self.single_click,
+            self.inspector
         )
     }
 
@@ -183,6 +189,7 @@ mod tests {
             show_extensions: false,
             show_protected: true,
             single_click: true,
+            inspector: true,
         };
         assert_eq!(Settings::parse(&s.serialize()), s);
     }

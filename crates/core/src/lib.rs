@@ -5,6 +5,7 @@ pub mod address;
 pub mod breadcrumb;
 pub mod display;
 pub mod history;
+pub mod inspect;
 pub mod places;
 pub mod renderer;
 pub mod selection;
