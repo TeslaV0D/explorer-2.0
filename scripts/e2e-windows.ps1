@@ -181,7 +181,7 @@ Check "[W17b] opening a drive shows its root" { (Last 'navigate tab') -match 'Us
 # M5.6c: network – \\localhost lists its shares, a share opens, "up" goes back to the server
 $shareDir = New-Item -ItemType Directory -Force "$R\freigabe"; Set-Content "$shareDir\im-netz.txt" "n"
 $shared = $true
-try { New-SmbShare -Name 'e2efreigabe' -Path "$shareDir" -FullAccess 'Everyone' -Remark 'E2E Freigabe' | Out-Null }
+try { New-SmbShare -Name 'e2efreigabe' -Path "$shareDir" -FullAccess 'Everyone' -Description 'E2E Freigabe' | Out-Null }
 catch { Write-Host "New-SmbShare failed: $_"; $shared = $false }
 Check "[W18a] test share created" { $shared }
 Keys '^l'; Keys '\\localhost'; Keys '{ENTER}'; Start-Sleep -Milliseconds 2500
