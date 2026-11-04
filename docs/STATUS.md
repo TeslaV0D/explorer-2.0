@@ -2,6 +2,19 @@
 
 **Stand:** 2026-11-03 · **Phase:** 1 · M0 ✅ · M1 ✅ · M1.5 ✅ · M2 ✅ · M3 ✅ (CI-Run #19) · **M4 ✅ (CI-Run #26)** · M5 wartet auf Freigabe · **Branch:** `claude/relaxed-pasteur-ufhh1p`
 
+## M5 – Shell-Integration (läuft, Freigabe Boss 2026-11-04)
+### M5.0 Exe-Größe
+- Analyse (Linux-Build als Näherung): 22,9 MB gesamt, davon Skia ≈ 8 MB (vorkompiliert, durch `opt-level` nicht beeinflussbar), Rest Rust (std, Slint-Core/Renderer, Winit, Text-Shaping harfrust/skrifa/parley, SVG usvg/resvg, Bilddecoder). Wayland/X11/zbus/sctk-adwaita (inkl. eingebetteter Cantarell-Schrift) sind **nur Linux**. Bildformate/SVG kommen aus Slint-Interna → nicht sauber abschaltbar.
+- Maßnahme: `opt-level = "s"` → Linux **22,9 → 19,6 MB (−15 %)**. Bench 100k (2×9 Läufe): erste Zeilen und Gesamtladen im Rauschen, Sortieren 43 → ~50 ms. `"z"` spart kaum mehr, ist langsamer.
+- E2E mit `"s"`: 100/100, First Paint 19 ms.
+- CI-Gate: Windows-Exe ≥ 20 MB → Build rot.
+
+### M5.1 Icons / M5.2 Typnamen
+- Neue Crate `explorer-shell`: Icon-Schlüssel (pro Endung bzw. pro Datei für exe/lnk/ico/url/…, Ordner mit R/S-Attribut), threadsichere `IconRegistry`, `SHGetFileInfoW` → HICON → RGBA (Alpha bzw. Maske), Typnamen per `SHGFI_TYPENAME|USEFILEATTRIBUTES` mit Cache.
+- App: Zeile trägt nur eine `icon`-id, UI hält `[image]`-Modell; Worker-Thread lädt gebündelt nach, Einzel-Icons nur für sichtbare Zeilen (Viewport-Callback ±20 Zeilen). Typ-Spalte zeigt Shell-Namen, **Sortieren nach Typ nach angezeigtem Namen** (wie Explorer: .jpg/.jpeg zusammen).
+- Linux: keine Shell → Fallback-Quadrate und eigene Typnamen wie bisher.
+- Tests: shell 8 Unit (Schlüsselregeln, Registry unter Konkurrenz, Pixel-Konvertierung) + Windows-Test mit echten Icons (16/32 px, Ordner ≠ txt, eigene Exe), core +1 (Typ-Sortierung), app +3; CI-UI-Matrix prüft „icons loaded“ + Shell-Typnamen.
+
 ## M4 – Dateioperationen
 - **Neue Crate `explorer-ops`** (plattformneutral testbar): `exec` (Job-Engine, synchrones `run` + `spawn` im Hintergrund), `undo`, `simple` (Umbenennen, Neuer Ordner), `names` (Windows-Namensregeln, „ - Kopie“, „ (2)“), `clipboard` (CF_HDROP), `win_copy` (CopyFileExW mit Fortschritt/Abbruch).
 - **Sicherheitsregeln**: Kopie in `.<name>.e2part` + Rename; Verschieben über Laufwerke löscht die Quelle erst nach vollständiger, geflushter Kopie; „Ersetzen“ = alte Datei in den Papierkorb (rückgängig machbar); Abbruch räumt Teil-Dateien weg; Fehler pro Element, Job läuft weiter.

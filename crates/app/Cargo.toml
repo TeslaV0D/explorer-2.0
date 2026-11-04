@@ -10,6 +10,7 @@ explorer-core = { path = "../core" }
 explorer-fs = { path = "../fs" }
 explorer-gpu = { path = "../gpu" }
 explorer-ops = { path = "../ops" }
+explorer-shell = { path = "../shell" }
 slint = { version = "1", default-features = false, features = ["std", "compat-1-2", "backend-winit", "renderer-skia-opengl", "renderer-software"] }
 
 [target.'cfg(windows)'.dependencies]

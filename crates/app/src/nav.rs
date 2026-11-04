@@ -13,7 +13,7 @@ use explorer_core::selection::Selection;
 use explorer_core::session::{PaneSession, Session};
 use explorer_core::typeahead::TypeAhead;
 use explorer_core::{
-    format_count, format_datetime, format_size, format_usage, sort_entries, type_label, Entry,
+    format_count, format_datetime, format_size, format_usage, sort_entries_with_type_names, Entry,
     SortKey, SortSpec, ViewFilter,
 };
 use explorer_fs::places::{drive_display_name, used_fraction};
@@ -250,7 +250,7 @@ pub fn clean_input(s: &str) -> String {
     t.trim().to_string()
 }
 
-fn to_row(e: &Entry) -> Row {
+fn to_row(e: &Entry, dir: &Path, labels: &mut crate::icons::RowLabels) -> Row {
     Row {
         name: e.name.as_str().into(),
         size: if e.is_dir() {
@@ -259,7 +259,8 @@ fn to_row(e: &Entry) -> Row {
             format_size(e.size).into()
         },
         modified: e.modified.map(format_datetime).unwrap_or_default().into(),
-        kind: type_label(e).into(),
+        kind: labels.type_name(e).into(),
+        icon: labels.icon_id(dir, e),
         is_dir: e.is_dir(),
         dim: e.hidden,
         selected: false,
@@ -269,12 +270,19 @@ fn to_row(e: &Entry) -> Row {
 }
 
 /// Filter + sort + format (runs on the loader thread).
-fn prepare(all: Vec<Entry>, filter: ViewFilter, sort: SortSpec) -> (Vec<Entry>, Vec<Row>, usize) {
+fn prepare(
+    all: Vec<Entry>,
+    filter: ViewFilter,
+    sort: SortSpec,
+    dir: &Path,
+) -> (Vec<Entry>, Vec<Row>, usize) {
     let total = all.len();
     let mut vis: Vec<Entry> = all.into_iter().filter(|e| filter.is_visible(e)).collect();
     let hidden = total - vis.len();
-    sort_entries(&mut vis, sort);
-    let rows = vis.iter().map(to_row).collect();
+    let mut labels = crate::icons::RowLabels::default();
+    // "Typ" sorts by the names shown in the column (shell names on Windows)
+    sort_entries_with_type_names(&mut vis, sort, |e| labels.type_name(e));
+    let rows = vis.iter().map(|e| to_row(e, dir, &mut labels)).collect();
     (vis, rows, hidden)
 }
 
@@ -682,6 +690,7 @@ fn navigate_tab(win: &MainWindow, id: TabId, target: PathBuf, reason: Reason, hi
     let path = target.clone();
     let t0 = Instant::now();
     let mut acc: Vec<Entry> = Vec::new();
+    let path_for_rows = target.clone();
     let handle = load_dir(target, move |ev| {
         let upd = match ev {
             LoadEvent::Batch { entries, first } => {
@@ -689,7 +698,7 @@ fn navigate_tab(win: &MainWindow, id: TabId, target: PathBuf, reason: Reason, hi
                 if !(first && reason == Reason::User) {
                     return; // only the first batch is painted early; refreshes never flash partial lists
                 }
-                let (entries, rows, hidden) = prepare(acc.clone(), filter, sort);
+                let (entries, rows, hidden) = prepare(acc.clone(), filter, sort, &path_for_rows);
                 Update::Rows {
                     entries,
                     rows,
@@ -699,7 +708,8 @@ fn navigate_tab(win: &MainWindow, id: TabId, target: PathBuf, reason: Reason, hi
                 }
             }
             LoadEvent::Done { total, .. } => {
-                let (entries, rows, hidden) = prepare(std::mem::take(&mut acc), filter, sort);
+                let (entries, rows, hidden) =
+                    prepare(std::mem::take(&mut acc), filter, sort, &path_for_rows);
                 Update::Rows {
                     entries,
                     rows,
@@ -804,6 +814,8 @@ fn apply(
                     rows[f].focused = true;
                 }
                 t.entries = entries;
+                // icons of the first screen (per-file ones only load when visible)
+                crate::icons::need(rows.iter().take(80).map(|r| r.icon));
                 t.model.set_vec(rows);
                 let focus = sel.focus();
                 t.selection = sel;
@@ -813,6 +825,7 @@ fn apply(
                 (pi, focus, needs_setup, rename_at)
             })
             .unwrap_or((0, None, false, None));
+            crate::icons::sync();
             if needs_setup {
                 let chars =
                     APP.with_borrow(|app| app.panes.get(pi).map(|p| p.crumb_chars).unwrap_or(60));
@@ -865,6 +878,21 @@ fn apply(
                         })
                         .unwrap_or_default();
                         trace(&format!("order {order:?}"));
+                        // distinct type names (shell names on Windows), for tests
+                        let kinds: Vec<String> = with_tab(id, |t, _, _| {
+                            let mut k: Vec<String> = Vec::new();
+                            for i in 0..t.model.row_count().min(200) {
+                                if let Some(r) = t.model.row_data(i) {
+                                    let s = r.kind.to_string();
+                                    if !k.contains(&s) {
+                                        k.push(s);
+                                    }
+                                }
+                            }
+                            k
+                        })
+                        .unwrap_or_default();
+                        trace(&format!("kinds {kinds:?}"));
                     }
                     trace_selection(id);
                 }
@@ -1499,6 +1527,18 @@ pub fn list_key(
     true
 }
 
+/// The list of pane `pi` scrolled/resized: load per-file icons of the visible rows.
+pub fn viewport(pi: usize, first: i32, count: i32) {
+    let Some(id) = active_tab_id(pi) else { return };
+    let ids: Vec<i32> = with_tab(id, |t, _, _| {
+        crate::icons::visible_range(first, count, t.model.row_count())
+            .filter_map(|i| t.model.row_data(i).map(|r| r.icon))
+            .collect()
+    })
+    .unwrap_or_default();
+    crate::icons::need(ids);
+}
+
 // ---------------------------------------------------------------- file-operation support
 
 /// Active pane index.
@@ -1709,7 +1749,12 @@ mod tests {
             e(".h", false, true),
             e("dir", true, false),
         ];
-        let (vis, rows, hidden) = prepare(all.clone(), ViewFilter::default(), SortSpec::default());
+        let (vis, rows, hidden) = prepare(
+            all.clone(),
+            ViewFilter::default(),
+            SortSpec::default(),
+            Path::new("/d"),
+        );
         assert_eq!(hidden, 1);
         assert_eq!(
             vis.iter().map(|e| e.name.as_str()).collect::<Vec<_>>(),
@@ -1723,7 +1768,7 @@ mod tests {
             show_hidden: true,
             show_protected_os: false,
         };
-        let (vis, rows, hidden) = prepare(all, show, SortSpec::default());
+        let (vis, rows, hidden) = prepare(all, show, SortSpec::default(), Path::new("/d"));
         assert_eq!((vis.len(), hidden), (3, 0));
         assert!(rows.iter().any(|r| r.dim));
     }

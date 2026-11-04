@@ -208,6 +208,35 @@ pub fn sort_entries(entries: &mut [Entry], spec: SortSpec) {
     });
 }
 
+/// Sorts like [`sort_entries`], but `SortKey::Type` compares the given type
+/// names (the shell's "Textdokument", "JPEG-Bild" …, as shown in the column)
+/// instead of raw extensions – that is how Explorer orders the "Typ" column.
+/// Names are computed once per entry (decorate-sort-undecorate).
+pub fn sort_entries_with_type_names(
+    entries: &mut Vec<Entry>,
+    spec: SortSpec,
+    mut type_name: impl FnMut(&Entry) -> String,
+) {
+    if spec.key != SortKey::Type {
+        sort_entries(entries, spec);
+        return;
+    }
+    let mut keyed: Vec<(String, Entry)> = entries.drain(..).map(|e| (type_name(&e), e)).collect();
+    keyed.sort_unstable_by(|(ta, a), (tb, b)| {
+        if spec.dirs_first && a.is_dir() != b.is_dir() {
+            return if a.is_dir() {
+                Ordering::Less
+            } else {
+                Ordering::Greater
+            };
+        }
+        let ord = natural_cmp(ta, tb).then_with(|| natural_cmp(&a.name, &b.name));
+        let ord = if spec.descending { ord.reverse() } else { ord };
+        ord.then_with(|| a.name.cmp(&b.name))
+    });
+    entries.extend(keyed.into_iter().map(|(_, e)| e));
+}
+
 /// Human-readable size, Explorer-style in the list ("1 KB", "3,4 MB" uses '.').
 pub fn format_size(bytes: u64) -> String {
     const UNITS: [&str; 5] = ["B", "KB", "MB", "GB", "TB"];
@@ -432,5 +461,44 @@ mod tests {
         );
         assert_eq!(format_datetime(-1), "1969-12-31 23:59");
         assert_eq!(format_datetime(1_793_686_008), "2026-11-03 06:06");
+    }
+
+    #[test]
+    fn type_sort_uses_shown_names() {
+        let mut v = vec![
+            e("b.jpg", EntryKind::File, 0),
+            e("a.txt", EntryKind::File, 0),
+            e("Ordner", EntryKind::Dir, 0),
+            e("c.jpeg", EntryKind::File, 0),
+        ];
+        let names = |x: &Entry| match extension(&x.name) {
+            "jpg" | "jpeg" => "JPEG-Bild".to_string(),
+            "txt" => "Textdokument".to_string(),
+            _ => "Dateiordner".to_string(),
+        };
+        let spec = SortSpec {
+            key: SortKey::Type,
+            descending: false,
+            dirs_first: true,
+        };
+        sort_entries_with_type_names(&mut v, spec, names);
+        let order: Vec<_> = v.iter().map(|x| x.name.as_str()).collect();
+        // jpg + jpeg share one type name → grouped, then by name; folders first
+        assert_eq!(order, ["Ordner", "b.jpg", "c.jpeg", "a.txt"]);
+        let spec = SortSpec {
+            descending: true,
+            ..spec
+        };
+        sort_entries_with_type_names(&mut v, spec, names);
+        let order: Vec<_> = v.iter().map(|x| x.name.as_str()).collect();
+        assert_eq!(order, ["Ordner", "a.txt", "c.jpeg", "b.jpg"]);
+        // other keys behave exactly like sort_entries
+        let spec = SortSpec {
+            key: SortKey::Name,
+            descending: false,
+            dirs_first: true,
+        };
+        sort_entries_with_type_names(&mut v, spec, |_| unreachable!());
+        assert_eq!(v[1].name, "a.txt");
     }
 }

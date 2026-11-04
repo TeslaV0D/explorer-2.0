@@ -1,6 +1,6 @@
 [workspace]
 resolver = "2"
-members = ["crates/core", "crates/fs", "crates/gpu", "crates/ops", "crates/app"]
+members = ["crates/core", "crates/fs", "crates/gpu", "crates/ops", "crates/shell", "crates/app"]
 
 [workspace.package]
 version = "0.0.1"
@@ -13,4 +13,6 @@ lto = "fat"
 codegen-units = 1
 panic = "abort"
 strip = true
-opt-level = 3
+# "s": -15 % exe size (Linux 22.9 -> 19.6 MB); measured cost: sorting 100k
+# +6-10 ms (43 -> ~50 ms), loading within noise, budgets far away (2026-11-04)
+opt-level = "s"

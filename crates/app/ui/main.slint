@@ -11,6 +11,8 @@ export struct Row {
     focused: bool,
     // marked for "cut" (Ctrl+X): drawn faded until pasted
     cut: bool,
+    // index into `icons` (0 = none → built-in fallback square)
+    icon: int,
 }
 
 export struct Crumb { label: string, path: string }
@@ -177,6 +179,13 @@ component FilePane inherits Rectangle {
     callback address-resized(float);
     callback rename-commit(string);
     callback rename-cancel();
+    in property <[image]> icons;
+    // visible rows changed (first index, count) → per-file icons are loaded lazily
+    callback viewport(int, int);
+    property <int> vp-first: max(0, floor(-list.content-y / root.row-height));
+    property <int> vp-count: ceil(list.visible-height / root.row-height) + 1;
+    changed vp-first => { root.viewport(self.vp-first, self.vp-count); }
+    changed vp-count => { root.viewport(self.vp-first, self.vp-count); }
     // drag & drop: row -1 = the folder shown in the pane; result 0 none, 1 copy, 2 move
     pure callback drag-payload(int) -> data-transfer;
     pure callback drop-check(int, data-transfer, bool) -> int;
@@ -391,7 +400,14 @@ component FilePane inherits Rectangle {
                                 padding-left: 6px; spacing: 0px;
                                 Rectangle {
                                     width: 20px;
-                                    Rectangle {
+                                    property <image> img: row.icon > 0 ? root.icons[row.icon] : @image-url("");
+                                    if img.width > 0 : Image {
+                                        width: 16px; height: 16px;
+                                        source: img;
+                                        opacity: row.dim ? 0.5 : 1;
+                                    }
+                                    // fallback until the shell icon arrives (and on non-Windows)
+                                    if img.width == 0 : Rectangle {
                                         width: 14px; height: 14px; border-radius: 3px;
                                         background: row.is-dir ? #e8b730 : #9aa5b1;
                                         opacity: row.dim ? 0.45 : 1;
@@ -522,6 +538,8 @@ export component MainWindow inherits Window {
     in-out property <length> w-size: 80px;
     // file operations
     in property <[JobRow]> jobs;
+    in property <[image]> icons;
+    callback viewport(int, int, int);
     in property <bool> can-paste;
     in property <bool> can-undo;
     in property <bool> can-redo;
@@ -651,6 +669,8 @@ export component MainWindow inherits Window {
                         address-resized(w) => { root.address-resized(pi, w); }
                         rename-commit(t) => { root.rename-commit(pi, t); }
                         rename-cancel => { root.rename-cancel(pi); }
+                        icons: root.icons;
+                        viewport(f, n) => { root.viewport(pi, f, n); }
                         drag-payload(r) => { return root.drag-payload(pi, r); }
                         drop-check(r, d, c) => { return root.drop-check(pi, r, d, c); }
                         drop-files(r, d, c) => { return root.drop-files(pi, r, d, c); }

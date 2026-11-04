@@ -3,6 +3,7 @@
 mod config;
 mod fileops;
 mod gfx;
+mod icons;
 mod keys;
 mod nav;
 mod open;
@@ -132,6 +133,11 @@ fn main() -> Result<(), slint::PlatformError> {
         nav::active_pane(),
         c.as_str()
     ));
+    on!(win, on_viewport, |_w, pi, first, count| nav::viewport(
+        pi as usize,
+        first,
+        count
+    ));
     on!(win, on_job_pause, |_w, id, p| fileops::job_pause(id, p));
     on!(win, on_job_cancel, |w, id| fileops::job_cancel(&w, id));
     on!(win, on_conflict_answer, |w, n| fileops::conflict_answer(
@@ -168,6 +174,7 @@ fn main() -> Result<(), slint::PlatformError> {
     });
 
     fileops::init(&win);
+    icons::init(&win);
     nav::init(
         &win,
         settings.show_hidden,

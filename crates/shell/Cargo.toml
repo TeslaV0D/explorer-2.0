@@ -1,0 +1,16 @@
+[package]
+name = "explorer-shell"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "Windows shell adapter (icons, type names, ...) with platform-neutral fallbacks"
+
+[target.'cfg(windows)'.dependencies]
+windows-sys = { version = "0.60", features = [
+    "Win32_Foundation",
+    "Win32_Graphics_Gdi",
+    "Win32_Storage_FileSystem",
+    "Win32_System_Com",
+    "Win32_UI_Shell",
+    "Win32_UI_WindowsAndMessaging",
+] }
