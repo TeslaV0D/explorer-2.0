@@ -58,6 +58,39 @@ pub fn filetime_to_unix(ticks: u64) -> Option<i64> {
     Some((ticks as i64 - EPOCH_DIFF).div_euclid(10_000_000))
 }
 
+/// Expands Windows 8.3 short names (`C:\\Users\\RUNNER~1` → `C:\\Users\\runneradmin`),
+/// like Explorer shows paths; unchanged elsewhere or if the path does not exist.
+/// Unlike `canonicalize` it keeps junctions/symlinks as they are.
+pub fn long_path(p: &std::path::Path) -> std::path::PathBuf {
+    #[cfg(windows)]
+    {
+        use std::os::windows::ffi::{OsStrExt, OsStringExt};
+        use windows_sys::Win32::Storage::FileSystem::GetLongPathNameW;
+        let s = p.as_os_str().to_string_lossy();
+        if !s.contains('~') {
+            return p.to_path_buf(); // fast path: no short name component
+        }
+        let wide: Vec<u16> = p.as_os_str().encode_wide().chain(Some(0)).collect();
+        let mut buf = vec![0u16; 1024];
+        // SAFETY: NUL-terminated input, buffer length passed; retried once with the needed size.
+        let mut n =
+            unsafe { GetLongPathNameW(wide.as_ptr(), buf.as_mut_ptr(), buf.len() as u32) } as usize;
+        if n > buf.len() {
+            buf.resize(n, 0);
+            n = unsafe { GetLongPathNameW(wide.as_ptr(), buf.as_mut_ptr(), buf.len() as u32) }
+                as usize;
+        }
+        if n == 0 || n > buf.len() {
+            return p.to_path_buf();
+        }
+        std::path::PathBuf::from(std::ffi::OsString::from_wide(&buf[..n]))
+    }
+    #[cfg(not(windows))]
+    {
+        p.to_path_buf()
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -94,5 +127,28 @@ mod tests {
             Some(86_400)
         );
         assert_eq!(filetime_to_unix(116_444_735_990_000_000), Some(-1));
+    }
+
+    #[cfg(windows)]
+    #[test]
+    fn short_names_are_expanded() {
+        let tmp = std::env::temp_dir(); // often C:\Users\RUNNER~1\… on CI
+        let long = super::long_path(&tmp);
+        assert!(
+            !long.to_string_lossy().contains('~') || !tmp.exists(),
+            "{long:?}"
+        );
+        assert_eq!(
+            std::fs::canonicalize(&long).unwrap(),
+            std::fs::canonicalize(&tmp).unwrap()
+        );
+        let missing = std::path::Path::new(r"C:\NO~1\x");
+        assert_eq!(super::long_path(missing), missing);
+    }
+
+    #[test]
+    fn long_path_keeps_normal_paths() {
+        let p = std::path::Path::new("/a/b");
+        assert_eq!(super::long_path(p), p);
     }
 }

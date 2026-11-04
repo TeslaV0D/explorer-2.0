@@ -29,6 +29,8 @@
 - Ziehen: `SHDoDragDrop` mit Shell-Datenobjekt (`GetUIObjectOf`) = Explorer-kompatibel inkl. Drag-Bild; Start per Timer nach dem Slint-Callback (modale Schleife), danach Pointer-Release nachgereicht. Windows: auch In-App-DnD über OLE; Linux: Slint-DragArea wie bisher.
 - Tests: Windows-Unit-Test schiebt ein echtes Shell-Datenobjekt durch unser `IDropTarget` (Pfade inkl. Umlaut, Strg → Kopieren); CI-UI-Matrix: Drop-Target registriert + Test-Hook `EXPLORER2_TEST_OLE_DRAG` (modale Drag-Schleife im laufenden Event-Loop, kein Absturz/Hänger); App-Unit-Test Hit-Test (Panes, Scroll, Sidebar/Header).
 
+- **CI-Run #31 (rot)**: Drop-Test verglich `%TEMP%`-Kurznamen (`RUNNER~1`) roh mit den Langnamen der Shell → Test vergleicht kanonisch. Dabei echtes Risiko gefunden: Start über einen Kurznamen-Pfad hätte Drop-Vergleiche (gleicher Ordner/in sich selbst) ausgehebelt → **Navigation expandiert jetzt Kurznamen** (`explorer_fs::path::long_path`, `GetLongPathNameW`, Junctions bleiben) und Drop-Vergleiche sind unter Windows case-insensitiv.
+
 ## M4 – Dateioperationen
 - **Neue Crate `explorer-ops`** (plattformneutral testbar): `exec` (Job-Engine, synchrones `run` + `spawn` im Hintergrund), `undo`, `simple` (Umbenennen, Neuer Ordner), `names` (Windows-Namensregeln, „ - Kopie“, „ (2)“), `clipboard` (CF_HDROP), `win_copy` (CopyFileExW mit Fortschritt/Abbruch).
 - **Sicherheitsregeln**: Kopie in `.<name>.e2part` + Rename; Verschieben über Laufwerke löscht die Quelle erst nach vollständiger, geflushter Kopie; „Ersetzen“ = alte Datei in den Papierkorb (rückgängig machbar); Abbruch räumt Teil-Dateien weg; Fehler pro Element, Job läuft weiter.

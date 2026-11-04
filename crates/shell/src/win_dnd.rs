@@ -215,7 +215,13 @@ mod tests {
         std::fs::write(&b, b"b").unwrap();
         let data: IDataObject =
             crate::win_menu::ui_object(HWND::default(), &d, &[a.clone(), b.clone()]).unwrap();
-        assert_eq!(hdrop_paths(&data), vec![a.clone(), b.clone()]);
+        // the shell reports long names (%TEMP% may be an 8.3 short path) → compare canonically
+        let canon = |v: Vec<PathBuf>| -> Vec<PathBuf> {
+            v.iter()
+                .map(|p| std::fs::canonicalize(p).unwrap())
+                .collect()
+        };
+        assert_eq!(canon(hdrop_paths(&data)), canon(vec![a.clone(), b.clone()]));
 
         type Log = Rc<RefCell<Vec<(DropPhase, usize, bool, bool)>>>;
         let seen: Log = Rc::default();

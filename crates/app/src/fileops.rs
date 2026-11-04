@@ -450,9 +450,24 @@ fn drop_target(pi: usize, row: i32) -> Option<PathBuf> {
 
 /// Decides the drop action: 0 = none, 1 = copy, 2 = move (pure → tested).
 pub fn drop_decision(sources: &[PathBuf], dest: &Path, copy: bool) -> i32 {
+    drop_decision_for(sources, dest, copy, cfg!(windows))
+}
+
+/// Windows paths compare case-insensitively ("C:\\A" == "c:\\a").
+fn norm(p: &Path, windows: bool) -> PathBuf {
+    if windows {
+        PathBuf::from(p.to_string_lossy().to_lowercase())
+    } else {
+        p.to_path_buf()
+    }
+}
+
+fn drop_decision_for(sources: &[PathBuf], dest: &Path, copy: bool, windows: bool) -> i32 {
     if sources.is_empty() {
         return 0;
     }
+    let dest = norm(dest, windows);
+    let sources: Vec<PathBuf> = sources.iter().map(|s| norm(s, windows)).collect();
     // never into itself or one of its own subfolders
     if sources.iter().any(|s| dest.starts_with(s)) {
         return 0;
@@ -461,7 +476,7 @@ pub fn drop_decision(sources: &[PathBuf], dest: &Path, copy: bool) -> i32 {
         return 1;
     }
     // moving within the same folder does nothing
-    if sources.iter().all(|s| s.parent() == Some(dest)) {
+    if sources.iter().all(|s| s.parent() == Some(dest.as_path())) {
         return 0;
     }
     2
@@ -1130,6 +1145,19 @@ mod tests {
             "into own subfolder"
         );
         assert_eq!(drop_decision(&[], Path::new("/b"), false), 0);
+        // Windows: case-insensitive (shell paths vs. typed paths)
+        let w = vec![p("C:/Daten/x.txt"), p("C:/Daten/Ordner")]; // "/" works on both
+        assert_eq!(
+            drop_decision_for(&w, Path::new("c:/daten"), false, true),
+            0,
+            "same folder"
+        );
+        assert_eq!(
+            drop_decision_for(&w, Path::new("C:/DATEN/ordner/sub"), true, true),
+            0,
+            "into itself"
+        );
+        assert_eq!(drop_decision_for(&w, Path::new("D:/Ziel"), false, true), 2);
     }
 
     #[test]

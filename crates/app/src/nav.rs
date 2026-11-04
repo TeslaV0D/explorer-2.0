@@ -664,6 +664,8 @@ fn ensure_loaded(win: &MainWindow, pi: usize) {
 
 fn navigate_tab(win: &MainWindow, id: TabId, target: PathBuf, reason: Reason, hist: Hist) {
     let target = std::path::absolute(&target).unwrap_or(target);
+    // show long names like Explorer (and keep path comparisons consistent with the shell)
+    let target = explorer_fs::path::long_path(&target);
     let (filter, sort) = APP.with_borrow(|app| (app.filter, app.sort));
     let gen = APP.with_borrow_mut(|app| {
         app.next_gen += 1;
