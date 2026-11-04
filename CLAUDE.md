@@ -32,6 +32,7 @@
 | D-013 | Exe-Größe: `opt-level="s"` (−15 %, Sortieren 100k +6–10 ms, Budgets weit weg), CI-Gate < 20 MB; Skia ≈ 8 MB, Rest Rust (Slint/Winit/Text), Bildformate/SVG kommen aus Slint-Interna (nicht abschaltbar) | fix (M5.0) |
 | D-014 | Icons: Schlüssel pro Endung (wenige) bzw. pro Datei für exe/lnk/ico/url/… und Ordner mit R/S-Attribut (desktop.ini); threadsichere `IconRegistry` (Schlüssel → id), Loader-Thread schreibt nur `icon-id` in die Zeile, UI hält `[image]` indexiert per id → nachgeladene Icons ohne Zeilen-Durchlauf; Einzel-Icons nur für sichtbare Zeilen | fix (M5.1) |
 | D-015 | **Qualität vor Größe**: Hauptziel = gutes, fehlerfreies Produkt; kleine Exe ist Nebenziel. Größen-Optimierungen nur, wenn sie nichts verschlechtern (Schrift, Ladezeiten, Animationen, Bugs) – sonst nicht machen. Die 20-MB-Grenze ist nur unser eigenes Frühwarn-Gate, keine technische Grenze | **fix (Boss, 2026-11-04)** |
+| D-016 | GPU-Renderer bleibt **Skia** (FemtoVG: 9,0 statt 16,5 MB, Bild gleichwertig, aber Start mit GL +27 % auf Mesa → D-015). Feature `gpu-femtovg` + `scripts/renderer-compare.ps1` bleiben für einen späteren Test auf echter GPU | **fix (Boss, 2026-11-04)** |
 | D-008 | Perf-Gates in CI auf **best-of-N** (≥ 9 Läufe), Median/Max/OS-Stalls nur ausweisen – Shared-Runner haben sporadische OS-Stalls (gemessen 168 ms im rohen FindFirstFileExW); Budgets selbst unverändert | fix (M1) |
 
 ## Arbeitsumgebung / Constraints
@@ -103,6 +104,9 @@
 - `windows`-Crate `#[implement]` expandiert zu `windows_core::…` → `windows-core` als **direkte** Abhängigkeit nötig.
 - Modale Windows-Schleifen (`SHDoDragDrop`, `TrackPopupMenuEx`) nie direkt aus einem Slint-Callback, der danach noch Slint-State anfasst → Start per `slint::Timer::single_shot(ZERO)`; nach `DoDragDrop` Pointer-Release per `dispatch_event` nachreichen (OLE schluckt das Loslassen).
 - Slint erzeugt das native Fenster erst **irgendwann nach** Event-Loop-Start (nicht zwingend im ersten Timer) → HWND-abhängiges Setup (Drop-Target) mit Wiederholung, bis `window_handle` ≠ 0 (CI #32/#33: „Invalid window handle“).
+- OLE-Drag nur starten, wenn die Primärtaste **noch gedrückt** ist (`primary_button_down`) – sonst wartet OLE auf die nächste Eingabe und legt beim nächsten Mausbewegen ab.
+- Windows-Dialogtitel (Eigenschaften) zeigen Namen **ohne** bekannte Endung („a Properties“) → Tests nicht auf „a.txt“ matchen.
+- Windows-E2E: `scripts/e2e-windows.ps1` (SendKeys + SetCursorPos/mouse_event, Fenster maximiert, Runner-Bildschirm 1024×768, DPI 1.0); Foreground-Lock mit Alt-Druck vor `SetForegroundWindow` umgehen.
 - Papierkorb-Restore immer gegen Snapshot **vor** der Aktion (gleicher Originalpfad kann mehrfach im Papierkorb liegen).
 
 ## Referenzen

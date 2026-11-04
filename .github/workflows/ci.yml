@@ -92,49 +92,6 @@ jobs:
         if: failure()
         uses: actions/upload-artifact@v4
         with: { name: e2e-screenshots, path: "${{ runner.temp }}/e2e/*.png" }
-  renderer-compare:
-    # D-015: FemtoVG only if nothing gets worse -> picture, start time, robustness on Windows
-    runs-on: windows-latest
-    needs: test
-    continue-on-error: true
-    steps:
-      - uses: actions/checkout@v4
-      - uses: dtolnay/rust-toolchain@stable
-      - uses: Swatinem/rust-cache@v2
-        with: { key: renderer-compare }
-      - name: Build with both GPU renderers (Skia + FemtoVG)
-        run: cargo build --release -p explorer2 --features gpu-femtovg
-      - name: Size of a FemtoVG-only build
-        shell: pwsh
-        run: |
-          cargo build --release -p explorer2 --no-default-features --features gpu-femtovg --target-dir target/femto
-          $s = (Get-Item target/femto/release/explorer2.exe).Length
-          "FEMTOVG-ONLY size=$s bytes ($([math]::Round($s / 1MB, 2)) MB)"
-      - name: Fetch Mesa OpenGL (simulated GPU driver for the GL path test)
-        shell: pwsh
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          $rel = Invoke-RestMethod https://api.github.com/repos/pal1000/mesa-dist-win/releases/latest -Headers @{ Authorization = "Bearer $env:GH_TOKEN" }
-          # MinGW build: Mesa 26.x MSVC builds ship without software OpenGL (known upstream issue)
-          $asset = $rel.assets | Where-Object { $_.name -match 'release-mingw\.7z$' } | Select-Object -First 1
-          if (-not $asset) { throw "test setup: mesa-dist-win mingw asset not found" }
-          "Mesa: $($asset.name)"
-          Invoke-WebRequest $asset.browser_download_url -OutFile "$env:RUNNER_TEMP\mesa.7z"
-          7z x "$env:RUNNER_TEMP\mesa.7z" "-o$env:RUNNER_TEMP\mesa" -y | Out-Null
-          $dst = "$env:RUNNER_TEMP\mesa-app"
-          New-Item -ItemType Directory $dst -Force | Out-Null
-          $gl = Get-ChildItem "$env:RUNNER_TEMP\mesa" -Recurse -Filter opengl32.dll | Where-Object { $_.DirectoryName -match 'x64' } | Select-Object -First 1
-          if (-not $gl) { throw "test setup: no x64 opengl32.dll in $($asset.name) (not an app failure)" }
-          "Mesa GL dir: $($gl.DirectoryName)"
-          Copy-Item "$($gl.DirectoryName)\*.dll" $dst
-          Get-ChildItem $dst | Format-Table Name, Length
-      - name: Compare Skia vs FemtoVG (start time, robustness, screenshots)
-        shell: pwsh
-        run: pwsh -File scripts/renderer-compare.ps1 (Resolve-Path target/release/explorer2.exe).Path "$env:RUNNER_TEMP\mesa-app" "$env:RUNNER_TEMP\cmp"
-      - name: FemtoVG test build for a real-GPU check (Boss)
-        uses: actions/upload-artifact@v4
-        with: { name: explorer2-femtovg-test, path: target/femto/release/explorer2.exe }
   build-windows-release:
     runs-on: windows-latest
     needs: test

@@ -152,8 +152,9 @@ Check "[W10] right-click shows the shell menu (closed with Esc)" { (Last 'contex
 Keys '%{ENTER}'; Start-Sleep -Milliseconds 2500
 $titles = [W]::Titles([uint32]$p.Id)
 Write-Host "windows of the app: $titles"
-Check "[W11] Alt+Enter opens the properties dialog" { $titles -match 'a\.txt' }
-[W]::CloseTitled([uint32]$p.Id, 'a.txt'); Start-Sleep -Milliseconds 500
+# title like "a Properties" / "Eigenschaften von a" (the shell hides known extensions)
+Check "[W11] Alt+Enter opens the properties dialog" { $titles -match '(^|\|)(a Properties|Eigenschaften von a)(\.txt)?\|' }
+foreach ($t in 'Properties', 'Eigenschaften') { [W]::CloseTitled([uint32]$p.Id, $t) }; Start-Sleep -Milliseconds 500
 Focus
 
 # real OLE drag & drop with the mouse: b.txt (row 3) onto folder "Ordner" (row 1)

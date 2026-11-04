@@ -42,7 +42,7 @@
 | Kaltstart mit OpenGL (Mesa llvmpipe, best of 3) | **982 ms** | 1245 ms (+27 %) |
 | Ohne nutzbares OpenGL, GPU erzwungen | Fallback, 408 ms | Fallback, **225 ms** |
 | Abstürze | keine | keine |
-- Bewertung: Bild gleichwertig, aber auf dem einzigen messbaren GL-Pfad (Software-GL) startet FemtoVG langsamer → nach D-015 **noch kein Wechsel**. Mesa ist kein echter GPU-Treiber; Entscheidung erst nach Test auf echter Grafikkarte (CI-Artefakt `explorer2-femtovg-test`).
+- Bewertung: Bild gleichwertig, aber auf dem einzigen messbaren GL-Pfad (Software-GL) startet FemtoVG langsamer → **Boss: bleibt bei Skia** (D-016). Vergleichsjob aus der CI entfernt, Skript bleibt. Mesa ist kein echter GPU-Treiber; Entscheidung erst nach Test auf echter Grafikkarte (CI-Artefakt `explorer2-femtovg-test`).
 - Linux-Vergleich (Xvfb/Mesa) bestätigt: Inhalt identisch, nur Text-Glättung unterscheidet sich.
 - Fund: OLE-Drag ohne gedrückte Taste (Loslassen zwischen Ziehschwelle und Drag-Start) hätte beim nächsten Mausbewegen „irgendwo“ abgelegt → Drag startet nur noch bei gedrückter Primärtaste (berücksichtigt vertauschte Tasten).
 
