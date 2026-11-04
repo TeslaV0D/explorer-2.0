@@ -40,7 +40,7 @@
 - **Bug (CI #32/#33, UI-Matrix)**: OLE-Drop-Target wurde nie registriert („Invalid window handle“) – der Timer lief, bevor Slint das native Fenster erzeugt hatte → Ablegen aus anderen Apps wäre tot gewesen. Fix: Registrierung wiederholt bis HWND existiert (50 ms, max. 5 s), sonst Rückfall auf In-App-DnD.
 - Neu: **Windows-E2E mit echter Tastatur/Maus** (`scripts/e2e-windows.ps1`, CI-Schritt im Release-Job, Screenshots bei Fehler).
 
-### M6.2 Inspector (lokal grün, CI ausstehend)
+### M6.2 Inspector ✅ (CI-Run #52)
 - Rechte Seitenleiste (280 px), **Alt+P** oder Knopf „Details“, Zustand in settings.ini (`inspector`).
 - Inhalt: Vorschau (Windows-Vorschaubild 256 px bzw. großes Icon; Textdateien: erste 40 Zeilen, UTF-8/BOM, Binär erkannt), Titel + Typ, Größe (ab 1 KB mit Bytes), Geändert, Erstellt, Attribute, Abmessungen (aus dem Dateikopf, `core::inspect::image_size`), Pfad als markierbarer Text (kopieren).
 - Mehrfachauswahl: Anzahl, Größe der Dateien, Gesamt inkl. Ordnerinhalt. Ordner: Inhalt + Gesamtgröße live im Hintergrund (`fs::dir_stats`: abbrechbar, Links/Junctions werden nicht verfolgt, unlesbare Ordner gezählt, Grenze 500.000 Einträge).
