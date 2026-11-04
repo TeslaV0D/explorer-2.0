@@ -519,3 +519,50 @@ fn disk_full_reports_error_and_leaves_no_partial_file() {
     assert!(no_partials(&dst));
     let _ = fs::remove_dir_all(&dst);
 }
+
+// ---------------------------------------------------------------- recycle bin view
+
+#[test]
+fn trash_view_lists_restores_and_purges() {
+    use explorer_ops::trashview;
+    let _g = TRASH_LOCK.lock().unwrap_or_else(|e| e.into_inner());
+    let d = tmp();
+    let f = d.path().join("papierkorb-test.txt");
+    write(&f, b"bitte wiederherstellen");
+    let (r, _) = exec(&job(Kind::Trash, &[&f], None), &[]);
+    assert!(r.errors.is_empty(), "{:?}", r.errors);
+    let find = || {
+        trashview::list().unwrap().into_iter().find(|e| {
+            e.real_name == "papierkorb-test.txt" && same_dir(&e.original_parent, d.path())
+        })
+    };
+    let e = find().expect("trashed file listed with its original folder");
+    assert_eq!(e.entry.size, 22);
+    assert!(e.entry.modified.is_some(), "deletion time shown");
+    trashview::restore(std::slice::from_ref(&e)).unwrap();
+    assert_eq!(
+        read(&f),
+        b"bitte wiederherstellen",
+        "restored under its real name"
+    );
+    assert!(find().is_none());
+
+    // restore refuses to overwrite a file that exists again
+    exec(&job(Kind::Trash, &[&f], None), &[]);
+    write(&f, b"neu");
+    let e = find().unwrap();
+    assert!(trashview::restore(std::slice::from_ref(&e))
+        .unwrap_err()
+        .contains("existiert bereits"));
+    assert_eq!(read(&f), b"neu", "nothing overwritten");
+    trashview::purge(std::slice::from_ref(&e)).unwrap();
+    assert!(find().is_none(), "purged for good");
+}
+
+/// Original folders may be reported as long names while temp paths use 8.3 names (Windows).
+fn same_dir(a: &Path, b: &Path) -> bool {
+    match (fs::canonicalize(a), fs::canonicalize(b)) {
+        (Ok(x), Ok(y)) => x == y,
+        _ => a == b,
+    }
+}

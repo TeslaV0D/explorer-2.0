@@ -5,6 +5,7 @@ pub mod clipboard;
 pub mod exec;
 pub mod names;
 pub mod simple;
+pub mod trashview;
 pub mod undo;
 #[cfg(windows)]
 mod win_copy;

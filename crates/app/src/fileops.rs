@@ -7,6 +7,7 @@
 
 use crate::nav::{self, trace_line as trace};
 use crate::{JobRow, MainWindow};
+use explorer_core::places::VirtualPlace;
 use explorer_core::{format_datetime, format_size};
 use explorer_ops::clipboard::{self, ClipFiles};
 use explorer_ops::exec::{
@@ -37,6 +38,12 @@ struct Job {
     shown: bool,
 }
 
+/// What a confirmation dialog will do on "OK".
+enum Confirm {
+    DeletePermanent(Vec<PathBuf>),
+    PurgeTrash(Vec<explorer_ops::trashview::TrashEntry>),
+}
+
 struct Rename {
     pi: usize,
     path: PathBuf,
@@ -52,7 +59,7 @@ struct Ops {
     jobs: Vec<Job>,
     next_id: i32,
     conflicts: VecDeque<(i32, Conflict)>,
-    confirm: Option<Vec<PathBuf>>,
+    confirm: Option<Confirm>,
     rename: Option<Rename>,
     undo_running: bool,
     job_model: Rc<VecModel<JobRow>>,
@@ -177,6 +184,9 @@ fn sync_jobs() {
 pub fn command(win: &MainWindow, pi: usize, cmd: &str) {
     nav::activate_pane(win, pi);
     trace(&format!("command {cmd} pane={pi}"));
+    if let Some(place) = nav::pane_place(pi) {
+        return place_command(win, pi, place, cmd);
+    }
     match cmd {
         "copy" | "cut" => set_clipboard(win, pi, cmd == "cut"),
         "paste" => paste(win, pi),
@@ -210,7 +220,7 @@ pub fn command(win: &MainWindow, pi: usize, cmd: &str) {
                     paths.len()
                 ),
             };
-            OPS.with_borrow_mut(|o| o.confirm = Some(paths));
+            OPS.with_borrow_mut(|o| o.confirm = Some(Confirm::DeletePermanent(paths)));
             win.set_confirm_text(text.into());
             win.set_confirm_ok("Endgültig löschen".into());
             win.set_confirm_open(true);
@@ -323,6 +333,127 @@ fn paste(win: &MainWindow, pi: usize) {
         label,
         false,
     );
+}
+
+// ---------------------------------------------------------------- virtual places
+
+/// Commands inside the recycle bin / "Dieser PC".
+fn place_command(win: &MainWindow, pi: usize, place: VirtualPlace, cmd: &str) {
+    match (place, cmd) {
+        (VirtualPlace::Trash, "restore") => {
+            let items = nav::selected_trash(pi);
+            if !items.is_empty() {
+                trash_action(win, TrashAction::Restore, items);
+            }
+        }
+        (VirtualPlace::Trash, "delete" | "delete-permanent") => {
+            let items = nav::selected_trash(pi);
+            if !items.is_empty() {
+                let text = match items.as_slice() {
+                    [one] => format!(
+                        "„{}“ endgültig löschen?\nDas kann nicht rückgängig gemacht werden.",
+                        one.entry.name
+                    ),
+                    many => format!(
+                        "Diese {} Elemente endgültig löschen?\nDas kann nicht rückgängig gemacht werden.",
+                        many.len()
+                    ),
+                };
+                ask_purge(win, text, items);
+            }
+        }
+        (VirtualPlace::Trash, "empty-trash") => {
+            let items = nav::all_trash(pi);
+            if items.is_empty() {
+                win.set_error("Der Papierkorb ist leer.".into());
+                return;
+            }
+            let text = format!(
+                "Alle {} Elemente im Papierkorb endgültig löschen?\nDas kann nicht rückgängig gemacht werden.",
+                items.len()
+            );
+            ask_purge(win, text, items);
+        }
+        (_, "undo") => run_undo(win),
+        (_, "redo") => run_redo(win),
+        (_, "escape" | "rename" | "properties") => {}
+        (_, other) => {
+            trace(&format!(
+                "command {other} not available in {}",
+                place.label()
+            ));
+            win.set_error(format!("Hier nicht möglich ({}).", place.label()).into());
+        }
+    }
+}
+
+fn ask_purge(win: &MainWindow, text: String, items: Vec<explorer_ops::trashview::TrashEntry>) {
+    OPS.with_borrow_mut(|o| o.confirm = Some(Confirm::PurgeTrash(items)));
+    win.set_confirm_text(text.into());
+    win.set_confirm_ok("Endgültig löschen".into());
+    win.set_confirm_open(true);
+}
+
+#[derive(Debug, Clone, Copy)]
+enum TrashAction {
+    Restore,
+    Purge,
+}
+
+/// Restore / purge on a helper thread (the shell can be slow), then refresh
+/// the trash view and the folders the items return to.
+fn trash_action(
+    win: &MainWindow,
+    action: TrashAction,
+    items: Vec<explorer_ops::trashview::TrashEntry>,
+) {
+    trace(&format!("trash {action:?} n={}", items.len()));
+    let mut dirs: Vec<PathBuf> = items.iter().map(|i| i.original_parent.clone()).collect();
+    dirs.push(VirtualPlace::Trash.path());
+    let select: Vec<(PathBuf, Vec<String>)> = match action {
+        TrashAction::Restore => items
+            .iter()
+            .map(|i| (i.original_parent.clone(), vec![i.real_name.clone()]))
+            .collect(),
+        TrashAction::Purge => Vec::new(),
+    };
+    let weak = win.as_weak();
+    std::thread::spawn(move || {
+        let res = match action {
+            TrashAction::Restore => explorer_ops::trashview::restore(&items),
+            TrashAction::Purge => explorer_ops::trashview::purge(&items),
+        };
+        let _ = slint::invoke_from_event_loop(move || {
+            let Some(w) = weak.upgrade() else { return };
+            trace(&format!("trash {action:?} done ok={}", res.is_ok()));
+            if let Err(e) = res {
+                w.set_error(e.into());
+            }
+            dirs.sort();
+            dirs.dedup();
+            nav::refresh_dirs(&w, &dirs, &select, None);
+        });
+    });
+}
+
+/// Moves `paths` to the trash (drop on the recycle bin view).
+fn trash_paths(win: &MainWindow, paths: Vec<PathBuf>) {
+    let paths: Vec<PathBuf> = paths
+        .into_iter()
+        .filter(|p| VirtualPlace::from_path(p).is_none())
+        .collect();
+    if !paths.is_empty() {
+        start_job(
+            win,
+            JobSpec {
+                kind: Kind::Trash,
+                sources: paths,
+                dest: None,
+            },
+            "Löschen",
+            false,
+        );
+    }
 }
 
 // ---------------------------------------------------------------- context menu
@@ -483,6 +614,9 @@ fn drop_decision_for(sources: &[PathBuf], dest: &Path, copy: bool, windows: bool
 }
 
 pub fn drop_check(pi: usize, row: i32, data: &slint::DataTransfer, copy: bool) -> i32 {
+    if nav::pane_place(pi) == Some(VirtualPlace::Trash) {
+        return if drag_sources(data).is_empty() { 0 } else { 2 };
+    }
     match drop_target(pi, row) {
         Some(dest) => drop_decision(&drag_sources(data), &dest, copy),
         None => 0,
@@ -496,6 +630,12 @@ pub fn drop_files(
     data: &slint::DataTransfer,
     copy: bool,
 ) -> i32 {
+    if nav::pane_place(pi) == Some(VirtualPlace::Trash) {
+        let sources = drag_sources(data);
+        trace(&format!("drop on trash n={}", sources.len()));
+        trash_paths(win, sources);
+        return 2;
+    }
     let Some(dest) = drop_target(pi, row) else {
         return 0;
     };
@@ -534,6 +674,18 @@ pub fn ole_drop(
     ev: &explorer_shell::DropEvent,
 ) -> explorer_shell::DropEffect {
     use explorer_shell::{default_effect, DropEffect, DropPhase};
+    if nav::pane_place(pi) == Some(VirtualPlace::Trash) {
+        // dropping on the recycle bin deletes (Explorer)
+        if ev.phase == DropPhase::Drop {
+            trace(&format!("ole drop on trash n={}", ev.paths.len()));
+            trash_paths(win, ev.paths.to_vec());
+        }
+        return if ev.allow_move {
+            DropEffect::Move
+        } else {
+            DropEffect::None
+        };
+    }
     let Some(dest) = drop_target(pi, row) else {
         return DropEffect::None;
     };
@@ -817,6 +969,11 @@ fn finish_job(win: &MainWindow, job: Job, r: Report) {
             select.push((dest.clone(), arrived));
         }
     }
+    if matches!(job.spec.kind, Kind::Trash)
+        || r.done.iter().any(|d| matches!(d, Done::Trashed { .. }))
+    {
+        dirs.push(VirtualPlace::Trash.path()); // an open recycle bin view shows it at once
+    }
     dirs.sort();
     dirs.dedup();
     nav::refresh_dirs(win, &dirs, &select, None);
@@ -910,10 +1067,10 @@ pub fn conflict_answer(win: &MainWindow, n: i32) {
 
 pub fn confirm_answer(win: &MainWindow, ok: bool) {
     win.set_confirm_open(false);
-    let paths = OPS.with_borrow_mut(|o| o.confirm.take());
+    let what = OPS.with_borrow_mut(|o| o.confirm.take());
     trace(&format!("confirm {ok}"));
-    if let (true, Some(paths)) = (ok, paths) {
-        start_job(
+    match (ok, what) {
+        (true, Some(Confirm::DeletePermanent(paths))) => start_job(
             win,
             JobSpec {
                 kind: Kind::DeletePermanent,
@@ -922,7 +1079,9 @@ pub fn confirm_answer(win: &MainWindow, ok: bool) {
             },
             "Löschen",
             false,
-        );
+        ),
+        (true, Some(Confirm::PurgeTrash(items))) => trash_action(win, TrashAction::Purge, items),
+        _ => {}
     }
     nav::focus_pane(nav::active_pane());
 }
@@ -1026,7 +1185,9 @@ fn run_undo(win: &MainWindow) {
                 if let Some(e) = errors.first() {
                     w.set_error(format!("Rückgängig: {e}").into());
                 }
-                nav::refresh_dirs(&w, &revert_dirs(&entry), &[], None);
+                let mut dirs = revert_dirs(&entry);
+                dirs.push(VirtualPlace::Trash.path()); // undo moves things in/out of the trash
+                nav::refresh_dirs(&w, &dirs, &[], None);
                 sync_flags(&w);
             }
         });

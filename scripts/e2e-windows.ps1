@@ -163,6 +163,21 @@ Drag $LISTX (RowY 3) (RowY 1)
 Check "[W12] OLE drag onto a folder moves the file" { (Test-Path "$src\Ordner\b.txt") -and -not (Test-Path "$src\b.txt") }
 Check "[W12b] drop went through our drop target" { (Last 'ole drop') -match 'effect=Move' }
 
+# M5.6: recycle bin view (rows in src now: 0 Neuer Ordner, 1 Ordner, 2 a.txt)
+Click $LISTX (RowY 2)
+Keys '{DEL}'; Start-Sleep -Milliseconds 1500
+Keys '^l'; Keys 'Papierkorb'; Keys '{ENTER}'; Start-Sleep -Milliseconds 2000
+Check "[W15] address 'Papierkorb' opens the recycle bin view" { (Last 'navigate tab') -match ' ::papierkorb ' }
+Check "[W15b] the deleted file is listed with its folder" { (Last 'kinds') -match [regex]::Escape("$src".Replace('\', '\\')) -or (Last 'kinds') -match 'win-e2e' }
+Keys 'a.txt'; Start-Sleep -Milliseconds 500
+Click 195 20   # command bar "Wiederherstellen"
+Start-Sleep -Milliseconds 2500
+Check "[W16] restore puts it back (real name with extension)" { (Test-Path "$src\a.txt") -and (Last 'trash Restore done') -match 'ok=true' }
+Keys '^l'; Keys 'Dieser PC'; Keys '{ENTER}'; Start-Sleep -Milliseconds 1500
+Check "[W17] 'Dieser PC' lists the drives with free space" { (Last 'navigate tab') -match ' ::dieser-pc ' -and (Last 'kinds') -match '(frei von|GB|MB)' }
+Keys '{HOME}'; Keys '{ENTER}'; Start-Sleep -Milliseconds 1200
+Check "[W17b] opening a drive shows its root" { (Last 'navigate tab') -match 'User [A-Z]:\\ at=' }
+
 $p.Refresh()
 Check "[W13] app still running" { -not $p.HasExited }
 Check "[W14] no panic" { (Log) -notmatch '(?i)panic' }

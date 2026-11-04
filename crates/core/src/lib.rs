@@ -3,6 +3,7 @@
 
 pub mod breadcrumb;
 pub mod history;
+pub mod places;
 pub mod renderer;
 pub mod selection;
 pub mod session;

@@ -9,6 +9,7 @@ use crate::keys::{map_key, KeyAction};
 use crate::{Crumb, MainWindow, PaneData, PlaceItem, Row, TabInfo};
 use explorer_core::breadcrumb::{crumbs, fit};
 use explorer_core::history::History;
+use explorer_core::places::VirtualPlace;
 use explorer_core::selection::Selection;
 use explorer_core::session::{PaneSession, Session};
 use explorer_core::typeahead::TypeAhead;
@@ -66,6 +67,17 @@ struct Tab {
     stale: bool,
     refresh_allowed_at: Instant,
     refresh_scheduled: bool,
+    /// Data behind the rows of a virtual place (trash items, drive roots).
+    virtual_data: VirtualData,
+}
+
+/// What stands behind the rows of a virtual place, keyed by `Entry::name`.
+#[derive(Default)]
+enum VirtualData {
+    #[default]
+    None,
+    Trash(Vec<explorer_ops::trashview::TrashEntry>),
+    ThisPc(HashMap<String, PathBuf>),
 }
 
 impl Tab {
@@ -87,10 +99,14 @@ impl Tab {
             stale: true,
             refresh_allowed_at: Instant::now(),
             refresh_scheduled: false,
+            virtual_data: VirtualData::None,
         }
     }
 
     fn title(&self) -> String {
+        if let Some(v) = self.path.as_deref().and_then(VirtualPlace::from_path) {
+            return v.label().to_string();
+        }
         match &self.path {
             Some(p) => p
                 .file_name()
@@ -280,14 +296,105 @@ fn prepare(
     sort: SortSpec,
     dir: &Path,
 ) -> (Vec<Entry>, Vec<Row>, usize) {
+    prepare_with(all, filter, sort, dir, None)
+}
+
+/// `kinds`: text for the "Typ" column per entry name (virtual places show
+/// e.g. the original location there); sorting by that column uses it too.
+fn prepare_with(
+    all: Vec<Entry>,
+    filter: ViewFilter,
+    sort: SortSpec,
+    dir: &Path,
+    kinds: Option<&HashMap<String, String>>,
+) -> (Vec<Entry>, Vec<Row>, usize) {
     let total = all.len();
     let mut vis: Vec<Entry> = all.into_iter().filter(|e| filter.is_visible(e)).collect();
     let hidden = total - vis.len();
     let mut labels = crate::icons::RowLabels::default();
+    let kind_of = |labels: &mut crate::icons::RowLabels, e: &Entry| match kinds {
+        Some(k) => k.get(&e.name).cloned().unwrap_or_default(),
+        None => labels.type_name(e),
+    };
     // "Typ" sorts by the names shown in the column (shell names on Windows)
-    sort_entries_with_type_names(&mut vis, sort, |e| labels.type_name(e));
-    let rows = vis.iter().map(|e| to_row(e, dir, &mut labels)).collect();
+    sort_entries_with_type_names(&mut vis, sort, |e| kind_of(&mut labels, e));
+    let rows = vis
+        .iter()
+        .map(|e| {
+            let mut r = to_row(e, dir, &mut labels);
+            if kinds.is_some() {
+                r.kind = kind_of(&mut labels, e).into();
+            }
+            r
+        })
+        .collect();
     (vis, rows, hidden)
+}
+
+/// Lists a virtual place (blocking, loader thread).
+fn load_virtual(v: VirtualPlace, filter: ViewFilter, sort: SortSpec) -> Update {
+    let t0 = Instant::now();
+    let (all, kinds, vdata) = match v {
+        VirtualPlace::Trash => match explorer_ops::trashview::list() {
+            Ok(items) => {
+                let kinds = items
+                    .iter()
+                    .map(|i| {
+                        (
+                            i.entry.name.clone(),
+                            i.original_parent.display().to_string(),
+                        )
+                    })
+                    .collect::<HashMap<_, _>>();
+                let all: Vec<Entry> = items.iter().map(|i| i.entry.clone()).collect();
+                (all, kinds, VirtualData::Trash(items))
+            }
+            Err(message) => {
+                return Update::Failed(FsError {
+                    kind: FsErrorKind::Other,
+                    message,
+                })
+            }
+        },
+        VirtualPlace::ThisPc => {
+            let drives = explorer_fs::places::drives();
+            let mut kinds = HashMap::new();
+            let mut targets = HashMap::new();
+            let all = drives
+                .iter()
+                .map(|d| {
+                    let name = drive_display_name(d);
+                    kinds.insert(
+                        name.clone(),
+                        d.space.map(|(f, t)| format_usage(f, t)).unwrap_or_default(),
+                    );
+                    targets.insert(name.clone(), d.root.clone());
+                    Entry {
+                        name,
+                        kind: explorer_core::EntryKind::Dir,
+                        size: d.space.map(|(_, t)| t).unwrap_or(0),
+                        modified: None,
+                        hidden: false,
+                        system: false,
+                        readonly: false,
+                        is_link: false,
+                    }
+                })
+                .collect();
+            (all, kinds, VirtualData::ThisPc(targets))
+        }
+    };
+    let total = all.len();
+    // icons by extension only: the items do not exist under the placeholder path
+    let (entries, rows, hidden) = prepare_with(all, filter, sort, Path::new(""), Some(&kinds));
+    Update::Rows {
+        entries,
+        rows,
+        hidden,
+        done: Some((total, t0.elapsed())),
+        data_ready: t0.elapsed(),
+        vdata,
+    }
 }
 
 /// Carries the selection over to a reloaded list of the same folder, matched by name.
@@ -331,6 +438,7 @@ fn sync_pane(pi: usize) {
     APP.with_borrow(|app| {
         let Some(p) = app.panes.get(pi) else { return };
         let t = p.tab();
+        let place = t.path.as_deref().and_then(VirtualPlace::from_path);
         let data = PaneData {
             tabs: ModelRc::new(VecModel::from(
                 p.tabs
@@ -368,6 +476,11 @@ fn sync_pane(pi: usize) {
             rename_sel: p.rename_sel,
             menu_seq: p.menu_seq,
             menu_row: p.menu_row,
+            date_label: place
+                .map(|v| v.columns().0)
+                .unwrap_or("Änderungsdatum")
+                .into(),
+            type_label: place.map(|v| v.columns().1).unwrap_or("Typ").into(),
         };
         if pi < app.pane_model.row_count() {
             app.pane_model.set_row_data(pi, data);
@@ -407,9 +520,15 @@ fn sync_window(win: &MainWindow) {
     });
     win.set_active_pane(active as i32);
     win.set_split(split);
+    let place = match VirtualPlace::from_path(Path::new(&path)) {
+        Some(VirtualPlace::Trash) => "trash",
+        Some(VirtualPlace::ThisPc) => "thispc",
+        None => "",
+    };
     win.set_active_path(path.into());
     win.set_status(status.into());
     win.set_has_selection(has_sel);
+    win.set_active_place(place.into());
     schedule_session_save();
 }
 
@@ -456,7 +575,10 @@ pub fn init(
             .ok()
             .or_else(|| std::env::var_os("HOME").map(PathBuf::from))
     };
-    let usable = |s: &str| explorer_fs::nearest_existing_ancestor(Path::new(s));
+    let usable = |s: &str| match VirtualPlace::from_path(Path::new(s)) {
+        Some(v) => Some(v.path()),
+        None => explorer_fs::nearest_existing_ancestor(Path::new(s)),
+    };
     let restored_active = session
         .as_ref()
         .filter(|_| start.is_none())
@@ -584,6 +706,14 @@ pub fn refresh_places(win: &MainWindow) {
             used: 0.0,
             has_bar: false,
         })
+        .chain(std::iter::once(PlaceItem {
+            label: VirtualPlace::Trash.label().into(),
+            path: VirtualPlace::Trash.path().to_string_lossy().as_ref().into(),
+            is_drive: false,
+            detail: Default::default(),
+            used: 0.0,
+            has_bar: false,
+        }))
         .collect();
     APP.with_borrow(|app| app.place_model.set_vec(places));
     refresh_drives(win);
@@ -663,9 +793,15 @@ fn ensure_loaded(win: &MainWindow, pi: usize) {
 }
 
 fn navigate_tab(win: &MainWindow, id: TabId, target: PathBuf, reason: Reason, hist: Hist) {
-    let target = std::path::absolute(&target).unwrap_or(target);
-    // show long names like Explorer (and keep path comparisons consistent with the shell)
-    let target = explorer_fs::path::long_path(&target);
+    let place = VirtualPlace::from_input(&target.to_string_lossy());
+    let target = match place {
+        Some(v) => v.path(),
+        None => {
+            let target = std::path::absolute(&target).unwrap_or(target);
+            // show long names like Explorer (and keep path comparisons consistent with the shell)
+            explorer_fs::path::long_path(&target)
+        }
+    };
     let (filter, sort) = APP.with_borrow(|app| (app.filter, app.sort));
     let gen = APP.with_borrow_mut(|app| {
         app.next_gen += 1;
@@ -697,6 +833,22 @@ fn navigate_tab(win: &MainWindow, id: TabId, target: PathBuf, reason: Reason, hi
     let weak = win.as_weak();
     let path = target.clone();
     let t0 = Instant::now();
+    if let Some(v) = place {
+        // virtual place: one listing on a helper thread, no partial batches
+        with_tab(id, |t, _, _| t.loader = None); // cancels a running folder load
+        let _ = std::thread::Builder::new()
+            .name("virtual-loader".into())
+            .spawn(move || {
+                let upd = load_virtual(v, filter, sort);
+                let _ = slint::invoke_from_event_loop(move || {
+                    if let Some(w) = weak.upgrade() {
+                        apply(&w, id, gen, path, reason, upd, t0);
+                    }
+                });
+            });
+        sync_pane(pi);
+        return;
+    }
     let mut acc: Vec<Entry> = Vec::new();
     let path_for_rows = target.clone();
     let handle = load_dir(target, move |ev| {
@@ -713,6 +865,7 @@ fn navigate_tab(win: &MainWindow, id: TabId, target: PathBuf, reason: Reason, hi
                     hidden,
                     done: None,
                     data_ready: t0.elapsed(),
+                    vdata: VirtualData::None,
                 }
             }
             LoadEvent::Done { total, .. } => {
@@ -724,6 +877,7 @@ fn navigate_tab(win: &MainWindow, id: TabId, target: PathBuf, reason: Reason, hi
                     hidden,
                     done: Some((total, t0.elapsed())),
                     data_ready: t0.elapsed(),
+                    vdata: VirtualData::None,
                 }
             }
             LoadEvent::Failed(e) => Update::Failed(e),
@@ -748,6 +902,7 @@ enum Update {
         /// navigate -> data prepared, measured on the loader thread (independent
         /// of when the UI thread gets to apply it, e.g. during renderer init).
         data_ready: Duration,
+        vdata: VirtualData,
     },
     Failed(FsError),
 }
@@ -772,6 +927,7 @@ fn apply(
             hidden,
             done,
             data_ready,
+            vdata,
         } => {
             let path_changed = current.as_deref() != Some(path.as_path());
             let n = entries.len();
@@ -822,6 +978,7 @@ fn apply(
                     rows[f].focused = true;
                 }
                 t.entries = entries;
+                t.virtual_data = vdata;
                 // icons of the first screen (per-file ones only load when visible)
                 crate::icons::need(rows.iter().take(80).map(|r| r.icon));
                 t.model.set_vec(rows);
@@ -841,7 +998,11 @@ fn apply(
                 if path_changed || reason == Reason::User {
                     request(pi, |p| p.top_seq += 1);
                 }
-                start_watch(win, id, &path);
+                if VirtualPlace::from_path(&path).is_none() {
+                    start_watch(win, id, &path);
+                } else {
+                    with_tab(id, |t, _, _| t.watcher = None); // refreshed by our own actions
+                }
             }
             if let Some(f) = focus {
                 request(pi, |p| {
@@ -958,6 +1119,14 @@ fn apply(
 }
 
 fn show_crumbs(id: TabId, path: &Path, chars: usize) {
+    if let Some(v) = VirtualPlace::from_path(path) {
+        let one = vec![Crumb {
+            label: v.label().into(),
+            path: path.to_string_lossy().as_ref().into(),
+        }];
+        with_tab(id, |t, _, _| t.crumbs.set_vec(one));
+        return;
+    }
     let list: Vec<Crumb> = fit(crumbs(&path.to_string_lossy()), chars)
         .into_iter()
         .map(|c| Crumb {
@@ -1147,7 +1316,14 @@ pub fn go_up(win: &MainWindow, pi: usize) {
     let Some(id) = active_tab_id(pi) else { return };
     let target = with_tab(id, |t, _, _| {
         let p = t.path.as_ref()?;
-        let parent = p.parent()?.to_path_buf();
+        if VirtualPlace::from_path(p).is_some() {
+            return None; // top level
+        }
+        // a drive root's parent is "Dieser PC" (Explorer)
+        let parent = match p.parent() {
+            Some(parent) if !parent.as_os_str().is_empty() => parent.to_path_buf(),
+            _ => return Some(VirtualPlace::ThisPc.path()),
+        };
         t.pending_select = p
             .file_name()
             .map(|n| n.to_string_lossy().into_owned())
@@ -1205,7 +1381,11 @@ pub fn open_entry(win: &MainWindow, pi: usize, index: usize) {
     let Some(id) = active_tab_id(pi) else { return };
     let target = with_tab(id, |t, _, _| {
         let e = t.entries.get(index)?;
-        Some((t.path.as_ref()?.join(&e.name), e.is_dir()))
+        match &t.virtual_data {
+            VirtualData::ThisPc(targets) => Some((targets.get(&e.name)?.clone(), true)),
+            VirtualData::Trash(_) => None, // items in the trash do not open (restore first)
+            VirtualData::None => Some((t.path.as_ref()?.join(&e.name), e.is_dir())),
+        }
     })
     .flatten();
     match target {
@@ -1569,9 +1749,55 @@ pub(crate) fn active_pane() -> usize {
 }
 
 /// Folder shown in pane `pi`.
+/// Folder shown in pane `pi`; `None` in virtual places, so file operations
+/// (paste, new folder, drops, …) can never act on a placeholder path.
 pub(crate) fn pane_dir(pi: usize) -> Option<PathBuf> {
     let id = active_tab_id(pi)?;
-    with_tab(id, |t, _, _| t.path.clone()).flatten()
+    with_tab(id, |t, _, _| t.path.clone())
+        .flatten()
+        .filter(|p| VirtualPlace::from_path(p).is_none())
+}
+
+/// Virtual place shown in pane `pi`, if any.
+pub(crate) fn pane_place(pi: usize) -> Option<VirtualPlace> {
+    let id = active_tab_id(pi)?;
+    with_tab(id, |t, _, _| {
+        t.path.as_deref().and_then(VirtualPlace::from_path)
+    })
+    .flatten()
+}
+
+/// Selected (or focused) trash items of pane `pi` (empty outside the trash).
+pub(crate) fn selected_trash(pi: usize) -> Vec<explorer_ops::trashview::TrashEntry> {
+    let Some(id) = active_tab_id(pi) else {
+        return Vec::new();
+    };
+    with_tab(id, |t, _, _| {
+        let VirtualData::Trash(items) = &t.virtual_data else {
+            return Vec::new();
+        };
+        let mut idx = t.selection.selected_indices();
+        if idx.is_empty() {
+            idx.extend(t.selection.focus());
+        }
+        idx.iter()
+            .filter_map(|&i| t.entries.get(i))
+            .filter_map(|e| items.iter().find(|it| it.entry.name == e.name).cloned())
+            .collect()
+    })
+    .unwrap_or_default()
+}
+
+/// All items of the trash shown in pane `pi`.
+pub(crate) fn all_trash(pi: usize) -> Vec<explorer_ops::trashview::TrashEntry> {
+    let Some(id) = active_tab_id(pi) else {
+        return Vec::new();
+    };
+    with_tab(id, |t, _, _| match &t.virtual_data {
+        VirtualData::Trash(items) => items.clone(),
+        _ => Vec::new(),
+    })
+    .unwrap_or_default()
 }
 
 /// Rows shown in pane `pi` (0 if the pane does not exist).
@@ -1594,7 +1820,11 @@ pub(crate) fn selected_paths(pi: usize) -> Vec<PathBuf> {
         return Vec::new();
     };
     with_tab(id, |t, _, _| {
-        let Some(dir) = t.path.as_ref() else {
+        let Some(dir) = t
+            .path
+            .as_ref()
+            .filter(|p| VirtualPlace::from_path(p).is_none())
+        else {
             return Vec::new();
         };
         let mut idx = t.selection.selected_indices();
@@ -1614,7 +1844,11 @@ pub(crate) fn entry_at(pi: usize, index: usize) -> Option<(PathBuf, String, bool
     let id = active_tab_id(pi)?;
     with_tab(id, |t, _, _| {
         let e = t.entries.get(index)?;
-        Some((t.path.as_ref()?.join(&e.name), e.name.clone(), e.is_dir()))
+        let dir = t
+            .path
+            .as_ref()
+            .filter(|p| VirtualPlace::from_path(p).is_none())?;
+        Some((dir.join(&e.name), e.name.clone(), e.is_dir()))
     })
     .flatten()
 }

@@ -69,7 +69,12 @@ Legende: `[ ]` offen · `[~]` in Arbeit · `[x]` erledigt · Prio P0/P1/P2
   - [x] M5.3 Kontextmenü (Linux: eigenes Fallback-Menü später): `IContextMenu` (inkl. Erweiterungen Dritter, „Senden an“, „Öffnen mit“ via IContextMenu2/3), Rechtsklick auf Auswahl / leere Fläche (Ordner-Hintergrund), eigene Einträge davor (Kopieren/Einfügen/… über unsere Engine)
   - [x] M5.4 Eigenschaften (`SHObjectProperties`/`SHMultiFileProperties`, Alt+Enter; „Öffnen mit“ kommt über das Shell-Menü)
   - [x] M5.5 OLE-Drag&Drop mit anderen Apps (Windows-E2E zieht per echter Maus): Ziehen aus der App (`DoDragDrop` + `SHCreateDataObject`), Ablegen in die App (`RegisterDragDrop`, Winit-Handler ersetzen), Standard-Aktion je Laufwerk wie Explorer
-  - [ ] M5.6 Virtuelle Orte: Papierkorb-Ansicht (Wiederherstellen/Leeren), „Dieser PC“, Netzwerk/UNC, Bibliotheken – über Shell-Namespace (`IShellFolder`/`IEnumIDList`), schneller Pfad bleibt für normale Ordner
+  - [~] M5.6 Virtuelle Orte (schneller Pfad bleibt für normale Ordner):
+    - [~] M5.6a Papierkorb-Ansicht: Liste (Gelöscht am, Ursprünglicher Ort, Größe), Wiederherstellen, endgültig löschen, leeren, Ablegen auf Papierkorb = löschen, Seitenleiste, Adress-Aliase – lokal grün, CI ausstehend
+    - [~] M5.6b „Dieser PC“: Laufwerke mit Speicherplatz, Klick auf Überschrift in der Seitenleiste, „Hoch“ vom Laufwerk → Dieser PC – lokal grün, CI ausstehend
+    - [ ] M5.6c Netzwerk: `\\server` → Freigaben (`NetShareEnum`), Anmeldedialog bei Bedarf
+    - [ ] M5.6d Bibliotheken / weitere Shell-Orte (`IShellFolder`), echtes Papierkorb-/PC-Icon
+    - [ ] Später: Undo für „Wiederherstellen“, Shell-Kontextmenü im Papierkorb
   - [ ] M5.7 Thumbnails (für spätere Symbol-Ansicht vorbereitet, Cache)
 - [ ] M6 Ordneroptionen-Parität, Themes, Command Palette, Inspector
 - [ ] **R-001 Ein-Knopf-Reset** für alle Integrationen (App-Knopf + eigenständiges Recovery-Tool + Journal + CI-Snapshot-Test) – Voraussetzung, bevor irgendeine Integration ausgeliefert wird

@@ -8,7 +8,7 @@ fail() { echo "FAIL  $1"; FAIL=1; }
 check() { if eval "$2"; then pass "$1"; else fail "$1"; fi; }
 
 # ---- layout (default 1200x720 window, see main.slint / e2e.sh) ----
-TOP_Y=20; NEWFOLDER_X=185; PASTE_X=471; UNDO_X=718
+TOP_Y=20; NEWFOLDER_X=185; PASTE_X=471; UNDO_X=718; SIDEBAR_X=80
 NAV_Y=94; LIST_X=500; ROW0_Y=140
 row_y() { echo $((ROW0_Y + 24 * $1 + 12)); }
 JOB_Y=672; JOB_PAUSE_X=1060; JOB_CANCEL_X=1150   # operations panel row above the status bar
@@ -165,6 +165,36 @@ check "[50d] no partial files left" "[ -z \"\$(find '$DST' -name '*.e2part' | he
 check "[50e] source complete" "[ \$(ls '$R/many' | wc -l) = 60000 ]"
 xdotool key ctrl+z; sleep 2
 check "[51] undo removes the partial copy" "[ ! -e '$DST/many' ]"
+echo "-- M5.6: recycle bin view, Dieser PC"
+T=$R/t; mkdir -p "$T"; echo x > "$T/x.txt"; echo y > "$T/y.txt"
+goto "$T"
+# rows: 0 x.txt, 1 y.txt
+xdotool mousemove $LIST_X $(row_y 0) click 1; sleep 0.3; xdotool key Delete; sleep 1.2
+goto "Papierkorb"
+check "[55] address alias 'Papierkorb' opens the recycle bin view" "last 'navigate tab' | grep -q ' ::papierkorb '"
+check "[55b] trashed file listed with its original folder" "last 'kinds' | grep -qF '$T'"
+xdotool type --delay 40 "x.txt"; sleep 0.5
+check "[55c] type-ahead works in the trash" "sel_is 'focus=x.txt'"
+xdotool mousemove 195 $TOP_Y click 1; sleep 1.5   # "Wiederherstellen"
+check "[56] restore puts the file back" "[ \"\$(cat '$T/x.txt')\" = x ] && last 'trash Restore done' | grep -q 'ok=true'"
+check "[56b] trash view refreshed (x.txt gone)" "! last 'kinds' | grep -q 'nothing' && ! ls $TRASH | grep -qx x.txt"
+xdotool key ctrl+v; sleep 0.5
+check "[56c] paste is refused in the trash" "last 'not available' | grep -q 'command paste not available in Papierkorb'"
+goto "$T"
+xdotool mousemove $LIST_X $(row_y 1) click 1; sleep 0.3; xdotool key Delete; sleep 1.2   # y.txt
+xdotool mousemove $SIDEBAR_X 112 click 1; sleep 1.2   # sidebar "Papierkorb" (2nd quick-access item)
+check "[57] sidebar 'Papierkorb' opens it" "[ \$(grep -c 'User ::papierkorb' $LOG) -ge 2 ]"
+xdotool type --delay 40 "y.txt"; sleep 0.4; xdotool key Delete; sleep 0.6
+xdotool key Return; sleep 1.5
+check "[57b] Del in the trash = delete for good (after confirmation)" "last 'trash Purge done' | grep -q 'ok=true' && ! ls $TRASH | grep -qx y.txt && [ ! -e '$T/y.txt' ]"
+xdotool mousemove 455 $TOP_Y click 1; sleep 0.6; xdotool key Return; sleep 2   # "Papierkorb leeren"
+check "[57c] empty the trash" "[ -z \"\$(ls -A $TRASH 2>/dev/null)\" ]"
+xdotool mousemove $SIDEBAR_X 150 click 1; sleep 1.5   # "Dieser PC" heading
+check "[58] 'Dieser PC' lists the drives" "last 'navigate tab' | grep -q ' ::dieser-pc ' && last 'done tab' | grep -qE 'total=[1-9]'"
+xdotool key Home Return; sleep 1.2
+check "[58b] opening a drive navigates to its root" "last 'navigate tab' | grep -qE 'User / at='"
+xdotool key BackSpace; sleep 1.2
+check "[58c] up from the root goes to 'Dieser PC'" "last 'navigate tab' | grep -q ' ::dieser-pc '"
 check "[52] process alive" "kill -0 $PID"
 kill $PID; wait $PID 2>/dev/null
 check "[52b] no panic" "! grep -qi panic $LOG"

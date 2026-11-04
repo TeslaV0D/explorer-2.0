@@ -40,6 +40,14 @@
 - **Bug (CI #32/#33, UI-Matrix)**: OLE-Drop-Target wurde nie registriert („Invalid window handle“) – der Timer lief, bevor Slint das native Fenster erzeugt hatte → Ablegen aus anderen Apps wäre tot gewesen. Fix: Registrierung wiederholt bis HWND existiert (50 ms, max. 5 s), sonst Rückfall auf In-App-DnD.
 - Neu: **Windows-E2E mit echter Tastatur/Maus** (`scripts/e2e-windows.ps1`, CI-Schritt im Release-Job, Screenshots bei Fehler).
 
+### M5.6a/b Papierkorb-Ansicht + „Dieser PC“ (lokal grün, CI ausstehend)
+- `core::places::VirtualPlace` (Platzhalter-Pfade `::papierkorb` / `::dieser-pc`, nie mit echten Pfaden verwechselbar) → Tabs, Verlauf, Sitzung, Breadcrumb funktionieren unverändert; Adress-Aliase: „Papierkorb“, `shell:RecycleBinFolder`, „Dieser PC“, `shell:MyComputerFolder`, Explorer-CLSIDs.
+- `ops::trashview`: Liste mit echtem Dateinamen (Windows-Anzeigenamen ohne Endung → Endung aus `$R…`), gleiche Namen eindeutig („a.txt (2)“), Wiederherstellen verweigert Überschreiben, endgültig löschen, leeren.
+- Sicherheit: in virtuellen Orten liefern `pane_dir`/`selected_paths`/`entry_at` nichts → Einfügen, Neuer Ordner, Drops, Umbenennen können nie auf einem Platzhalter-Pfad landen; nicht erlaubte Befehle melden „Hier nicht möglich“.
+- Befehlsleiste im Papierkorb: Wiederherstellen / Endgültig löschen / Papierkorb leeren; Spalten „Gelöscht am“, „Ursprünglicher Ort“. Dateien auf den Papierkorb ziehen = löschen. Jedes Löschen/Undo aktualisiert offene Papierkorb-Tabs.
+- „Dieser PC“: Laufwerke mit „x GB frei von y GB“, Öffnen → Laufwerkswurzel, „Hoch“ von einer Wurzel → Dieser PC.
+- Tests: core +2, ops +3 (inkl. echter Papierkorb-Durchlauf), E2E Linux **116/116** (neu 55–58c), Windows-E2E erweitert (W15–W17b).
+
 ### Renderer-Vergleich Skia vs. FemtoVG (CI #35, Windows, D-015)
 | | Skia (heute) | FemtoVG |
 |---|---|---|

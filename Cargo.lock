@@ -1000,6 +1000,7 @@ dependencies = [
 name = "explorer-ops"
 version = "0.0.1"
 dependencies = [
+ "explorer-core",
  "tempfile",
  "trash",
  "windows-sys 0.60.2",
