@@ -98,6 +98,56 @@ pub fn grid_columns(width: f32, tile_w: f32) -> usize {
     ((width / tile_w).floor() as usize).max(1)
 }
 
+/// Items touched by a rubber band from (x0, y0) to (x1, y1) in list content
+/// coordinates (y includes the scroll offset): `cols` items of `item_w` per
+/// line of `line_h`, `n` items. Details view: `cols` = 1, x is ignored.
+#[allow(clippy::too_many_arguments)]
+pub fn band_hits(
+    x0: f32,
+    y0: f32,
+    x1: f32,
+    y1: f32,
+    line_h: f32,
+    cols: usize,
+    item_w: f32,
+    n: usize,
+) -> Vec<usize> {
+    if n == 0 || line_h <= 0.0 {
+        return Vec::new();
+    }
+    let cols = cols.max(1);
+    let (top, bottom) = (y0.min(y1).max(0.0), y0.max(y1));
+    if bottom < 0.0 {
+        return Vec::new();
+    }
+    let first_line = (top / line_h).floor() as usize;
+    let last_line = (bottom / line_h).floor() as usize;
+    let (c0, c1) = if cols == 1 || item_w <= 0.0 {
+        (0, 0)
+    } else {
+        let (l, r) = (x0.min(x1).max(0.0), x0.max(x1));
+        if r < 0.0 || l >= cols as f32 * item_w {
+            return Vec::new();
+        }
+        let c0 = (l / item_w).floor() as usize;
+        let c1 = ((r / item_w).floor() as usize).min(cols - 1);
+        (c0, c1)
+    };
+    let mut out = Vec::new();
+    for line in first_line..=last_line {
+        for c in c0..=c1 {
+            let i = line * cols + c;
+            if i < n {
+                out.push(i);
+            }
+        }
+        if line * cols >= n {
+            break;
+        }
+    }
+    out
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -122,6 +172,45 @@ mod tests {
         assert_eq!(ViewMode::from_shortcut('§'), Some(ViewMode::Medium));
         assert_eq!(ViewMode::from_shortcut('&'), Some(ViewMode::Details));
         assert_eq!(ViewMode::from_shortcut('4'), None);
+    }
+
+    #[test]
+    fn rubber_band() {
+        // details: rows of 24 px, x ignored
+        assert_eq!(
+            band_hits(5.0, 30.0, 400.0, 80.0, 24.0, 1, 0.0, 10),
+            vec![1, 2, 3]
+        );
+        assert_eq!(
+            band_hits(5.0, 80.0, 400.0, 30.0, 24.0, 1, 0.0, 10),
+            vec![1, 2, 3],
+            "upwards"
+        );
+        assert_eq!(
+            band_hits(5.0, 200.0, 9.0, 400.0, 24.0, 1, 0.0, 5),
+            Vec::<usize>::new(),
+            "below the rows"
+        );
+        // grid: 4 per line, 100×120
+        assert_eq!(
+            band_hits(150.0, 10.0, 260.0, 130.0, 120.0, 4, 100.0, 10),
+            vec![1, 2, 5, 6]
+        );
+        assert_eq!(
+            band_hits(390.0, 10.0, 500.0, 20.0, 120.0, 4, 100.0, 10),
+            vec![3],
+            "clamped to the last column"
+        );
+        assert_eq!(
+            band_hits(450.0, 10.0, 500.0, 20.0, 120.0, 4, 100.0, 10),
+            Vec::<usize>::new(),
+            "right of the grid"
+        );
+        assert_eq!(
+            band_hits(0.0, 250.0, 399.0, 300.0, 120.0, 4, 100.0, 10),
+            vec![8, 9],
+            "last line is short"
+        );
     }
 
     #[test]

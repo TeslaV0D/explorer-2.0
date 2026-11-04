@@ -82,6 +82,11 @@ thread_local! {
     static GEOMS: RefCell<Vec<Geom>> = const { RefCell::new(Vec::new()) };
 }
 
+/// Last reported list geometry of pane `pi`.
+pub fn geometry(pi: usize) -> Option<Geom> {
+    GEOMS.with_borrow(|v| v.get(pi).copied())
+}
+
 pub fn set_geometry(pi: usize, g: Geom) {
     GEOMS.with_borrow_mut(|v| {
         if v.len() <= pi {

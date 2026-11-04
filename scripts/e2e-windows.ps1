@@ -264,6 +264,14 @@ Click ([int]($gx + 2 + 128 + 62)) ([int]($gy + 60))
 Check "[W29] click on a tile selects it" { (Last 'selection pane') -match 'focus=text\.txt' }
 Keys '{LEFT}'
 Check "[W29b] arrow keys move in the grid" { (Last 'selection pane') -match 'focus=rot\.png' }
+# M6.1b: rubber band from the empty area right of the two tiles over both
+$a = Pt ([int]($gx + 600)) ([int]($gy + 300)); [void][W]::SetCursorPos($a.X, $a.Y); Start-Sleep -Milliseconds 100
+[W]::mouse_event(0x02, 0, 0, 0, [UIntPtr]::Zero)
+for ($i = 1; $i -le 12; $i++) {
+  $b = Pt ([int]($gx + 600 - 590 * $i / 12)) ([int]($gy + 300 - 290 * $i / 12)); [void][W]::SetCursorPos($b.X, $b.Y); Start-Sleep -Milliseconds 50
+}
+[W]::mouse_event(0x04, 0, 0, 0, [UIntPtr]::Zero); Start-Sleep -Milliseconds 600
+Check "[W34] rubber band selects both tiles" { (Last 'band done') -match 'hits=2' -and (Last 'selection pane') -match 'count=2 ' }
 Keys '^+6'; Start-Sleep -Milliseconds 800
 Check "[W30] Ctrl+Shift+6 = details again" { (Last 'view mode') -match 'mode=details' }
 if ($shared) { Remove-SmbShare -Name 'e2efreigabe' -Force -ErrorAction SilentlyContinue }

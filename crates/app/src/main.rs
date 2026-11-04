@@ -105,6 +105,12 @@ fn main() -> Result<(), slint::PlatformError> {
     on!(win, on_back, |w, pi| nav::back(&w, pi as usize));
     on!(win, on_forward, |w, pi| nav::forward(&w, pi as usize));
     on!(win, on_sort_by, |w, k| nav::sort_by(&w, k.as_str()));
+    on!(win, on_sort_pick, |w, k| nav::sort_pick(
+        &w,
+        Some(k.as_str()),
+        None
+    ));
+    on!(win, on_sort_dir, |w, d| nav::sort_pick(&w, None, Some(d)));
     on!(win, on_row_pressed, |w, pi, row, ctrl, shift| {
         nav::row_pressed(&w, pi as usize, row as usize, ctrl, shift)
     });
@@ -214,6 +220,16 @@ fn main() -> Result<(), slint::PlatformError> {
         &w,
         n.as_str(),
         on
+    ));
+    on!(win, on_band, |w, pi, x0, y0, x1, y1, c, ph| nav::band(
+        &w,
+        pi as usize,
+        x0,
+        y0,
+        x1,
+        y1,
+        c,
+        ph
     ));
     on!(win, on_click_open, |w, pi, r| nav::click_open(
         &w,

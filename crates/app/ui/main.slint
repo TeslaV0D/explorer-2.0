@@ -325,6 +325,15 @@ component FilePane inherits Rectangle {
     // "Öffnen durch einfachen Klick": release opens, hovering selects
     in property <bool> single-click;
     callback click-open(int);
+    // rubber band: (x0, y0, x1, y1) in list content px, Ctrl held, phase 0 start / 1 move / 2 end
+    callback band(float, float, float, float, bool, int);
+    property <bool> band-active;
+    property <bool> band-left;
+    property <bool> band-ctrl;
+    property <length> band-x0;
+    property <length> band-y0;
+    property <length> band-x1;
+    property <length> band-y1;
     // icon view ("details" = rows); tile geometry comes from Rust (core::view)
     in property <string> view-mode: "details";
     in property <[image]> thumbs;
@@ -513,9 +522,10 @@ component FilePane inherits Rectangle {
                 }
             }
         }
-        // ---------- column header ----------
+        // ---------- column header (details only; icons sort via the status bar menu) ----------
         Rectangle {
-            height: 26px;
+            height: root.grid ? 0px : 26px;
+            visible: !root.grid;
             background: #f4f5f7;
             Rectangle { y: parent.height - 1px; height: 1px; background: #e3e6ea; }
             HorizontalLayout {
@@ -547,10 +557,44 @@ component FilePane inherits Rectangle {
             Rectangle {
                 border-width: pane-drop.has-drag ? 2px : 0px;
                 border-color: #0067c0;
-                // click on empty space below the rows clears the selection
-                TouchArea {
-                    clicked => { root.activate(); list-focus.focus(); root.clear-selection(); }
+                // click on empty space clears the selection; dragging there draws a
+                // selection rectangle (coordinates in list content space, y incl. scroll)
+                bg-ta := TouchArea {
+                    // Slint emits `clicked` before the pointer-up event: the band is
+                    // finished (and reset) in pointer-event, not here
+                    clicked => {
+                        if (!root.band-active) { root.activate(); list-focus.focus(); root.clear-selection(); }
+                    }
+                    moved => {
+                        if (self.pressed && root.band-left) {
+                            root.band-x1 = self.mouse-x;
+                            root.band-y1 = self.mouse-y - root.scroll-y;
+                            if (!root.band-active && (abs(root.band-x1 - root.band-x0) > 4px || abs(root.band-y1 - root.band-y0) > 4px)) {
+                                root.band-active = true;
+                                root.activate();
+                                list-focus.focus();
+                                root.band(root.band-x0 / 1px, root.band-y0 / 1px, root.band-x1 / 1px, root.band-y1 / 1px, root.band-ctrl, 0);
+                            }
+                            if (root.band-active) {
+                                root.band(root.band-x0 / 1px, root.band-y0 / 1px, root.band-x1 / 1px, root.band-y1 / 1px, root.band-ctrl, 1);
+                            }
+                        }
+                    }
                     pointer-event(e) => {
+                        if (e.kind == PointerEventKind.down && e.button == PointerEventButton.left) {
+                            root.band-left = true;
+                            root.band-active = false;
+                            root.band-ctrl = e.modifiers.control;
+                            root.band-x0 = self.mouse-x;
+                            root.band-y0 = self.mouse-y - root.scroll-y;
+                        }
+                        if (e.kind == PointerEventKind.up && e.button == PointerEventButton.left) {
+                            root.band-left = false;
+                            if (root.band-active) {
+                                root.band(root.band-x0 / 1px, root.band-y0 / 1px, root.band-x1 / 1px, root.band-y1 / 1px, root.band-ctrl, 2);
+                                root.band-active = false;
+                            }
+                        }
                         if (e.kind == PointerEventKind.up && e.button == PointerEventButton.right) {
                             root.activate();
                             list-focus.focus();
@@ -701,6 +745,15 @@ component FilePane inherits Rectangle {
                         }
                     }
                 }
+                if root.band-active : Rectangle {
+                    x: min(root.band-x0, root.band-x1);
+                    y: min(root.band-y0, root.band-y1) + root.scroll-y;
+                    width: abs(root.band-x1 - root.band-x0);
+                    height: abs(root.band-y1 - root.band-y0);
+                    background: #0067c022;
+                    border-width: 1px;
+                    border-color: #0067c0;
+                }
             }
         }
     }
@@ -737,6 +790,22 @@ component FilePane inherits Rectangle {
     }
     // active-pane marker (thin accent line on top)
     if root.active : Rectangle { y: 0; height: 2px; background: #0067c0; }
+}
+
+// One entry of the sort menu (dot = current choice).
+component SortItem inherits Rectangle {
+    in property <string> label;
+    in property <bool> on;
+    callback picked();
+    height: 24px;
+    border-radius: 3px;
+    background: item-ta.has-hover ? #e5f1fb : transparent;
+    HorizontalLayout {
+        padding-left: 6px; spacing: 6px;
+        Text { text: root.on ? "•" : ""; width: 10px; vertical-alignment: center; color: #0067c0; }
+        Text { text: root.label; vertical-alignment: center; color: #222; }
+    }
+    item-ta := TouchArea { clicked => { root.picked(); } }
 }
 
 component SidebarItem inherits Rectangle {
@@ -852,7 +921,11 @@ export component MainWindow inherits Window {
     in property <length> img-size: 48px;
     callback zoom(bool);
     callback set-view(string);
+    // sort menu: column (direction kept) / direction
+    callback sort-pick(string);
+    callback sort-dir(bool);
     callback click-open(int, int);
+    callback band(int, float, float, float, float, bool, int);
     callback context-menu(int, int, float, float);
     in property <bool> can-paste;
     in property <bool> can-undo;
@@ -1002,6 +1075,7 @@ export component MainWindow inherits Window {
                         view-mode: root.view-mode;
                         single-click: root.opt-single-click;
                         click-open(r) => { root.click-open(pi, r); }
+                        band(x0, y0, x1, y1, c, ph) => { root.band(pi, x0, y0, x1, y1, c, ph); }
                         thumbs: root.thumbs;
                         tile-w: root.tile-w;
                         tile-h: root.tile-h;
@@ -1046,6 +1120,34 @@ export component MainWindow inherits Window {
                     padding-left: 8px; padding-right: 8px; spacing: 16px;
                     Text { text: root.status; vertical-alignment: center; color: #444; }
                     Text { text: root.error; vertical-alignment: center; color: #c0262d; horizontal-stretch: 1; overflow: elide; }
+                    // sort menu (the icon view has no column headers)
+                    sort-btn := Rectangle {
+                        width: sort-text.preferred-width + 12px;
+                        border-radius: 3px;
+                        background: sort-ta.has-hover ? #e5e9ef : transparent;
+                        sort-text := Text { text: "Sortieren ▾"; vertical-alignment: center; color: #333; font-size: 11px; }
+                        sort-ta := TouchArea { clicked => { sort-popup.show(); } }
+                        sort-popup := PopupWindow {
+                            x: 0; y: -self.height - 2px;
+                            width: 190px;
+                            Rectangle {
+                                background: white;
+                                border-width: 1px; border-color: #c8ccd0; border-radius: 4px;
+                                drop-shadow-blur: 8px; drop-shadow-color: #00000030;
+                                VerticalLayout {
+                                    padding: 4px;
+                                    for k in [{ id: "name", label: "Name" }, { id: "modified", label: "Änderungsdatum" },
+                                              { id: "type", label: "Typ" }, { id: "size", label: "Größe" }] : SortItem {
+                                        label: k.label; on: root.sort-key == k.id;
+                                        picked => { root.sort-pick(k.id); }
+                                    }
+                                    Rectangle { height: 1px; background: #e3e6ea; }
+                                    SortItem { label: "Aufsteigend"; on: !root.sort-desc; picked => { root.sort-dir(false); } }
+                                    SortItem { label: "Absteigend"; on: root.sort-desc; picked => { root.sort-dir(true); } }
+                                }
+                            }
+                        }
+                    }
                     // view switch (like Explorer's buttons bottom right)
                     for v in [{ id: "details", label: "Details" }, { id: "large", label: "Symbole" }] : Rectangle {
                         width: view-text.preferred-width + 12px;

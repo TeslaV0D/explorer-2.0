@@ -157,6 +157,8 @@ struct Pane {
     cols: usize,
     /// One entry per column of the icon grid (stable model, like `Tab::grid`).
     cols_model: Rc<VecModel<i32>>,
+    /// Selection kept while a Ctrl rubber band is drawn (None = no band).
+    band_base: Option<Vec<usize>>,
 }
 
 impl Pane {
@@ -173,6 +175,7 @@ impl Pane {
             vp: (0, 60),
             cols: 1,
             cols_model: Rc::new(VecModel::from(vec![0])),
+            band_base: None,
             rename_index: -1,
             rename_seq: 0,
             rename_text: String::new(),
@@ -1809,6 +1812,50 @@ fn history_step(win: &MainWindow, pi: usize, back: bool) {
     }
 }
 
+/// Rubber band on empty list space (`phase` 0 start, 1 move, 2 end): the
+/// items it touches are selected, with Ctrl in addition to the selection at
+/// the start.
+#[allow(clippy::too_many_arguments)]
+pub fn band(
+    win: &MainWindow,
+    pi: usize,
+    x0: f32,
+    y0: f32,
+    x1: f32,
+    y1: f32,
+    ctrl: bool,
+    phase: i32,
+) {
+    activate_pane(win, pi);
+    let Some(id) = active_tab_id(pi) else { return };
+    if phase == 0 {
+        let base = if ctrl {
+            with_tab(id, |t, _, _| t.selection.selected_indices()).unwrap_or_default()
+        } else {
+            Vec::new()
+        };
+        APP.with_borrow_mut(|app| {
+            if let Some(p) = app.panes.get_mut(pi) {
+                p.band_base = Some(base);
+            }
+        });
+    }
+    let base = APP.with_borrow(|app| app.panes.get(pi).and_then(|p| p.band_base.clone()));
+    let Some(base) = base else { return };
+    let g = crate::dnd::geometry(pi).unwrap_or_default();
+    let n = with_tab(id, |t, _, _| t.entries.len()).unwrap_or(0);
+    let hits = explorer_core::view::band_hits(x0, y0, x1, y1, g.line_h, g.cols, g.item_w, n);
+    change_selection(win, pi, |sel, _| sel.set_band(&base, &hits));
+    if phase == 2 {
+        APP.with_borrow_mut(|app| {
+            if let Some(p) = app.panes.get_mut(pi) {
+                p.band_base = None;
+            }
+        });
+        trace(&format!("band done pane={pi} hits={}", hits.len()));
+    }
+}
+
 /// Single-click mode: a click opens. Clicks right after such an open are the
 /// rest of a double click and land on whatever the next folder shows under
 /// the cursor → ignored (Explorer does the same).
@@ -2025,6 +2072,24 @@ pub fn sort_by(win: &MainWindow, key: &str) {
         }
         app.sort
     });
+    apply_sort(win, sort);
+}
+
+/// Sort menu: pick a column (keeps the direction) or a direction.
+pub fn sort_pick(win: &MainWindow, key: Option<&str>, descending: Option<bool>) {
+    let sort = APP.with_borrow_mut(|app| {
+        if let Some(k) = key.and_then(SortKey::parse) {
+            app.sort.key = k;
+        }
+        if let Some(d) = descending {
+            app.sort.descending = d;
+        }
+        app.sort
+    });
+    apply_sort(win, sort);
+}
+
+fn apply_sort(win: &MainWindow, sort: SortSpec) {
     trace(&format!(
         "sort key={} desc={}",
         sort.key.as_str(),

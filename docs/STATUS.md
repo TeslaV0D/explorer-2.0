@@ -40,6 +40,12 @@
 - **Bug (CI #32/#33, UI-Matrix)**: OLE-Drop-Target wurde nie registriert („Invalid window handle“) – der Timer lief, bevor Slint das native Fenster erzeugt hatte → Ablegen aus anderen Apps wäre tot gewesen. Fix: Registrierung wiederholt bis HWND existiert (50 ms, max. 5 s), sonst Rückfall auf In-App-DnD.
 - Neu: **Windows-E2E mit echter Tastatur/Maus** (`scripts/e2e-windows.ps1`, CI-Schritt im Release-Job, Screenshots bei Fehler).
 
+### M6.1b Sortier-Menü + Rahmen-Auswahl (lokal grün, CI ausstehend)
+- „Sortieren ▾“ in der Statusleiste (Popup): Name/Änderungsdatum/Typ/Größe (Richtung bleibt), Auf-/Absteigend; aktuelle Wahl mit Punkt. Kachel-Ansicht ohne Spaltenköpfe (wie Explorer).
+- Rahmen-Auswahl: Ziehen auf freier Fläche (unter den Zeilen, neben/zwischen Kacheln) zeichnet einen Rahmen; berührte Einträge werden live markiert, mit Strg zusätzlich zur Auswahl vom Start. `core::view::band_hits` + `Selection::set_band` (rein, getestet).
+- Gefunden: Slint feuert `clicked` **vor** dem Pointer-Up-Ereignis → Rahmen wird im Pointer-Ereignis abgeschlossen, nicht in `clicked` (sonst kam das Ende nie an).
+- Tests: Unit (Rahmen-Treffer Details/Raster, Auswahl mit/ohne Basis), Linux-E2E [65]–[66d] (149/149), Windows-E2E W34 (Rahmen über zwei Kacheln mit echter Maus).
+
 ### M6.1a Ordneroptionen ✅ (CI-Run #49)
 - Einstellungs-Panel, Abschnitt „Ordneroptionen“ (in settings.ini: `show_extensions`, `show_protected`, `single_click`):
   - **Dateinamenerweiterungen anzeigen** (Standard an): aus → Endung nur bei *bekannten* Typen ausgeblendet (Windows: `HKCR\.ext` existiert, gecacht; Ordner, `.gitignore`, `ende.` nie). F2 bearbeitet dann nur den angezeigten Namen, die Endung wird beim Speichern wieder angehängt („x.txt“ tippen → „x.txt.txt“, wie Explorer); bei Fehler bleibt der getippte Text ohne Endung im Editor (keine doppelte Endung).

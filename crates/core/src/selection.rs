@@ -63,6 +63,19 @@ impl Selection {
         }
     }
 
+    /// Rubber-band selection: exactly `base` (kept with Ctrl, else empty) plus
+    /// the items inside the band; focus/anchor go to the last item hit.
+    pub fn set_band(&mut self, base: &[usize], hits: &[usize]) {
+        self.clear();
+        for &i in base.iter().chain(hits) {
+            self.set(i, true);
+        }
+        if let Some(&last) = hits.last() {
+            self.focus = Some(last);
+            self.anchor = Some(last);
+        }
+    }
+
     pub fn clear(&mut self) {
         self.selected.iter_mut().for_each(|s| *s = false);
         self.count = 0;
@@ -154,6 +167,23 @@ impl Selection {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn rubber_band_with_and_without_base() {
+        let mut s = Selection::new(10);
+        s.click(0);
+        s.set_band(&[], &[3, 4]);
+        assert_eq!(s.selected_indices(), vec![3, 4]);
+        assert_eq!((s.focus(), s.count()), (Some(4), 2));
+        s.set_band(&[0, 4], &[6]);
+        assert_eq!(
+            s.selected_indices(),
+            vec![0, 4, 6],
+            "Ctrl keeps the earlier selection"
+        );
+        s.set_band(&[], &[]);
+        assert_eq!(s.count(), 0);
+    }
 
     #[test]
     fn click_ctrl_shift() {

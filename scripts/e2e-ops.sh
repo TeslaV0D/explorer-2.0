@@ -267,6 +267,34 @@ xdotool mousemove $SETTINGS_BTN click 1; sleep 0.6
 xdotool mousemove $OPT_CLICK click 1; sleep 0.4
 xdotool mousemove $SETTINGS_CLOSE click 1; sleep 0.4
 check "[64e] single-click off again" "grep -q 'single_click = false' $W/config-ops/settings.ini"
+echo "-- M6.1b: sort menu + rubber band"
+# still in $F: rows 0 Ordner, 1 y.txt
+SORT_BTN="1018 708"; SORT_NAME="1040 557"; SORT_SIZE="1040 629"; SORT_ASC="1040 654"; SORT_DESC="1040 678"
+xdotool key ctrl+shift+2; sleep 1
+check "[65] icon view hides the column header (list starts higher)" "last 'geometry pane=0' | grep -q ' y=114 '"
+xdotool mousemove $SORT_BTN click 1; sleep 0.5; xdotool mousemove $SORT_SIZE click 1; sleep 0.8
+check "[65b] sort menu: by size" "last 'sort key' | grep -q 'key=size desc=false'"
+xdotool mousemove $SORT_BTN click 1; sleep 0.5; xdotool mousemove $SORT_DESC click 1; sleep 0.8
+check "[65c] sort menu: descending keeps the column" "last 'sort key' | grep -q 'key=size desc=true'"
+xdotool mousemove $SORT_BTN click 1; sleep 0.5; xdotool mousemove $SORT_NAME click 1; sleep 0.5
+xdotool mousemove $SORT_BTN click 1; sleep 0.5; xdotool mousemove $SORT_ASC click 1; sleep 0.8
+check "[65d] back to name ascending" "last 'sort key' | grep -q 'key=name desc=false'"
+xdotool mousemove 1150 420 mousedown 1; sleep 0.2
+for s in 1 2 3 4 5 6; do xdotool mousemove $((1150 - s * 140)) $((420 - s * 45)); sleep 0.08; done
+xdotool mouseup 1; sleep 0.6
+check "[66] rubber band in the icon view selects both tiles" "last 'band done' | grep -q 'hits=2' && sel_is 'count=2 '"
+xdotool mousemove 1150 600 click 1; sleep 0.4
+check "[66b] click on empty space clears it" "sel_is 'count=0 '"
+xdotool key ctrl+shift+6; sleep 0.8
+xdotool mousemove 600 420 mousedown 1; sleep 0.2
+for s in 1 2 3 4 5; do xdotool mousemove 600 $((420 - s * 55)); sleep 0.08; done
+xdotool mouseup 1; sleep 0.6
+check "[66c] rubber band from below the rows in details" "last 'band done' | grep -q 'hits=2' && sel_is 'count=2 '"
+xdotool mousemove $LIST_X $(row_y 0) click 1; sleep 0.3
+xdotool mousemove 600 420 keydown ctrl mousedown 1; sleep 0.2
+for s in 1 2 3 4 5; do xdotool mousemove 600 $((420 - s * 50)); sleep 0.08; done
+xdotool mouseup 1 keyup ctrl; sleep 0.6
+check "[66d] Ctrl + band adds to the selection" "sel_is 'count=2 '"
 check "[52] process alive" "kill -0 $PID"
 kill $PID; wait $PID 2>/dev/null
 check "[52b] no panic" "! grep -qi panic $LOG"
