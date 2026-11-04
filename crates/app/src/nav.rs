@@ -887,11 +887,16 @@ fn apply(
                         // distinct type names (shell names on Windows), for tests
                         let kinds: Vec<String> = with_tab(id, |t, _, _| {
                             let mut k: Vec<String> = Vec::new();
-                            for i in 0..t.model.row_count().min(200) {
+                            // all rows (folders sort first, so the first screen can be
+                            // folders only), stop after a few distinct names
+                            for i in 0..t.model.row_count() {
                                 if let Some(r) = t.model.row_data(i) {
                                     let s = r.kind.to_string();
                                     if !k.contains(&s) {
                                         k.push(s);
+                                        if k.len() >= 10 {
+                                            break;
+                                        }
                                     }
                                 }
                             }

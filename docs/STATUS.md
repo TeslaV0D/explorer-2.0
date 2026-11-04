@@ -7,7 +7,7 @@
 - Analyse (Linux-Build als Näherung): 22,9 MB gesamt, davon Skia ≈ 8 MB (vorkompiliert, durch `opt-level` nicht beeinflussbar), Rest Rust (std, Slint-Core/Renderer, Winit, Text-Shaping harfrust/skrifa/parley, SVG usvg/resvg, Bilddecoder). Wayland/X11/zbus/sctk-adwaita (inkl. eingebetteter Cantarell-Schrift) sind **nur Linux**. Bildformate/SVG kommen aus Slint-Interna → nicht sauber abschaltbar.
 - Maßnahme: `opt-level = "s"` → Linux **22,9 → 19,6 MB (−15 %)**. Bench 100k (2×9 Läufe): erste Zeilen und Gesamtladen im Rauschen, Sortieren 43 → ~50 ms. `"z"` spart kaum mehr, ist langsamer.
 - E2E mit `"s"`: 100/100, First Paint 19 ms.
-- CI-Gate: Windows-Exe ≥ 20 MB → Build rot.
+- CI-Gate: Windows-Exe ≥ 20 MB → Build rot. **Windows-Exe jetzt 16,47 MB** (Run #29, vorher 19,7 MB).
 
 ### M5.1 Icons / M5.2 Typnamen
 - Neue Crate `explorer-shell`: Icon-Schlüssel (pro Endung bzw. pro Datei für exe/lnk/ico/url/…, Ordner mit R/S-Attribut), threadsichere `IconRegistry`, `SHGetFileInfoW` → HICON → RGBA (Alpha bzw. Maske), Typnamen per `SHGFI_TYPENAME|USEFILEATTRIBUTES` mit Cache.
@@ -20,6 +20,7 @@
 - Eigene Verben statt Shell: Umbenennen, Löschen, Ausschneiden/Kopieren/Einfügen, Neuer Ordner → laufen über unsere Engine (Undo, Fortschritt, Konfliktdialog). Alles andere (Erweiterungen Dritter) führt die Shell aus, danach Refresh.
 - Rechtsklick wie Explorer: nicht markierte Zeile wird markiert, Mehrfachauswahl bleibt; leere Fläche = Ordner-Hintergrund; Shift+F10/Menü-Taste an der fokussierten Zeile; Alt+Enter = Eigenschaften (eine Datei: `SHObjectProperties`, mehrere: `SHMultiFileProperties`).
 - Windows-Test: Menü wird gebaut (ohne Anzeige) und muss die Verben open/delete/rename/properties enthalten; Hintergrund-Menü nicht leer. E2E Linux 53–53d (UI-Pfad).
+- CI-Run #29: Tests + Kontextmenü-Test + Release-Build auf Windows grün (App kompiliert mit HWND-Code); Icons laden in der UI-Matrix (2 Icons nach 23 ms). Rot nur der `kinds`-Trace: erste 200 Zeilen im 100k-Ordner sind alles Ordner → Trace sucht jetzt alle Zeilen ab (max. 10 Namen).
 - CI-Run #28: Shell-Icons und Typnamen laufen auf Windows (Runner englisch: „File folder“); nur ein App-Test erwartete fest den Linux-Fallback → plattformbewusst gemacht.
 
 ## M4 – Dateioperationen
