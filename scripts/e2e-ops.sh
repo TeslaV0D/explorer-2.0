@@ -211,6 +211,31 @@ goto 'Bibliotheken'
 check "[61] 'Bibliotheken' gives a clear message on Linux" "last 'failed tab' | grep -qF '::bibliotheken'"
 goto 'shell:DocumentsLibrary'
 check "[61b] shell:DocumentsLibrary resolves to the library place" "last 'navigate tab' | grep -qF '::bibliothek:Documents'"
+echo "-- M5.7: icon view"
+G=$R/g; mkdir -p "$G/Unterordner"; for i in $(seq 1 12); do echo x > "$G/f$i.txt"; done
+goto "$G"
+# items (natural sort, folders first): 0 Unterordner, i = f<i>.txt
+xdotool key ctrl+shift+2; sleep 1
+check "[62] Ctrl+Shift+2 switches to large icons" "last 'view mode' | grep -q 'mode=large'"
+GEO=$(last 'geometry pane=0'); echo "   $GEO"
+COLS=$(echo "$GEO" | sed -E 's/.* cols=([0-9]+).*/\1/'); GX=$(echo "$GEO" | sed -E 's/.* x=([0-9.]+).*/\1/'); GY=$(echo "$GEO" | sed -E 's/.* y=([0-9.]+).*/\1/')
+GX=${GX%.*}; GY=${GY%.*}
+check "[62a] the grid has several columns" "[ ${COLS:-0} -ge 3 ]"
+tile_x() { echo $((GX + 128 * $1 + 64)); }
+xdotool mousemove $(tile_x 2) $((GY + 50)) click 1; sleep 0.4
+check "[62b] click on a tile selects it" "sel_is 'count=1 focus=f2.txt'"
+xdotool key Right; sleep 0.3
+check "[62c] → moves one item" "sel_is 'focus=f3.txt'"
+xdotool key Down; sleep 0.3
+check "[62d] ↓ moves one grid row" "sel_is 'focus=f$((3 + COLS)).txt'"
+xdotool mousemove $(tile_x 0) $((GY + 50)) click --repeat 2 --delay 80 1; sleep 1.2
+check "[62e] double-click on a folder tile opens it" "last 'navigate tab' | grep -qF '$G/Unterordner'"
+xdotool key BackSpace; sleep 1.2
+xdotool mousemove $(tile_x 1) $((GY + 50)) keydown ctrl click 5 keyup ctrl; sleep 0.8
+check "[62f] Ctrl+wheel down = smaller icons" "last 'view mode' | grep -q 'mode=medium'"
+check "[62g] the view is saved" "grep -q 'view = medium' $W/config-ops/settings.ini"
+xdotool key ctrl+shift+6; sleep 0.8
+check "[62h] Ctrl+Shift+6 = details again" "last 'view mode' | grep -q 'mode=details' && last 'geometry pane=0' | grep -q 'cols=1 '"
 check "[52] process alive" "kill -0 $PID"
 kill $PID; wait $PID 2>/dev/null
 check "[52b] no panic" "! grep -qi panic $LOG"

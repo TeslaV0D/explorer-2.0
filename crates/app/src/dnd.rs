@@ -25,9 +25,30 @@ pub struct Geom {
     pub h: f32,
     /// Slint `content-y` (≤ 0 when scrolled down).
     pub content_y: f32,
+    /// Height of one line (row, or row of tiles), items per line, item width
+    /// (details: 1 item as wide as the list).
+    pub line_h: f32,
+    pub cols: usize,
+    pub item_w: f32,
 }
 
 pub const ROW_HEIGHT: f32 = 24.0;
+
+impl Geom {
+    /// Details view geometry (one row per line).
+    pub fn details(x: f32, y: f32, w: f32, h: f32, content_y: f32) -> Self {
+        Geom {
+            x,
+            y,
+            w,
+            h,
+            content_y,
+            line_h: ROW_HEIGHT,
+            cols: 1,
+            item_w: w,
+        }
+    }
+}
 
 /// Pane and row under (x, y): row -1 = below the rows (folder background).
 /// `rows(pane)` = number of rows shown in that pane (pure → tested).
@@ -36,9 +57,21 @@ pub fn hit(geoms: &[Geom], x: f32, y: f32, rows: impl Fn(usize) -> usize) -> Opt
         .iter()
         .enumerate()
         .find(|(_, g)| x >= g.x && x < g.x + g.w && y >= g.y && y < g.y + g.h)?;
-    let i = ((y - g.y - g.content_y) / ROW_HEIGHT).floor();
-    let row = if i >= 0.0 && (i as usize) < rows(pi) {
-        i as i32
+    let line_h = if g.line_h > 0.0 { g.line_h } else { ROW_HEIGHT };
+    let cols = g.cols.max(1);
+    let line = ((y - g.y - g.content_y) / line_h).floor();
+    let col = if cols == 1 || g.item_w <= 0.0 {
+        0.0
+    } else {
+        ((x - g.x) / g.item_w).floor()
+    };
+    let row = if line >= 0.0 && col >= 0.0 && (col as usize) < cols {
+        let i = line as usize * cols + col as usize;
+        if i < rows(pi) {
+            i as i32
+        } else {
+            -1
+        }
     } else {
         -1
     };
@@ -54,7 +87,22 @@ pub fn set_geometry(pi: usize, g: Geom) {
         if v.len() <= pi {
             v.resize(pi + 1, Geom::default());
         }
+        let old = v[pi];
         v[pi] = g;
+        if old.cols != g.cols {
+            // after the borrow: nav may call back into us
+            let (pi, cols) = (pi, g.cols);
+            slint::Timer::single_shot(std::time::Duration::ZERO, move || {
+                crate::nav::set_cols(pi, cols)
+            });
+        }
+        // layout changes (not scrolling) are logged for tests
+        if (old.x, old.y, old.w, old.cols, old.line_h) != (g.x, g.y, g.w, g.cols, g.line_h) {
+            crate::nav::trace_line(&format!(
+                "geometry pane={pi} x={} y={} w={} cols={} line_h={} item_w={}",
+                g.x, g.y, g.w, g.cols, g.line_h, g.item_w
+            ));
+        }
     });
 }
 
@@ -184,20 +232,8 @@ mod tests {
 
     #[test]
     fn hit_testing_panes_rows_and_scroll() {
-        let left = Geom {
-            x: 210.0,
-            y: 140.0,
-            w: 500.0,
-            h: 400.0,
-            content_y: 0.0,
-        };
-        let right = Geom {
-            x: 711.0,
-            y: 140.0,
-            w: 489.0,
-            h: 400.0,
-            content_y: -48.0,
-        };
+        let left = Geom::details(210.0, 140.0, 500.0, 400.0, 0.0);
+        let right = Geom::details(711.0, 140.0, 489.0, 400.0, -48.0);
         let geoms = [left, right];
         let rows = |pi: usize| if pi == 0 { 5 } else { 100 };
         assert_eq!(hit(&geoms, 300.0, 141.0, rows), Some((0, 0)));
@@ -215,5 +251,33 @@ mod tests {
         assert_eq!(hit(&geoms, 100.0, 200.0, rows), None, "sidebar");
         assert_eq!(hit(&geoms, 300.0, 100.0, rows), None, "header / toolbar");
         assert_eq!(hit(&[], 300.0, 200.0, rows), None);
+    }
+
+    #[test]
+    fn hit_testing_the_icon_grid() {
+        // 4 tiles of 100×120 per line, scrolled by one line
+        let g = Geom {
+            line_h: 120.0,
+            cols: 4,
+            item_w: 100.0,
+            ..Geom::details(0.0, 0.0, 420.0, 400.0, -120.0)
+        };
+        let rows = |_| 10;
+        assert_eq!(
+            hit(&[g], 10.0, 10.0, rows),
+            Some((0, 4)),
+            "first visible = 2nd line"
+        );
+        assert_eq!(
+            hit(&[g], 250.0, 130.0, rows),
+            Some((0, -1)),
+            "item 10 does not exist"
+        );
+        assert_eq!(hit(&[g], 150.0, 130.0, rows), Some((0, 9)));
+        assert_eq!(
+            hit(&[g], 410.0, 10.0, rows),
+            Some((0, -1)),
+            "right of the last column"
+        );
     }
 }

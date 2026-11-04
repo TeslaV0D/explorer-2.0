@@ -5,7 +5,7 @@
 //! stable **tab id** (tabs can be closed or moved meanwhile) and guarded by a
 //! generation counter so a stale result never overwrites a newer navigation.
 
-use crate::keys::{map_key, KeyAction};
+use crate::keys::{map_key_grid, KeyAction};
 use crate::{Crumb, MainWindow, PaneData, PlaceItem, Row, TabInfo};
 use explorer_core::breadcrumb::{crumbs, fit};
 use explorer_core::history::History;
@@ -13,6 +13,7 @@ use explorer_core::places::VirtualPlace;
 use explorer_core::selection::Selection;
 use explorer_core::session::{PaneSession, Session};
 use explorer_core::typeahead::TypeAhead;
+use explorer_core::view::ViewMode;
 use explorer_core::{
     format_count, format_datetime, format_size, format_usage, sort_entries_with_type_names, Entry,
     SortKey, SortSpec, ViewFilter,
@@ -72,6 +73,11 @@ struct Tab {
     virtual_data: VirtualData,
     /// Network folder we already showed the login dialog for (no prompt loops).
     login_tried: Option<PathBuf>,
+    /// Icon view: one entry per line of tiles. A stable model that only grows
+    /// or shrinks at the end – an `int` repeater would rebuild every tile on
+    /// each change (Slint compares models by pointer), losing hover and
+    /// double-clicks.
+    grid: Rc<VecModel<i32>>,
 }
 
 /// What stands behind the rows of a virtual place, keyed by `Entry::name`.
@@ -107,6 +113,7 @@ impl Tab {
             refresh_scheduled: false,
             virtual_data: VirtualData::None,
             login_tried: None,
+            grid: Rc::new(VecModel::default()),
         }
     }
 
@@ -144,6 +151,12 @@ struct Pane {
     rename_sel: i32,
     menu_seq: i32,
     menu_row: i32,
+    /// Last visible item range (first, count) reported by the UI.
+    vp: (i32, i32),
+    /// Items per line as laid out by the UI (1 in details).
+    cols: usize,
+    /// One entry per column of the icon grid (stable model, like `Tab::grid`).
+    cols_model: Rc<VecModel<i32>>,
 }
 
 impl Pane {
@@ -157,6 +170,9 @@ impl Pane {
             edit_seq: 0,
             focus_seq: 0,
             crumb_chars: 60,
+            vp: (0, 60),
+            cols: 1,
+            cols_model: Rc::new(VecModel::from(vec![0])),
             rename_index: -1,
             rename_seq: 0,
             rename_text: String::new(),
@@ -183,6 +199,9 @@ struct App {
     drive_model: Rc<VecModel<PlaceItem>>,
     session_save_scheduled: bool,
     drives_loading: bool,
+    view: ViewMode,
+    /// Last Ctrl+wheel size step (wheels/touchpads send bursts of events).
+    last_zoom: Option<Instant>,
 }
 
 thread_local! {
@@ -198,6 +217,8 @@ thread_local! {
         drive_model: Rc::new(VecModel::default()),
         session_save_scheduled: false,
         drives_loading: false,
+        view: ViewMode::Details,
+        last_zoom: None,
     });
     // Separate cell: used inside selection changes, which already borrow APP.
     static TYPEAHEAD: RefCell<TypeAhead> = RefCell::new(TypeAhead::default());
@@ -291,6 +312,7 @@ fn to_row(e: &Entry, dir: &Path, labels: &mut crate::icons::RowLabels) -> Row {
         modified: e.modified.map(format_datetime).unwrap_or_default().into(),
         kind: labels.type_name(e).into(),
         icon: labels.icon_id(dir, e),
+        thumb: 0,
         is_dir: e.is_dir(),
         dim: e.hidden,
         selected: false,
@@ -652,6 +674,24 @@ fn sync_pane(pi: usize) {
     APP.with_borrow(|app| {
         let Some(p) = app.panes.get(pi) else { return };
         let t = p.tab();
+        let lines = if app.view.is_grid() {
+            t.model.row_count().div_ceil(p.cols.max(1))
+        } else {
+            0
+        };
+        while t.grid.row_count() < lines {
+            t.grid.push(t.grid.row_count() as i32);
+        }
+        while t.grid.row_count() > lines {
+            t.grid.remove(t.grid.row_count() - 1);
+        }
+        let cols = p.cols.max(1);
+        while p.cols_model.row_count() < cols {
+            p.cols_model.push(p.cols_model.row_count() as i32);
+        }
+        while p.cols_model.row_count() > cols {
+            p.cols_model.remove(p.cols_model.row_count() - 1);
+        }
         let place = t.path.as_deref().and_then(VirtualPlace::from_path);
         let data = PaneData {
             tabs: ModelRc::new(VecModel::from(
@@ -670,6 +710,8 @@ fn sync_pane(pi: usize) {
             )),
             active_tab: p.active as i32,
             rows: ModelRc::from(t.model.clone()),
+            grid_lines: ModelRc::from(t.grid.clone()),
+            grid_cols: ModelRc::from(p.cols_model.clone()),
             crumbs: ModelRc::from(t.crumbs.clone()),
             path: t
                 .path
@@ -770,10 +812,13 @@ pub fn init(
     sort: SortSpec,
     start: Option<PathBuf>,
     session: Option<Session>,
+    view: ViewMode,
 ) {
+    show_view(win, view);
     let (pane_model, place_model, drive_model) = APP.with_borrow_mut(|app| {
         app.filter.show_hidden = show_hidden;
         app.sort = sort;
+        app.view = view;
         (
             app.pane_model.clone(),
             app.place_model.clone(),
@@ -1251,6 +1296,9 @@ fn apply(
             })
             .unwrap_or((0, None, false, None));
             crate::icons::sync();
+            if active_tab_id(pi) == Some(id) {
+                refresh_thumbs(win, pi);
+            }
             if needs_setup {
                 let chars =
                     APP.with_borrow(|app| app.panes.get(pi).map(|p| p.crumb_chars).unwrap_or(60));
@@ -1783,6 +1831,124 @@ pub fn set_show_hidden(win: &MainWindow, on: bool) {
     invalidate_all(win);
 }
 
+fn show_view(win: &MainWindow, m: ViewMode) {
+    let (w, h) = m.tile();
+    win.set_view_mode(m.as_str().into());
+    win.set_tile_w(w);
+    win.set_tile_h(h);
+    win.set_img_size(m.image_px() as f32);
+}
+
+/// Details or icons (Ctrl+Shift+1/2/3/6, Ctrl+wheel, status bar buttons);
+/// remembered in settings.ini.
+pub fn set_view(win: &MainWindow, m: ViewMode) {
+    if APP.with_borrow(|app| app.view) == m {
+        return;
+    }
+    APP.with_borrow_mut(|app| app.view = m);
+    show_view(win, m);
+    trace(&format!("view mode={} img={}", m.as_str(), m.image_px()));
+    if let Err(e) = crate::config::update(|s| s.view = m) {
+        win.set_error(e.into());
+    }
+    let panes = APP.with_borrow(|app| app.panes.len());
+    for pi in 0..panes {
+        sync_pane(pi);
+        refresh_thumbs(win, pi);
+        // keep the focused item in view after the layout changed
+        let focus = active_tab_id(pi)
+            .and_then(|id| with_tab(id, |t, _, _| t.selection.focus()))
+            .flatten();
+        if let Some(f) = focus {
+            request(pi, |p| {
+                p.scroll_to = f as i32;
+                p.scroll_seq += 1;
+            });
+        }
+    }
+}
+
+/// Ctrl+wheel: one size up/down, at most one step per `ZOOM_GAP` (a notch
+/// can arrive as several events, touchpads send many small ones).
+pub fn zoom(win: &MainWindow, up: bool) {
+    const ZOOM_GAP: Duration = Duration::from_millis(250);
+    let now = Instant::now();
+    let (cur, allowed) = APP.with_borrow_mut(|app| {
+        let allowed = app
+            .last_zoom
+            .is_none_or(|t| now.duration_since(t) >= ZOOM_GAP);
+        if allowed {
+            app.last_zoom = Some(now); // measured from the start of a step
+        }
+        (app.view, allowed)
+    });
+    if allowed {
+        set_view(win, cur.step(up));
+    }
+}
+
+/// Status bar buttons: "details", or "large" = icons (keeps the icon size if already icons).
+pub fn set_view_named(win: &MainWindow, name: &str) {
+    let cur = APP.with_borrow(|app| app.view);
+    let m = match name {
+        "large" if cur.is_grid() => cur,
+        n => ViewMode::parse(n).unwrap_or(cur),
+    };
+    set_view(win, m);
+}
+
+/// Icon view: thumbnail ids for the visible tiles of pane `pi` (requested
+/// lazily; rows that already show the right id are left alone).
+fn refresh_thumbs(win: &MainWindow, pi: usize) {
+    let view = APP.with_borrow(|app| app.view);
+    if !view.is_grid() {
+        return;
+    }
+    let Some(id) = active_tab_id(pi) else { return };
+    let (first, count) = APP.with_borrow(|app| app.panes.get(pi).map(|p| p.vp).unwrap_or((0, 60)));
+    let px = (view.image_px() as f32 * win.window().scale_factor()).round() as u32;
+    let items: Vec<(usize, crate::thumbs::ThumbKey)> = with_tab(id, |t, _, _| {
+        let dir = t
+            .path
+            .as_ref()
+            .filter(|p| !explorer_core::places::is_placeholder(p));
+        crate::icons::visible_range(first, count, t.entries.len())
+            .filter_map(|i| {
+                let e = t.entries.get(i)?;
+                let path = match (&t.virtual_data, dir) {
+                    (VirtualData::Targets(m) | VirtualData::Library(_, m), _) => {
+                        m.get(&e.name)?.clone()
+                    }
+                    (VirtualData::Trash(_), _) => return None,
+                    (VirtualData::None, Some(d)) => d.join(&e.name),
+                    (VirtualData::None, None) => return None,
+                };
+                Some((
+                    i,
+                    crate::thumbs::ThumbKey {
+                        path,
+                        mtime: e.modified,
+                        px,
+                    },
+                ))
+            })
+            .collect()
+    })
+    .unwrap_or_default();
+    let (idx, keys): (Vec<usize>, Vec<_>) = items.into_iter().unzip();
+    let ids = crate::thumbs::want(keys);
+    with_tab(id, |t, _, _| {
+        for (i, tid) in idx.into_iter().zip(ids) {
+            if let Some(mut row) = t.model.row_data(i) {
+                if row.thumb != tid {
+                    row.thumb = tid;
+                    t.model.set_row_data(i, row);
+                }
+            }
+        }
+    });
+}
+
 fn show_sort(win: &MainWindow, sort: SortSpec) {
     win.set_sort_key(sort.key.as_str().into());
     win.set_sort_desc(sort.descending);
@@ -1980,9 +2146,11 @@ pub fn list_key(
     ctrl: bool,
     shift: bool,
     alt: bool,
-    page_rows: i32,
+    // (rows per page, items per row)
+    (page_rows, cols): (i32, i32),
 ) -> bool {
-    let Some(action) = map_key(text, ctrl, shift, alt, page_rows as isize) else {
+    let Some(action) = map_key_grid(text, ctrl, shift, alt, page_rows as isize, cols as isize)
+    else {
         return false;
     };
     if crate::fileops::blocks_keys(win) {
@@ -2007,6 +2175,7 @@ pub fn list_key(
             sel.move_to(target, extend, focus_only)
         }),
         KeyAction::SelectAll => change_selection(win, pi, |sel, _| sel.select_all()),
+        KeyAction::View(m) => set_view(win, m),
         KeyAction::ToggleFocused => change_selection(win, pi, |sel, _| {
             if let Some(f) = sel.focus() {
                 sel.ctrl_click(f);
@@ -2105,7 +2274,27 @@ pub fn list_key(
 }
 
 /// The list of pane `pi` scrolled/resized: load per-file icons of the visible rows.
-pub fn viewport(pi: usize, first: i32, count: i32) {
+/// The UI laid out `cols` items per line (geometry report).
+pub fn set_cols(pi: usize, cols: usize) {
+    let changed = APP.with_borrow_mut(|app| match app.panes.get_mut(pi) {
+        Some(p) if p.cols != cols => {
+            p.cols = cols;
+            true
+        }
+        _ => false,
+    });
+    if changed {
+        sync_pane(pi);
+    }
+}
+
+pub fn viewport(win: &MainWindow, pi: usize, first: i32, count: i32) {
+    APP.with_borrow_mut(|app| {
+        if let Some(p) = app.panes.get_mut(pi) {
+            p.vp = (first, count);
+        }
+    });
+    refresh_thumbs(win, pi);
     let Some(id) = active_tab_id(pi) else { return };
     let ids: Vec<i32> = with_tab(id, |t, _, _| {
         crate::icons::visible_range(first, count, t.model.row_count())

@@ -33,6 +33,7 @@
 | D-014 | Icons: Schlüssel pro Endung (wenige) bzw. pro Datei für exe/lnk/ico/url/… und Ordner mit R/S-Attribut (desktop.ini); threadsichere `IconRegistry` (Schlüssel → id), Loader-Thread schreibt nur `icon-id` in die Zeile, UI hält `[image]` indexiert per id → nachgeladene Icons ohne Zeilen-Durchlauf; Einzel-Icons nur für sichtbare Zeilen | fix (M5.1) |
 | D-015 | **Qualität vor Größe**: Hauptziel = gutes, fehlerfreies Produkt; kleine Exe ist Nebenziel. Größen-Optimierungen nur, wenn sie nichts verschlechtern (Schrift, Ladezeiten, Animationen, Bugs) – sonst nicht machen. Die 20-MB-Grenze ist nur unser eigenes Frühwarn-Gate, keine technische Grenze | **fix (Boss, 2026-11-04)** |
 | D-016 | GPU-Renderer bleibt **Skia** (FemtoVG: 9,0 statt 16,5 MB, Bild gleichwertig, aber Start mit GL +27 % auf Mesa → D-015). Feature `gpu-femtovg` + `scripts/renderer-compare.ps1` bleiben für einen späteren Test auf echter GPU | **fix (Boss, 2026-11-04)** |
+| D-017 | Kachel-Ansicht: 3 Größen wie Explorer (48/96/256 px) + Details, global gespeichert (pro Ordner später); Vorschaubilder nur über die Shell (`IShellItemImageFactory`, nutzt den Windows-Thumbnail-Cache), kein eigener Platten-Cache; Speicher-LRU 96 MB | fix (Boss: Weg 1, 2026-11-04) |
 | D-008 | Perf-Gates in CI auf **best-of-N** (≥ 9 Läufe), Median/Max/OS-Stalls nur ausweisen – Shared-Runner haben sporadische OS-Stalls (gemessen 168 ms im rohen FindFirstFileExW); Budgets selbst unverändert | fix (M1) |
 
 ## Arbeitsumgebung / Constraints
@@ -44,7 +45,7 @@
 - **R-001 Ein-Knopf-Reset / „Notausgang“** (2026-11-03, Lehre aus File Pilot, wo nur Windows-Neuinstallation half): Jede Windows-Integration (Win+E, Ordner-Verben/Default-Handler, explorer.exe-Proxy/IFEO, Kontextmenü-Einträge, Autostart, Umgebungsvariablen/PATH, Verknüpfungen, Dateizuordnungen, Hotkeys) muss **mit einem Knopf vollständig rückgängig** zu machen sein – in der App **und** über ein eigenständiges Recovery-Tool, das auch funktioniert, wenn die App selbst nicht startet (inkl. Abgesichertem Modus). Jede Änderung wird vorher mit Originalwert in einem Journal gesichert; Reset stellt exakt den Ursprungszustand her. Pflicht-Test: Integration an → Reset → Registry/Umgebung identisch zum Snapshot vorher. Gilt ab M7, Architektur schon vorher berücksichtigen.
 
 ## Meilenstein-Stand
-- M0 ✅ · M1 ✅ (Run #10) · M1.5 ✅ Renderer-Wahl + Einstellungen + Icon (Run #13) · M2 ✅ (Run #16) · M3 ✅ (Run #19) · M4 ✅ (Run #26) · **M5 läuft: M5.0–M5.5 ✅ (Run #37), M5.6a/b ✅ (Run #39), M5.6c ✅ (Run #41), M5.6 ✅ komplett (Papierkorb, Dieser PC, Netzwerk, Adresszeile/Icons, Bibliotheken; Run #39–#44)**, nächster Schritt M5.7 Vorschaubilder
+- M0 ✅ · M1 ✅ (Run #10) · M1.5 ✅ Renderer-Wahl + Einstellungen + Icon (Run #13) · M2 ✅ (Run #16) · M3 ✅ (Run #19) · M4 ✅ (Run #26) · **M5 läuft: M5.0–M5.5 ✅ (Run #37), M5.6a/b ✅ (Run #39), M5.6c ✅ (Run #41), M5.6 ✅ komplett (Papierkorb, Dieser PC, Netzwerk, Adresszeile/Icons, Bibliotheken; Run #39–#44)**, M5.7 Kachel-Ansicht + Vorschaubilder in CI
 - Arbeitsregel (Boss): nächste Stufe erst, wenn die aktuelle vollständig abgeschlossen, getestet und CI-grün ist.
 
 ## Code-Layout (seit M0)
@@ -58,6 +59,7 @@
 - `crates/shell` (`explorer-shell`): `icons.rs` (`icon_key`, `IconRegistry`, `bgra_to_rgba`, `load_icon`), `types.rs` (`type_name`, Cache pro Endung), `win.rs` (`SHGetFileInfoW`, HICON→RGBA, `CoInitializeEx`) – andere Plattformen liefern `None` → UI-Fallback
 - Adresszeile: `core::address` (`expand_env`, `expand_home`, `shell_folder` → `KnownFolder`), `fs::places::known_folder_path`, nav `resolve_input` (nur Adresszeile/Seitenleiste; existierende Pfade unverändert)
 - Netzwerk: `fs::network` (`server_root`/`share_of`/`share_root_parent` rein + getestet, `shares` = `NetShareEnum` Level 1, `connect` = Anmeldedialog `WNetAddConnection3W`); nav: Server-Pfad `\\nas` → `share-loader`-Thread, kein Watcher, `pane_dir` = None (nichts anlegen); `FsErrorKind::LoginRequired`, `ask_login` einmal pro Pfad (`Tab.login_tried`)
+- Kachel-Ansicht: `core::view` (`ViewMode`, `grid_columns`), `shell::thumbnail`, `app/src/thumbs.rs` (Worker + LRU, `want(keys)` → ids), nav `set_view`/`zoom`/`refresh_thumbs`/`set_cols`, `Tab.grid` + `Pane.cols_model` (stabile Raster-Modelle), `keys::map_key_grid`, `dnd::Geom` mit `line_h`/`cols`/`item_w`; Slint `Tile`-Komponente + zweite ListView `grid`
 - Bibliotheken: `shell::libraries`/`library` (`IShellLibrary`, COM pro Loader-Thread via `init_thread`), Platzhalter `::bibliotheken` + `::bibliothek:<Stamm>` (`places::library_path`/`library_of`), nav `load_library` (1 Ordner → `Update::Redirect`), `VirtualData::Targets`/`Library`; Schutz-Check generell `places::is_placeholder`
 - Virtuelle Orte: `core::places::VirtualPlace` (Platzhalter-Pfade), `ops::trashview` (Papierkorb), nav: `load_virtual`, `VirtualData` am Tab, `pane_place`/`selected_trash`; **in virtuellen Orten liefern `pane_dir`/`selected_paths`/`entry_at` None/leer** (Schutz vor Dateioperationen auf Platzhaltern)
 - `crates/app/src/fileops.rs`: UI-Seite der Dateioperationen (Clipboard, Jobs/Panel, Dialoge, Rename, Undo/Redo, DnD); nav.rs liefert Helfer (`selected_paths`, `refresh_dirs` mit Nach-Auswahl/-Umbenennen, `show_rename`, `set_cut`)
@@ -113,6 +115,9 @@
 - PowerShell `New-SmbShare`: Kommentar heißt `-Description` (nicht `-Remark`, das ist der NetAPI-Name); Runner hat nur Admin-Freigaben → für Netzwerk-Tests eigene Freigabe anlegen.
 - SendKeys: `%` = Alt, `+` = Shift, `^` = Strg → wörtlich als `{%}`, `{+}`, `{^}` senden.
 - CI läuft nicht bei reinen Doku-Commits (`paths-ignore`) → Doku-Abschluss braucht keinen eigenen Run.
+- **Slint: Repeater über ein `int` (`for x in n`) baut bei JEDER Neubewertung alle Instanzen neu** (Modelle werden per Zeiger verglichen, `int` erzeugt jedes Mal ein neues) → Hover/Doppelklick gehen verloren. Für dynamische Listen immer ein stabiles `VecModel` aus Rust, nur am Ende wachsen/schrumpfen. Prüfen mit `init => { debug(…) }`.
+- Slint: `row`/`col` sind auf jedem Element reserviert (GridLayout) → Property nicht `row` nennen.
+- X11/Xvfb: ein Mausrad-Klick kann doppelt ankommen → Rad-Aktionen drosseln; E2E-Trace nie in den beobachteten Ordner legen (Refresh-Schleife).
 - Windows-E2E: `scripts/e2e-windows.ps1` (SendKeys + SetCursorPos/mouse_event, Fenster maximiert, Runner-Bildschirm 1024×768, DPI 1.0); Foreground-Lock mit Alt-Druck vor `SetForegroundWindow` umgehen.
 - Papierkorb-Restore immer gegen Snapshot **vor** der Aktion (gleicher Originalpfad kann mehrfach im Papierkorb liegen).
 

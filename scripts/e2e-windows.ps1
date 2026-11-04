@@ -230,6 +230,34 @@ Check "[W26] back to the library, up to 'Bibliotheken'" { (Last 'address=') -mat
 Keys '^l'; Keys 'shell:DocumentsLibrary'; Keys '{ENTER}'; Start-Sleep -Milliseconds 2000
 Check "[W27] shell:DocumentsLibrary opens the Documents library" { (Last 'navigate tab') -match 'User ::bibliothek:Documents ' -or (Log) -match 'redirect ::bibliothek:Documents' }
 Remove-Item -Force "$libDir\e2ebib.library-ms" -ErrorAction SilentlyContinue
+# M5.7: icon view with real thumbnails – a red picture must show up red in its tile
+$pics = New-Item -ItemType Directory -Force "$R\bilder"
+$bm = New-Object System.Drawing.Bitmap 120, 80
+$gr = [System.Drawing.Graphics]::FromImage($bm); $gr.Clear([System.Drawing.Color]::FromArgb(255, 220, 20, 20)); $gr.Dispose()
+$bm.Save("$pics\rot.png", [System.Drawing.Imaging.ImageFormat]::Png); $bm.Dispose()
+Set-Content "$pics\text.txt" "t"
+Keys '^l'; Keys "$pics"; Keys '{ENTER}'; Start-Sleep -Milliseconds 1500
+Keys '^+2'; Start-Sleep -Milliseconds 3000
+Check "[W28] Ctrl+Shift+2 = large icons" { (Last 'view mode') -match 'mode=large' }
+Check "[W28b] thumbnails are loaded for the visible tiles" { (Log) -match 'thumbs loaded n=\d+' }
+$geo = Last 'geometry pane=0'; Write-Host "geometry: $geo"
+if ($geo -match ' x=([\d.]+) y=([\d.]+) .* item_w=([\d.]+)') {
+  $gx = [double]$Matches[1]; $gy = [double]$Matches[2]
+  # tile 0 = rot.png (files sort by name); image area: 2 px margin + 4 px padding, 96 px high
+  $c = Pt ([int]($gx + 2 + 62)) ([int]($gy + 6 + 48))
+  $shot = New-Object System.Drawing.Bitmap 1, 1
+  $g2 = [System.Drawing.Graphics]::FromImage($shot); $g2.CopyFromScreen($c.X, $c.Y, 0, 0, (New-Object System.Drawing.Size 1, 1)); $g2.Dispose()
+  $px = $shot.GetPixel(0, 0); $shot.Dispose()
+  Write-Host "tile 0 center pixel: $px"
+  Shot "w28-icons"
+  Check "[W28c] the picture's tile shows its red thumbnail" { $px.R -gt 180 -and $px.G -lt 90 -and $px.B -lt 90 }
+} else { Fail "[W28c] no geometry trace" }
+Click ([int]($gx + 2 + 128 + 62)) ([int]($gy + 60))
+Check "[W29] click on a tile selects it" { (Last 'selection pane') -match 'focus=text\.txt' }
+Keys '{LEFT}'
+Check "[W29b] arrow keys move in the grid" { (Last 'selection pane') -match 'focus=rot\.png' }
+Keys '^+6'; Start-Sleep -Milliseconds 800
+Check "[W30] Ctrl+Shift+6 = details again" { (Last 'view mode') -match 'mode=details' }
 if ($shared) { Remove-SmbShare -Name 'e2efreigabe' -Force -ErrorAction SilentlyContinue }
 
 $p.Refresh()

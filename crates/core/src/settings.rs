@@ -19,6 +19,7 @@ pub struct Settings {
     pub gpu_probe_version: String,
     pub sort_key: SortKey,
     pub sort_desc: bool,
+    pub view: crate::view::ViewMode,
 }
 
 impl Default for Settings {
@@ -30,6 +31,7 @@ impl Default for Settings {
             gpu_probe_version: String::new(),
             sort_key: SortKey::Name,
             sort_desc: false,
+            view: crate::view::ViewMode::Details,
         }
     }
 }
@@ -83,6 +85,11 @@ impl Settings {
                         s.sort_desc = b;
                     }
                 }
+                "view" => {
+                    if let Some(m) = crate::view::ViewMode::parse(v) {
+                        s.view = m;
+                    }
+                }
                 _ => {} // unknown keys from newer/older versions are ignored
             }
         }
@@ -102,12 +109,14 @@ impl Settings {
              gpu_probe = {probe}\n\
              gpu_probe_version = {}\n\
              sort_key = {}\n\
-             sort_desc = {}\n",
+             sort_desc = {}\n\
+             view = {}\n",
             self.hardware_acceleration,
             self.show_hidden,
             self.gpu_probe_version,
             self.sort_key.as_str(),
-            self.sort_desc
+            self.sort_desc,
+            self.view.as_str()
         )
     }
 
@@ -146,6 +155,7 @@ mod tests {
             gpu_probe_version: "1.2.3".into(),
             sort_key: SortKey::Modified,
             sort_desc: true,
+            view: crate::view::ViewMode::Large,
         };
         assert_eq!(Settings::parse(&s.serialize()), s);
     }

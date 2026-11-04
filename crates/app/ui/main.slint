@@ -13,6 +13,8 @@ export struct Row {
     cut: bool,
     // index into `icons` (0 = none → built-in fallback square)
     icon: int,
+    // index into `thumbs` (icon view; 0 = not loaded yet)
+    thumb: int,
 }
 
 export struct Crumb { label: string, path: string }
@@ -36,6 +38,9 @@ export struct PaneData {
     tabs: [TabInfo],
     active-tab: int,
     rows: [Row],
+    // icon view: one entry per line of tiles (stable model, see nav.rs)
+    grid-lines: [int],
+    grid-cols: [int],
     crumbs: [Crumb],
     path: string,
     can-back: bool,
@@ -158,6 +163,124 @@ component TabItem inherits Rectangle {
     }
 }
 
+// One item of the icon view: image (thumbnail or icon) above a two-line name.
+// Same interaction as a details row (click/Ctrl/Shift, defer-click for dragging
+// a multi-selection, right-click, double-click, drag & drop, Ctrl+wheel).
+component Tile inherits Rectangle {
+    in property <Row> item;
+    in property <int> index;
+    in property <image> icon;
+    in property <image> thumb;
+    in property <length> img-size;
+    in property <bool> list-focused;
+    in property <bool> os-dnd;
+    callback activate();
+    callback pressed(int, bool, bool);
+    callback context(int, float, float);
+    callback open(int);
+    callback os-drag(int);
+    callback zoom(bool);
+    callback back();
+    callback forward();
+    pure callback drag-payload(int) -> data-transfer;
+    pure callback drop-check(int, data-transfer, bool) -> int;
+    callback drop-files(int, data-transfer, bool) -> int;
+
+    function to-action(r: int) -> DragAction {
+        if (r == 1) { return DragAction.copy; }
+        if (r == 2) { return DragAction.move; }
+        return DragAction.none;
+    }
+
+    border-radius: 4px;
+    background: tile-drop.has-drag ? #b3dcff : root.item.selected ? (root.list-focused ? #cce8ff : #e5e5e5) : (ta.has-hover ? #eef3f9 : transparent);
+    border-width: root.item.focused && root.list-focused ? 1px : 0px;
+    border-color: #0067c0;
+    opacity: root.item.cut ? 0.5 : 1;
+    tile-drop := DropArea {
+        enabled: root.item.is-dir;
+        can-drop(e) => { return root.to-action(root.drop-check(root.index, e.data, e.proposed-action == DragAction.copy)); }
+        dropped(e) => { return root.to-action(root.drop-files(root.index, e.data, e.proposed-action == DragAction.copy)); }
+    }
+    property <bool> defer-click;
+    property <bool> os-drag-sent;
+    DragArea {
+        enabled: !root.os-dnd;
+        allow-copy: true;
+        allow-move: true;
+        data: root.drag-payload(root.index);
+        ta := TouchArea {
+            pointer-event(e) => {
+                if (e.kind == PointerEventKind.down && e.button == PointerEventButton.left) {
+                    root.os-drag-sent = false;
+                    root.activate();
+                    if (root.item.selected && !e.modifiers.control && !e.modifiers.shift) {
+                        root.defer-click = true;
+                    } else {
+                        root.pressed(root.index, e.modifiers.control, e.modifiers.shift);
+                    }
+                }
+                if (e.kind == PointerEventKind.up && e.button == PointerEventButton.left && root.defer-click) {
+                    root.defer-click = false;
+                    root.pressed(root.index, false, false);
+                }
+                if (e.kind == PointerEventKind.cancel) { root.defer-click = false; }
+                if (e.kind == PointerEventKind.up && e.button == PointerEventButton.right) {
+                    root.activate();
+                    root.context(root.index, (self.absolute-position.x + self.mouse-x) / 1px, (self.absolute-position.y + self.mouse-y) / 1px);
+                }
+                if (e.kind == PointerEventKind.down && e.button == PointerEventButton.back) { root.back(); }
+                if (e.kind == PointerEventKind.down && e.button == PointerEventButton.forward) { root.forward(); }
+            }
+            double-clicked => { root.open(root.index); }
+            moved => {
+                if (root.os-dnd && self.pressed && !root.os-drag-sent
+                    && (abs(self.mouse-x - self.pressed-x) > 5px || abs(self.mouse-y - self.pressed-y) > 5px)) {
+                    root.os-drag-sent = true;
+                    root.defer-click = false;
+                    root.os-drag(root.index);
+                }
+            }
+            scroll-event(e) => {
+                if (e.modifiers.control) { root.zoom(e.delta-y > 0); return accept; }
+                return reject;
+            }
+        }
+        VerticalLayout {
+            padding: 4px; spacing: 4px;
+            Rectangle {
+                height: root.img-size;
+                // thumbnail (or the shell's large icon) once loaded, else the small icon
+                if root.thumb.width > 0 : Image {
+                    x: (parent.width - self.width) / 2;
+                    width: min(parent.width, root.img-size); height: root.img-size;
+                    source: root.thumb; image-fit: contain;
+                    opacity: root.item.dim ? 0.5 : 1;
+                }
+                if root.thumb.width == 0 && root.icon.width > 0 : Image {
+                    x: (parent.width - self.width) / 2; y: (parent.height - self.height) / 2;
+                    width: min(32px, root.img-size); height: self.width;
+                    source: root.icon; image-fit: contain;
+                    opacity: root.item.dim ? 0.5 : 1;
+                }
+                if root.thumb.width == 0 && root.icon.width == 0 : Rectangle {
+                    x: (parent.width - self.width) / 2; y: (parent.height - self.height) / 2;
+                    width: root.img-size * 0.75; height: root.img-size * 0.6; border-radius: 4px;
+                    background: root.item.is-dir ? #e8b730 : #9aa5b1;
+                    opacity: root.item.dim ? 0.45 : 1;
+                }
+            }
+            Text {
+                text: root.item.name;
+                height: 32px;
+                wrap: word-wrap; overflow: elide;
+                horizontal-alignment: center; vertical-alignment: top;
+                opacity: root.item.dim ? 0.55 : 1;
+            }
+        }
+    }
+}
+
 component FilePane inherits Rectangle {
     in property <PaneData> data;
     in property <bool> active;
@@ -180,7 +303,7 @@ component FilePane inherits Rectangle {
     callback sort-by(string);
     callback row-pressed(int, bool, bool);
     callback clear-selection();
-    callback list-key(string, bool, bool, bool, int) -> bool;
+    callback list-key(string, bool, bool, bool, int, int) -> bool;
     callback tab-select(int);
     callback tab-close(int);
     callback tab-new();
@@ -188,20 +311,37 @@ component FilePane inherits Rectangle {
     callback rename-commit(string);
     callback rename-cancel();
     in property <[image]> icons;
+    // icon view ("details" = rows); tile geometry comes from Rust (core::view)
+    in property <string> view-mode: "details";
+    in property <[image]> thumbs;
+    in property <length> tile-w: 92px;
+    in property <length> tile-h: 92px;
+    in property <length> img-size: 48px;
+    callback zoom(bool);
+    property <bool> grid: root.view-mode != "details";
+    property <int> cols: root.grid ? max(1, floor((list-focus.width - 14px) / root.tile-w)) : 1;
+    property <length> line-h: root.grid ? root.tile-h : root.row-height;
+    property <length> scroll-y: root.grid ? grid.content-y : list.content-y;
     // Windows: system (OLE) drag & drop instead of Slint's DragArea
     in property <bool> os-dnd;
     callback os-drag(int);
     // list geometry for hit-testing external drops (window px + scroll offset)
-    callback geometry(float, float, float, float, float);
+    // + line height, items per line, tile width (icon view)
+    callback geometry(float, float, float, float, float, float, int, float);
     function report-geometry() {
         root.geometry(list-focus.absolute-position.x / 1px, list-focus.absolute-position.y / 1px,
-                      list-focus.width / 1px, list-focus.height / 1px, list.content-y / 1px);
+                      list-focus.width / 1px, list-focus.height / 1px, root.scroll-y / 1px,
+                      root.line-h / 1px, root.cols, (root.grid ? root.tile-w : list-focus.width) / 1px);
     }
     property <length> geo-x: list-focus.absolute-position.x;
     property <length> geo-y: list-focus.absolute-position.y;
     property <length> geo-w: list-focus.width;
     property <length> geo-h: list-focus.height;
-    property <length> geo-scroll: list.content-y;
+    property <length> geo-scroll: root.scroll-y;
+    property <int> geo-cols: root.cols;
+    property <length> geo-line: root.line-h;
+    changed geo-cols => { root.report-geometry(); }
+    changed geo-line => { root.report-geometry(); }
     changed geo-x => { root.report-geometry(); }
     changed geo-y => { root.report-geometry(); }
     changed geo-w => { root.report-geometry(); }
@@ -212,13 +352,13 @@ component FilePane inherits Rectangle {
     property <int> menu-seq: root.data.menu-seq;
     changed menu-seq => {
         root.context-menu(root.data.menu-row,
-            (list-focus.absolute-position.x + 60px) / 1px,
-            (list-focus.absolute-position.y + max(0, root.data.menu-row) * root.row-height + list.content-y + root.row-height - 4px) / 1px);
+            (list-focus.absolute-position.x + mod(max(0, root.data.menu-row), root.cols) * (root.grid ? root.tile-w : 0px) + 60px) / 1px,
+            (list-focus.absolute-position.y + floor(max(0, root.data.menu-row) / root.cols) * root.line-h + root.scroll-y + root.line-h - 4px) / 1px);
     }
     // visible rows changed (first index, count) → per-file icons are loaded lazily
     callback viewport(int, int);
-    property <int> vp-first: max(0, floor(-list.content-y / root.row-height));
-    property <int> vp-count: ceil(list.visible-height / root.row-height) + 1;
+    property <int> vp-first: max(0, floor(-root.scroll-y / root.line-h)) * root.cols;
+    property <int> vp-count: (ceil(list-focus.height / root.line-h) + 1) * root.cols;
     changed vp-first => { root.viewport(self.vp-first, self.vp-count); }
     changed vp-count => { root.viewport(self.vp-first, self.vp-count); }
     // drag & drop: row -1 = the folder shown in the pane; result 0 none, 1 copy, 2 move
@@ -237,6 +377,14 @@ component FilePane inherits Rectangle {
 
     function ensure-visible(i: int) {
         if (i < 0) { return; }
+        if (root.grid) {
+            if (floor(i / root.cols) * root.tile-h < -grid.content-y) {
+                grid.content-y = -(floor(i / root.cols) * root.tile-h);
+            } else if ((floor(i / root.cols) + 1) * root.tile-h > -grid.content-y + grid.visible-height) {
+                grid.content-y = -((floor(i / root.cols) + 1) * root.tile-h - grid.visible-height);
+            }
+            return;
+        }
         if (i * root.row-height < -list.content-y) {
             list.content-y = -(i * root.row-height);
         } else if ((i + 1) * root.row-height > -list.content-y + list.visible-height) {
@@ -254,7 +402,7 @@ component FilePane inherits Rectangle {
     property <int> scroll-seq: root.data.scroll-seq;
     changed scroll-seq => { root.ensure-visible(root.data.scroll-to); }
     property <int> top-seq: root.data.top-seq;
-    changed top-seq => { list.content-y = 0; }
+    changed top-seq => { list.content-y = 0; grid.content-y = 0; }
     property <int> edit-seq: root.data.edit-seq;
     changed edit-seq => { root.start-edit(); }
     property <int> focus-seq: root.data.focus-seq;
@@ -373,7 +521,7 @@ component FilePane inherits Rectangle {
             vertical-stretch: 1;
             key-pressed(e) => {
                 if (root.list-key(e.text, e.modifiers.control, e.modifiers.shift, e.modifiers.alt,
-                                  max(1, floor(list.visible-height / root.row-height) - 1))) {
+                                  max(1, floor(list-focus.height / root.line-h) - 1), root.cols)) {
                     return accept;
                 }
                 reject
@@ -396,8 +544,13 @@ component FilePane inherits Rectangle {
                         }
                         root.mouse-nav(e);
                     }
+                    scroll-event(e) => {
+                        if (e.modifiers.control) { root.zoom(e.delta-y > 0); return accept; }
+                        return reject;
+                    }
                 }
                 list := ListView {
+                    visible: !root.grid;
                     for row[i] in root.data.rows : Rectangle {
                         height: root.row-height;
                         background: row-drop.has-drag ? #b3dcff : row.selected ? (list-focus.has-focus ? #cce8ff : #e5e5e5) : (ta.has-hover ? #eef3f9 : transparent);
@@ -445,6 +598,10 @@ component FilePane inherits Rectangle {
                                     root.mouse-nav(e);
                                 }
                                 double-clicked => { root.open-row(i); }
+                                scroll-event(e) => {
+                                    if (e.modifiers.control) { root.zoom(e.delta-y > 0); return accept; }
+                                    return reject;
+                                }
                                 moved => {
                                     if (root.os-dnd && self.pressed && !os-drag-sent
                                         && (abs(self.mouse-x - self.pressed-x) > 5px || abs(self.mouse-y - self.pressed-y) > 5px)) {
@@ -483,23 +640,61 @@ component FilePane inherits Rectangle {
                         }
                     }
                 }
+                grid := ListView {
+                    visible: root.grid;
+                    for line[li] in root.data.grid-lines : HorizontalLayout {
+                        height: root.tile-h;
+                        alignment: start;
+                        for c in root.data.grid-cols : Rectangle {
+                            width: root.tile-w;
+                            height: root.tile-h;
+                            property <int> idx: li * root.cols + c;
+                            if self.idx < root.data.rows.length : Tile {
+                                x: 2px; y: 2px; width: parent.width - 4px; height: parent.height - 4px;
+                                item: root.data.rows[parent.idx];
+                                index: parent.idx;
+                                icon: self.item.icon > 0 ? root.icons[self.item.icon] : @image-url("");
+                                thumb: self.item.thumb > 0 ? root.thumbs[self.item.thumb] : @image-url("");
+                                img-size: root.img-size;
+                                list-focused: list-focus.has-focus;
+                                os-dnd: root.os-dnd;
+                                activate => { root.activate(); list-focus.focus(); }
+                                pressed(i, c, s) => { root.row-pressed(i, c, s); }
+                                context(i, x, y) => { list-focus.focus(); root.context-menu(i, x, y); }
+                                open(i) => { root.open-row(i); }
+                                os-drag(i) => { root.os-drag(i); }
+                                zoom(up) => { root.zoom(up); }
+                                back => { root.back(); }
+                                forward => { root.forward(); }
+                                drag-payload(i) => { return root.drag-payload(i); }
+                                drop-check(i, d, cp) => { return root.drop-check(i, d, cp); }
+                                drop-files(i, d, cp) => { return root.drop-files(i, d, cp); }
+                            }
+                        }
+                    }
+                }
             }
         }
     }
-    // inline rename editor, laid over the name cell of the row being renamed
+    // inline rename editor, laid over the name cell of the row (or the tile label)
+    property <length> rn-x: root.grid ? mod(root.data.rename-index, root.cols) * root.tile-w + 4px : 24px;
+    property <length> rn-y: root.grid
+        ? list-focus.y + floor(root.data.rename-index / root.cols) * root.tile-h + grid.content-y + root.img-size + 10px
+        : list-focus.y + root.data.rename-index * root.row-height + list.content-y + 1px;
+    property <length> rn-w: root.grid ? root.tile-w - 8px : max(80px, root.width - 26px - root.w-date - root.w-type - root.w-size - 50px);
     if root.renaming : Rectangle {
-        x: 24px;
-        y: list-focus.y + root.data.rename-index * root.row-height + list.content-y + 1px;
-        width: max(80px, root.width - 26px - root.w-date - root.w-type - root.w-size - 50px);
+        x: root.rn-x;
+        y: root.rn-y;
+        width: root.rn-w;
         height: root.row-height - 2px;
         background: white;
         border-width: 1px;
         border-color: #0067c0;
     }
     rename-edit := TextInput {
-        x: 28px;
-        y: list-focus.y + root.data.rename-index * root.row-height + list.content-y + 1px;
-        width: max(80px, root.width - 26px - root.w-date - root.w-type - root.w-size - 50px) - 8px;
+        x: root.rn-x + 4px;
+        y: root.rn-y;
+        width: root.rn-w - 8px;
         height: root.row-height - 2px;
         visible: root.renaming;
         enabled: root.renaming;
@@ -614,8 +809,16 @@ export component MainWindow inherits Window {
     in property <[image]> icons;
     in property <bool> os-dnd;
     callback os-drag(int, int);
-    callback geometry(int, float, float, float, float, float);
+    callback geometry(int, float, float, float, float, float, float, int, float);
     callback viewport(int, int, int);
+    // icon view: "details" | "medium" | "large" | "xlarge"
+    in property <string> view-mode: "details";
+    in property <[image]> thumbs;
+    in property <length> tile-w: 92px;
+    in property <length> tile-h: 92px;
+    in property <length> img-size: 48px;
+    callback zoom(bool);
+    callback set-view(string);
     callback context-menu(int, int, float, float);
     in property <bool> can-paste;
     in property <bool> can-undo;
@@ -656,7 +859,7 @@ export component MainWindow inherits Window {
     callback sort-by(string);
     callback row-pressed(int, int, bool, bool);
     callback clear-selection(int);
-    callback list-key(int, string, bool, bool, bool, int) -> bool;
+    callback list-key(int, string, bool, bool, bool, int, int) -> bool;
     callback tab-select(int, int);
     callback tab-close(int, int);
     callback tab-new(int);
@@ -670,7 +873,7 @@ export component MainWindow inherits Window {
         // Keys that reach the window (no list focused, or bubbled up) go to the active pane,
         // so shortcuts like Ctrl+T or Alt+← work everywhere.
         key-pressed(e) => {
-            if (root.list-key(root.active-pane, e.text, e.modifiers.control, e.modifiers.shift, e.modifiers.alt, 20)) {
+            if (root.list-key(root.active-pane, e.text, e.modifiers.control, e.modifiers.shift, e.modifiers.alt, 20, 1)) {
                 return accept;
             }
             reject
@@ -751,7 +954,7 @@ export component MainWindow inherits Window {
                         sort-by(k) => { root.sort-by(k); }
                         row-pressed(r, c, s) => { root.row-pressed(pi, r, c, s); }
                         clear-selection => { root.clear-selection(pi); }
-                        list-key(t, c, s, a, pg) => { return root.list-key(pi, t, c, s, a, pg); }
+                        list-key(t, c, s, a, pg, cols) => { return root.list-key(pi, t, c, s, a, pg, cols); }
                         tab-select(t) => { root.tab-select(pi, t); }
                         tab-close(t) => { root.tab-close(pi, t); }
                         tab-new => { root.tab-new(pi); }
@@ -761,7 +964,13 @@ export component MainWindow inherits Window {
                         icons: root.icons;
                         os-dnd: root.os-dnd;
                         os-drag(r) => { root.os-drag(pi, r); }
-                        geometry(x, y, w, h, cy) => { root.geometry(pi, x, y, w, h, cy); }
+                        geometry(x, y, w, h, cy, lh, cols, tw) => { root.geometry(pi, x, y, w, h, cy, lh, cols, tw); }
+                        view-mode: root.view-mode;
+                        thumbs: root.thumbs;
+                        tile-w: root.tile-w;
+                        tile-h: root.tile-h;
+                        img-size: root.img-size;
+                        zoom(up) => { root.pane-activate(pi); root.zoom(up); }
                         viewport(f, n) => { root.viewport(pi, f, n); }
                         context-menu(r, x, y) => { root.context-menu(pi, r, x, y); }
                         drag-payload(r) => { return root.drag-payload(pi, r); }
@@ -801,6 +1010,15 @@ export component MainWindow inherits Window {
                     padding-left: 8px; padding-right: 8px; spacing: 16px;
                     Text { text: root.status; vertical-alignment: center; color: #444; }
                     Text { text: root.error; vertical-alignment: center; color: #c0262d; horizontal-stretch: 1; overflow: elide; }
+                    // view switch (like Explorer's buttons bottom right)
+                    for v in [{ id: "details", label: "Details" }, { id: "large", label: "Symbole" }] : Rectangle {
+                        width: view-text.preferred-width + 12px;
+                        border-radius: 3px;
+                        property <bool> on: v.id == "details" ? root.view-mode == "details" : root.view-mode != "details";
+                        background: self.on ? #dde8f5 : (view-ta.has-hover ? #e5e9ef : transparent);
+                        view-text := Text { text: v.label; vertical-alignment: center; color: #333; font-size: 11px; }
+                        view-ta := TouchArea { clicked => { root.set-view(v.id); } }
+                    }
                 }
             }
         }

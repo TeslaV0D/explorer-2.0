@@ -54,6 +54,8 @@ pub enum KeyAction {
     ContextMenu,
     /// Alt+Enter: properties dialog.
     Properties,
+    /// Ctrl+Shift+1/2/3/6: icon sizes / details (Explorer).
+    View(explorer_core::view::ViewMode),
     TypeChar(char),
 }
 
@@ -78,13 +80,29 @@ const ESCAPE: char = '\u{1B}';
 const F10: char = '\u{F70D}';
 const MENU: char = '\u{F735}';
 
+/// Details view (one item per row).
+#[cfg(test)]
 pub fn map_key(text: &str, ctrl: bool, shift: bool, alt: bool, page: isize) -> Option<KeyAction> {
+    map_key_grid(text, ctrl, shift, alt, page, 1)
+}
+
+/// `cols` items per row (icon view): ↑/↓ move a whole row, ←/→ one item,
+/// PageUp/PageDown `page` rows.
+pub fn map_key_grid(
+    text: &str,
+    ctrl: bool,
+    shift: bool,
+    alt: bool,
+    page: isize,
+    cols: isize,
+) -> Option<KeyAction> {
+    let cols = cols.max(1);
     let mut chars = text.chars();
     let c = chars.next()?;
     if chars.next().is_some() {
         return None; // IME/multi-char input is not a list command
     }
-    let page = page.max(1);
+    let page = page.max(1) * cols;
     let mv = |delta| {
         Some(KeyAction::Move {
             delta,
@@ -102,8 +120,13 @@ pub fn map_key(text: &str, ctrl: bool, shift: bool, alt: bool, page: isize) -> O
             KeyAction::NextTab
         }),
         F6 => Some(KeyAction::SwitchPane),
-        UP => mv(-1),
-        DOWN => mv(1),
+        c if ctrl && shift && !alt && explorer_core::view::ViewMode::from_shortcut(c).is_some() => {
+            explorer_core::view::ViewMode::from_shortcut(c).map(KeyAction::View)
+        }
+        UP => mv(-cols),
+        DOWN => mv(cols),
+        LEFT if cols > 1 => mv(-1),
+        RIGHT if cols > 1 => mv(1),
         PAGE_UP => mv(-page),
         PAGE_DOWN => mv(page),
         HOME => Some(KeyAction::Edge {
@@ -153,6 +176,59 @@ pub fn map_key(text: &str, ctrl: bool, shift: bool, alt: bool, page: isize) -> O
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn grid_navigation_and_view_shortcuts() {
+        let mv = |d, e| {
+            Some(KeyAction::Move {
+                delta: d,
+                extend: e,
+                focus_only: false,
+            })
+        };
+        assert_eq!(
+            map_key_grid("\u{F701}", false, false, false, 3, 5),
+            mv(5, false)
+        );
+        assert_eq!(
+            map_key_grid("\u{F700}", false, true, false, 3, 5),
+            mv(-5, true)
+        );
+        assert_eq!(
+            map_key_grid("\u{F703}", false, false, false, 3, 5),
+            mv(1, false)
+        );
+        assert_eq!(
+            map_key_grid("\u{F702}", false, false, false, 3, 5),
+            mv(-1, false)
+        );
+        assert_eq!(
+            map_key_grid("\u{F72D}", false, false, false, 3, 5),
+            mv(15, false)
+        );
+        assert_eq!(
+            map_key_grid("\u{F702}", false, false, false, 3, 1),
+            None,
+            "details: ← nothing"
+        );
+        use explorer_core::view::ViewMode;
+        assert_eq!(
+            map_key("1", true, true, false, 1),
+            Some(KeyAction::View(ViewMode::ExtraLarge))
+        );
+        assert_eq!(
+            map_key("\"", true, true, false, 1),
+            Some(KeyAction::View(ViewMode::Large))
+        );
+        assert_eq!(
+            map_key("6", true, true, false, 1),
+            Some(KeyAction::View(ViewMode::Details))
+        );
+        assert_eq!(
+            map_key("1", false, false, false, 1),
+            Some(KeyAction::TypeChar('1'))
+        );
+    }
 
     #[test]
     fn navigation_keys() {

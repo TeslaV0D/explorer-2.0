@@ -8,6 +8,7 @@ mod icons;
 mod keys;
 mod nav;
 mod open;
+mod thumbs;
 
 use std::io::Write;
 use std::path::PathBuf;
@@ -134,7 +135,8 @@ fn main() -> Result<(), slint::PlatformError> {
         nav::active_pane(),
         c.as_str()
     ));
-    on!(win, on_viewport, |_w, pi, first, count| nav::viewport(
+    on!(win, on_viewport, |w, pi, first, count| nav::viewport(
+        &w,
         pi as usize,
         first,
         count
@@ -147,15 +149,14 @@ fn main() -> Result<(), slint::PlatformError> {
         pi as usize,
         row as usize
     ));
-    win.on_geometry(|pi, x, y, w, h, cy| {
+    win.on_geometry(|pi, x, y, w, h, cy, line_h, cols, item_w| {
         dnd::set_geometry(
             pi as usize,
             dnd::Geom {
-                x,
-                y,
-                w,
-                h,
-                content_y: cy,
+                line_h,
+                cols: cols.max(1) as usize,
+                item_w,
+                ..dnd::Geom::details(x, y, w, h, cy)
             },
         )
     });
@@ -187,15 +188,26 @@ fn main() -> Result<(), slint::PlatformError> {
     ));
     win.on_list_key({
         let weak = win.as_weak();
-        move |pi, text, ctrl, shift, alt, page| {
+        move |pi, text, ctrl, shift, alt, page, cols| {
             weak.upgrade().is_some_and(|w| {
-                nav::list_key(&w, pi as usize, text.as_str(), ctrl, shift, alt, page)
+                nav::list_key(
+                    &w,
+                    pi as usize,
+                    text.as_str(),
+                    ctrl,
+                    shift,
+                    alt,
+                    (page, cols),
+                )
             })
         }
     });
 
     fileops::init(&win);
     icons::init(&win);
+    thumbs::init(&win);
+    on!(win, on_zoom, |w, up| nav::zoom(&w, up));
+    on!(win, on_set_view, |w, v| nav::set_view_named(&w, v.as_str()));
     dnd::init(&win);
     nav::init(
         &win,
@@ -207,6 +219,7 @@ fn main() -> Result<(), slint::PlatformError> {
         },
         start,
         session,
+        settings.view,
     );
 
     // Drives come and go (USB sticks, network shares): refresh the sidebar periodically.

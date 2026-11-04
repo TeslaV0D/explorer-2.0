@@ -10,6 +10,7 @@ pub mod selection;
 pub mod session;
 pub mod settings;
 pub mod typeahead;
+pub mod view;
 
 use std::cmp::Ordering;
 
