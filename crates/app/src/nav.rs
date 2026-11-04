@@ -19,6 +19,7 @@ use explorer_core::{
 };
 use explorer_fs::places::{drive_display_name, used_fraction};
 use explorer_fs::{load_dir, watch_dir, DirWatcher, FsError, FsErrorKind, LoadEvent, LoadHandle};
+use explorer_shell::IconKey;
 use slint::{ComponentHandle, Model, ModelRc, VecModel};
 use std::cell::RefCell;
 use std::collections::HashMap;
@@ -389,7 +390,15 @@ fn load_virtual(v: VirtualPlace, filter: ViewFilter, sort: SortSpec) -> Update {
     };
     let total = all.len();
     // icons by extension only: the items do not exist under the placeholder path
-    let (entries, rows, hidden) = prepare_with(all, filter, sort, Path::new(""), Some(&kinds));
+    let (entries, mut rows, hidden) = prepare_with(all, filter, sort, Path::new(""), Some(&kinds));
+    if let VirtualData::ThisPc(targets) = &vdata {
+        // drives get their real icon (system drive, USB stick, DVD …)
+        for (row, e) in rows.iter_mut().zip(&entries) {
+            if let Some(root) = targets.get(&e.name) {
+                row.icon = crate::icons::registry().id_for(IconKey::File(root.clone())) as i32;
+            }
+        }
+    }
     Update::Rows {
         entries,
         rows,
@@ -777,6 +786,8 @@ pub fn refresh_places(win: &MainWindow) {
             detail: Default::default(),
             used: 0.0,
             has_bar: false,
+            // the folder's own icon (Downloads, Bilder … carry one via desktop.ini)
+            icon: crate::icons::eager(IconKey::File(p.path.clone())),
         })
         .chain(std::iter::once(PlaceItem {
             label: VirtualPlace::Trash.label().into(),
@@ -785,6 +796,7 @@ pub fn refresh_places(win: &MainWindow) {
             detail: Default::default(),
             used: 0.0,
             has_bar: false,
+            icon: crate::icons::eager(IconKey::Shell(explorer_shell::RECYCLE_BIN.into())),
         }))
         .collect();
     APP.with_borrow(|app| app.place_model.set_vec(places));
@@ -822,6 +834,7 @@ pub fn refresh_drives(win: &MainWindow) {
                         items
                             .into_iter()
                             .map(|(label, path, detail, used, has_bar)| PlaceItem {
+                                icon: crate::icons::eager(IconKey::File(PathBuf::from(&path))),
                                 label: label.into(),
                                 path: path.into(),
                                 is_drive: true,
@@ -1433,16 +1446,39 @@ pub fn activate_pane(win: &MainWindow, pi: usize) {
     }
 }
 
+/// Address bar text → path like Explorer: quotes stripped, `%VAR%`, `~` (Unix),
+/// `shell:Downloads\x`. Text that already names an existing path is taken as typed.
+pub fn resolve_input(s: &str) -> Result<PathBuf, String> {
+    use explorer_core::address::{expand_env, expand_home, shell_folder};
+    let t = clean_input(s);
+    if Path::new(&t).exists() {
+        return Ok(PathBuf::from(t));
+    }
+    let t = expand_env(&t, |n| std::env::var(n).ok());
+    let t = if cfg!(windows) {
+        t
+    } else {
+        expand_home(&t, std::env::var("HOME").ok().as_deref())
+    };
+    match shell_folder(&t) {
+        Ok(None) => Ok(PathBuf::from(t)),
+        Ok(Some((f, sub))) => explorer_fs::places::known_folder_path(f)
+            .map(|p| if sub.is_empty() { p } else { p.join(sub) })
+            .ok_or_else(|| format!("Diesen Ort gibt es hier nicht: {t}")),
+        Err(name) => Err(format!("Unbekannter Shell-Ort: shell:{name}")),
+    }
+}
+
 pub fn navigate(win: &MainWindow, pi: usize, target: &str) {
     activate_pane(win, pi);
-    if let Some(id) = active_tab_id(pi) {
-        navigate_tab(
-            win,
-            id,
-            PathBuf::from(clean_input(target)),
-            Reason::User,
-            Hist::Push,
-        );
+    let Some(id) = active_tab_id(pi) else { return };
+    match resolve_input(target) {
+        Ok(p) => navigate_tab(win, id, p, Reason::User, Hist::Push),
+        Err(m) => {
+            trace(&format!("address error: {m}"));
+            win.set_error(m.into());
+            cancel_edit(pi);
+        }
     }
 }
 
@@ -2149,6 +2185,38 @@ mod tests {
     fn crumb_budget_from_width() {
         assert_eq!(crumb_budget(0.0), 12);
         assert_eq!(crumb_budget(774.0), 100);
+    }
+
+    #[test]
+    fn address_input_resolves_env_shell_and_home() {
+        std::env::set_var("EXPLORER2_TEST_DIR", "/opt/x");
+        assert_eq!(
+            resolve_input("%EXPLORER2_TEST_DIR%/a").unwrap(),
+            PathBuf::from("/opt/x/a")
+        );
+        assert!(resolve_input("shell:gibtsnicht")
+            .unwrap_err()
+            .contains("shell:gibtsnicht"));
+        if !cfg!(windows) {
+            let home = std::env::var("HOME").unwrap();
+            assert_eq!(
+                resolve_input("~/q").unwrap(),
+                PathBuf::from(format!("{home}/q"))
+            );
+            assert_eq!(
+                resolve_input("shell:Profile").unwrap(),
+                PathBuf::from(&home)
+            );
+            assert!(resolve_input("shell:Fonts").is_ok());
+            assert!(resolve_input("shell:CommonStartup")
+                .unwrap_err()
+                .contains("nicht"));
+        }
+        assert_eq!(
+            resolve_input("Papierkorb").unwrap(),
+            PathBuf::from("Papierkorb"),
+            "virtual alias passes through"
+        );
     }
 
     #[test]

@@ -19,14 +19,20 @@ pub enum IconKey {
     Folder,
     /// Files without own icon: lower-case extension ("" = no extension).
     Ext(String),
-    /// Item with an individual icon (exe, lnk, ico, custom folder …).
+    /// Item with an individual icon (exe, lnk, ico, custom folder, drive …).
     File(PathBuf),
+    /// Shell object by parsing name (`::{645FF040-…}` = recycle bin).
+    Shell(String),
 }
+
+/// Parsing names of the shell objects behind our virtual places.
+pub const RECYCLE_BIN: &str = "::{645FF040-5081-101B-9F08-00AA002F954E}";
+pub const THIS_PC: &str = "::{20D04FE0-3AEA-1069-A2D8-08002B30309D}";
 
 impl IconKey {
     /// Per-file keys are expensive (one shell call per file) → load lazily.
     pub fn is_individual(&self) -> bool {
-        matches!(self, IconKey::File(_))
+        matches!(self, IconKey::File(_) | IconKey::Shell(_))
     }
 }
 

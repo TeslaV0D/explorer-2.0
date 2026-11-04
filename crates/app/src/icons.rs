@@ -214,6 +214,15 @@ pub fn need(ids: impl IntoIterator<Item = i32>) {
     });
 }
 
+/// Id for an icon shown right away (sidebar): registered and requested now
+/// (UI thread). Without shell the id stays empty → fallback square.
+pub fn eager(key: IconKey) -> i32 {
+    let id = registry().id_for(key) as i32;
+    sync();
+    need([id]);
+    id
+}
+
 /// Rows visible around a scroll position (with a margin, so scrolling
 /// a few rows never shows placeholders).
 pub fn visible_range(first: i32, count: i32, len: usize) -> std::ops::Range<usize> {

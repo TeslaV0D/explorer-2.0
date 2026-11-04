@@ -26,6 +26,8 @@ export struct PlaceItem {
     detail: string,
     used: float,
     has-bar: bool,
+    // index into `icons` (0 = fallback square)
+    icon: int,
 }
 
 // Everything one pane shows. Rust replaces it as a whole; the *-seq counters are
@@ -516,6 +518,7 @@ component FilePane inherits Rectangle {
 
 component SidebarItem inherits Rectangle {
     in property <PlaceItem> item;
+    in property <[image]> icons;
     in property <bool> current;
     callback open(string);
     height: root.item.is-drive ? 48px : 28px;
@@ -527,9 +530,15 @@ component SidebarItem inherits Rectangle {
         HorizontalLayout {
             spacing: 8px;
             Rectangle {
-                width: 14px; height: 14px; y: (parent.height - 14px) / 2;
-                border-radius: root.item.is-drive ? 2px : 3px;
-                background: root.item.is-drive ? #7a8794 : #e8b730;
+                width: 16px; height: 16px; y: (parent.height - 16px) / 2;
+                property <image> img: root.item.icon > 0 ? root.icons[root.item.icon] : @image-url("");
+                if img.width > 0 : Image { width: 16px; height: 16px; source: img; }
+                // fallback until the shell icon arrives (and on non-Windows)
+                if img.width == 0 : Rectangle {
+                    x: 1px; y: 1px; width: 14px; height: 14px;
+                    border-radius: root.item.is-drive ? 2px : 3px;
+                    background: root.item.is-drive ? #7a8794 : #e8b730;
+                }
             }
             Text { text: root.item.label; vertical-alignment: center; overflow: elide; horizontal-stretch: 1; color: #222; }
         }
@@ -549,6 +558,7 @@ component SidebarItem inherits Rectangle {
 component Sidebar inherits Rectangle {
     in property <[PlaceItem]> places;
     in property <[PlaceItem]> drives;
+    in property <[image]> icons;
     in property <string> current-path;
     callback open(string);
     background: #f3f4f6;
@@ -558,7 +568,7 @@ component Sidebar inherits Rectangle {
             padding: 6px; spacing: 1px;
             alignment: start;
             Text { text: "Schnellzugriff"; font-size: 11px; color: #666; font-weight: 600; height: 24px; vertical-alignment: center; x: 6px; }
-            for p in root.places : SidebarItem { item: p; current: p.path == root.current-path; open(path) => { root.open(path); } }
+            for p in root.places : SidebarItem { item: p; icons: root.icons; current: p.path == root.current-path; open(path) => { root.open(path); } }
             Rectangle { height: 8px; }
             // the "Dieser PC" heading opens the drive overview (like Explorer)
             Rectangle {
@@ -568,7 +578,7 @@ component Sidebar inherits Rectangle {
                 Text { text: "Dieser PC"; font-size: 11px; color: #666; font-weight: 600; vertical-alignment: center; x: 6px; }
                 pc-ta := TouchArea { clicked => { root.open("::dieser-pc"); } }
             }
-            for d in root.drives : SidebarItem { item: d; current: d.path == root.current-path; open(path) => { root.open(path); } }
+            for d in root.drives : SidebarItem { item: d; icons: root.icons; current: d.path == root.current-path; open(path) => { root.open(path); } }
         }
     }
 }
@@ -714,6 +724,7 @@ export component MainWindow inherits Window {
                     width: 210px;
                     places: root.places;
                     drives: root.drives;
+                    icons: root.icons;
                     current-path: root.active-path;
                     open(path) => { root.open-place(path); }
                 }

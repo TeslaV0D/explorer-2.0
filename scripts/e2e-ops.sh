@@ -199,6 +199,13 @@ echo "-- M5.6c: network server path (Windows only, Linux: clear error)"
 goto '\\localhost'
 check "[59] server path gives a clear error, no crash" "last 'failed tab' | grep -qF 'localhost'"
 check "[59b] the previous listing stays" "last 'address=' | grep -q 'address=::dieser-pc'"
+echo "-- M5.6d: address bar ~, %VAR%, shell:"
+goto '~'
+check "[60] ~ opens the home folder" "last 'address=' | grep -qx '.*address=$HOME'"
+goto '/' ; goto '%HOME%'
+check "[60b] %HOME% is expanded" "last 'navigate tab' | grep -qF ' $HOME at='"
+goto 'shell:gibtsnicht'
+check "[60c] unknown shell: name gives a clear error" "last 'address error' | grep -q 'Unbekannter Shell-Ort: shell:gibtsnicht'"
 check "[52] process alive" "kill -0 $PID"
 kill $PID; wait $PID 2>/dev/null
 check "[52b] no panic" "! grep -qi panic $LOG"

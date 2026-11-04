@@ -1,7 +1,10 @@
 name: ci
 on:
+  # pure documentation commits need no build (saves ~15 runner minutes each)
   push:
+    paths-ignore: ["docs/**", "**/*.md"]
   pull_request:
+    paths-ignore: ["docs/**", "**/*.md"]
 jobs:
   test:
     strategy:

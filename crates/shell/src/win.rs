@@ -73,11 +73,55 @@ pub fn type_name(ext: &str, is_dir: bool) -> Option<String> {
     (!s.is_empty()).then_some(s)
 }
 
+/// Icon of a shell object given by parsing name (recycle bin, This PC).
+fn shell_object_icon(name: &str, size_flag: u32) -> Option<Icon> {
+    use windows_sys::Win32::System::Com::CoTaskMemFree;
+    use windows_sys::Win32::UI::Shell::Common::ITEMIDLIST;
+    use windows_sys::Win32::UI::Shell::{SHParseDisplayName, SHGFI_PIDL};
+    let w = wide_str(name);
+    let mut pidl: *mut ITEMIDLIST = std::ptr::null_mut();
+    // SAFETY: NUL-terminated name, out pointer; the PIDL is freed below.
+    let hr = unsafe {
+        SHParseDisplayName(
+            w.as_ptr(),
+            std::ptr::null_mut(),
+            &mut pidl,
+            0,
+            std::ptr::null_mut(),
+        )
+    };
+    if hr < 0 || pidl.is_null() {
+        return None;
+    }
+    let mut info: SHFILEINFOW = unsafe { std::mem::zeroed() };
+    // SAFETY: with SHGFI_PIDL the first argument is the PIDL.
+    let ok = unsafe {
+        SHGetFileInfoW(
+            pidl as *const u16,
+            0,
+            &mut info,
+            std::mem::size_of::<SHFILEINFOW>() as u32,
+            SHGFI_PIDL | SHGFI_ICON | size_flag,
+        )
+    } != 0;
+    unsafe { CoTaskMemFree(pidl as *const c_void) };
+    if !ok || info.hIcon.is_null() {
+        return None;
+    }
+    let icon = icon_pixels(info.hIcon);
+    // SAFETY: we own the icon returned by SHGetFileInfoW.
+    unsafe { DestroyIcon(info.hIcon) };
+    icon
+}
+
 pub fn load_icon(key: &IconKey, size: IconSize) -> Option<Icon> {
     let size_flag = match size {
         IconSize::Small => SHGFI_SMALLICON,
         IconSize::Large => SHGFI_LARGEICON,
     };
+    if let IconKey::Shell(name) = key {
+        return shell_object_icon(name, size_flag);
+    }
     let (path, attrs, flags) = match key {
         IconKey::Folder => (
             wide_str("folder"),
@@ -96,6 +140,7 @@ pub fn load_icon(key: &IconKey, size: IconSize) -> Option<Icon> {
         ),
         // real file: its own icon + overlays (shortcut arrow, …)
         IconKey::File(p) => (wide(p), 0, SHGFI_ADDOVERLAYS),
+        IconKey::Shell(_) => return None, // handled above
     };
     let mut info: SHFILEINFOW = unsafe { std::mem::zeroed() };
     if !file_info(&path, attrs, SHGFI_ICON | size_flag | flags, &mut info) || info.hIcon.is_null() {
@@ -191,6 +236,9 @@ mod tests {
             IconKey::Folder,
             IconKey::Ext("txt".into()),
             IconKey::Ext(String::new()),
+            IconKey::Shell(crate::icons::RECYCLE_BIN.into()),
+            IconKey::Shell(crate::icons::THIS_PC.into()),
+            IconKey::File(r"C:\".into()),
         ] {
             for size in [IconSize::Small, IconSize::Large] {
                 let i =

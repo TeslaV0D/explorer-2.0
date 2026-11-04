@@ -40,6 +40,13 @@
 - **Bug (CI #32/#33, UI-Matrix)**: OLE-Drop-Target wurde nie registriert („Invalid window handle“) – der Timer lief, bevor Slint das native Fenster erzeugt hatte → Ablegen aus anderen Apps wäre tot gewesen. Fix: Registrierung wiederholt bis HWND existiert (50 ms, max. 5 s), sonst Rückfall auf In-App-DnD.
 - Neu: **Windows-E2E mit echter Tastatur/Maus** (`scripts/e2e-windows.ps1`, CI-Schritt im Release-Job, Screenshots bei Fehler).
 
+### M5.6d1 Adresszeile + echte Shell-Icons (lokal grün, CI ausstehend)
+- `core::address` (rein, getestet): `%VAR%` (unbekannte bleiben stehen, `100%` bleibt), `shell:<Name>` mit Unterpfad (`shell:Downloads\\Fotos`), Windows-Kanonnamen + Aliase (`Personal` = Dokumente), unbekannter Name → klare Fehlermeldung; `~` nur unter Unix. Existierende Pfade werden nie umgedeutet (Ordner namens `%x%` bleibt erreichbar).
+- `fs::places::known_folder_path`: Windows `SHGetKnownFolderPath` (32 Ordner), Linux XDG-Gegenstücke wo vorhanden.
+- Icons: `IconKey::Shell` (Parsing-Name → `SHParseDisplayName` + `SHGFI_PIDL`) für Papierkorb/Dieser PC; Seitenleiste zeigt echte Icons (Ordner mit desktop.ini-Icon, Laufwerke, Papierkorb), „Dieser PC“-Zeilen echte Laufwerks-Icons; ohne Shell bleibt das Ersatz-Quadrat.
+- CI: reine Doku-Commits (`docs/**`, `*.md`) lösen keinen Lauf mehr aus.
+- Tests: Unit (Adress-Parsing, Windows: Shell-Icons Papierkorb/PC/C:\\), Linux-E2E [60]–[60c], Windows-E2E W20–W22 (`%TEMP%` mit Langnamen, `shell:Downloads`, unbekannter Name).
+
 ### M5.6c Netzwerk ✅ (CI-Run #41, Windows-E2E W18–W19c mit echter SMB-Freigabe grün)
 - `\\server` in der Adresszeile → Freigaben des Servers als Ordnerliste (`NetShareEnum` Level 1); Admin-Freigaben (`C$`, `ADMIN$`, `IPC$`), Drucker und `…$` ausgeblendet wie im Explorer; Freigabe-Kommentar steht in „Typ“.
 - Server will Anmeldung → Windows-Anmeldedialog (`WNetAddConnection3W`, Fenster als Owner, im Hintergrund-Thread), danach neu laden; gilt auch für Ordner in Freigaben (Zugriff verweigert / Anmeldung fehlgeschlagen) – höchstens einmal pro Pfad, keine Dialog-Schleifen.

@@ -109,6 +109,11 @@ pub fn parse_user_dirs(text: &str, home: &Path) -> Vec<(String, PathBuf)> {
         .collect()
 }
 
+/// Path of a `shell:` folder (None if this machine has no such folder).
+pub fn known_folder_path(f: explorer_core::address::KnownFolder) -> Option<PathBuf> {
+    platform::known_folder_path(f)
+}
+
 /// Quick-access folders that exist on this machine.
 pub fn known_folders() -> Vec<Place> {
     let mut out = platform::known_folders();
@@ -158,6 +163,46 @@ mod platform {
         // SAFETY: CoTaskMemFree accepts null; required even when the call failed.
         unsafe { CoTaskMemFree(p as *const _) };
         out
+    }
+
+    pub fn known_folder_path(f: explorer_core::address::KnownFolder) -> Option<PathBuf> {
+        use explorer_core::address::KnownFolder as K;
+        use windows_sys::Win32::UI::Shell::*;
+        let id = match f {
+            K::Desktop => &FOLDERID_Desktop,
+            K::Downloads => &FOLDERID_Downloads,
+            K::Documents => &FOLDERID_Documents,
+            K::Pictures => &FOLDERID_Pictures,
+            K::Music => &FOLDERID_Music,
+            K::Videos => &FOLDERID_Videos,
+            K::Profile => &FOLDERID_Profile,
+            K::UserProfiles => &FOLDERID_UserProfiles,
+            K::AppData => &FOLDERID_RoamingAppData,
+            K::LocalAppData => &FOLDERID_LocalAppData,
+            K::LocalAppDataLow => &FOLDERID_LocalAppDataLow,
+            K::Startup => &FOLDERID_Startup,
+            K::Programs => &FOLDERID_Programs,
+            K::StartMenu => &FOLDERID_StartMenu,
+            K::SendTo => &FOLDERID_SendTo,
+            K::Recent => &FOLDERID_Recent,
+            K::Templates => &FOLDERID_Templates,
+            K::Favorites => &FOLDERID_Favorites,
+            K::Links => &FOLDERID_Links,
+            K::SavedGames => &FOLDERID_SavedGames,
+            K::Screenshots => &FOLDERID_Screenshots,
+            K::Fonts => &FOLDERID_Fonts,
+            K::Windows => &FOLDERID_Windows,
+            K::System => &FOLDERID_System,
+            K::ProgramFiles => &FOLDERID_ProgramFiles,
+            K::ProgramFilesX86 => &FOLDERID_ProgramFilesX86,
+            K::ProgramData => &FOLDERID_ProgramData,
+            K::Public => &FOLDERID_Public,
+            K::CommonDesktop => &FOLDERID_PublicDesktop,
+            K::CommonStartup => &FOLDERID_CommonStartup,
+            K::CommonPrograms => &FOLDERID_CommonPrograms,
+            K::CommonStartMenu => &FOLDERID_CommonStartMenu,
+        };
+        known(id)
     }
 
     pub fn known_folders() -> Vec<Place> {
@@ -242,6 +287,37 @@ mod platform {
 #[cfg(not(windows))]
 mod platform {
     use super::*;
+
+    /// The folders that have a freedesktop counterpart; the rest is Windows-only.
+    pub fn known_folder_path(f: explorer_core::address::KnownFolder) -> Option<PathBuf> {
+        use explorer_core::address::KnownFolder as K;
+        let home = std::env::var_os("HOME").map(PathBuf::from)?;
+        let xdg = |var: &str, fallback: &str| {
+            std::env::var_os(var)
+                .map(PathBuf::from)
+                .unwrap_or_else(|| home.join(fallback))
+        };
+        let place = |kind: PlaceKind| {
+            known_folders()
+                .into_iter()
+                .find(|p| p.kind == kind)
+                .map(|p| p.path)
+        };
+        match f {
+            K::Desktop => place(PlaceKind::Desktop),
+            K::Downloads => place(PlaceKind::Downloads),
+            K::Documents => place(PlaceKind::Documents),
+            K::Pictures => place(PlaceKind::Pictures),
+            K::Music => place(PlaceKind::Music),
+            K::Videos => place(PlaceKind::Videos),
+            K::Profile => Some(home),
+            K::AppData => Some(xdg("XDG_CONFIG_HOME", ".config")),
+            K::LocalAppData => Some(xdg("XDG_DATA_HOME", ".local/share")),
+            K::Templates => Some(home.join("Templates")),
+            K::Fonts => Some(xdg("XDG_DATA_HOME", ".local/share").join("fonts")),
+            _ => None,
+        }
+    }
 
     pub fn known_folders() -> Vec<Place> {
         let Some(home) = std::env::var_os("HOME").map(PathBuf::from) else {

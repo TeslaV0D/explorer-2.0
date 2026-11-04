@@ -194,6 +194,15 @@ Check "[W19b] up from a share goes to the server, share selected" { (Last 'addre
 Keys '^l'; Keys '\\gibtsnicht-e2e'; Keys '{ENTER}'
 [void](WaitFor 'failed tab=.*gibtsnicht-e2e' 30000)   # name resolution may take a while
 Check "[W19c] unknown server: error message, previous listing stays" { (Last 'failed tab') -match 'gibtsnicht-e2e' -and (Last 'address=') -match 'address=\\\\localhost\s*$' }
+# M5.6d: address bar understands %VAR% and shell: names
+# (SendKeys: % is Alt, so the literal percent sign is {%})
+Keys '^l'; Keys '{%}TEMP{%}'; Keys '{ENTER}'; Start-Sleep -Milliseconds 1500
+Check "[W20] %TEMP% opens the temp folder (long name)" { (Last 'address=') -match 'address=[A-Z]:\\.*\\Temp\s*$' -and (Last 'address=') -notmatch '~' }
+Keys '^l'; Keys 'shell:Downloads'; Keys '{ENTER}'; Start-Sleep -Milliseconds 1500
+Check "[W21] shell:Downloads opens the Downloads folder" { (Last 'address=') -match 'address=[A-Z]:\\.*\\Downloads\s*$' }
+Keys '^l'; Keys 'shell:gibtsnicht'; Keys '{ENTER}'; Start-Sleep -Milliseconds 800
+Check "[W22] unknown shell: name gives a clear error" { (Last 'address error') -match 'Unbekannter Shell-Ort: shell:gibtsnicht' }
+Keys '{ESC}'
 if ($shared) { Remove-SmbShare -Name 'e2efreigabe' -Force -ErrorAction SilentlyContinue }
 
 $p.Refresh()

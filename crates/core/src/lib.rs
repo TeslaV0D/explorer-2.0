@@ -1,6 +1,7 @@
 //! Platform-neutral model: entries, sorting, natural ordering.
 //! No I/O and no OS-specific code here, so it is unit-testable everywhere.
 
+pub mod address;
 pub mod breadcrumb;
 pub mod history;
 pub mod places;

@@ -21,6 +21,7 @@ pub use dnd::{
 };
 pub use icons::{
     bgra_to_rgba, icon_key, init_thread, load_icon, Icon, IconKey, IconRegistry, IconSize,
+    RECYCLE_BIN, THIS_PC,
 };
 pub use menu::{
     client_to_screen, menu_entries, own_verb, show_context_menu, show_properties, MenuEntry,
