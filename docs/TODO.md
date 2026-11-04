@@ -62,13 +62,13 @@ Legende: `[ ]` offen · `[~]` in Arbeit · `[x]` erledigt · Prio P0/P1/P2
   - [x] Tests: ops 18 Integrationstests (+ Disk-Full per tmpfs in CI, gesperrte Datei auf Windows), E2E 38–52 (40 Checks), CI-Clipboard-Interop mit Windows PowerShell
   - [x] CI grün (Run #26: E2E 100/100, Windows-ops 19/19 inkl. Papierkorb + gesperrte Datei, Clipboard-Interop mit Windows, Disk-Full)
 - [ ] M4-Rest/Politur (später): DnD mit anderen Apps (OLE, M5), Standard-Aktion je Laufwerk (gleiches Laufwerk = Verschieben, anderes = Kopieren, wie Explorer), Job-Warteschlange (nacheinander statt parallel, pro Laufwerk), Konfliktdialog mit Vorschaubildern, „Kopieren nach…“/„Verschieben nach…“, Fortschritt in der Taskleiste (ITaskbarList3), Papierkorb-Ansicht, Junctions/Hardlinks beim Kopieren sauber behandeln, Alternate Data Streams/ACLs (CopyFileExW kopiert ADS bereits)
-- [~] M5 Shell-Integration (Boss-Freigabe 2026-11-04) – in Teilschritten, jeder einzeln CI-geprüft:
+- [~] M5 Shell-Integration (Boss-Freigabe 2026-11-04) – **M5.0–M5.5 ✅ CI-Run #37** – in Teilschritten, jeder einzeln CI-geprüft:
   - [x] M5.0 Exe-Größe: `opt-level="s"` (**Windows 19,7 → 16,5 MB**, Linux 22,9 → 19,6 MB; Sortieren 100k +6–10 ms, Rest im Rauschen), CI-Gate < 20 MB
-  - [~] M5.1 Echte Icons (lokal grün, CI ausstehend): Shell-Icons (`SHGetFileInfoW`/`IShellItemImageFactory`), Cache pro Endung + individuell für .exe/.lnk/.ico/.url, im Hintergrund, Overlays (Verknüpfung) – Linux: Fallback wie bisher
-  - [~] M5.2 Shell-Typnamen (lokal grün, CI ausstehend; Typ-Sortierung nach angezeigtem Namen) („Textdokument“, „JPEG-Bild“) per `SHGetFileInfoW(SHGFI_TYPENAME|USEFILEATTRIBUTES)`, gecacht pro Endung
-  - [~] M5.3 Kontextmenü (lokal grün, CI ausstehend; Linux: nur UI-Pfad, eigenes Fallback-Menü später): `IContextMenu` (inkl. Erweiterungen Dritter, „Senden an“, „Öffnen mit“ via IContextMenu2/3), Rechtsklick auf Auswahl / leere Fläche (Ordner-Hintergrund), eigene Einträge davor (Kopieren/Einfügen/… über unsere Engine)
-  - [~] M5.4 Eigenschaften (`SHObjectProperties`/`SHMultiFileProperties`, Alt+Enter; „Öffnen mit“ kommt über das Shell-Menü) – CI ausstehend
-  - [~] M5.5 OLE-Drag&Drop mit anderen Apps (lokal grün, CI ausstehend; Maus-Drag muss Boss auf echtem PC testen): Ziehen aus der App (`DoDragDrop` + `SHCreateDataObject`), Ablegen in die App (`RegisterDragDrop`, Winit-Handler ersetzen), Standard-Aktion je Laufwerk wie Explorer
+  - [x] M5.1 Echte Icons: Shell-Icons (`SHGetFileInfoW`/`IShellItemImageFactory`), Cache pro Endung + individuell für .exe/.lnk/.ico/.url, im Hintergrund, Overlays (Verknüpfung) – Linux: Fallback wie bisher
+  - [x] M5.2 Shell-Typnamen (Typ-Sortierung nach angezeigtem Namen) („Textdokument“, „JPEG-Bild“) per `SHGetFileInfoW(SHGFI_TYPENAME|USEFILEATTRIBUTES)`, gecacht pro Endung
+  - [x] M5.3 Kontextmenü (Linux: eigenes Fallback-Menü später): `IContextMenu` (inkl. Erweiterungen Dritter, „Senden an“, „Öffnen mit“ via IContextMenu2/3), Rechtsklick auf Auswahl / leere Fläche (Ordner-Hintergrund), eigene Einträge davor (Kopieren/Einfügen/… über unsere Engine)
+  - [x] M5.4 Eigenschaften (`SHObjectProperties`/`SHMultiFileProperties`, Alt+Enter; „Öffnen mit“ kommt über das Shell-Menü)
+  - [x] M5.5 OLE-Drag&Drop mit anderen Apps (Windows-E2E zieht per echter Maus): Ziehen aus der App (`DoDragDrop` + `SHCreateDataObject`), Ablegen in die App (`RegisterDragDrop`, Winit-Handler ersetzen), Standard-Aktion je Laufwerk wie Explorer
   - [ ] M5.6 Virtuelle Orte: Papierkorb-Ansicht (Wiederherstellen/Leeren), „Dieser PC“, Netzwerk/UNC, Bibliotheken – über Shell-Namespace (`IShellFolder`/`IEnumIDList`), schneller Pfad bleibt für normale Ordner
   - [ ] M5.7 Thumbnails (für spätere Symbol-Ansicht vorbereitet, Cache)
 - [ ] M6 Ordneroptionen-Parität, Themes, Command Palette, Inspector

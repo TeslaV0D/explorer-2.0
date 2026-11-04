@@ -1,8 +1,14 @@
 # Zwischenstand
 
-**Stand:** 2026-11-03 · **Phase:** 1 · M0 ✅ · M1 ✅ · M1.5 ✅ · M2 ✅ · M3 ✅ (CI-Run #19) · **M4 ✅ (CI-Run #26)** · M5 wartet auf Freigabe · **Branch:** `claude/relaxed-pasteur-ufhh1p`
+**Stand:** 2026-11-03 · **Phase:** 1 · M0 ✅ · M1 ✅ · M1.5 ✅ · M2 ✅ · M3 ✅ (CI-Run #19) · M4 ✅ (CI-Run #26) · **M5.0–M5.5 ✅ (CI-Run #37)** · **Branch:** `claude/relaxed-pasteur-ufhh1p`
 
 ## M5 – Shell-Integration (läuft, Freigabe Boss 2026-11-04)
+### CI-Run #37 – alles grün ✅ (M5.0–M5.5)
+- Windows-Tests inkl. echte Icons, Shell-Typnamen, Kontextmenü-Verben, Drop-Target-Datenpfad; Clipboard-Interop; Benchmark.
+- UI-Matrix: Drop-Target registriert (1. Versuch), Icons + Typnamen geladen, Drag ohne gedrückte Taste wird übersprungen.
+- **Windows-E2E mit echter Tastatur/Maus: 16/16** (Auswahl, F2 + Undo, Neuer Ordner, Strg+C → Windows-Clipboard, Strg+V, Entf → Papierkorb + Undo, echtes Shell-Menü, Eigenschaften-Dialog, echtes OLE-Drag per Maus).
+- Linux-E2E 104/104. Exe Windows 16,5 MB.
+
 ### M5.0 Exe-Größe
 - Analyse (Linux-Build als Näherung): 22,9 MB gesamt, davon Skia ≈ 8 MB (vorkompiliert, durch `opt-level` nicht beeinflussbar), Rest Rust (std, Slint-Core/Renderer, Winit, Text-Shaping harfrust/skrifa/parley, SVG usvg/resvg, Bilddecoder). Wayland/X11/zbus/sctk-adwaita (inkl. eingebetteter Cantarell-Schrift) sind **nur Linux**. Bildformate/SVG kommen aus Slint-Interna → nicht sauber abschaltbar.
 - Maßnahme: `opt-level = "s"` → Linux **22,9 → 19,6 MB (−15 %)**. Bench 100k (2×9 Läufe): erste Zeilen und Gesamtladen im Rauschen, Sortieren 43 → ~50 ms. `"z"` spart kaum mehr, ist langsamer.
