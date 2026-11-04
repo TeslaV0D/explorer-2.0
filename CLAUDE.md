@@ -45,7 +45,7 @@
 - **R-001 Ein-Knopf-Reset / „Notausgang“** (2026-11-03, Lehre aus File Pilot, wo nur Windows-Neuinstallation half): Jede Windows-Integration (Win+E, Ordner-Verben/Default-Handler, explorer.exe-Proxy/IFEO, Kontextmenü-Einträge, Autostart, Umgebungsvariablen/PATH, Verknüpfungen, Dateizuordnungen, Hotkeys) muss **mit einem Knopf vollständig rückgängig** zu machen sein – in der App **und** über ein eigenständiges Recovery-Tool, das auch funktioniert, wenn die App selbst nicht startet (inkl. Abgesichertem Modus). Jede Änderung wird vorher mit Originalwert in einem Journal gesichert; Reset stellt exakt den Ursprungszustand her. Pflicht-Test: Integration an → Reset → Registry/Umgebung identisch zum Snapshot vorher. Gilt ab M7, Architektur schon vorher berücksichtigen.
 
 ## Meilenstein-Stand
-- M0 ✅ · M1 ✅ (Run #10) · M1.5 ✅ Renderer-Wahl + Einstellungen + Icon (Run #13) · M2 ✅ (Run #16) · M3 ✅ (Run #19) · M4 ✅ (Run #26) · **M5 ✅: M5.0–M5.5 ✅ (Run #37), M5.6a/b ✅ (Run #39), M5.6c ✅ (Run #41), M5.6 ✅ komplett (Papierkorb, Dieser PC, Netzwerk, Adresszeile/Icons, Bibliotheken; Run #39–#44), M5.7 ✅ Kachel-Ansicht + Vorschaubilder (Run #48) → M5 komplett**, **M6 läuft (Boss: M6.1 → M6.4)**: M6.1a ✅ (Run #49), M6.1b Sortier-Menü + Lasso in CI
+- M0 ✅ · M1 ✅ (Run #10) · M1.5 ✅ Renderer-Wahl + Einstellungen + Icon (Run #13) · M2 ✅ (Run #16) · M3 ✅ (Run #19) · M4 ✅ (Run #26) · **M5 ✅: M5.0–M5.5 ✅ (Run #37), M5.6a/b ✅ (Run #39), M5.6c ✅ (Run #41), M5.6 ✅ komplett (Papierkorb, Dieser PC, Netzwerk, Adresszeile/Icons, Bibliotheken; Run #39–#44), M5.7 ✅ Kachel-Ansicht + Vorschaubilder (Run #48) → M5 komplett**, **M6 läuft (Boss: M6.1 → M6.4)**: M6.1a ✅ (Run #49), M6.1b Sortier-Menü + Lasso + M6.1c Ansicht pro Ordner in CI
 - Arbeitsregel (Boss): nächste Stufe erst, wenn die aktuelle vollständig abgeschlossen, getestet und CI-grün ist.
 
 ## Code-Layout (seit M0)
@@ -117,6 +117,7 @@
 - SendKeys: `%` = Alt, `+` = Shift, `^` = Strg → wörtlich als `{%}`, `{+}`, `{^}` senden.
 - CI läuft nicht bei reinen Doku-Commits (`paths-ignore`) → Doku-Abschluss braucht keinen eigenen Run.
 - **Slint: Repeater über ein `int` (`for x in n`) baut bei JEDER Neubewertung alle Instanzen neu** (Modelle werden per Zeiger verglichen, `int` erzeugt jedes Mal ein neues) → Hover/Doppelklick gehen verloren. Für dynamische Listen immer ein stabiles `VecModel` aus Rust, nur am Ende wachsen/schrumpfen. Prüfen mit `init => { debug(…) }`.
+- UI-Texte nur mit Zeichen, die Segoe UI sicher hat (Latin, Umlaute, Pfeile ←→↑↶↷›); Symbole wie ▾ ✓ als `Path`/Rectangle zeichnen – Verdacht: Schrift-Fallback kostet auf frischer VM Sekunden (CI #50).
 - Slint TouchArea: `clicked` kommt **vor** `pointer-event(up)` → Zustand, den `clicked` prüft, erst im Pointer-Ereignis zurücksetzen.
 - Slint: `row`/`col` sind auf jedem Element reserviert (GridLayout) → Property nicht `row` nennen.
 - Windows-Server-Runner: PNG-Vorschaubilder ja, **BMP nein** (kein Anbieter) → Vorschau-Tests mit PNG; `shell::thumbnail` meldet `preview` ehrlich.

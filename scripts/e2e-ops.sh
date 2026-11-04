@@ -233,14 +233,14 @@ check "[62e] double-click on a folder tile opens it" "last 'navigate tab' | grep
 xdotool key BackSpace; sleep 1.2
 xdotool mousemove $(tile_x 1) $((GY + 50)) keydown ctrl click 5 keyup ctrl; sleep 0.8
 check "[62f] Ctrl+wheel down = smaller icons" "last 'view mode' | grep -q 'mode=medium'"
-check "[62g] the view is saved" "grep -q 'view = medium' $W/config-ops/settings.ini"
+check "[62g] the view is saved (for this folder)" "grep -qP '^medium\t$G$' $W/config-ops/views.ini"
 xdotool key ctrl+shift+6; sleep 0.8
 check "[62h] Ctrl+Shift+6 = details again" "last 'view mode' | grep -q 'mode=details' && last 'geometry pane=0' | grep -q 'cols=1 '"
 echo "-- M6.1a: folder options (settings panel)"
 F=$R/opt; mkdir -p "$F/Ordner/Tief"; echo x > "$F/x.txt"
 goto "$F"
 # rows: 0 Ordner, 1 x.txt
-SETTINGS_BTN="1144 20"; OPT_EXT="835 205"; OPT_CLICK="835 257"; SETTINGS_CLOSE="1138 290"
+SETTINGS_BTN="1144 20"; OPT_EXT="835 205"; OPT_CLICK="835 257"; SETTINGS_CLOSE="1138 352"; VIEW_ALL="926 312"
 xdotool mousemove $SETTINGS_BTN click 1; sleep 0.6
 xdotool mousemove $OPT_EXT click 1; sleep 1.2
 check "[63] 'Dateinamenerweiterungen anzeigen' off hides known extensions" "last 'option show_extensions' | grep -q '=false' && last 'shown' | grep -qF '\"x\"' && ! last 'shown' | grep -qF 'x.txt'"
@@ -295,6 +295,22 @@ xdotool mousemove 600 420 keydown ctrl mousedown 1; sleep 0.2
 for s in 1 2 3 4 5; do xdotool mousemove 600 $((420 - s * 50)); sleep 0.08; done
 xdotool mouseup 1 keyup ctrl; sleep 0.6
 check "[66d] Ctrl + band adds to the selection" "sel_is 'count=2 '"
+echo "-- M6.1c: view per folder"
+VA=$R/va; VB=$R/vb; mkdir -p "$VA" "$VB"; echo a > "$VA/a.txt"; echo b > "$VB/b.txt"
+goto "$VA"
+xdotool key ctrl+shift+2; sleep 0.8
+check "[67] the view is remembered for the folder" "grep -qP '^large\t$VA$' $W/config-ops/views.ini"
+goto "$VB"
+check "[67b] another folder keeps the default (details)" "last 'view follows folder' | grep -q 'mode=details' && last 'geometry pane=0' | grep -q 'cols=1 '"
+xdotool key alt+Left; sleep 1.2
+check "[67c] back in the first folder: large icons again" "last 'view follows folder' | grep -q 'mode=large'"
+xdotool mousemove $SETTINGS_BTN click 1; sleep 0.6
+xdotool mousemove $VIEW_ALL click 1; sleep 0.6
+xdotool mousemove $SETTINGS_CLOSE click 1; sleep 0.4
+check "[67d] 'Aktuelle Ansicht für alle Ordner' makes it the default" "last 'view applied to all' | grep -q 'mode=large' && grep -q 'view = large' $W/config-ops/settings.ini && [ ! -s $W/config-ops/views.ini ]"
+goto "$VB"
+check "[67e] … so the other folder now opens with large icons" "! last 'geometry pane=0' | grep -q 'cols=1 '"
+xdotool key ctrl+shift+6; sleep 0.8
 check "[52] process alive" "kill -0 $PID"
 kill $PID; wait $PID 2>/dev/null
 check "[52b] no panic" "! grep -qi panic $LOG"

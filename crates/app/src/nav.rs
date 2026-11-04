@@ -78,6 +78,8 @@ struct Tab {
     /// each change (Slint compares models by pointer), losing hover and
     /// double-clicks.
     grid: Rc<VecModel<i32>>,
+    /// View of this tab: the folder's remembered view, else the default.
+    view: ViewMode,
 }
 
 /// What stands behind the rows of a virtual place, keyed by `Entry::name`.
@@ -114,6 +116,7 @@ impl Tab {
             virtual_data: VirtualData::None,
             login_tried: None,
             grid: Rc::new(VecModel::default()),
+            view: ViewMode::Details,
         }
     }
 
@@ -202,7 +205,10 @@ struct App {
     drive_model: Rc<VecModel<PlaceItem>>,
     session_save_scheduled: bool,
     drives_loading: bool,
-    view: ViewMode,
+    /// View for folders without a remembered one (settings.ini `view`).
+    default_view: ViewMode,
+    /// Remembered view per folder (views.ini).
+    views: explorer_core::views::FolderViews,
     /// Last Ctrl+wheel size step (wheels/touchpads send bursts of events).
     last_zoom: Option<Instant>,
 }
@@ -220,7 +226,8 @@ thread_local! {
         drive_model: Rc::new(VecModel::default()),
         session_save_scheduled: false,
         drives_loading: false,
-        view: ViewMode::Details,
+        default_view: ViewMode::Details,
+        views: explorer_core::views::FolderViews::new(cfg!(windows)),
         last_zoom: None,
     });
     // Separate cell: used inside selection changes, which already borrow APP.
@@ -678,7 +685,7 @@ fn sync_pane(pi: usize) {
     APP.with_borrow(|app| {
         let Some(p) = app.panes.get(pi) else { return };
         let t = p.tab();
-        let lines = if app.view.is_grid() {
+        let lines = if t.view.is_grid() {
             t.model.row_count().div_ceil(p.cols.max(1))
         } else {
             0
@@ -714,6 +721,10 @@ fn sync_pane(pi: usize) {
             )),
             active_tab: p.active as i32,
             rows: ModelRc::from(t.model.clone()),
+            view_mode: t.view.as_str().into(),
+            tile_w: t.view.tile().0,
+            tile_h: t.view.tile().1,
+            img_size: t.view.image_px() as f32,
             grid_lines: ModelRc::from(t.grid.clone()),
             grid_cols: ModelRc::from(p.cols_model.clone()),
             crumbs: ModelRc::from(t.crumbs.clone()),
@@ -778,6 +789,7 @@ fn sync_window(win: &MainWindow) {
             t.selection.count() > 0 || t.selection.focus().is_some(),
         )
     });
+    show_view(win, tab_view(active));
     win.set_active_pane(active as i32);
     win.set_split(split);
     let place = match VirtualPlace::from_path(Path::new(&path)) {
@@ -825,7 +837,8 @@ pub fn init(
     let (pane_model, place_model, drive_model) = APP.with_borrow_mut(|app| {
         app.filter = filter;
         app.sort = sort;
-        app.view = view;
+        app.default_view = view;
+        app.views = crate::config::load_views();
         (
             app.pane_model.clone(),
             app.place_model.clone(),
@@ -1084,8 +1097,18 @@ fn navigate_tab(win: &MainWindow, id: TabId, target: PathBuf, reason: Reason, hi
         app.next_gen += 1;
         app.next_gen
     });
+    // the folder's remembered view (else the default)
+    let view = APP.with_borrow(|app| {
+        app.views
+            .get(&target.to_string_lossy())
+            .unwrap_or(app.default_view)
+    });
     let Some(pi) = with_tab(id, |t, pi, _| {
         t.gen = gen;
+        if t.view != view {
+            trace(&format!("view follows folder mode={}", view.as_str()));
+            t.view = view;
+        }
         t.stale = false;
         if hist == Hist::Push {
             if let Some(cur) = t.path.clone() {
@@ -1936,39 +1959,77 @@ pub fn set_option(win: &MainWindow, name: &str, on: bool) {
 }
 
 fn show_view(win: &MainWindow, m: ViewMode) {
-    let (w, h) = m.tile();
     win.set_view_mode(m.as_str().into());
-    win.set_tile_w(w);
-    win.set_tile_h(h);
-    win.set_img_size(m.image_px() as f32);
 }
 
-/// Details or icons (Ctrl+Shift+1/2/3/6, Ctrl+wheel, status bar buttons);
-/// remembered in settings.ini.
+/// View of the active tab of pane `pi`.
+fn tab_view(pi: usize) -> ViewMode {
+    active_tab_id(pi)
+        .and_then(|id| with_tab(id, |t, _, _| t.view))
+        .unwrap_or_default()
+}
+
+/// Details or icons (Ctrl+Shift+1/2/3/6, Ctrl+wheel, status bar buttons)
+/// for the active tab; remembered for its folder (views.ini).
 pub fn set_view(win: &MainWindow, m: ViewMode) {
-    if APP.with_borrow(|app| app.view) == m {
+    let pi = APP.with_borrow(|app| app.active_pane);
+    let Some(id) = active_tab_id(pi) else { return };
+    let Some((path, focus)) = with_tab(id, |t, _, _| {
+        if t.view == m {
+            return None;
+        }
+        t.view = m;
+        Some((t.path.clone(), t.selection.focus()))
+    })
+    .flatten() else {
         return;
-    }
-    APP.with_borrow_mut(|app| app.view = m);
+    };
     show_view(win, m);
     trace(&format!("view mode={} img={}", m.as_str(), m.image_px()));
-    if let Err(e) = crate::config::update(|s| s.view = m) {
+    if let Some(p) = path {
+        let views = APP.with_borrow_mut(|app| {
+            app.views.set(&p.to_string_lossy(), m);
+            app.views.clone()
+        });
+        if let Err(e) = crate::config::save_views(&views) {
+            win.set_error(format!("Ansicht nicht gespeichert: {e}").into());
+        }
+    }
+    sync_pane(pi);
+    refresh_thumbs(win, pi);
+    // keep the focused item in view after the layout changed
+    if let Some(f) = focus {
+        request(pi, |p| {
+            p.scroll_to = f as i32;
+            p.scroll_seq += 1;
+        });
+    }
+}
+
+/// Settings: the active tab's view becomes the default and every folder
+/// forgets its own view.
+pub fn apply_view_all(win: &MainWindow) {
+    let m = tab_view(APP.with_borrow(|app| app.active_pane));
+    let panes = APP.with_borrow_mut(|app| {
+        app.default_view = m;
+        app.views.clear();
+        for p in &mut app.panes {
+            for t in &mut p.tabs {
+                t.view = m;
+            }
+        }
+        app.panes.len()
+    });
+    trace(&format!("view applied to all folders mode={}", m.as_str()));
+    let views = APP.with_borrow(|app| app.views.clone());
+    if let Err(e) = crate::config::save_views(&views)
+        .and_then(|_| crate::config::update(|s| s.view = m).map(|_| ()))
+    {
         win.set_error(e.into());
     }
-    let panes = APP.with_borrow(|app| app.panes.len());
     for pi in 0..panes {
         sync_pane(pi);
         refresh_thumbs(win, pi);
-        // keep the focused item in view after the layout changed
-        let focus = active_tab_id(pi)
-            .and_then(|id| with_tab(id, |t, _, _| t.selection.focus()))
-            .flatten();
-        if let Some(f) = focus {
-            request(pi, |p| {
-                p.scroll_to = f as i32;
-                p.scroll_seq += 1;
-            });
-        }
     }
 }
 
@@ -1977,15 +2038,16 @@ pub fn set_view(win: &MainWindow, m: ViewMode) {
 pub fn zoom(win: &MainWindow, up: bool) {
     const ZOOM_GAP: Duration = Duration::from_millis(250);
     let now = Instant::now();
-    let (cur, allowed) = APP.with_borrow_mut(|app| {
+    let (allowed, pi) = APP.with_borrow_mut(|app| {
         let allowed = app
             .last_zoom
             .is_none_or(|t| now.duration_since(t) >= ZOOM_GAP);
         if allowed {
             app.last_zoom = Some(now); // measured from the start of a step
         }
-        (app.view, allowed)
+        (allowed, app.active_pane)
     });
+    let cur = tab_view(pi);
     if allowed {
         set_view(win, cur.step(up));
     }
@@ -1993,7 +2055,7 @@ pub fn zoom(win: &MainWindow, up: bool) {
 
 /// Status bar buttons: "details", or "large" = icons (keeps the icon size if already icons).
 pub fn set_view_named(win: &MainWindow, name: &str) {
-    let cur = APP.with_borrow(|app| app.view);
+    let cur = tab_view(APP.with_borrow(|app| app.active_pane));
     let m = match name {
         "large" if cur.is_grid() => cur,
         n => ViewMode::parse(n).unwrap_or(cur),
@@ -2004,7 +2066,7 @@ pub fn set_view_named(win: &MainWindow, name: &str) {
 /// Icon view: thumbnail ids for the visible tiles of pane `pi` (requested
 /// lazily; rows that already show the right id are left alone).
 fn refresh_thumbs(win: &MainWindow, pi: usize) {
-    let view = APP.with_borrow(|app| app.view);
+    let view = tab_view(pi);
     if !view.is_grid() {
         return;
     }

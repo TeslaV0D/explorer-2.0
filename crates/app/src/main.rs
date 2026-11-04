@@ -214,6 +214,7 @@ fn main() -> Result<(), slint::PlatformError> {
     thumbs::init(&win);
     on!(win, on_zoom, |w, up| nav::zoom(&w, up));
     on!(win, on_set_view, |w, v| nav::set_view_named(&w, v.as_str()));
+    on!(win, on_apply_view_all, |w| nav::apply_view_all(&w));
     dnd::init(&win);
     win.set_opt_single_click(settings.single_click);
     on!(win, on_set_option, |w, n, on| nav::set_option(
@@ -252,6 +253,7 @@ fn main() -> Result<(), slint::PlatformError> {
         session,
         settings.view,
     );
+    nav::trace_line(&format!("init done at={:.1}ms", nav::since_start_ms()));
 
     // Drives come and go (USB sticks, network shares): refresh the sidebar periodically.
     let drive_timer = slint::Timer::default();
@@ -283,6 +285,8 @@ fn main() -> Result<(), slint::PlatformError> {
         ));
     });
     gfx::probe_in_background(&renderer);
+    // startup phases for the first-start gate: init done -> run -> event loop running
+    nav::trace_line(&format!("run at={:.1}ms", nav::since_start_ms()));
     let res = win.run();
     nav::save_session_now();
     res

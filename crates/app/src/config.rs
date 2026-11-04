@@ -61,6 +61,23 @@ pub fn update(f: impl FnOnce(&mut Settings)) -> Result<Settings, String> {
     Ok(s)
 }
 
+/// Remembered view per folder (`views.ini`).
+pub fn load_views() -> explorer_core::views::FolderViews {
+    let text = config_dir()
+        .and_then(|d| std::fs::read_to_string(d.join("views.ini")).ok())
+        .unwrap_or_default();
+    explorer_core::views::FolderViews::parse(&text, cfg!(windows))
+}
+
+pub fn save_views(v: &explorer_core::views::FolderViews) -> Result<(), String> {
+    let _g = LOCK.lock().unwrap_or_else(|e| e.into_inner());
+    let dir = config_dir().ok_or("kein Konfigurationsordner")?;
+    std::fs::create_dir_all(&dir).map_err(|e| e.to_string())?;
+    let tmp = dir.join("views.ini.tmp");
+    std::fs::write(&tmp, v.serialize()).map_err(|e| e.to_string())?;
+    std::fs::rename(&tmp, dir.join("views.ini")).map_err(|e| e.to_string())
+}
+
 pub fn load_session() -> Option<Session> {
     let p = config_dir()?.join("session.ini");
     Session::parse(&std::fs::read_to_string(p).ok()?)

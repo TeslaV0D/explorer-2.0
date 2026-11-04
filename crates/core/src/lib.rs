@@ -12,6 +12,7 @@ pub mod session;
 pub mod settings;
 pub mod typeahead;
 pub mod view;
+pub mod views;
 
 use std::cmp::Ordering;
 

@@ -38,6 +38,11 @@ export struct PaneData {
     tabs: [TabInfo],
     active-tab: int,
     rows: [Row],
+    // view of the active tab (remembered per folder): "details" | "medium" | …
+    view-mode: string,
+    tile-w: length,
+    tile-h: length,
+    img-size: length,
     // icon view: one entry per line of tiles (stable model, see nav.rs)
     grid-lines: [int],
     grid-cols: [int],
@@ -802,7 +807,11 @@ component SortItem inherits Rectangle {
     background: item-ta.has-hover ? #e5f1fb : transparent;
     HorizontalLayout {
         padding-left: 6px; spacing: 6px;
-        Text { text: root.on ? "•" : ""; width: 10px; vertical-alignment: center; color: #0067c0; }
+        // dot drawn as a circle (no glyph lookup)
+        Rectangle {
+            width: 10px;
+            if root.on : Rectangle { x: 2px; y: (parent.height - 6px) / 2; width: 6px; height: 6px; border-radius: 3px; background: #0067c0; }
+        }
         Text { text: root.label; vertical-alignment: center; color: #222; }
     }
     item-ta := TouchArea { clicked => { root.picked(); } }
@@ -913,12 +922,10 @@ export component MainWindow inherits Window {
     callback os-drag(int, int);
     callback geometry(int, float, float, float, float, float, float, int, float);
     callback viewport(int, int, int);
-    // icon view: "details" | "medium" | "large" | "xlarge"
+    // view of the active pane (status bar buttons): "details" | "medium" | "large" | "xlarge"
     in property <string> view-mode: "details";
     in property <[image]> thumbs;
-    in property <length> tile-w: 92px;
-    in property <length> tile-h: 92px;
-    in property <length> img-size: 48px;
+    callback apply-view-all();
     callback zoom(bool);
     callback set-view(string);
     // sort menu: column (direction kept) / direction
@@ -1072,14 +1079,14 @@ export component MainWindow inherits Window {
                         os-dnd: root.os-dnd;
                         os-drag(r) => { root.os-drag(pi, r); }
                         geometry(x, y, w, h, cy, lh, cols, tw) => { root.geometry(pi, x, y, w, h, cy, lh, cols, tw); }
-                        view-mode: root.view-mode;
+                        view-mode: pane.view-mode;
                         single-click: root.opt-single-click;
                         click-open(r) => { root.click-open(pi, r); }
                         band(x0, y0, x1, y1, c, ph) => { root.band(pi, x0, y0, x1, y1, c, ph); }
                         thumbs: root.thumbs;
-                        tile-w: root.tile-w;
-                        tile-h: root.tile-h;
-                        img-size: root.img-size;
+                        tile-w: pane.tile-w;
+                        tile-h: pane.tile-h;
+                        img-size: pane.img-size;
                         zoom(up) => { root.pane-activate(pi); root.zoom(up); }
                         viewport(f, n) => { root.viewport(pi, f, n); }
                         context-menu(r, x, y) => { root.context-menu(pi, r, x, y); }
@@ -1122,10 +1129,20 @@ export component MainWindow inherits Window {
                     Text { text: root.error; vertical-alignment: center; color: #c0262d; horizontal-stretch: 1; overflow: elide; }
                     // sort menu (the icon view has no column headers)
                     sort-btn := Rectangle {
-                        width: sort-text.preferred-width + 12px;
+                        width: sort-text.preferred-width + 23px;
                         border-radius: 3px;
                         background: sort-ta.has-hover ? #e5e9ef : transparent;
-                        sort-text := Text { text: "Sortieren ▾"; vertical-alignment: center; color: #333; font-size: 11px; }
+                        // caret drawn, not a "▾" glyph: Segoe UI has none, and the font
+                        // fallback search cost seconds on a fresh Windows VM (CI #50)
+                        HorizontalLayout {
+                            padding-left: 6px; spacing: 4px;
+                            sort-text := Text { text: "Sortieren"; vertical-alignment: center; color: #333; font-size: 11px; }
+                            Path {
+                                width: 7px; height: 4px; y: (parent.height - 4px) / 2;
+                                commands: "M 0 0 L 7 0 L 3.5 4 Z";
+                                fill: #555;
+                            }
+                        }
                         sort-ta := TouchArea { clicked => { sort-popup.show(); } }
                         sort-popup := PopupWindow {
                             x: 0; y: -self.height - 2px;
@@ -1274,6 +1291,11 @@ export component MainWindow inherits Window {
                 text: "Öffnen durch einfachen Klick (Markieren durch Zeigen)";
                 checked <=> root.opt-single-click;
                 toggled => { root.set-option("single_click", self.checked); }
+            }
+            Text { text: "Die Ansicht wird pro Ordner gemerkt."; font-size: 11px; color: #666; }
+            HorizontalLayout {
+                alignment: start;
+                Button { text: "Aktuelle Ansicht für alle Ordner"; clicked => { root.apply-view-all(); } }
             }
             HorizontalLayout {
                 alignment: end;
