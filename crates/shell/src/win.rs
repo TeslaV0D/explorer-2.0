@@ -198,6 +198,38 @@ fn bitmap_bits(hbm: HBITMAP) -> Option<(u32, u32, Vec<u8>)> {
     }
 }
 
+/// The shell's image for a file (thumbnail, or its icon) fitting `px`×`px`.
+pub fn thumbnail(path: &Path, px: u32) -> Option<Icon> {
+    use windows::core::HSTRING;
+    use windows::Win32::Foundation::SIZE;
+    use windows::Win32::UI::Shell::{
+        IShellItemImageFactory, SHCreateItemFromParsingName, SIIGBF_RESIZETOFIT,
+    };
+    init_thread();
+    // SAFETY: COM calls with valid arguments; the returned bitmap is deleted below.
+    let hbm = unsafe {
+        let f: IShellItemImageFactory =
+            SHCreateItemFromParsingName(&HSTRING::from(path.as_os_str()), None).ok()?;
+        f.GetImage(
+            SIZE {
+                cx: px as i32,
+                cy: px as i32,
+            },
+            SIIGBF_RESIZETOFIT,
+        )
+        .ok()?
+    };
+    let raw = hbm.0 as HBITMAP;
+    let bits = bitmap_bits(raw);
+    unsafe { DeleteObject(raw) };
+    let (w, h, bgra) = bits?;
+    Some(Icon {
+        width: w,
+        height: h,
+        rgba: crate::thumbs::premultiplied_bgra_to_rgba(&bgra),
+    })
+}
+
 fn icon_pixels(hicon: HICON) -> Option<Icon> {
     // SAFETY: GetIconInfo hands us two bitmaps that we must delete.
     let mut ii: ICONINFO = unsafe { std::mem::zeroed() };
@@ -228,6 +260,57 @@ fn icon_pixels(hicon: HICON) -> Option<Icon> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn thumbnails_of_a_picture_and_a_text_file() {
+        // 64×32 solid red 24-bit BMP, written by hand (no image crate needed)
+        let dir = std::env::temp_dir().join(format!("e2-thumb-{}", std::process::id()));
+        std::fs::create_dir_all(&dir).unwrap();
+        let (w, h) = (64u32, 32u32);
+        let row = (w * 3).div_ceil(4) * 4;
+        let size = 54 + row * h;
+        let mut b = Vec::new();
+        b.extend_from_slice(b"BM");
+        for v in [size, 0, 54, 40, w, h] {
+            b.extend_from_slice(&v.to_le_bytes());
+        }
+        b.extend_from_slice(&1u16.to_le_bytes());
+        b.extend_from_slice(&24u16.to_le_bytes());
+        for v in [0u32, row * h, 2835, 2835, 0, 0] {
+            b.extend_from_slice(&v.to_le_bytes());
+        }
+        for _ in 0..h {
+            for _ in 0..w {
+                b.extend_from_slice(&[0, 0, 255]); // BGR red
+            }
+            b.resize(b.len() + (row - w * 3) as usize, 0);
+        }
+        let bmp = dir.join("rot.bmp");
+        std::fs::write(&bmp, &b).unwrap();
+        let t = thumbnail(&bmp, 96).expect("thumbnail of a bmp");
+        assert!(
+            t.width <= 96 && t.height <= 96 && t.width > 0,
+            "{}x{}",
+            t.width,
+            t.height
+        );
+        assert_eq!(t.rgba.len(), (t.width * t.height * 4) as usize);
+        let c = ((t.height / 2 * t.width + t.width / 2) * 4) as usize;
+        let px = &t.rgba[c..c + 4];
+        assert!(
+            px[0] > 200 && px[1] < 60 && px[2] < 60 && px[3] > 200,
+            "center pixel {px:?}"
+        );
+        let txt = dir.join("a.txt");
+        std::fs::write(&txt, "x").unwrap();
+        let i = thumbnail(&txt, 48).expect("files without preview get their icon");
+        assert!(
+            i.width > 16 && i.width <= 48,
+            "large icon, not the 16 px one: {}",
+            i.width
+        );
+        let _ = std::fs::remove_dir_all(&dir);
+    }
 
     #[test]
     fn real_icons_load() {

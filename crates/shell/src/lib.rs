@@ -8,6 +8,7 @@ mod dnd;
 mod icons;
 mod libraries;
 mod menu;
+mod thumbs;
 mod types;
 #[cfg(windows)]
 mod win;
@@ -31,6 +32,7 @@ pub use menu::{
     client_to_screen, menu_entries, own_verb, show_context_menu, show_properties, MenuEntry,
     MenuOutcome, OwnVerb,
 };
+pub use thumbs::thumbnail;
 pub use types::{type_name, TypeNames};
 
 /// Screen pixels → window-client pixels (Windows); identity elsewhere.
