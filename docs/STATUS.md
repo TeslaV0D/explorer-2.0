@@ -47,6 +47,7 @@
 - Nicht verfügbare Befehle grau (Enter → „Hier nicht möglich“); zuletzt benutzte (8) in settings.ini (`recent_commands`).
 - „>“-Modus: Orte aus Seitenleiste, Laufwerken, virtuellen Orten und dem Verlauf aller Tabs.
 - Tests: Unit, Linux-E2E [69]–[69g] (168/168), Windows-E2E W36.
+- CI #53 rot am Erststart-Gate: run→erstes Bild 1376 ms (#51: 456, #52: 592; VM zusätzlich ~2× langsamer). Die Palette war unsichtbar (`visible: false`), aber **aufgebaut und gelayoutet** → jetzt eigene Komponente unter `if pal-open` (entsteht erst beim Öffnen, `init` fokussiert das Feld).
 
 ### M6.2 Inspector ✅ (CI-Run #52)
 - Rechte Seitenleiste (280 px), **Alt+P** oder Knopf „Details“, Zustand in settings.ini (`inspector`).

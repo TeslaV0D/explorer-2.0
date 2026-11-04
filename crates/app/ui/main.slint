@@ -823,6 +823,78 @@ component SortItem inherits Rectangle {
     item-ta := TouchArea { clicked => { root.picked(); } }
 }
 
+// Command palette (Ctrl+Shift+P). Created when opened (init focuses the input).
+component Palette inherits Rectangle {
+    in property <[PaletteItem]> items;
+    in-out property <int> sel;
+    callback query(string);
+    callback run(int);
+    callback close();
+    init => { pal-input.focus(); }
+    function move(d: int) {
+        root.sel = max(0, min(root.items.length - 1, root.sel + d));
+        // keep the selection visible (rows are 30 px)
+        if (root.sel * 30px < -pal-list.content-y) {
+            pal-list.content-y = -(root.sel * 30px);
+        } else if ((root.sel + 1) * 30px > -pal-list.content-y + pal-list.visible-height) {
+            pal-list.content-y = -((root.sel + 1) * 30px - pal-list.visible-height);
+        }
+    }
+
+        background: #00000018;
+        TouchArea { clicked => { root.close(); } }
+        Rectangle {
+            x: (parent.width - self.width) / 2;
+            y: 48px;
+            width: min(600px, parent.width - 40px);
+            height: pal-box.preferred-height;
+            background: #ffffff;
+            border-color: #c8ccd0; border-width: 1px; border-radius: 6px;
+            drop-shadow-blur: 16px; drop-shadow-color: #00000040;
+            TouchArea { }   // clicks inside do not close
+            pal-box := VerticalLayout {
+                padding: 8px; spacing: 6px;
+                Rectangle {
+                    height: 32px;
+                    border-color: #0067c0; border-width: 1px; border-radius: 4px;
+                    pal-input := TextInput {
+                        x: 8px; width: parent.width - 16px;
+                        vertical-alignment: center; single-line: true; font-size: 14px;
+                        edited => { root.query(self.text); }
+                        accepted => { root.run(root.sel); }
+                        key-pressed(e) => {
+                            if (e.text == Key.Escape) { root.close(); return accept; }
+                            if (e.text == Key.DownArrow) { root.move(1); return accept; }
+                            if (e.text == Key.UpArrow) { root.move(-1); return accept; }
+                            if (e.text == Key.PageDown) { root.move(10); return accept; }
+                            if (e.text == Key.PageUp) { root.move(-10); return accept; }
+                            reject
+                        }
+                    }
+                    if pal-input.text == "" : Text {
+                        x: 8px; vertical-alignment: center; color: #888; font-size: 14px;
+                        text: "Befehl suchen …   (> springt zu Orten)";
+                    }
+                }
+                pal-list := ListView {
+                    height: min(12, max(1, root.items.length)) * 30px;
+                    for it[i] in root.items : Rectangle {
+                        height: 30px;
+                        border-radius: 4px;
+                        background: i == root.sel ? #cce8ff : (item-ta.has-hover ? #eef3f9 : transparent);
+                        item-ta := TouchArea { clicked => { root.sel = i; root.run(i); } }
+                        HorizontalLayout {
+                            padding-left: 10px; padding-right: 10px; spacing: 12px;
+                            Text { text: it.label; vertical-alignment: center; color: it.enabled ? #222 : #999; overflow: elide; horizontal-stretch: 1; }
+                            Text { text: it.detail; vertical-alignment: center; color: #777; font-size: 11px; overflow: elide; max-width: 260px; }
+                        }
+                    }
+                }
+                if root.items.length == 0 : Text { text: "Nichts gefunden"; color: #888; height: 24px; vertical-alignment: center; x: 10px; }
+            }
+        }
+    }
+
 component SidebarItem inherits Rectangle {
     in property <PlaceItem> item;
     in property <[image]> icons;
@@ -945,21 +1017,9 @@ export component MainWindow inherits Window {
     in property <bool> pal-open;
     in property <[PaletteItem]> pal-items;
     in-out property <int> pal-sel;
-    in property <int> pal-seq;
     callback pal-query(string);
     callback pal-run(int);
     callback pal-close();
-    property <int> pal-seq-seen: root.pal-seq;
-    changed pal-seq-seen => { pal-input.text = ""; pal-input.focus(); pal-list.content-y = 0; }
-    function pal-move(d: int) {
-        root.pal-sel = max(0, min(root.pal-items.length - 1, root.pal-sel + d));
-        // keep the selection visible (rows are 30 px)
-        if (root.pal-sel * 30px < -pal-list.content-y) {
-            pal-list.content-y = -(root.pal-sel * 30px);
-        } else if ((root.pal-sel + 1) * 30px > -pal-list.content-y + pal-list.visible-height) {
-            pal-list.content-y = -((root.pal-sel + 1) * 30px - pal-list.visible-height);
-        }
-    }
     callback zoom(bool);
     callback set-view(string);
     // sort menu: column (direction kept) / direction
@@ -1332,61 +1392,13 @@ export component MainWindow inherits Window {
         }
     }
 
-    // ---------- command palette (modal) ----------
-    Rectangle {
-        visible: root.pal-open;
-        background: #00000018;
-        TouchArea { clicked => { root.pal-close(); } }
-        Rectangle {
-            x: (parent.width - self.width) / 2;
-            y: 48px;
-            width: min(600px, parent.width - 40px);
-            height: pal-box.preferred-height;
-            background: #ffffff;
-            border-color: #c8ccd0; border-width: 1px; border-radius: 6px;
-            drop-shadow-blur: 16px; drop-shadow-color: #00000040;
-            TouchArea { }   // clicks inside do not close
-            pal-box := VerticalLayout {
-                padding: 8px; spacing: 6px;
-                Rectangle {
-                    height: 32px;
-                    border-color: #0067c0; border-width: 1px; border-radius: 4px;
-                    pal-input := TextInput {
-                        x: 8px; width: parent.width - 16px;
-                        vertical-alignment: center; single-line: true; font-size: 14px;
-                        edited => { root.pal-query(self.text); }
-                        accepted => { root.pal-run(root.pal-sel); }
-                        key-pressed(e) => {
-                            if (e.text == Key.Escape) { root.pal-close(); return accept; }
-                            if (e.text == Key.DownArrow) { root.pal-move(1); return accept; }
-                            if (e.text == Key.UpArrow) { root.pal-move(-1); return accept; }
-                            if (e.text == Key.PageDown) { root.pal-move(10); return accept; }
-                            if (e.text == Key.PageUp) { root.pal-move(-10); return accept; }
-                            reject
-                        }
-                    }
-                    if pal-input.text == "" : Text {
-                        x: 8px; vertical-alignment: center; color: #888; font-size: 14px;
-                        text: "Befehl suchen …   (> springt zu Orten)";
-                    }
-                }
-                pal-list := ListView {
-                    height: min(12, max(1, root.pal-items.length)) * 30px;
-                    for it[i] in root.pal-items : Rectangle {
-                        height: 30px;
-                        border-radius: 4px;
-                        background: i == root.pal-sel ? #cce8ff : (item-ta.has-hover ? #eef3f9 : transparent);
-                        item-ta := TouchArea { clicked => { root.pal-sel = i; root.pal-run(i); } }
-                        HorizontalLayout {
-                            padding-left: 10px; padding-right: 10px; spacing: 12px;
-                            Text { text: it.label; vertical-alignment: center; color: it.enabled ? #222 : #999; overflow: elide; horizontal-stretch: 1; }
-                            Text { text: it.detail; vertical-alignment: center; color: #777; font-size: 11px; overflow: elide; max-width: 260px; }
-                        }
-                    }
-                }
-                if root.pal-items.length == 0 : Text { text: "Nichts gefunden"; color: #888; height: 24px; vertical-alignment: center; x: 10px; }
-            }
-        }
+    // ---------- command palette (modal; only exists while open → no startup cost) ----------
+    if root.pal-open : Palette {
+        items: root.pal-items;
+        sel <=> root.pal-sel;
+        query(t) => { root.pal-query(t); }
+        run(i) => { root.pal-run(i); }
+        close => { root.pal-close(); }
     }
 
     if root.settings-open : Rectangle {

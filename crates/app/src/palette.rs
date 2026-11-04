@@ -49,8 +49,8 @@ pub fn open(win: &MainWindow) {
         s.pane = pi;
     });
     query(win, "");
+    // the palette element is created on open (fresh, empty, focused input)
     win.set_pal_open(true);
-    win.set_pal_seq(win.get_pal_seq() + 1); // clear + focus the input
     nav::trace_line("palette open");
 }
 

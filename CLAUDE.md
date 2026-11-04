@@ -120,6 +120,7 @@
 - CI läuft nicht bei reinen Doku-Commits (`paths-ignore`) → Doku-Abschluss braucht keinen eigenen Run.
 - **Slint: Repeater über ein `int` (`for x in n`) baut bei JEDER Neubewertung alle Instanzen neu** (Modelle werden per Zeiger verglichen, `int` erzeugt jedes Mal ein neues) → Hover/Doppelklick gehen verloren. Für dynamische Listen immer ein stabiles `VecModel` aus Rust, nur am Ende wachsen/schrumpfen. Prüfen mit `init => { debug(…) }`.
 - UI-Texte nur mit Zeichen, die Segoe UI sicher hat (Latin, Umlaute, Pfeile ←→↑↶↷›); Symbole wie ▾ ✓ als `Path`/Rectangle zeichnen – **gemessen**: ein „▾“ kostete auf frischer VM +1,2 s beim ersten Frame (CI #50 vs #51); Trace-Marken `init done`/`run`/`event loop running` grenzen den Start ein.
+- Slint: `visible: false` spart **nicht** den Aufbau/das Layout beim ersten Frame → selten gebrauchte Overlays (Palette, Dialoge) unter `if …` legen, Fokus per `init` (CI #53).
 - Slint TouchArea: `clicked` kommt **vor** `pointer-event(up)` → Zustand, den `clicked` prüft, erst im Pointer-Ereignis zurücksetzen.
 - Slint: `row`/`col` sind auf jedem Element reserviert (GridLayout) → Property nicht `row` nennen.
 - Windows-Server-Runner: PNG-Vorschaubilder ja, **BMP nein** (kein Anbieter) → Vorschau-Tests mit PNG; `shell::thumbnail` meldet `preview` ehrlich.
