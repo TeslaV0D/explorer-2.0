@@ -40,6 +40,14 @@
 - **Bug (CI #32/#33, UI-Matrix)**: OLE-Drop-Target wurde nie registriert („Invalid window handle“) – der Timer lief, bevor Slint das native Fenster erzeugt hatte → Ablegen aus anderen Apps wäre tot gewesen. Fix: Registrierung wiederholt bis HWND existiert (50 ms, max. 5 s), sonst Rückfall auf In-App-DnD.
 - Neu: **Windows-E2E mit echter Tastatur/Maus** (`scripts/e2e-windows.ps1`, CI-Schritt im Release-Job, Screenshots bei Fehler).
 
+### M5.6d2 Bibliotheken (lokal grün, CI ausstehend)
+- `shell::libraries`/`library` (`IShellLibrary` über die `.library-ms`-Dateien in `FOLDERID_Libraries`): lokalisierter Name, Mitgliedsordner (nur Dateisystem), Datei fürs Icon.
+- Ansicht „Bibliotheken“ (`::bibliotheken`, Aliase „Bibliotheken“, `shell:Libraries`, CLSID): Zeilen mit echtem Bibliotheks-Icon und „N Ordner“; Bibliothek mit **einem** Ordner öffnet ihn direkt, mit mehreren → `::bibliothek:<Stamm>` listet ihre Ordner (Spalte „Ordner“ = übergeordneter Pfad).
+- `shell:DocumentsLibrary`/`MusicLibrary`/`PicturesLibrary`/`VideosLibrary`/`CameraRoll`/`SavedPicturesLibrary` → Bibliothek; Hoch aus einer Bibliothek → „Bibliotheken“; Breadcrumb „Bibliotheken › Name“; Sitzung merkt sich Bibliotheks-Tabs.
+- Schutz: alle Platzhalter (`::…`) laufen über `places::is_placeholder` → keine Dateioperation, kein Watcher.
+- Bewusst noch nicht: zusammengeführte Ansicht (Explorer zeigt Inhalte aller Ordner gemischt) → eigener TODO.
+- Tests: Unit (Platzhalter, Namen, `shell:`-Bibliotheken), Windows-Unit `libraries_read_without_crashing`, Linux-E2E [61]/[61b], Windows-E2E W23–W27 mit eigener Test-Bibliothek (2 Ordner).
+
 ### M5.6d1 Adresszeile + echte Shell-Icons ✅ (CI-Run #43)
 - `core::address` (rein, getestet): `%VAR%` (unbekannte bleiben stehen, `100%` bleibt), `shell:<Name>` mit Unterpfad (`shell:Downloads\\Fotos`), Windows-Kanonnamen + Aliase (`Personal` = Dokumente), unbekannter Name → klare Fehlermeldung; `~` nur unter Unix. Existierende Pfade werden nie umgedeutet (Ordner namens `%x%` bleibt erreichbar).
 - `fs::places::known_folder_path`: Windows `SHGetKnownFolderPath` (32 Ordner), Linux XDG-Gegenstücke wo vorhanden.

@@ -6,12 +6,15 @@
 
 mod dnd;
 mod icons;
+mod libraries;
 mod menu;
 mod types;
 #[cfg(windows)]
 mod win;
 #[cfg(windows)]
 mod win_dnd;
+#[cfg(windows)]
+mod win_lib;
 #[cfg(windows)]
 mod win_menu;
 
@@ -23,6 +26,7 @@ pub use icons::{
     bgra_to_rgba, icon_key, init_thread, load_icon, Icon, IconKey, IconRegistry, IconSize,
     RECYCLE_BIN, THIS_PC,
 };
+pub use libraries::{libraries, library, stem_for_shell_name, Library};
 pub use menu::{
     client_to_screen, menu_entries, own_verb, show_context_menu, show_properties, MenuEntry,
     MenuOutcome, OwnVerb,

@@ -440,7 +440,7 @@ fn trash_action(
 fn trash_paths(win: &MainWindow, paths: Vec<PathBuf>) {
     let paths: Vec<PathBuf> = paths
         .into_iter()
-        .filter(|p| VirtualPlace::from_path(p).is_none())
+        .filter(|p| !explorer_core::places::is_placeholder(p))
         .collect();
     if !paths.is_empty() {
         start_job(

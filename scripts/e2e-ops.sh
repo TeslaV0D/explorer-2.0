@@ -206,6 +206,11 @@ goto '/' ; goto '%HOME%'
 check "[60b] %HOME% is expanded" "last 'navigate tab' | grep -qF ' $HOME at='"
 goto 'shell:gibtsnicht'
 check "[60c] unknown shell: name gives a clear error" "last 'address error' | grep -q 'Unbekannter Shell-Ort: shell:gibtsnicht'"
+echo "-- M5.6d2: libraries (Windows only, Linux: clear message)"
+goto 'Bibliotheken'
+check "[61] 'Bibliotheken' gives a clear message on Linux" "last 'failed tab' | grep -qF '::bibliotheken'"
+goto 'shell:DocumentsLibrary'
+check "[61b] shell:DocumentsLibrary resolves to the library place" "last 'navigate tab' | grep -qF '::bibliothek:Documents'"
 check "[52] process alive" "kill -0 $PID"
 kill $PID; wait $PID 2>/dev/null
 check "[52b] no panic" "! grep -qi panic $LOG"

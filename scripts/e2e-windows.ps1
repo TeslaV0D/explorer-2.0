@@ -203,6 +203,33 @@ Check "[W21] shell:Downloads opens the Downloads folder" { (Last 'address=') -ma
 Keys '^l'; Keys 'shell:gibtsnicht'; Keys '{ENTER}'; Start-Sleep -Milliseconds 800
 Check "[W22] unknown shell: name gives a clear error" { (Last 'address error') -match 'Unbekannter Shell-Ort: shell:gibtsnicht' }
 Keys '{ESC}'
+# M5.6d2: libraries – an own test library with two folders
+$libDir = Join-Path $env:APPDATA 'Microsoft\Windows\Libraries'
+New-Item -ItemType Directory -Force $libDir | Out-Null
+$bibA = New-Item -ItemType Directory -Force "$R\bib-a"; $bibB = New-Item -ItemType Directory -Force "$R\bib-b"
+Set-Content "$bibA\in-a.txt" "a"
+$libXml = @"
+<?xml version="1.0" encoding="UTF-8"?>
+<libraryDescription xmlns="http://schemas.microsoft.com/windows/2009/library">
+  <name>e2ebib</name><version>1</version><isLibraryPinned>true</isLibraryPinned>
+  <searchConnectorDescriptionList>
+    <searchConnectorDescription><isDefaultSaveLocation>true</isDefaultSaveLocation><simpleLocation><url>$bibA</url></simpleLocation></searchConnectorDescription>
+    <searchConnectorDescription><simpleLocation><url>$bibB</url></simpleLocation></searchConnectorDescription>
+  </searchConnectorDescriptionList>
+</libraryDescription>
+"@
+Set-Content -Encoding UTF8 "$libDir\e2ebib.library-ms" $libXml
+Keys '^l'; Keys 'Bibliotheken'; Keys '{ENTER}'; Start-Sleep -Milliseconds 2500
+Check "[W23] 'Bibliotheken' lists the test library with 2 folders" { (Last 'address=') -match 'address=::bibliotheken\s*$' -and (Last 'order') -match '"e2ebib' -and (Last 'kinds') -match '2 Ordner' }
+Keys 'e2eb'; Keys '{ENTER}'; Start-Sleep -Milliseconds 2000
+Check "[W24] a library with several folders lists them" { (Last 'address=') -match 'address=::bibliothek:e2ebib\s*$' -and (Last 'order') -match 'bib-a' -and (Last 'order') -match 'bib-b' }
+Keys '{HOME}'; Keys '{ENTER}'; Start-Sleep -Milliseconds 1500
+Check "[W25] opening a library folder shows its files" { (Last 'address=') -match '\\bib-a\s*$' -and (Last 'order') -match 'in-a\.txt' }
+Keys '%{LEFT}'; Start-Sleep -Milliseconds 1500; Keys '{BACKSPACE}'; Start-Sleep -Milliseconds 1500
+Check "[W26] back to the library, up to 'Bibliotheken'" { (Last 'address=') -match 'address=::bibliotheken\s*$' }
+Keys '^l'; Keys 'shell:DocumentsLibrary'; Keys '{ENTER}'; Start-Sleep -Milliseconds 2000
+Check "[W27] shell:DocumentsLibrary opens the Documents library" { (Last 'navigate tab') -match 'User ::bibliothek:Documents ' -or (Log) -match 'redirect ::bibliothek:Documents' }
+Remove-Item -Force "$libDir\e2ebib.library-ms" -ErrorAction SilentlyContinue
 if ($shared) { Remove-SmbShare -Name 'e2efreigabe' -Force -ErrorAction SilentlyContinue }
 
 $p.Refresh()

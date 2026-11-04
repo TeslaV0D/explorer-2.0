@@ -80,7 +80,10 @@ enum VirtualData {
     #[default]
     None,
     Trash(Vec<explorer_ops::trashview::TrashEntry>),
-    ThisPc(HashMap<String, PathBuf>),
+    /// Row name → what it opens ("Dieser PC": drive roots, "Bibliotheken": libraries).
+    Targets(HashMap<String, PathBuf>),
+    /// One library: its display name and row name → member folder.
+    Library(String, HashMap<String, PathBuf>),
 }
 
 impl Tab {
@@ -110,6 +113,9 @@ impl Tab {
     fn title(&self) -> String {
         if let Some(v) = self.path.as_deref().and_then(VirtualPlace::from_path) {
             return v.label().to_string();
+        }
+        if let VirtualData::Library(display, _) = &self.virtual_data {
+            return display.clone();
         }
         match &self.path {
             Some(p) => p
@@ -360,6 +366,39 @@ fn load_virtual(v: VirtualPlace, filter: ViewFilter, sort: SortSpec) -> Update {
                 })
             }
         },
+        VirtualPlace::Libraries => {
+            if !explorer_shell::SHELL_SUPPORTED {
+                return Update::Failed(FsError {
+                    kind: FsErrorKind::Other,
+                    message: "Bibliotheken gibt es nur unter Windows".into(),
+                });
+            }
+            let mut kinds = HashMap::new();
+            let mut targets = HashMap::new();
+            let mut icons = HashMap::new();
+            let mut all = Vec::new();
+            for l in explorer_shell::libraries() {
+                let name = unique_name(&targets, &l.display);
+                kinds.insert(name.clone(), folder_count(l.folders.len()));
+                // a library with one folder opens that folder directly (Explorer)
+                let target = match l.folders.as_slice() {
+                    [one] => one.clone(),
+                    _ => explorer_core::places::library_path(&l.stem),
+                };
+                targets.insert(name.clone(), target);
+                icons.insert(name.clone(), IconKey::File(l.file.clone()));
+                all.push(dir_entry(name));
+            }
+            return finish_virtual(
+                all,
+                kinds,
+                icons,
+                VirtualData::Targets(targets),
+                filter,
+                sort,
+                t0,
+            );
+        }
         VirtualPlace::ThisPc => {
             let drives = explorer_fs::places::drives();
             let mut kinds = HashMap::new();
@@ -385,18 +424,36 @@ fn load_virtual(v: VirtualPlace, filter: ViewFilter, sort: SortSpec) -> Update {
                     }
                 })
                 .collect();
-            (all, kinds, VirtualData::ThisPc(targets))
+            (all, kinds, VirtualData::Targets(targets))
         }
     };
+    // drives get their real icon (system drive, USB stick, DVD …)
+    let icons = match &vdata {
+        VirtualData::Targets(t) => t
+            .iter()
+            .map(|(k, v)| (k.clone(), IconKey::File(v.clone())))
+            .collect(),
+        _ => HashMap::new(),
+    };
+    finish_virtual(all, kinds, icons, vdata, filter, sort, t0)
+}
+
+/// Sorted rows of a virtual listing; `icons` overrides the icon per row name
+/// (items do not live under the placeholder path, so the default would be wrong).
+fn finish_virtual(
+    all: Vec<Entry>,
+    kinds: HashMap<String, String>,
+    icons: HashMap<String, IconKey>,
+    vdata: VirtualData,
+    filter: ViewFilter,
+    sort: SortSpec,
+    t0: Instant,
+) -> Update {
     let total = all.len();
-    // icons by extension only: the items do not exist under the placeholder path
     let (entries, mut rows, hidden) = prepare_with(all, filter, sort, Path::new(""), Some(&kinds));
-    if let VirtualData::ThisPc(targets) = &vdata {
-        // drives get their real icon (system drive, USB stick, DVD …)
-        for (row, e) in rows.iter_mut().zip(&entries) {
-            if let Some(root) = targets.get(&e.name) {
-                row.icon = crate::icons::registry().id_for(IconKey::File(root.clone())) as i32;
-            }
+    for (row, e) in rows.iter_mut().zip(&entries) {
+        if let Some(k) = icons.get(&e.name) {
+            row.icon = crate::icons::registry().id_for(k.clone()) as i32;
         }
     }
     Update::Rows {
@@ -407,6 +464,82 @@ fn load_virtual(v: VirtualPlace, filter: ViewFilter, sort: SortSpec) -> Update {
         data_ready: t0.elapsed(),
         vdata,
     }
+}
+
+fn dir_entry(name: String) -> Entry {
+    Entry {
+        name,
+        kind: explorer_core::EntryKind::Dir,
+        size: 0,
+        modified: None,
+        hidden: false,
+        system: false,
+        readonly: false,
+        is_link: false,
+    }
+}
+
+fn folder_count(n: usize) -> String {
+    if n == 1 {
+        "1 Ordner".into()
+    } else {
+        format!("{n} Ordner")
+    }
+}
+
+/// `name`, or `name (2)`, `name (3)` … if a row with that name exists.
+fn unique_name<V>(taken: &HashMap<String, V>, name: &str) -> String {
+    let mut n = name.to_string();
+    let mut i = 2;
+    while taken.contains_key(&n) {
+        n = format!("{name} ({i})");
+        i += 1;
+    }
+    n
+}
+
+/// One library (blocking, loader thread): one folder → open it; several →
+/// list them; unknown → error.
+fn load_library(stem: &str, filter: ViewFilter, sort: SortSpec) -> Update {
+    let t0 = Instant::now();
+    let Some(lib) = explorer_shell::library(stem) else {
+        return Update::Failed(FsError {
+            kind: FsErrorKind::NotFound,
+            message: format!("Bibliothek nicht gefunden: {stem}"),
+        });
+    };
+    if let [one] = lib.folders.as_slice() {
+        return Update::Redirect(one.clone());
+    }
+    let mut kinds = HashMap::new();
+    let mut targets = HashMap::new();
+    let mut icons = HashMap::new();
+    let mut all = Vec::new();
+    for f in &lib.folders {
+        let base = f
+            .file_name()
+            .map(|n| n.to_string_lossy().into_owned())
+            .unwrap_or_else(|| f.to_string_lossy().into_owned());
+        let name = unique_name(&targets, &base);
+        kinds.insert(
+            name.clone(),
+            f.parent()
+                .map(|p| p.display().to_string())
+                .unwrap_or_default(),
+        );
+        targets.insert(name.clone(), f.clone());
+        icons.insert(name.clone(), IconKey::File(f.clone()));
+        all.push(dir_entry(name));
+    }
+    finish_virtual(
+        all,
+        kinds,
+        icons,
+        VirtualData::Library(lib.display, targets),
+        filter,
+        sort,
+        t0,
+    )
 }
 
 /// Lists the shares of a server (`\\nas`) like a folder (blocking, loader
@@ -604,6 +737,8 @@ fn sync_window(win: &MainWindow) {
     let place = match VirtualPlace::from_path(Path::new(&path)) {
         Some(VirtualPlace::Trash) => "trash",
         Some(VirtualPlace::ThisPc) => "thispc",
+        Some(VirtualPlace::Libraries) => "libraries",
+        None if explorer_core::places::is_placeholder(Path::new(&path)) => "libraries",
         None => "",
     };
     win.set_active_path(path.into());
@@ -658,6 +793,7 @@ pub fn init(
     };
     let usable = |s: &str| match VirtualPlace::from_path(Path::new(s)) {
         Some(v) => Some(v.path()),
+        None if explorer_core::places::is_placeholder(Path::new(s)) => Some(PathBuf::from(s)),
         None => explorer_fs::nearest_existing_ancestor(Path::new(s)),
     };
     let restored_active = session
@@ -880,9 +1016,11 @@ fn ensure_loaded(win: &MainWindow, pi: usize) {
 fn navigate_tab(win: &MainWindow, id: TabId, target: PathBuf, reason: Reason, hist: Hist) {
     let place = VirtualPlace::from_input(&target.to_string_lossy());
     let server = explorer_fs::network::server_root(&target.to_string_lossy());
+    let library = explorer_core::places::library_of(&target).map(str::to_string);
     let target = match (place, &server) {
         (Some(v), _) => v.path(),
         (None, Some(s)) => PathBuf::from(format!(r"\\{s}")),
+        (None, None) if library.is_some() => target,
         (None, None) => {
             let target = std::path::absolute(&target).unwrap_or(target);
             // show long names like Explorer (and keep path comparisons consistent with the shell)
@@ -927,6 +1065,21 @@ fn navigate_tab(win: &MainWindow, id: TabId, target: PathBuf, reason: Reason, hi
             .name("virtual-loader".into())
             .spawn(move || {
                 let upd = load_virtual(v, filter, sort);
+                let _ = slint::invoke_from_event_loop(move || {
+                    if let Some(w) = weak.upgrade() {
+                        apply(&w, id, gen, path, reason, upd, t0);
+                    }
+                });
+            });
+        sync_pane(pi);
+        return;
+    }
+    if let Some(stem) = library {
+        with_tab(id, |t, _, _| t.loader = None);
+        let _ = std::thread::Builder::new()
+            .name("library-loader".into())
+            .spawn(move || {
+                let upd = load_library(&stem, filter, sort);
                 let _ = slint::invoke_from_event_loop(move || {
                     if let Some(w) = weak.upgrade() {
                         apply(&w, id, gen, path, reason, upd, t0);
@@ -1008,6 +1161,8 @@ enum Update {
         data_ready: Duration,
         vdata: VirtualData,
     },
+    /// Go there instead (a library with a single folder).
+    Redirect(PathBuf),
     Failed(FsError),
 }
 
@@ -1103,7 +1258,7 @@ fn apply(
                 if path_changed || reason == Reason::User {
                     request(pi, |p| p.top_seq += 1);
                 }
-                if VirtualPlace::from_path(&path).is_none() && !is_server(&path) {
+                if !explorer_core::places::is_placeholder(&path) && !is_server(&path) {
                     start_watch(win, id, &path);
                 } else {
                     with_tab(id, |t, _, _| t.watcher = None); // refreshed by our own actions
@@ -1182,6 +1337,10 @@ fn apply(
                 crate::fileops::begin_rename(win, pi, i);
             }
         }
+        Update::Redirect(to) => {
+            trace(&format!("redirect {} -> {}", path.display(), to.display()));
+            navigate_tab(win, id, to, reason, Hist::Keep);
+        }
         Update::Failed(e) => {
             trace(&format!(
                 "failed tab={id} gen={gen} {:?} {}",
@@ -1231,6 +1390,25 @@ fn apply(
 }
 
 fn show_crumbs(id: TabId, path: &Path, chars: usize) {
+    if explorer_core::places::library_of(path).is_some() {
+        let title = with_tab(id, |t, _, _| t.title()).unwrap_or_default();
+        let two = vec![
+            Crumb {
+                label: VirtualPlace::Libraries.label().into(),
+                path: VirtualPlace::Libraries
+                    .path()
+                    .to_string_lossy()
+                    .as_ref()
+                    .into(),
+            },
+            Crumb {
+                label: title.into(),
+                path: path.to_string_lossy().as_ref().into(),
+            },
+        ];
+        with_tab(id, |t, _, _| t.crumbs.set_vec(two));
+        return;
+    }
     if let Some(v) = VirtualPlace::from_path(path) {
         let one = vec![Crumb {
             label: v.label().into(),
@@ -1460,6 +1638,13 @@ pub fn resolve_input(s: &str) -> Result<PathBuf, String> {
     } else {
         expand_home(&t, std::env::var("HOME").ok().as_deref())
     };
+    if let Some(stem) = t
+        .get(..6)
+        .filter(|p| p.eq_ignore_ascii_case("shell:"))
+        .and_then(|_| explorer_shell::stem_for_shell_name(&t[6..]))
+    {
+        return Ok(explorer_core::places::library_path(stem));
+    }
     match shell_folder(&t) {
         Ok(None) => Ok(PathBuf::from(t)),
         Ok(Some((f, sub))) => explorer_fs::places::known_folder_path(f)
@@ -1492,6 +1677,9 @@ pub fn go_up(win: &MainWindow, pi: usize) {
     let Some(id) = active_tab_id(pi) else { return };
     let target = with_tab(id, |t, _, _| {
         let p = t.path.as_ref()?;
+        if explorer_core::places::library_of(p).is_some() {
+            return Some(VirtualPlace::Libraries.path());
+        }
         if VirtualPlace::from_path(p).is_some() {
             return None; // top level
         }
@@ -1567,7 +1755,9 @@ pub fn open_entry(win: &MainWindow, pi: usize, index: usize) {
     let target = with_tab(id, |t, _, _| {
         let e = t.entries.get(index)?;
         match &t.virtual_data {
-            VirtualData::ThisPc(targets) => Some((targets.get(&e.name)?.clone(), true)),
+            VirtualData::Targets(targets) | VirtualData::Library(_, targets) => {
+                Some((targets.get(&e.name)?.clone(), true))
+            }
             VirtualData::Trash(_) => None, // items in the trash do not open (restore first)
             VirtualData::None => Some((t.path.as_ref()?.join(&e.name), e.is_dir())),
         }
@@ -1940,14 +2130,16 @@ pub(crate) fn pane_dir(pi: usize) -> Option<PathBuf> {
     let id = active_tab_id(pi)?;
     with_tab(id, |t, _, _| t.path.clone())
         .flatten()
-        .filter(|p| VirtualPlace::from_path(p).is_none() && !is_server(p))
+        .filter(|p| !explorer_core::places::is_placeholder(p) && !is_server(p))
 }
 
 /// Virtual place shown in pane `pi`, if any.
 pub(crate) fn pane_place(pi: usize) -> Option<VirtualPlace> {
     let id = active_tab_id(pi)?;
     with_tab(id, |t, _, _| {
-        t.path.as_deref().and_then(VirtualPlace::from_path)
+        let p = t.path.as_deref()?;
+        VirtualPlace::from_path(p)
+            .or_else(|| explorer_core::places::library_of(p).map(|_| VirtualPlace::Libraries))
     })
     .flatten()
 }
@@ -2008,7 +2200,7 @@ pub(crate) fn selected_paths(pi: usize) -> Vec<PathBuf> {
         let Some(dir) = t
             .path
             .as_ref()
-            .filter(|p| VirtualPlace::from_path(p).is_none())
+            .filter(|p| !explorer_core::places::is_placeholder(p))
         else {
             return Vec::new();
         };
@@ -2032,7 +2224,7 @@ pub(crate) fn entry_at(pi: usize, index: usize) -> Option<(PathBuf, String, bool
         let dir = t
             .path
             .as_ref()
-            .filter(|p| VirtualPlace::from_path(p).is_none())?;
+            .filter(|p| !explorer_core::places::is_placeholder(p))?;
         Some((dir.join(&e.name), e.name.clone(), e.is_dir()))
     })
     .flatten()
@@ -2216,6 +2408,21 @@ mod tests {
             resolve_input("Papierkorb").unwrap(),
             PathBuf::from("Papierkorb"),
             "virtual alias passes through"
+        );
+    }
+
+    #[test]
+    fn library_helpers() {
+        let mut m: HashMap<String, PathBuf> = HashMap::new();
+        assert_eq!(unique_name(&m, "Fotos"), "Fotos");
+        m.insert("Fotos".into(), PathBuf::new());
+        m.insert("Fotos (2)".into(), PathBuf::new());
+        assert_eq!(unique_name(&m, "Fotos"), "Fotos (3)");
+        assert_eq!(folder_count(1), "1 Ordner");
+        assert_eq!(folder_count(3), "3 Ordner");
+        assert_eq!(
+            resolve_input("shell:DocumentsLibrary").unwrap(),
+            explorer_core::places::library_path("Documents")
         );
     }
 

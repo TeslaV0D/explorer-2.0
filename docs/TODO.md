@@ -74,7 +74,8 @@ Legende: `[ ]` offen · `[~]` in Arbeit · `[x]` erledigt · Prio P0/P1/P2
     - [x] M5.6b „Dieser PC“: Laufwerke mit Speicherplatz, Klick auf Überschrift in der Seitenleiste, „Hoch“ vom Laufwerk → Dieser PC (CI-Run #39)
     - [x] M5.6c Netzwerk: `\\server` → Freigaben (`NetShareEnum`, ohne Admin-Freigaben `C$`/`IPC$`), Kommentar in „Typ“, Anmeldedialog (`WNetAddConnection3W`) bei Zugriff verweigert – einmal pro Ordner, „Hoch“ von Freigabe → Server, Breadcrumb `\\nas › film` (CI-Run #41)
     - [x] M5.6d1 Adresszeile wie Explorer: `%VAR%`, `shell:<Name>` (32 Known Folders, z. B. `shell:Downloads\\x`, `shell:Common Startup`), `~` (Unix); echte Shell-Icons in Seitenleiste (Ordner, Laufwerke, Papierkorb) und „Dieser PC“ (CI-Run #43)
-    - [ ] M5.6d2 Bibliotheken (`IShellLibrary`): Ansicht „Bibliotheken“, Bibliothek mit einem Ordner öffnet ihn, mit mehreren zeigt ihre Ordner; `shell:Libraries`/`shell:DocumentsLibrary` …
+    - [~] M5.6d2 Bibliotheken (`IShellLibrary`): Ansicht „Bibliotheken“, Bibliothek mit einem Ordner öffnet ihn, mit mehreren zeigt ihre Ordner; `shell:Libraries`/`shell:DocumentsLibrary` … – lokal grün, CI ausstehend
+    - [ ] Später: zusammengeführte Bibliotheks-Ansicht (Inhalte aller Ordner in einer Liste, wie Explorer) – braucht Dateioperationen mit Pfad pro Zeile
     - [ ] Später: Undo für „Wiederherstellen“, Shell-Kontextmenü im Papierkorb
   - [ ] M5.7 Thumbnails (für spätere Symbol-Ansicht vorbereitet, Cache)
 - [ ] M6 Ordneroptionen-Parität, Themes, Command Palette, Inspector
