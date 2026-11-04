@@ -20,6 +20,12 @@ pub struct Settings {
     pub sort_key: SortKey,
     pub sort_desc: bool,
     pub view: crate::view::ViewMode,
+    /// Ordneroptionen (Explorer: "Erweiterungen bei bekannten Dateitypen
+    /// ausblenden" inverted, "Geschützte Systemdateien ausblenden" inverted,
+    /// "Öffnen durch einfachen Klick").
+    pub show_extensions: bool,
+    pub show_protected: bool,
+    pub single_click: bool,
 }
 
 impl Default for Settings {
@@ -32,6 +38,9 @@ impl Default for Settings {
             sort_key: SortKey::Name,
             sort_desc: false,
             view: crate::view::ViewMode::Details,
+            show_extensions: true,
+            show_protected: false,
+            single_click: false,
         }
     }
 }
@@ -85,6 +94,15 @@ impl Settings {
                         s.sort_desc = b;
                     }
                 }
+                "show_extensions" | "show_protected" | "single_click" => {
+                    if let Some(b) = parse_bool(v) {
+                        match k {
+                            "show_extensions" => s.show_extensions = b,
+                            "show_protected" => s.show_protected = b,
+                            _ => s.single_click = b,
+                        }
+                    }
+                }
                 "view" => {
                     if let Some(m) = crate::view::ViewMode::parse(v) {
                         s.view = m;
@@ -110,13 +128,19 @@ impl Settings {
              gpu_probe_version = {}\n\
              sort_key = {}\n\
              sort_desc = {}\n\
-             view = {}\n",
+             view = {}\n\
+             show_extensions = {}\n\
+             show_protected = {}\n\
+             single_click = {}\n",
             self.hardware_acceleration,
             self.show_hidden,
             self.gpu_probe_version,
             self.sort_key.as_str(),
             self.sort_desc,
-            self.view.as_str()
+            self.view.as_str(),
+            self.show_extensions,
+            self.show_protected,
+            self.single_click
         )
     }
 
@@ -156,6 +180,9 @@ mod tests {
             sort_key: SortKey::Modified,
             sort_desc: true,
             view: crate::view::ViewMode::Large,
+            show_extensions: false,
+            show_protected: true,
+            single_click: true,
         };
         assert_eq!(Settings::parse(&s.serialize()), s);
     }

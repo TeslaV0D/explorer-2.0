@@ -3,6 +3,7 @@
 
 pub mod address;
 pub mod breadcrumb;
+pub mod display;
 pub mod history;
 pub mod places;
 pub mod renderer;
@@ -42,13 +43,27 @@ impl Entry {
     }
 }
 
-/// Explorer visibility rules ("Ordneroptionen"). Default = Explorer default (both off).
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
+/// Explorer visibility rules ("Ordneroptionen"). Default = Explorer default
+/// for hidden/protected files (both hidden); extensions are shown.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct ViewFilter {
     /// "Ausgeblendete Elemente anzeigen" (default off).
     pub show_hidden: bool,
     /// Inverse of "Geschützte Systemdateien ausblenden" (default: hidden).
     pub show_protected_os: bool,
+    /// Inverse of "Erweiterungen bei bekannten Dateitypen ausblenden"
+    /// (default: shown – a file manager for people who care about names).
+    pub show_extensions: bool,
+}
+
+impl Default for ViewFilter {
+    fn default() -> Self {
+        ViewFilter {
+            show_hidden: false,
+            show_protected_os: false,
+            show_extensions: true,
+        }
+    }
 }
 
 impl ViewFilter {
@@ -327,11 +342,13 @@ mod tests {
         let show_hidden = ViewFilter {
             show_hidden: true,
             show_protected_os: false,
+            ..Default::default()
         };
         assert!(!show_hidden.is_visible(&f));
         assert!(ViewFilter {
             show_hidden: true,
-            show_protected_os: true
+            show_protected_os: true,
+            ..Default::default()
         }
         .is_visible(&f));
         f.system = false; // hidden only

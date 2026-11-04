@@ -236,6 +236,37 @@ check "[62f] Ctrl+wheel down = smaller icons" "last 'view mode' | grep -q 'mode=
 check "[62g] the view is saved" "grep -q 'view = medium' $W/config-ops/settings.ini"
 xdotool key ctrl+shift+6; sleep 0.8
 check "[62h] Ctrl+Shift+6 = details again" "last 'view mode' | grep -q 'mode=details' && last 'geometry pane=0' | grep -q 'cols=1 '"
+echo "-- M6.1a: folder options (settings panel)"
+F=$R/opt; mkdir -p "$F/Ordner/Tief"; echo x > "$F/x.txt"
+goto "$F"
+# rows: 0 Ordner, 1 x.txt
+SETTINGS_BTN="1144 20"; OPT_EXT="835 205"; OPT_CLICK="835 257"; SETTINGS_CLOSE="1138 290"
+xdotool mousemove $SETTINGS_BTN click 1; sleep 0.6
+xdotool mousemove $OPT_EXT click 1; sleep 1.2
+check "[63] 'Dateinamenerweiterungen anzeigen' off hides known extensions" "last 'option show_extensions' | grep -q '=false' && last 'shown' | grep -qF '\"x\"' && ! last 'shown' | grep -qF 'x.txt'"
+xdotool mousemove $SETTINGS_CLOSE click 1; sleep 0.4
+xdotool mousemove $LIST_X $(row_y 1) click 1; sleep 0.3; xdotool key F2; sleep 0.4
+check "[63b] F2 edits the name without the hidden extension" "last 'rename start' | grep -q 'edit=x hidden_ext=txt'"
+xdotool key ctrl+a; xdotool type --delay 30 "y"; xdotool key Return; sleep 1
+check "[63c] … and keeps it: x.txt -> y.txt" "[ -f '$F/y.txt' ] && [ ! -e '$F/y' ] && [ ! -e '$F/x.txt' ]"
+xdotool mousemove $SETTINGS_BTN click 1; sleep 0.6
+xdotool mousemove $OPT_EXT click 1; sleep 1.2
+check "[63d] extensions shown again" "last 'option show_extensions' | grep -q '=true' && last 'shown' | grep -qF 'y.txt'"
+xdotool mousemove $OPT_CLICK click 1; sleep 0.4
+xdotool mousemove $SETTINGS_CLOSE click 1; sleep 0.4
+check "[64] single-click option saved" "grep -q 'single_click = true' $W/config-ops/settings.ini"
+xdotool mousemove $LIST_X $(row_y 0) click 1; sleep 1.2
+check "[64b] one click opens a folder" "last 'single-click open' | grep -q 'row=0' && last 'navigate tab' | grep -qF '$F/Ordner '"
+xdotool key BackSpace; sleep 1.2
+xdotool mousemove $LIST_X $(row_y 0) click --repeat 2 --delay 80 1; sleep 1.5
+check "[64c] a double click opens only one level (Ordner, not Ordner/Tief)" "last 'navigate tab' | grep -qF '$F/Ordner ' && ! grep -qF '$F/Ordner/Tief' $LOG && grep -q 'single-click open ignored' $LOG"
+xdotool key BackSpace; sleep 1.2
+xdotool mousemove $LIST_X $(row_y 1) sleep 1.2
+check "[64d] hovering selects (Markieren durch Zeigen)" "sel_is 'focus=y.txt'"
+xdotool mousemove $SETTINGS_BTN click 1; sleep 0.6
+xdotool mousemove $OPT_CLICK click 1; sleep 0.4
+xdotool mousemove $SETTINGS_CLOSE click 1; sleep 0.4
+check "[64e] single-click off again" "grep -q 'single_click = false' $W/config-ops/settings.ini"
 check "[52] process alive" "kill -0 $PID"
 kill $PID; wait $PID 2>/dev/null
 check "[52b] no panic" "! grep -qi panic $LOG"

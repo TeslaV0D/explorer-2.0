@@ -303,7 +303,7 @@ pub fn clean_input(s: &str) -> String {
 
 fn to_row(e: &Entry, dir: &Path, labels: &mut crate::icons::RowLabels) -> Row {
     Row {
-        name: e.name.as_str().into(),
+        name: labels.display_name(e).into(),
         size: if e.is_dir() {
             Default::default()
         } else {
@@ -344,6 +344,7 @@ fn prepare_with(
     let mut vis: Vec<Entry> = all.into_iter().filter(|e| filter.is_visible(e)).collect();
     let hidden = total - vis.len();
     let mut labels = crate::icons::RowLabels::default();
+    labels.show_extensions = filter.show_extensions;
     let kind_of = |labels: &mut crate::icons::RowLabels, e: &Entry| match kinds {
         Some(k) => k.get(&e.name).cloned().unwrap_or_default(),
         None => labels.type_name(e),
@@ -808,15 +809,18 @@ fn request_focus(pi: usize) {
 /// Sets up panes from the session (or a start path) and loads the visible tabs.
 pub fn init(
     win: &MainWindow,
-    show_hidden: bool,
+    filter: ViewFilter,
     sort: SortSpec,
     start: Option<PathBuf>,
     session: Option<Session>,
     view: ViewMode,
 ) {
     show_view(win, view);
+    let show_hidden = filter.show_hidden;
+    win.set_opt_show_ext(filter.show_extensions);
+    win.set_opt_show_protected(filter.show_protected_os);
     let (pane_model, place_model, drive_model) = APP.with_borrow_mut(|app| {
-        app.filter.show_hidden = show_hidden;
+        app.filter = filter;
         app.sort = sort;
         app.view = view;
         (
@@ -1355,6 +1359,14 @@ fn apply(
                         })
                         .unwrap_or_default();
                         trace(&format!("order {order:?}"));
+                        // names as listed (hidden extensions, …), for tests
+                        let shown: Vec<String> = with_tab(id, |t, _, _| {
+                            (0..t.model.row_count().min(8))
+                                .filter_map(|i| t.model.row_data(i).map(|r| r.name.to_string()))
+                                .collect()
+                        })
+                        .unwrap_or_default();
+                        trace(&format!("shown {shown:?}"));
                         // distinct type names (shell names on Windows), for tests
                         let kinds: Vec<String> = with_tab(id, |t, _, _| {
                             let mut k: Vec<String> = Vec::new();
@@ -1797,6 +1809,24 @@ fn history_step(win: &MainWindow, pi: usize, back: bool) {
     }
 }
 
+/// Single-click mode: a click opens. Clicks right after such an open are the
+/// rest of a double click and land on whatever the next folder shows under
+/// the cursor → ignored (Explorer does the same).
+pub fn click_open(win: &MainWindow, pi: usize, index: usize) {
+    thread_local! {
+        static LAST: std::cell::Cell<Option<Instant>> = const { std::cell::Cell::new(None) };
+    }
+    const GUARD: Duration = Duration::from_millis(600);
+    let now = Instant::now();
+    if LAST.get().is_some_and(|t| now.duration_since(t) < GUARD) {
+        trace("single-click open ignored (double click)");
+        return;
+    }
+    LAST.set(Some(now));
+    trace(&format!("single-click open pane={pi} row={index}"));
+    open_entry(win, pi, index);
+}
+
 /// Opens entry `index` of pane `pi`: folders navigate, files open with their default app.
 pub fn open_entry(win: &MainWindow, pi: usize, index: usize) {
     let Some(id) = active_tab_id(pi) else { return };
@@ -1829,6 +1859,33 @@ pub fn set_show_hidden(win: &MainWindow, on: bool) {
     }
     APP.with_borrow_mut(|app| app.filter.show_hidden = on);
     invalidate_all(win);
+}
+
+/// Settings panel ("Ordneroptionen"): `name` = show_extensions |
+/// show_protected | single_click.
+pub fn set_option(win: &MainWindow, name: &str, on: bool) {
+    trace(&format!("option {name}={on}"));
+    let res = crate::config::update(|s| match name {
+        "show_extensions" => s.show_extensions = on,
+        "show_protected" => s.show_protected = on,
+        "single_click" => s.single_click = on,
+        _ => {}
+    });
+    if let Err(e) = res {
+        win.set_error(e.into());
+    }
+    match name {
+        "show_extensions" => {
+            APP.with_borrow_mut(|app| app.filter.show_extensions = on);
+            invalidate_all(win);
+        }
+        "show_protected" => {
+            APP.with_borrow_mut(|app| app.filter.show_protected_os = on);
+            invalidate_all(win);
+        }
+        "single_click" => win.set_opt_single_click(on),
+        _ => {}
+    }
 }
 
 fn show_view(win: &MainWindow, m: ViewMode) {
@@ -2405,6 +2462,15 @@ pub(crate) fn selected_paths(pi: usize) -> Vec<PathBuf> {
     .unwrap_or_default()
 }
 
+/// Name shown for entry `index` of pane `pi` (may lack a hidden extension).
+pub(crate) fn shown_name_at(pi: usize, index: usize) -> Option<String> {
+    let id = active_tab_id(pi)?;
+    with_tab(id, |t, _, _| {
+        t.model.row_data(index).map(|r| r.name.to_string())
+    })
+    .flatten()
+}
+
 /// Entry `index` of pane `pi`: (full path, name, is_dir).
 pub(crate) fn entry_at(pi: usize, index: usize) -> Option<(PathBuf, String, bool)> {
     let id = active_tab_id(pi)?;
@@ -2654,7 +2720,7 @@ mod tests {
         assert_eq!(rows[1].modified, "1970-01-01 00:00");
         let show = ViewFilter {
             show_hidden: true,
-            show_protected_os: false,
+            ..Default::default()
         };
         let (vis, rows, hidden) = prepare(all, show, SortSpec::default(), Path::new("/d"));
         assert_eq!((vis.len(), hidden), (3, 0));

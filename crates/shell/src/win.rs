@@ -114,6 +114,24 @@ fn shell_object_icon(name: &str, size_flag: u32) -> Option<Icon> {
     icon
 }
 
+/// `HKEY_CLASSES_ROOT\.<ext>` exists (the type is registered).
+pub fn registered_type(ext: &str) -> bool {
+    use windows_sys::Win32::System::Registry::{
+        RegCloseKey, RegOpenKeyExW, HKEY, HKEY_CLASSES_ROOT, KEY_READ,
+    };
+    if ext.is_empty() {
+        return false;
+    }
+    let name = wide_str(&format!(".{ext}"));
+    let mut key: HKEY = std::ptr::null_mut();
+    // SAFETY: valid NUL-terminated name and out pointer; the key is closed below.
+    let rc = unsafe { RegOpenKeyExW(HKEY_CLASSES_ROOT, name.as_ptr(), 0, KEY_READ, &mut key) };
+    if rc == 0 {
+        unsafe { RegCloseKey(key) };
+    }
+    rc == 0
+}
+
 pub fn load_icon(key: &IconKey, size: IconSize) -> Option<Icon> {
     let size_flag = match size {
         IconSize::Small => SHGFI_SMALLICON,
@@ -334,6 +352,17 @@ mod tests {
             i.width
         );
         let _ = std::fs::remove_dir_all(&dir);
+    }
+
+    #[test]
+    fn registered_types() {
+        assert!(
+            registered_type("txt"),
+            ".txt is registered on every Windows"
+        );
+        assert!(registered_type("exe"));
+        assert!(!registered_type("gibtsnicht-e2e"));
+        assert!(!registered_type(""));
     }
 
     #[test]

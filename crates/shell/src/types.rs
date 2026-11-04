@@ -41,6 +41,24 @@ pub fn type_name(ext: &str, is_dir: bool) -> Option<String> {
     TypeNames::global().file(ext)
 }
 
+/// Is `ext` a registered file type? Explorer hides only these extensions
+/// ("bekannte Dateitypen"). Cached per extension. Without a registry (other
+/// platforms) every extension counts as known.
+pub fn known_type(ext: &str) -> bool {
+    static KNOWN: OnceLock<Mutex<HashMap<String, bool>>> = OnceLock::new();
+    let ext = ext.to_ascii_lowercase();
+    let map = KNOWN.get_or_init(Default::default);
+    if let Some(&v) = map.lock().unwrap_or_else(|e| e.into_inner()).get(&ext) {
+        return v;
+    }
+    #[cfg(windows)]
+    let v = crate::win::registered_type(&ext);
+    #[cfg(not(windows))]
+    let v = !ext.is_empty();
+    map.lock().unwrap_or_else(|e| e.into_inner()).insert(ext, v);
+    v
+}
+
 fn lookup(ext: &str, is_dir: bool) -> Option<String> {
     #[cfg(windows)]
     {

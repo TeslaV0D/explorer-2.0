@@ -33,7 +33,7 @@ pub use menu::{
     MenuOutcome, OwnVerb,
 };
 pub use thumbs::{premultiplied_bgra_to_rgba, thumbnail, Thumb};
-pub use types::{type_name, TypeNames};
+pub use types::{known_type, type_name, TypeNames};
 
 /// Screen pixels → window-client pixels (Windows); identity elsewhere.
 pub fn screen_to_client(hwnd: isize, x: i32, y: i32) -> (i32, i32) {

@@ -48,6 +48,8 @@ struct Rename {
     pi: usize,
     path: PathBuf,
     name: String,
+    /// Extension not shown in the list (and not in the editor): kept on commit.
+    hidden_ext: Option<String>,
 }
 
 #[derive(Default)]
@@ -727,10 +729,28 @@ pub fn begin_rename(win: &MainWindow, pi: usize, index: usize) {
         return;
     };
     let _ = win;
-    let sel = names::rename_selection_len(&name, is_dir);
-    trace(&format!("rename start pane={pi} name={name}"));
-    nav::show_rename(pi, index as i32, &name, sel);
-    OPS.with_borrow_mut(|o| o.rename = Some(Rename { pi, path, name }));
+    // with "hide extensions of known types" the editor shows the name as listed
+    let shown = nav::shown_name_at(pi, index).unwrap_or_else(|| name.clone());
+    let hidden_ext = explorer_core::display::hidden_ext(&name, &shown).map(str::to_string);
+    let text = if hidden_ext.is_some() {
+        shown
+    } else {
+        name.clone()
+    };
+    let sel = names::rename_selection_len(&text, is_dir);
+    trace(&format!(
+        "rename start pane={pi} name={name} edit={text} hidden_ext={}",
+        hidden_ext.as_deref().unwrap_or("-")
+    ));
+    nav::show_rename(pi, index as i32, &text, sel);
+    OPS.with_borrow_mut(|o| {
+        o.rename = Some(Rename {
+            pi,
+            path,
+            name,
+            hidden_ext,
+        })
+    });
 }
 
 pub fn rename_commit(win: &MainWindow, pi: usize, text: &str) {
@@ -738,6 +758,9 @@ pub fn rename_commit(win: &MainWindow, pi: usize, text: &str) {
         return;
     };
     nav::show_rename(pi, -1, "", 0);
+    let typed = text;
+    let full = explorer_core::display::rename_result(typed, r.hidden_ext.as_deref());
+    let text = full.as_str();
     if text == r.name {
         trace("rename unchanged");
         nav::focus_pane(pi);
@@ -779,9 +802,10 @@ pub fn rename_commit(win: &MainWindow, pi: usize, text: &str) {
             trace(&format!("rename failed: {msg}"));
             win.set_error(msg.into());
             // back into the editor with the typed text (like Explorer)
+            // (without the hidden extension: it is added again on the next commit)
             if let Some(i) = nav::focused_index(pi) {
-                let len = text.len();
-                nav::show_rename(pi, i as i32, text, len);
+                let len = typed.len();
+                nav::show_rename(pi, i as i32, typed, len);
                 OPS.with_borrow_mut(|o| o.rename = Some(r));
             }
         }

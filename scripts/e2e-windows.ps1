@@ -272,5 +272,36 @@ $p.Refresh()
 Check "[W13] app still running" { -not $p.HasExited }
 Check "[W14] no panic" { (Log) -notmatch '(?i)panic' }
 if (-not $p.HasExited) { Stop-Process -Id $p.Id -Force }
+$mainLog = $script:log
+
+# M6.1a: folder options from settings.ini (second start: real registry, real attributes)
+$o = New-Item -ItemType Directory -Force "$R\optionen"
+Set-Content "$o\brief.txt" "b"; Set-Content "$o\daten.unbekanntxyz" "u"
+Set-Content "$o\geschuetzt.dat" "g"; attrib +h +s "$o\geschuetzt.dat"
+$cfg2 = "$Work\cfg-opt"; New-Item -ItemType Directory -Force $cfg2 | Out-Null
+Set-Content "$cfg2\settings.ini" "show_extensions = false`r`nshow_protected = false`r`nshow_hidden = true"
+$script:log = "$Work\win-e2e-opt.log"; $env:EXPLORER2_CONFIG_DIR = $cfg2
+$p = Start-Process -FilePath $Exe -ArgumentList "`"$o`"" -PassThru -RedirectStandardError $script:log
+if (WaitFor 'done tab=1 ' 15000) {
+  Start-Sleep -Seconds 1
+  $p.Refresh(); $script:hwnd = $p.MainWindowHandle
+  [void][W]::ShowWindow($script:hwnd, 3); Start-Sleep -Milliseconds 800
+  Focus
+  Write-Host "shown: $(Last 'shown')"
+  Check "[W31] known extension hidden (.txt), unknown kept" { (Last 'shown') -match '"brief"' -and (Last 'shown') -match '"daten\.unbekanntxyz"' }
+  Check "[W31b] protected system file hidden although 'show hidden' is on" { (Last 'shown') -notmatch 'geschuetzt' }
+  # rows: 0 brief, 1 daten.unbekanntxyz
+  Click $LISTX (RowY 0)
+  Keys '{F2}'
+  Check "[W32] F2 edits the stem only" { (Last 'rename start') -match 'edit=brief hidden_ext=txt' }
+  Keys 'neu'; Keys '{ENTER}'; Start-Sleep -Milliseconds 1000
+  Check "[W32b] rename keeps the hidden extension (brief.txt -> neu.txt)" { (Test-Path "$o\neu.txt") -and -not (Test-Path "$o\neu") }
+  $p.Refresh()
+  Check "[W33] app still running" { -not $p.HasExited }
+} else { Fail "[W31] second start did not load" }
+if (-not $p.HasExited) { Stop-Process -Id $p.Id -Force }
+Check "[W33b] no panic" { (Log) -notmatch '(?i)panic' }
+if ($script:fail) { Write-Host "----- trace (options)"; Write-Host (Log) }
+$script:log = $mainLog
 if ($script:fail) { Write-Host "----- trace"; Write-Host (Log) }
 exit $script:fail

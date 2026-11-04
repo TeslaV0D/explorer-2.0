@@ -209,9 +209,24 @@ fn main() -> Result<(), slint::PlatformError> {
     on!(win, on_zoom, |w, up| nav::zoom(&w, up));
     on!(win, on_set_view, |w, v| nav::set_view_named(&w, v.as_str()));
     dnd::init(&win);
+    win.set_opt_single_click(settings.single_click);
+    on!(win, on_set_option, |w, n, on| nav::set_option(
+        &w,
+        n.as_str(),
+        on
+    ));
+    on!(win, on_click_open, |w, pi, r| nav::click_open(
+        &w,
+        pi as usize,
+        r as usize
+    ));
     nav::init(
         &win,
-        settings.show_hidden,
+        explorer_core::ViewFilter {
+            show_hidden: settings.show_hidden,
+            show_protected_os: settings.show_protected,
+            show_extensions: settings.show_extensions,
+        },
         explorer_core::SortSpec {
             key: settings.sort_key,
             descending: settings.sort_desc,

@@ -174,6 +174,8 @@ component Tile inherits Rectangle {
     in property <length> img-size;
     in property <bool> list-focused;
     in property <bool> os-dnd;
+    in property <bool> single-click;
+    callback click-open(int);
     callback activate();
     callback pressed(int, bool, bool);
     callback context(int, float, float);
@@ -204,6 +206,11 @@ component Tile inherits Rectangle {
     }
     property <bool> defer-click;
     property <bool> os-drag-sent;
+    Timer {
+        interval: 600ms;
+        running: root.single-click && ta.has-hover && !root.item.selected;
+        triggered => { root.pressed(root.index, false, false); }
+    }
     DragArea {
         enabled: !root.os-dnd;
         allow-copy: true;
@@ -224,6 +231,10 @@ component Tile inherits Rectangle {
                     root.defer-click = false;
                     root.pressed(root.index, false, false);
                 }
+                if (e.kind == PointerEventKind.up && e.button == PointerEventButton.left && root.single-click
+                    && !root.os-drag-sent && !e.modifiers.control && !e.modifiers.shift) {
+                    root.click-open(root.index);
+                }
                 if (e.kind == PointerEventKind.cancel) { root.defer-click = false; }
                 if (e.kind == PointerEventKind.up && e.button == PointerEventButton.right) {
                     root.activate();
@@ -232,7 +243,7 @@ component Tile inherits Rectangle {
                 if (e.kind == PointerEventKind.down && e.button == PointerEventButton.back) { root.back(); }
                 if (e.kind == PointerEventKind.down && e.button == PointerEventButton.forward) { root.forward(); }
             }
-            double-clicked => { root.open(root.index); }
+            double-clicked => { if (!root.single-click) { root.open(root.index); } }
             moved => {
                 if (root.os-dnd && self.pressed && !root.os-drag-sent
                     && (abs(self.mouse-x - self.pressed-x) > 5px || abs(self.mouse-y - self.pressed-y) > 5px)) {
@@ -311,6 +322,9 @@ component FilePane inherits Rectangle {
     callback rename-commit(string);
     callback rename-cancel();
     in property <[image]> icons;
+    // "Öffnen durch einfachen Klick": release opens, hovering selects
+    in property <bool> single-click;
+    callback click-open(int);
     // icon view ("details" = rows); tile geometry comes from Rust (core::view)
     in property <string> view-mode: "details";
     in property <[image]> thumbs;
@@ -567,6 +581,12 @@ component FilePane inherits Rectangle {
                         // dragged); the plain click is applied on release instead
                         property <bool> defer-click;
                         property <bool> os-drag-sent;
+                        // "Markieren durch Zeigen" (single-click mode)
+                        Timer {
+                            interval: 600ms;
+                            running: root.single-click && ta.has-hover && !row.selected && !root.renaming;
+                            triggered => { root.row-pressed(i, false, false); }
+                        }
                         // the TouchArea must be a child: DragArea filters presses before its children
                         DragArea {
                             enabled: !root.os-dnd;
@@ -589,6 +609,10 @@ component FilePane inherits Rectangle {
                                         defer-click = false;
                                         root.row-pressed(i, false, false);
                                     }
+                                    if (e.kind == PointerEventKind.up && e.button == PointerEventButton.left && root.single-click
+                                        && !os-drag-sent && !e.modifiers.control && !e.modifiers.shift) {
+                                        root.click-open(i);
+                                    }
                                     if (e.kind == PointerEventKind.cancel) { defer-click = false; }
                                     if (e.kind == PointerEventKind.up && e.button == PointerEventButton.right) {
                                         root.activate();
@@ -597,7 +621,9 @@ component FilePane inherits Rectangle {
                                     }
                                     root.mouse-nav(e);
                                 }
-                                double-clicked => { root.open-row(i); }
+                                // single-click mode opens on release; a double click there must not
+                                // open what lands under the cursor in the next folder
+                                double-clicked => { if (!root.single-click) { root.open-row(i); } }
                                 scroll-event(e) => {
                                     if (e.modifiers.control) { root.zoom(e.delta-y > 0); return accept; }
                                     return reject;
@@ -658,6 +684,8 @@ component FilePane inherits Rectangle {
                                 img-size: root.img-size;
                                 list-focused: list-focus.has-focus;
                                 os-dnd: root.os-dnd;
+                                single-click: root.single-click;
+                                click-open(i) => { root.click-open(i); }
                                 activate => { root.activate(); list-focus.focus(); }
                                 pressed(i, c, s) => { root.row-pressed(i, c, s); }
                                 context(i, x, y) => { list-focus.focus(); root.context-menu(i, x, y); }
@@ -798,6 +826,11 @@ export component MainWindow inherits Window {
     in-out property <bool> show-hidden;
     in-out property <bool> hw-accel: true;
     in-out property <bool> settings-open;
+    // Ordneroptionen
+    in-out property <bool> opt-show-ext: true;
+    in-out property <bool> opt-show-protected;
+    in-out property <bool> opt-single-click;
+    callback set-option(string, bool);
     in property <string> renderer-status;
     in property <string> sort-key: "name";
     in property <bool> sort-desc;
@@ -819,6 +852,7 @@ export component MainWindow inherits Window {
     in property <length> img-size: 48px;
     callback zoom(bool);
     callback set-view(string);
+    callback click-open(int, int);
     callback context-menu(int, int, float, float);
     in property <bool> can-paste;
     in property <bool> can-undo;
@@ -966,6 +1000,8 @@ export component MainWindow inherits Window {
                         os-drag(r) => { root.os-drag(pi, r); }
                         geometry(x, y, w, h, cy, lh, cols, tw) => { root.geometry(pi, x, y, w, h, cy, lh, cols, tw); }
                         view-mode: root.view-mode;
+                        single-click: root.opt-single-click;
+                        click-open(r) => { root.click-open(pi, r); }
                         thumbs: root.thumbs;
                         tile-w: root.tile-w;
                         tile-h: root.tile-h;
@@ -1120,6 +1156,23 @@ export component MainWindow inherits Window {
             }
             Text { text: "Änderung wird beim nächsten Start wirksam."; font-size: 11px; color: #666; }
             Text { text: root.renderer-status; font-size: 11px; color: #444; wrap: word-wrap; }
+            Rectangle { height: 1px; background: #e3e6ea; }
+            Text { text: "Ordneroptionen"; font-size: 13px; font-weight: 600; }
+            CheckBox {
+                text: "Dateinamenerweiterungen anzeigen";
+                checked <=> root.opt-show-ext;
+                toggled => { root.set-option("show_extensions", self.checked); }
+            }
+            CheckBox {
+                text: "Geschützte Systemdateien anzeigen";
+                checked <=> root.opt-show-protected;
+                toggled => { root.set-option("show_protected", self.checked); }
+            }
+            CheckBox {
+                text: "Öffnen durch einfachen Klick (Markieren durch Zeigen)";
+                checked <=> root.opt-single-click;
+                toggled => { root.set-option("single_click", self.checked); }
+            }
             HorizontalLayout {
                 alignment: end;
                 Button { text: "Schließen"; clicked => { root.settings-open = false; } }

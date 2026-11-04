@@ -28,12 +28,14 @@ pub fn registry() -> &'static IconRegistry {
 
 /// Per-`prepare` cache: avoids a registry lock / shell lookup per row
 /// (a 100 000-file folder has only a handful of distinct extensions).
-#[derive(Default)]
 pub struct RowLabels {
     ext_ids: HashMap<String, u32>,
     folder_id: Option<u32>,
     types: HashMap<String, String>,
     dir_type: Option<String>,
+    /// "Erweiterungen bei bekannten Dateitypen ausblenden" is off.
+    pub show_extensions: bool,
+    known: HashMap<String, bool>,
 }
 
 impl RowLabels {
@@ -60,6 +62,17 @@ impl RowLabels {
         id as i32
     }
 
+    /// Name as shown in the list (extension of known types hidden if the
+    /// option says so).
+    pub fn display_name<'a>(&mut self, e: &'a Entry) -> &'a str {
+        let known = &mut self.known;
+        explorer_core::display::display_name(&e.name, e.is_dir(), self.show_extensions, |ext| {
+            *known
+                .entry(ext.to_ascii_lowercase())
+                .or_insert_with(|| explorer_shell::known_type(ext))
+        })
+    }
+
     /// Shell type name ("Textdokument"), or the built-in label without shell.
     pub fn type_name(&mut self, e: &Entry) -> String {
         if !SHELL_SUPPORTED {
@@ -80,6 +93,19 @@ impl RowLabels {
         let t = explorer_shell::type_name(ext, false).unwrap_or_else(|| type_label(e));
         self.types.insert(ext.to_string(), t.clone());
         t
+    }
+}
+
+impl Default for RowLabels {
+    fn default() -> Self {
+        RowLabels {
+            ext_ids: HashMap::new(),
+            folder_id: None,
+            types: HashMap::new(),
+            dir_type: None,
+            show_extensions: true,
+            known: HashMap::new(),
+        }
     }
 }
 

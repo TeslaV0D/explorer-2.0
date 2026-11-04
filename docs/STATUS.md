@@ -40,6 +40,13 @@
 - **Bug (CI #32/#33, UI-Matrix)**: OLE-Drop-Target wurde nie registriert („Invalid window handle“) – der Timer lief, bevor Slint das native Fenster erzeugt hatte → Ablegen aus anderen Apps wäre tot gewesen. Fix: Registrierung wiederholt bis HWND existiert (50 ms, max. 5 s), sonst Rückfall auf In-App-DnD.
 - Neu: **Windows-E2E mit echter Tastatur/Maus** (`scripts/e2e-windows.ps1`, CI-Schritt im Release-Job, Screenshots bei Fehler).
 
+### M6.1a Ordneroptionen (lokal grün, CI ausstehend)
+- Einstellungs-Panel, Abschnitt „Ordneroptionen“ (in settings.ini: `show_extensions`, `show_protected`, `single_click`):
+  - **Dateinamenerweiterungen anzeigen** (Standard an): aus → Endung nur bei *bekannten* Typen ausgeblendet (Windows: `HKCR\.ext` existiert, gecacht; Ordner, `.gitignore`, `ende.` nie). F2 bearbeitet dann nur den angezeigten Namen, die Endung wird beim Speichern wieder angehängt („x.txt“ tippen → „x.txt.txt“, wie Explorer); bei Fehler bleibt der getippte Text ohne Endung im Editor (keine doppelte Endung).
+  - **Geschützte Systemdateien anzeigen** (Standard aus): versteckt+System bleibt auch bei „Ausgeblendete“ unsichtbar.
+  - **Öffnen durch einfachen Klick**: Loslassen öffnet, Zeigen (600 ms) markiert, Strg/Shift-Klick wählt nur aus; Klicks bis 600 ms nach einem Öffnen werden ignoriert (sonst öffnet der 2. Klick eines Doppelklicks, was im nächsten Ordner unter dem Zeiger liegt); gilt für Zeilen und Kacheln.
+- Tests: Unit (`core::display`, Settings-Roundtrip, Windows `registered_types`), Linux-E2E [63]–[64e] (141/141), Windows-E2E W31–W33b (zweiter Start mit settings.ini: `.txt` ausgeblendet, unbekannte Endung bleibt, `attrib +h +s`-Datei unsichtbar, F2 behält Endung).
+
 ### M5.7 Kachel-Ansicht + Vorschaubilder ✅ (CI-Run #48; W28c: echtes PNG-Vorschaubild, Kachel-Mitte exakt R220 G20 B20) → **M5 komplett**
 - `core::view::ViewMode` (Details/Mittel/Groß/Extra groß, 48/96/256 px, Kachelmaße, `step` für Strg+Mausrad, Explorer-Kürzel Strg+Shift+1/2/3/6 inkl. US/DE-Shift-Zeichen), Einstellung `view` in settings.ini.
 - `shell::thumbnail(path, px)`: `IShellItemImageFactory::GetImage` (Vorschau aus dem Windows-Thumbnail-Cache, sonst großes Shell-Icon), vormultipliziertes BGRA → RGBA; Windows-Test mit selbst geschriebener BMP.
