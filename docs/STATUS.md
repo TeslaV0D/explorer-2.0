@@ -48,7 +48,7 @@
 - „>“-Modus: Orte aus Seitenleiste, Laufwerken, virtuellen Orten und dem Verlauf aller Tabs.
 - Tests: Unit, Linux-E2E [69]–[69g] (168/168), Windows-E2E W36.
 - CI #53 rot am Erststart-Gate: run→erstes Bild 1376 ms (#51: 456, #52: 592; VM zusätzlich ~2× langsamer). Die Palette war unsichtbar (`visible: false`), aber **aufgebaut und gelayoutet** → jetzt eigene Komponente unter `if pal-open` (entsteht erst beim Öffnen, `init` fokussiert das Feld).
-- #54 (gleicher App-Code wie #55) trotzdem rot: 1178 ms; #55: **731 ms** bei identischem Code → das Erststart-Gate misst vor allem die VM (Hintergrund-Probe 170 vs 89 ms). CI lässt den Windows-E2E jetzt auch nach einem roten Zeit-Gate laufen (Funktionssignal geht nicht mehr verloren). Gate-Schwelle: Entscheidung Boss offen.
+- #54 (gleicher App-Code wie #55) trotzdem rot: 1178 ms; #55: **731 ms** bei identischem Code → das Erststart-Gate misst vor allem die VM (Hintergrund-Probe 170 vs 89 ms). CI lässt den Windows-E2E jetzt auch nach einem roten Zeit-Gate laufen (Funktionssignal geht nicht mehr verloren). Gate jetzt Warnung ab 1 s, rot ab 2 s (Boss, D-018).
 
 ### M6.2 Inspector ✅ (CI-Run #52)
 - Rechte Seitenleiste (280 px), **Alt+P** oder Knopf „Details“, Zustand in settings.ini (`inspector`).

@@ -202,7 +202,10 @@ jobs:
           $r = Invoke-App 'auto-fresh' $exe @{ EXPLORER2_CONFIG_DIR = $cfgA }
           Expect $r 'renderer choice=Software reason="GPU probe pending \(background\)" background=Now' 'no probe on the startup path'
           Expect $r 'background probe: Unusable \{ reason: "software OpenGL \(gdi generic\)" \}' 'background probe rejects runner GL'
-          if ($r.cold -gt 1000) { throw "[auto-fresh] first start sanity gate exceeded: $($r.cold) ms > 1000 ms" }
+          # one-shot start on a fresh VM: varies ~0.6-1.2 s with VM speed for the same
+          # code (#54/#55) -> warning from 1 s, red from 2 s (D-018, Boss 2026-11-04)
+          if ($r.cold -gt 2000) { throw "[auto-fresh] first start sanity gate exceeded: $($r.cold) ms > 2000 ms" }
+          if ($r.cold -gt 1000) { Write-Host "::warning title=First start slow::[auto-fresh] first start $($r.cold) ms > 1000 ms (VM variance or a real regression - compare 'run at' / 'event loop running' with earlier runs)" }
           # 2) Normal starts: cached result, delayed re-probe; cold start budget 300 ms (best of 3, D-008)
           $colds = @()
           foreach ($n in 1..3) {

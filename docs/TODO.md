@@ -91,7 +91,7 @@ Legende: `[ ]` offen · `[~]` in Arbeit · `[x]` erledigt · Prio P0/P1/P2
     - [ ] Später: Inspector-Breite verstellbar; Metadaten aus Shell-Eigenschaften (Autor, Länge von Videos/Audio, EXIF)
   - [x] M6.3 Befehlspalette (Strg+Shift+P): zentrales Befehlsverzeichnis (`core::commands`, 45 Befehle mit Kürzel + Bedingung), unscharfe Suche (Umlaute/Groß-Klein egal, Wortanfänge zählen), nicht verfügbare Befehle grau, zuletzt benutzte oben (settings.ini), „>“ = Orte (Schnellzugriff, Laufwerke, virtuelle Orte, zuletzt besuchte Ordner) – CI-Run #55
     - [ ] Später: frei belegbare Tastenkürzel auf Basis des Befehlsverzeichnisses
-    - [ ] Entscheidung Boss offen: Erststart-Gate (einmaliger Start auf frischer VM, schwankt 618–1178 ms bei gleichem Code) – Vorschlag: Warnung ab 1 s, rot ab 2 s
+    - [x] Erststart-Gate: Warnung ab 1 s, rot ab 2 s (Boss: Variante 1, D-018)
   - [ ] M6.4 Farbschemata (Hell/Dunkel/System, Akzentfarbe)
 - [ ] **R-001 Ein-Knopf-Reset** für alle Integrationen (App-Knopf + eigenständiges Recovery-Tool + Journal + CI-Snapshot-Test) – Voraussetzung, bevor irgendeine Integration ausgeliefert wird
 - [ ] M7 Windows-Integration Stufe 1–3 (siehe `WINDOWS-INTEGRATION.md`) + Verifikationspunkte auf echtem Windows
