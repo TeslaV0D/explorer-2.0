@@ -183,6 +183,25 @@ component FilePane inherits Rectangle {
     callback rename-commit(string);
     callback rename-cancel();
     in property <[image]> icons;
+    // Windows: system (OLE) drag & drop instead of Slint's DragArea
+    in property <bool> os-dnd;
+    callback os-drag(int);
+    // list geometry for hit-testing external drops (window px + scroll offset)
+    callback geometry(float, float, float, float, float);
+    function report-geometry() {
+        root.geometry(list-focus.absolute-position.x / 1px, list-focus.absolute-position.y / 1px,
+                      list-focus.width / 1px, list-focus.height / 1px, list.content-y / 1px);
+    }
+    property <length> geo-x: list-focus.absolute-position.x;
+    property <length> geo-y: list-focus.absolute-position.y;
+    property <length> geo-w: list-focus.width;
+    property <length> geo-h: list-focus.height;
+    property <length> geo-scroll: list.content-y;
+    changed geo-x => { root.report-geometry(); }
+    changed geo-y => { root.report-geometry(); }
+    changed geo-w => { root.report-geometry(); }
+    changed geo-h => { root.report-geometry(); }
+    changed geo-scroll => { root.report-geometry(); }
     // right-click / Shift+F10: row (-1 = folder background), window position in px
     callback context-menu(int, float, float);
     property <int> menu-seq: root.data.menu-seq;
@@ -253,7 +272,7 @@ component FilePane inherits Rectangle {
     // Keyboard focus follows the active pane. A pane created by the split view is
     // instantiated after the request was made, so `changed` alone would miss it.
     changed active => { if (root.active) { list-focus.focus(); } }
-    init => { if (root.active) { list-focus.focus(); } }
+    init => { if (root.active) { list-focus.focus(); } root.report-geometry(); }
     property <length> addr-w: address.width;
     changed addr-w => { root.address-resized(self.addr-w / 1px); }
 
@@ -389,14 +408,17 @@ component FilePane inherits Rectangle {
                         // pressing an already selected row keeps a multi-selection (so it can be
                         // dragged); the plain click is applied on release instead
                         property <bool> defer-click;
+                        property <bool> os-drag-sent;
                         // the TouchArea must be a child: DragArea filters presses before its children
                         DragArea {
+                            enabled: !root.os-dnd;
                             allow-copy: true;
                             allow-move: true;
                             data: root.drag-payload(i);
                             ta := TouchArea {
                                 pointer-event(e) => {
                                     if (e.kind == PointerEventKind.down && e.button == PointerEventButton.left) {
+                                        os-drag-sent = false;
                                         root.activate();
                                         list-focus.focus();
                                         if (row.selected && !e.modifiers.control && !e.modifiers.shift) {
@@ -418,6 +440,14 @@ component FilePane inherits Rectangle {
                                     root.mouse-nav(e);
                                 }
                                 double-clicked => { root.open-row(i); }
+                                moved => {
+                                    if (root.os-dnd && self.pressed && !os-drag-sent
+                                        && (abs(self.mouse-x - self.pressed-x) > 5px || abs(self.mouse-y - self.pressed-y) > 5px)) {
+                                        os-drag-sent = true;
+                                        defer-click = false;
+                                        root.os-drag(i);
+                                    }
+                                }
                             }
                             HorizontalLayout {
                                 padding-left: 6px; spacing: 0px;
@@ -562,6 +592,9 @@ export component MainWindow inherits Window {
     // file operations
     in property <[JobRow]> jobs;
     in property <[image]> icons;
+    in property <bool> os-dnd;
+    callback os-drag(int, int);
+    callback geometry(int, float, float, float, float, float);
     callback viewport(int, int, int);
     callback context-menu(int, int, float, float);
     in property <bool> can-paste;
@@ -694,6 +727,9 @@ export component MainWindow inherits Window {
                         rename-commit(t) => { root.rename-commit(pi, t); }
                         rename-cancel => { root.rename-cancel(pi); }
                         icons: root.icons;
+                        os-dnd: root.os-dnd;
+                        os-drag(r) => { root.os-drag(pi, r); }
+                        geometry(x, y, w, h, cy) => { root.geometry(pi, x, y, w, h, cy); }
                         viewport(f, n) => { root.viewport(pi, f, n); }
                         context-menu(r, x, y) => { root.context-menu(pi, r, x, y); }
                         drag-payload(r) => { return root.drag-payload(pi, r); }

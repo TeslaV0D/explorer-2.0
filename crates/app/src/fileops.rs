@@ -328,7 +328,7 @@ fn paste(win: &MainWindow, pi: usize) {
 // ---------------------------------------------------------------- context menu
 
 /// Native window handle (HWND) for shell dialogs/menus; 0 if unavailable.
-fn window_handle(win: &MainWindow) -> isize {
+pub fn window_handle(win: &MainWindow) -> isize {
     #[cfg(windows)]
     {
         use raw_window_handle::{HasWindowHandle, RawWindowHandle};
@@ -365,6 +365,16 @@ pub fn context_menu(win: &MainWindow, pi: usize, row: i32, x: f32, y: f32) {
     if !explorer_shell::SHELL_SUPPORTED {
         return; // no shell menu on this platform (own fallback menu: later)
     }
+    // The menu runs a modal message loop → start it after this Slint callback returned.
+    let weak = win.as_weak();
+    slint::Timer::single_shot(std::time::Duration::ZERO, move || {
+        if let Some(w) = weak.upgrade() {
+            show_menu_now(&w, pi, dir, items, x, y);
+        }
+    });
+}
+
+fn show_menu_now(win: &MainWindow, pi: usize, dir: PathBuf, items: Vec<PathBuf>, x: f32, y: f32) {
     let hwnd = window_handle(win);
     let at = explorer_shell::client_to_screen(hwnd, x, y, win.window().scale_factor());
     let outcome = explorer_shell::show_context_menu(hwnd, &dir, &items, at);
@@ -497,6 +507,50 @@ pub fn drop_files(
         false,
     );
     action
+}
+
+/// OLE drop on pane `pi` / row `row` (-1 = shown folder): decide (and on
+/// `Drop` perform) like Explorer – same drive moves, other drive copies,
+/// Ctrl copies, Shift moves; never into itself.
+pub fn ole_drop(
+    win: &MainWindow,
+    pi: usize,
+    row: i32,
+    ev: &explorer_shell::DropEvent,
+) -> explorer_shell::DropEffect {
+    use explorer_shell::{default_effect, DropEffect, DropPhase};
+    let Some(dest) = drop_target(pi, row) else {
+        return DropEffect::None;
+    };
+    let effect = default_effect(ev.paths, &dest, ev.keys, ev.allow_copy, ev.allow_move);
+    // same rules as in-app drags (not into itself, no-op moves)
+    let copy = effect == DropEffect::Copy;
+    if effect == DropEffect::None || drop_decision(ev.paths, &dest, copy) == 0 {
+        return DropEffect::None;
+    }
+    if ev.phase == DropPhase::Drop {
+        trace(&format!(
+            "ole drop pane={pi} row={row} n={} effect={effect:?} dest={}",
+            ev.paths.len(),
+            dest.display()
+        ));
+        let (kind, label) = if copy {
+            (Kind::Copy, "Kopieren")
+        } else {
+            (Kind::Move, "Verschieben")
+        };
+        start_job(
+            win,
+            JobSpec {
+                kind,
+                sources: ev.paths.to_vec(),
+                dest: Some(dest),
+            },
+            label,
+            false,
+        );
+    }
+    effect
 }
 
 // ---------------------------------------------------------------- rename / new folder

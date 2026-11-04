@@ -99,6 +99,9 @@
 - CI nutzt das **neueste** stable (neue Clippy-Lints, z. B. 1.99 `chunks_exact_to_as_chunks`) → vor dem Push `rustup update stable` lokal.
 - Windows: Pfade können **8.3-Kurznamen** enthalten (`C:\Users\RUNNER~1\…`, z. B. aus `%TEMP%`), Shell/Papierkorb liefern Langnamen → Pfade nie roh vergleichen: Elternordner kanonisieren + case-insensitiv (`undo::same_location`).
 - Windows-Papierkorb (`trash`-Crate): `TrashItem.name` ist der **Anzeigename** (Endung bei Standard-Einstellung ausgeblendet: „weg“ statt „weg.txt“) und wird beim Restore als Zielname benutzt → Abgleich über Stamm + Endung der `$R…`-Datei (`item.id`), vor `restore_all` `item.name` auf den echten Namen setzen.
+- `windows`-Crate `#[implement]` expandiert zu `windows_core::…` → `windows-core` als **direkte** Abhängigkeit nötig.
+- Modale Windows-Schleifen (`SHDoDragDrop`, `TrackPopupMenuEx`) nie direkt aus einem Slint-Callback, der danach noch Slint-State anfasst → Start per `slint::Timer::single_shot(ZERO)`; nach `DoDragDrop` Pointer-Release per `dispatch_event` nachreichen (OLE schluckt das Loslassen).
+- Slint erzeugt das native Fenster erst beim Event-Loop-Start → HWND-abhängiges Setup (Drop-Target) per Timer nach `run()`.
 - Papierkorb-Restore immer gegen Snapshot **vor** der Aktion (gleicher Originalpfad kann mehrfach im Papierkorb liegen).
 
 ## Referenzen

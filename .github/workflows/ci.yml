@@ -180,6 +180,8 @@ jobs:
             Write-Host "[$label] first rows ready: $first ms | all 100k ready: $all ms | cold start to content: $cold ms"
             if ($first -gt 100) { throw "[$label] first rows budget exceeded: $first ms" }
             if ($all -gt 1000) { throw "[$label] full load budget exceeded: $all ms" }
+            # M5.5: our OLE drop target replaced winit's
+            if ($text -notmatch 'ole drop target registered=true') { throw "[$label] OLE drop target not registered" }
             # M5.1/5.2: real shell icons (folder + .txt) and shell type names in the "Typ" column
             if ($text -notmatch 'icons loaded n=\d+ total=([2-9]|[1-9]\d+) ') { throw "[$label] shell icons not loaded" }
             if ($text -notmatch 'kinds \[.*"(Textdokument|Text Document)"') { throw "[$label] no shell type names: $([regex]::Match($text, 'kinds \[.*').Value)" }
@@ -208,6 +210,10 @@ jobs:
           $best = ($colds | Measure-Object -Minimum).Minimum
           Write-Host "[auto-cached] cold start best=$best ms (all: $($colds -join ', ') ms, budget 300 ms)"
           if ($best -gt 300) { throw "[auto-cached] cold start budget exceeded: best $best ms > 300 ms" }
+          # 2b) OLE drag out (modal loop inside the running event loop): must not crash or hang
+          $r = Invoke-App 'ole-drag' $exe @{ EXPLORER2_CONFIG_DIR = $cfgA; EXPLORER2_TEST_OLE_DRAG = '1' } 9
+          Expect $r 'ole drag start n=1' 'drag started'
+          Expect $r 'ole drag result (Ok|Err)' 'drag returned (no hang)'
           # 3) Forced GPU without GPU: Skia falls back by itself, app keeps working
           $r = Invoke-App 'forced-gpu' $exe @{ EXPLORER2_CONFIG_DIR = "$env:RUNNER_TEMP\cfg-gpu"; EXPLORER2_RENDERER = 'gpu' }
           Expect $r 'renderer choice=Gpu reason="forced' 'GPU forced'

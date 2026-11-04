@@ -1,6 +1,7 @@
 #![cfg_attr(all(windows, not(debug_assertions)), windows_subsystem = "windows")]
 
 mod config;
+mod dnd;
 mod fileops;
 mod gfx;
 mod icons;
@@ -141,6 +142,23 @@ fn main() -> Result<(), slint::PlatformError> {
     on!(win, on_context_menu, |w, pi, row, x, y| {
         fileops::context_menu(&w, pi as usize, row, x, y)
     });
+    on!(win, on_os_drag, |w, pi, row| dnd::os_drag(
+        &w,
+        pi as usize,
+        row as usize
+    ));
+    win.on_geometry(|pi, x, y, w, h, cy| {
+        dnd::set_geometry(
+            pi as usize,
+            dnd::Geom {
+                x,
+                y,
+                w,
+                h,
+                content_y: cy,
+            },
+        )
+    });
     on!(win, on_job_pause, |_w, id, p| fileops::job_pause(id, p));
     on!(win, on_job_cancel, |w, id| fileops::job_cancel(&w, id));
     on!(win, on_conflict_answer, |w, n| fileops::conflict_answer(
@@ -178,6 +196,7 @@ fn main() -> Result<(), slint::PlatformError> {
 
     fileops::init(&win);
     icons::init(&win);
+    dnd::init(&win);
     nav::init(
         &win,
         settings.show_hidden,

@@ -87,6 +87,31 @@ fn context_menu(hwnd: HWND, dir: &Path, items: &[PathBuf]) -> Result<IContextMen
     }
 }
 
+/// Any UI object (context menu, data object, …) of `items` (all in `dir`).
+pub(crate) fn ui_object<T: Interface>(
+    hwnd: HWND,
+    dir: &Path,
+    items: &[PathBuf],
+) -> Result<T, String> {
+    com_init();
+    let e = |e: windows::core::Error| e.message();
+    // SAFETY: COM calls on valid interfaces; PIDLs outlive the calls.
+    unsafe {
+        let desktop = SHGetDesktopFolder().map_err(e)?;
+        let dir_pidl = Pidl::parse(dir)?;
+        let folder: IShellFolder = desktop.BindToObject(dir_pidl.0, None).map_err(e)?;
+        let full: Vec<Pidl> = items
+            .iter()
+            .map(|p| Pidl::parse(p))
+            .collect::<Result<_, _>>()?;
+        let children: Vec<*const ITEMIDLIST> = full
+            .iter()
+            .map(|p| ILFindLastID(p.0) as *const ITEMIDLIST)
+            .collect();
+        folder.GetUIObjectOf::<T>(hwnd, &children, None).map_err(e)
+    }
+}
+
 fn verb_of(cm: &IContextMenu, cmd: u32) -> String {
     let mut buf = [0u16; 128];
     // SAFETY: GCS_VERBW writes a wide string of at most `cchmax` chars.
@@ -292,18 +317,7 @@ pub fn properties(hwnd: isize, items: &[PathBuf]) -> Result<(), String> {
             let e = |e: windows::core::Error| e.message();
             // SAFETY: as in context_menu.
             unsafe {
-                let desktop = SHGetDesktopFolder().map_err(e)?;
-                let dir_pidl = Pidl::parse(dir)?;
-                let folder: IShellFolder = desktop.BindToObject(dir_pidl.0, None).map_err(e)?;
-                let full: Vec<Pidl> = many
-                    .iter()
-                    .map(|p| Pidl::parse(p))
-                    .collect::<Result<_, _>>()?;
-                let children: Vec<*const ITEMIDLIST> = full
-                    .iter()
-                    .map(|p| ILFindLastID(p.0) as *const ITEMIDLIST)
-                    .collect();
-                let data: IDataObject = folder.GetUIObjectOf(hwnd, &children, None).map_err(e)?;
+                let data: IDataObject = ui_object(hwnd, dir, many)?;
                 SHMultiFileProperties(&data, 0).map_err(e)
             }
         }

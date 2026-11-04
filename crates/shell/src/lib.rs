@@ -4,14 +4,21 @@
 //! every platform; the Windows part asks the shell (`SHGetFileInfoW`). Other
 //! platforms return `None`, and the UI keeps its built-in fallback look.
 
+mod dnd;
 mod icons;
 mod menu;
 mod types;
 #[cfg(windows)]
 mod win;
 #[cfg(windows)]
+mod win_dnd;
+#[cfg(windows)]
 mod win_menu;
 
+pub use dnd::{
+    default_effect, register_drop_target, same_volume, start_drag, DropEffect, DropEvent, DropKeys,
+    DropPhase,
+};
 pub use icons::{
     bgra_to_rgba, icon_key, init_thread, load_icon, Icon, IconKey, IconRegistry, IconSize,
 };
@@ -20,6 +27,19 @@ pub use menu::{
     MenuOutcome, OwnVerb,
 };
 pub use types::{type_name, TypeNames};
+
+/// Screen pixels → window-client pixels (Windows); identity elsewhere.
+pub fn screen_to_client(hwnd: isize, x: i32, y: i32) -> (i32, i32) {
+    #[cfg(windows)]
+    {
+        win_dnd::screen_to_client(hwnd, x, y)
+    }
+    #[cfg(not(windows))]
+    {
+        let _ = hwnd;
+        (x, y)
+    }
+}
 
 /// True where real shell icons/type names are available.
 pub const SHELL_SUPPORTED: bool = cfg!(windows);

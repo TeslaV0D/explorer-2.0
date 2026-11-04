@@ -1572,6 +1572,13 @@ pub(crate) fn pane_dir(pi: usize) -> Option<PathBuf> {
     with_tab(id, |t, _, _| t.path.clone()).flatten()
 }
 
+/// Rows shown in pane `pi` (0 if the pane does not exist).
+pub(crate) fn row_count(pi: usize) -> usize {
+    active_tab_id(pi)
+        .and_then(|id| with_tab(id, |t, _, _| t.model.row_count()))
+        .unwrap_or(0)
+}
+
 /// Is row `index` of pane `pi` selected?
 pub(crate) fn is_selected(pi: usize, index: usize) -> bool {
     active_tab_id(pi)
