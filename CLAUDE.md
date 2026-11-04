@@ -31,6 +31,7 @@
 | D-012 | In-App-DnD über Slint 1.18 `DragArea`/`DropArea` (Payload = Pane/Zeile, Auflösung zur Drop-Zeit); OLE-DnD mit anderen Apps erst M5 | fix (M4) |
 | D-013 | Exe-Größe: `opt-level="s"` (−15 %, Sortieren 100k +6–10 ms, Budgets weit weg), CI-Gate < 20 MB; Skia ≈ 8 MB, Rest Rust (Slint/Winit/Text), Bildformate/SVG kommen aus Slint-Interna (nicht abschaltbar) | fix (M5.0) |
 | D-014 | Icons: Schlüssel pro Endung (wenige) bzw. pro Datei für exe/lnk/ico/url/… und Ordner mit R/S-Attribut (desktop.ini); threadsichere `IconRegistry` (Schlüssel → id), Loader-Thread schreibt nur `icon-id` in die Zeile, UI hält `[image]` indexiert per id → nachgeladene Icons ohne Zeilen-Durchlauf; Einzel-Icons nur für sichtbare Zeilen | fix (M5.1) |
+| D-015 | **Qualität vor Größe**: Hauptziel = gutes, fehlerfreies Produkt; kleine Exe ist Nebenziel. Größen-Optimierungen nur, wenn sie nichts verschlechtern (Schrift, Ladezeiten, Animationen, Bugs) – sonst nicht machen. Die 20-MB-Grenze ist nur unser eigenes Frühwarn-Gate, keine technische Grenze | **fix (Boss, 2026-11-04)** |
 | D-008 | Perf-Gates in CI auf **best-of-N** (≥ 9 Läufe), Median/Max/OS-Stalls nur ausweisen – Shared-Runner haben sporadische OS-Stalls (gemessen 168 ms im rohen FindFirstFileExW); Budgets selbst unverändert | fix (M1) |
 
 ## Arbeitsumgebung / Constraints
@@ -101,7 +102,7 @@
 - Windows-Papierkorb (`trash`-Crate): `TrashItem.name` ist der **Anzeigename** (Endung bei Standard-Einstellung ausgeblendet: „weg“ statt „weg.txt“) und wird beim Restore als Zielname benutzt → Abgleich über Stamm + Endung der `$R…`-Datei (`item.id`), vor `restore_all` `item.name` auf den echten Namen setzen.
 - `windows`-Crate `#[implement]` expandiert zu `windows_core::…` → `windows-core` als **direkte** Abhängigkeit nötig.
 - Modale Windows-Schleifen (`SHDoDragDrop`, `TrackPopupMenuEx`) nie direkt aus einem Slint-Callback, der danach noch Slint-State anfasst → Start per `slint::Timer::single_shot(ZERO)`; nach `DoDragDrop` Pointer-Release per `dispatch_event` nachreichen (OLE schluckt das Loslassen).
-- Slint erzeugt das native Fenster erst beim Event-Loop-Start → HWND-abhängiges Setup (Drop-Target) per Timer nach `run()`.
+- Slint erzeugt das native Fenster erst **irgendwann nach** Event-Loop-Start (nicht zwingend im ersten Timer) → HWND-abhängiges Setup (Drop-Target) mit Wiederholung, bis `window_handle` ≠ 0 (CI #32/#33: „Invalid window handle“).
 - Papierkorb-Restore immer gegen Snapshot **vor** der Aktion (gleicher Originalpfad kann mehrfach im Papierkorb liegen).
 
 ## Referenzen

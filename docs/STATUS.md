@@ -31,6 +31,9 @@
 
 - **CI-Run #31 (rot)**: Drop-Test verglich `%TEMP%`-Kurznamen (`RUNNER~1`) roh mit den Langnamen der Shell → Test vergleicht kanonisch. Dabei echtes Risiko gefunden: Start über einen Kurznamen-Pfad hätte Drop-Vergleiche (gleicher Ordner/in sich selbst) ausgehebelt → **Navigation expandiert jetzt Kurznamen** (`explorer_fs::path::long_path`, `GetLongPathNameW`, Junctions bleiben) und Drop-Vergleiche sind unter Windows case-insensitiv.
 
+- **Bug (CI #32/#33, UI-Matrix)**: OLE-Drop-Target wurde nie registriert („Invalid window handle“) – der Timer lief, bevor Slint das native Fenster erzeugt hatte → Ablegen aus anderen Apps wäre tot gewesen. Fix: Registrierung wiederholt bis HWND existiert (50 ms, max. 5 s), sonst Rückfall auf In-App-DnD.
+- Neu: **Windows-E2E mit echter Tastatur/Maus** (`scripts/e2e-windows.ps1`, CI-Schritt im Release-Job, Screenshots bei Fehler).
+
 ## M4 – Dateioperationen
 - **Neue Crate `explorer-ops`** (plattformneutral testbar): `exec` (Job-Engine, synchrones `run` + `spawn` im Hintergrund), `undo`, `simple` (Umbenennen, Neuer Ordner), `names` (Windows-Namensregeln, „ - Kopie“, „ (2)“), `clipboard` (CF_HDROP), `win_copy` (CopyFileExW mit Fortschritt/Abbruch).
 - **Sicherheitsregeln**: Kopie in `.<name>.e2part` + Rename; Verschieben über Laufwerke löscht die Quelle erst nach vollständiger, geflushter Kopie; „Ersetzen“ = alte Datei in den Papierkorb (rückgängig machbar); Abbruch räumt Teil-Dateien weg; Fehler pro Element, Job läuft weiter.

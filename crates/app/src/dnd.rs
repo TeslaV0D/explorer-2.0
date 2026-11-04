@@ -64,32 +64,56 @@ pub fn init(win: &MainWindow) {
         return;
     }
     win.set_os_dnd(true);
-    let weak = win.as_weak();
-    // the native window exists once the event loop runs
-    slint::Timer::single_shot(Duration::ZERO, move || {
-        let Some(w) = weak.upgrade() else { return };
-        let hwnd = crate::fileops::window_handle(&w);
-        let weak = w.as_weak();
-        let res = explorer_shell::register_drop_target(hwnd, move |ev| {
-            weak.upgrade()
-                .map(|w| on_drop_event(&w, hwnd, ev))
-                .unwrap_or(DropEffect::None)
-        });
-        trace(&format!("ole drop target registered={}", res.is_ok()));
-        // CI hook: exercise the modal drag loop inside the running event loop
-        // (without a pressed button the drag ends at once)
-        if std::env::var_os("EXPLORER2_TEST_OLE_DRAG").is_some() {
-            let weak = w.as_weak();
-            slint::Timer::single_shot(Duration::from_secs(2), move || {
-                if let Some(w) = weak.upgrade() {
-                    os_drag(&w, 0, 0);
+    try_register(win.as_weak(), 0);
+}
+
+/// Slint creates the native window only after the event loop started (and not
+/// necessarily in the first iteration) → retry until the HWND exists.
+fn try_register(weak: slint::Weak<MainWindow>, attempt: u32) {
+    const RETRY: Duration = Duration::from_millis(50);
+    const MAX_ATTEMPTS: u32 = 100; // 5 s
+    slint::Timer::single_shot(
+        if attempt == 0 { Duration::ZERO } else { RETRY },
+        move || {
+            let Some(w) = weak.upgrade() else { return };
+            let hwnd = crate::fileops::window_handle(&w);
+            let res = if hwnd == 0 {
+                Err("no native window yet".to_string())
+            } else {
+                let weak = w.as_weak();
+                explorer_shell::register_drop_target(hwnd, move |ev| {
+                    weak.upgrade()
+                        .map(|w| on_drop_event(&w, hwnd, ev))
+                        .unwrap_or(DropEffect::None)
+                })
+            };
+            match res {
+                Ok(()) => {
+                    trace(&format!(
+                        "ole drop target registered=true attempt={attempt}"
+                    ));
+                    // CI hook: exercise the modal drag loop inside the running event loop
+                    // (without a pressed button the drag ends at once)
+                    if std::env::var_os("EXPLORER2_TEST_OLE_DRAG").is_some() {
+                        let weak = w.as_weak();
+                        slint::Timer::single_shot(Duration::from_secs(2), move || {
+                            if let Some(w) = weak.upgrade() {
+                                os_drag(&w, 0, 0);
+                            }
+                        });
+                    }
                 }
-            });
-        }
-        if let Err(e) = res {
-            trace(&format!("ole drop target failed: {e}"));
-        }
-    });
+                Err(e) if attempt + 1 < MAX_ATTEMPTS => {
+                    let _ = e;
+                    try_register(w.as_weak(), attempt + 1);
+                }
+                Err(e) => {
+                    trace(&format!("ole drop target registered=false: {e}"));
+                    w.set_os_dnd(false); // keep in-app drag & drop working (Slint)
+                }
+            }
+        },
+    );
 }
 
 fn on_drop_event(win: &MainWindow, hwnd: isize, ev: &DropEvent) -> DropEffect {
