@@ -8,7 +8,7 @@ pub struct Crumb {
 }
 
 /// Splits a path into clickable segments: `C:\Users\Boss` → `C:\`, `Users`, `Boss`;
-/// `\\nas\share\x` → `\\nas\share`, `x`; `/home/u` → `/`, `home`, `u`.
+/// `\\nas\share\x` → `\\nas`, `share`, `x`; `/home/u` → `/`, `home`, `u`.
 pub fn crumbs(path: &str) -> Vec<Crumb> {
     let p = path
         .strip_prefix(r"\\?\UNC\")
@@ -17,11 +17,12 @@ pub fn crumbs(path: &str) -> Vec<Crumb> {
     let windows = p.contains('\\') || (p.len() >= 2 && p.as_bytes()[1] == b':');
     let sep = if windows { '\\' } else { '/' };
     let (root, rest): (String, &str) = if let Some(unc) = p.strip_prefix(r"\\") {
-        let mut it = unc.splitn(3, '\\');
-        let (server, share) = (it.next().unwrap_or(""), it.next().unwrap_or(""));
-        let root = format!(r"\\{server}\{share}");
-        let consumed = 2 + server.len() + if share.is_empty() { 0 } else { 1 + share.len() };
-        (root, &p[consumed.min(p.len())..])
+        // the server is its own segment (it lists its shares), like Explorer
+        let server = unc.split('\\').next().unwrap_or("");
+        (
+            format!(r"\\{server}"),
+            &p[(2 + server.len()).min(p.len())..],
+        )
     } else if windows && p.len() >= 2 && p.as_bytes()[1] == b':' {
         (format!(r"{}\", p[..2].to_ascii_uppercase()), &p[2..])
     } else if let Some(r) = p.strip_prefix('/') {
@@ -104,11 +105,14 @@ mod tests {
     #[test]
     fn unc_paths() {
         let c = crumbs(r"\\nas\share\film\2024");
-        assert_eq!(labels(&c), [r"\\nas\share", "film", "2024"]);
-        assert_eq!(c[2].path, r"\\nas\share\film\2024");
+        assert_eq!(labels(&c), [r"\\nas", "share", "film", "2024"]);
+        assert_eq!(c[1].path, r"\\nas\share");
+        assert_eq!(c[3].path, r"\\nas\share\film\2024");
+        assert_eq!(labels(&crumbs(r"\\nas")), [r"\\nas"]);
+        assert_eq!(labels(&crumbs(r"\\nas\")), [r"\\nas"]);
         assert_eq!(
             labels(&crumbs(r"\\?\UNC\nas\share\x")),
-            [r"\\nas\share", "x"]
+            [r"\\nas", "share", "x"]
         );
     }
 

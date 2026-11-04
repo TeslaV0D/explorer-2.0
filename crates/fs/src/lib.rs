@@ -6,6 +6,7 @@
 //! - Other platforms: portable `std::fs` implementation (used for tests/dev).
 
 mod loader;
+pub mod network;
 pub mod path;
 pub mod places;
 #[cfg(not(windows))]
@@ -28,6 +29,8 @@ pub enum FsErrorKind {
     NotFound,
     PermissionDenied,
     NotADirectory,
+    /// A network folder wants credentials (logon failure, not authenticated).
+    LoginRequired,
     Other,
 }
 
@@ -57,12 +60,19 @@ impl From<io::Error> for FsError {
             _ if cfg!(windows) && e.raw_os_error() == Some(WIN_ERROR_DIRECTORY) => {
                 FsErrorKind::NotADirectory
             }
+            _ if cfg!(windows)
+                && e.raw_os_error()
+                    .is_some_and(|c| c != 5 && network::is_login_error(c as u32)) =>
+            {
+                FsErrorKind::LoginRequired
+            }
             _ => FsErrorKind::Other,
         };
         let message = match kind {
             FsErrorKind::NotFound => "Ordner nicht gefunden".to_string(),
             FsErrorKind::PermissionDenied => "Zugriff verweigert".to_string(),
             FsErrorKind::NotADirectory => "Kein Ordner".to_string(),
+            FsErrorKind::LoginRequired => "Anmeldung erforderlich".to_string(),
             FsErrorKind::Other => e.to_string(),
         };
         FsError { kind, message }

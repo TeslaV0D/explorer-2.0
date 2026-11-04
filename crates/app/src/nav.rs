@@ -69,6 +69,8 @@ struct Tab {
     refresh_scheduled: bool,
     /// Data behind the rows of a virtual place (trash items, drive roots).
     virtual_data: VirtualData,
+    /// Network folder we already showed the login dialog for (no prompt loops).
+    login_tried: Option<PathBuf>,
 }
 
 /// What stands behind the rows of a virtual place, keyed by `Entry::name`.
@@ -100,6 +102,7 @@ impl Tab {
             refresh_allowed_at: Instant::now(),
             refresh_scheduled: false,
             virtual_data: VirtualData::None,
+            login_tried: None,
         }
     }
 
@@ -395,6 +398,75 @@ fn load_virtual(v: VirtualPlace, filter: ViewFilter, sort: SortSpec) -> Update {
         data_ready: t0.elapsed(),
         vdata,
     }
+}
+
+/// Lists the shares of a server (`\\nas`) like a folder (blocking, loader
+/// thread). Asks for credentials once if the server wants them.
+fn load_shares(
+    server: &str,
+    dir: &Path,
+    filter: ViewFilter,
+    sort: SortSpec,
+    hwnd: isize,
+) -> Update {
+    use explorer_fs::network::{self, NetError};
+    let t0 = Instant::now();
+    let mut res = network::shares(server);
+    if let Err(NetError::LoginRequired(_)) = &res {
+        trace(&format!("login prompt \\\\{server}"));
+        res = match network::connect(server, None, hwnd) {
+            Ok(()) => network::shares(server),
+            Err(m) => Err(NetError::Other(m)),
+        };
+    }
+    let shares = match res {
+        Ok(s) => s,
+        Err(e) => {
+            return Update::Failed(FsError {
+                kind: FsErrorKind::Other,
+                message: e.message().to_string(),
+            })
+        }
+    };
+    let kinds: HashMap<String, String> = shares
+        .iter()
+        .map(|s| {
+            let k = if s.remark.is_empty() {
+                "Freigegebener Ordner".to_string()
+            } else {
+                s.remark.clone()
+            };
+            (s.name.clone(), k)
+        })
+        .collect();
+    let all: Vec<Entry> = shares
+        .iter()
+        .map(|s| Entry {
+            name: s.name.clone(),
+            kind: explorer_core::EntryKind::Dir,
+            size: 0,
+            modified: None,
+            hidden: false,
+            system: false,
+            readonly: false,
+            is_link: false,
+        })
+        .collect();
+    let total = all.len();
+    let (entries, rows, hidden) = prepare_with(all, filter, sort, dir, Some(&kinds));
+    Update::Rows {
+        entries,
+        rows,
+        hidden,
+        done: Some((total, t0.elapsed())),
+        data_ready: t0.elapsed(),
+        vdata: VirtualData::None,
+    }
+}
+
+/// `\\nas` (a server, not a folder): shares are listed, nothing can be created there.
+fn is_server(p: &Path) -> bool {
+    explorer_fs::network::server_root(&p.to_string_lossy()).is_some()
 }
 
 /// Carries the selection over to a reloaded list of the same folder, matched by name.
@@ -794,9 +866,11 @@ fn ensure_loaded(win: &MainWindow, pi: usize) {
 
 fn navigate_tab(win: &MainWindow, id: TabId, target: PathBuf, reason: Reason, hist: Hist) {
     let place = VirtualPlace::from_input(&target.to_string_lossy());
-    let target = match place {
-        Some(v) => v.path(),
-        None => {
+    let server = explorer_fs::network::server_root(&target.to_string_lossy());
+    let target = match (place, &server) {
+        (Some(v), _) => v.path(),
+        (None, Some(s)) => PathBuf::from(format!(r"\\{s}")),
+        (None, None) => {
             let target = std::path::absolute(&target).unwrap_or(target);
             // show long names like Explorer (and keep path comparisons consistent with the shell)
             explorer_fs::path::long_path(&target)
@@ -840,6 +914,23 @@ fn navigate_tab(win: &MainWindow, id: TabId, target: PathBuf, reason: Reason, hi
             .name("virtual-loader".into())
             .spawn(move || {
                 let upd = load_virtual(v, filter, sort);
+                let _ = slint::invoke_from_event_loop(move || {
+                    if let Some(w) = weak.upgrade() {
+                        apply(&w, id, gen, path, reason, upd, t0);
+                    }
+                });
+            });
+        sync_pane(pi);
+        return;
+    }
+    if let Some(server) = server {
+        // a server: its shares, on a helper thread (may show the login dialog)
+        with_tab(id, |t, _, _| t.loader = None);
+        let hwnd = crate::fileops::window_handle(win);
+        let _ = std::thread::Builder::new()
+            .name("share-loader".into())
+            .spawn(move || {
+                let upd = load_shares(&server, &path, filter, sort, hwnd);
                 let _ = slint::invoke_from_event_loop(move || {
                     if let Some(w) = weak.upgrade() {
                         apply(&w, id, gen, path, reason, upd, t0);
@@ -979,6 +1070,7 @@ fn apply(
                 }
                 t.entries = entries;
                 t.virtual_data = vdata;
+                t.login_tried = None;
                 // icons of the first screen (per-file ones only load when visible)
                 crate::icons::need(rows.iter().take(80).map(|r| r.icon));
                 t.model.set_vec(rows);
@@ -998,7 +1090,7 @@ fn apply(
                 if path_changed || reason == Reason::User {
                     request(pi, |p| p.top_seq += 1);
                 }
-                if VirtualPlace::from_path(&path).is_none() {
+                if VirtualPlace::from_path(&path).is_none() && !is_server(&path) {
                     start_watch(win, id, &path);
                 } else {
                     with_tab(id, |t, _, _| t.watcher = None); // refreshed by our own actions
@@ -1083,6 +1175,13 @@ fn apply(
                 e.kind,
                 path.display()
             ));
+            if matches!(
+                e.kind,
+                FsErrorKind::PermissionDenied | FsErrorKind::LoginRequired
+            ) && ask_login(win, id, &path, reason)
+            {
+                return; // retried after the login dialog
+            }
             let vanished =
                 e.kind == FsErrorKind::NotFound && current.as_deref() == Some(path.as_path());
             if vanished {
@@ -1208,6 +1307,47 @@ fn change_selection(win: &MainWindow, pi: usize, f: impl FnOnce(&mut Selection, 
     trace_selection(id);
 }
 
+/// A network folder refused access: show the Windows login dialog once (on a
+/// helper thread, it blocks) and load again. `false` if not a network folder
+/// or already tried.
+fn ask_login(win: &MainWindow, id: TabId, path: &Path, reason: Reason) -> bool {
+    let Some((server, share)) = explorer_fs::network::share_of(&path.to_string_lossy()) else {
+        return false;
+    };
+    if !explorer_fs::network::LOGIN_SUPPORTED {
+        return false;
+    }
+    let first = with_tab(id, |t, _, _| {
+        let first = t.login_tried.as_deref() != Some(path);
+        t.login_tried = Some(path.to_path_buf());
+        first
+    })
+    .unwrap_or(false);
+    if !first {
+        return false;
+    }
+    trace(&format!("login prompt {}", path.display()));
+    let hwnd = crate::fileops::window_handle(win);
+    let weak = win.as_weak();
+    let path = path.to_path_buf();
+    let _ = std::thread::Builder::new()
+        .name("login".into())
+        .spawn(move || {
+            let res = explorer_fs::network::connect(&server, Some(&share), hwnd);
+            let _ = slint::invoke_from_event_loop(move || {
+                let Some(w) = weak.upgrade() else { return };
+                match res {
+                    Ok(()) => navigate_tab(&w, id, path, reason, Hist::Keep),
+                    Err(m) => {
+                        w.set_error(format!("{m}: {}", path.display()).into());
+                        set_tab_status(&w, id, String::new());
+                    }
+                }
+            });
+        });
+    true
+}
+
 fn start_watch(win: &MainWindow, id: TabId, path: &Path) {
     let weak = win.as_weak();
     let watched = path.to_path_buf();
@@ -1319,16 +1459,25 @@ pub fn go_up(win: &MainWindow, pi: usize) {
         if VirtualPlace::from_path(p).is_some() {
             return None; // top level
         }
-        // a drive root's parent is "Dieser PC" (Explorer)
-        let parent = match p.parent() {
-            Some(parent) if !parent.as_os_str().is_empty() => parent.to_path_buf(),
-            _ => return Some(VirtualPlace::ThisPc.path()),
+        // a share's parent is its server, a drive root's parent is "Dieser PC" (Explorer)
+        let s = p.to_string_lossy();
+        if is_server(p) {
+            return Some(VirtualPlace::ThisPc.path());
+        }
+        let (parent, name) = if let Some(server) = explorer_fs::network::share_root_parent(&s) {
+            // `\\nas\film` has no file name in std's eyes (it is the prefix)
+            let share = explorer_fs::network::share_of(&s).map(|(_, sh)| sh);
+            (PathBuf::from(server), share)
+        } else {
+            match p.parent() {
+                Some(parent) if !parent.as_os_str().is_empty() => (
+                    parent.to_path_buf(),
+                    p.file_name().map(|n| n.to_string_lossy().into_owned()),
+                ),
+                _ => return Some(VirtualPlace::ThisPc.path()),
+            }
         };
-        t.pending_select = p
-            .file_name()
-            .map(|n| n.to_string_lossy().into_owned())
-            .into_iter()
-            .collect();
+        t.pending_select = name.into_iter().collect();
         Some(parent)
     })
     .flatten();
@@ -1755,7 +1904,7 @@ pub(crate) fn pane_dir(pi: usize) -> Option<PathBuf> {
     let id = active_tab_id(pi)?;
     with_tab(id, |t, _, _| t.path.clone())
         .flatten()
-        .filter(|p| VirtualPlace::from_path(p).is_none())
+        .filter(|p| VirtualPlace::from_path(p).is_none() && !is_server(p))
 }
 
 /// Virtual place shown in pane `pi`, if any.

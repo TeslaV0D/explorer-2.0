@@ -178,6 +178,24 @@ Check "[W17] 'Dieser PC' lists the drives with free space" { (Last 'navigate tab
 Keys '{HOME}'; Keys '{ENTER}'; Start-Sleep -Milliseconds 1200
 Check "[W17b] opening a drive shows its root" { (Last 'navigate tab') -match 'User [A-Z]:\\ at=' }
 
+# M5.6c: network – \\localhost lists its shares, a share opens, "up" goes back to the server
+$shareDir = New-Item -ItemType Directory -Force "$R\freigabe"; Set-Content "$shareDir\im-netz.txt" "n"
+$shared = $true
+try { New-SmbShare -Name 'e2efreigabe' -Path "$shareDir" -FullAccess 'Everyone' -Remark 'E2E Freigabe' | Out-Null }
+catch { Write-Host "New-SmbShare failed: $_"; $shared = $false }
+Check "[W18a] test share created" { $shared }
+Keys '^l'; Keys '\\localhost'; Keys '{ENTER}'; Start-Sleep -Milliseconds 2500
+Check "[W18] \\localhost lists its shares (no admin shares)" { (Last 'address=') -match 'address=\\\\localhost\s*$' -and (Last 'order') -match '"e2efreigabe"' -and (Last 'order') -notmatch '\$"' }
+Check "[W18b] share comment in the type column" { (Last 'kinds') -match 'E2E Freigabe' }
+Keys 'e2e'; Keys '{ENTER}'; Start-Sleep -Milliseconds 2000
+Check "[W19] opening a share lists its files" { (Last 'address=') -match 'address=\\\\localhost\\e2efreigabe' -and (Last 'order') -match 'im-netz\.txt' }
+Keys '{BACKSPACE}'; Start-Sleep -Milliseconds 2000
+Check "[W19b] up from a share goes to the server, share selected" { (Last 'address=') -match 'address=\\\\localhost\s*$' -and (Last 'selection pane') -match 'focus=e2efreigabe' }
+Keys '^l'; Keys '\\gibtsnicht-e2e'; Keys '{ENTER}'
+[void](WaitFor 'failed tab=.*gibtsnicht-e2e' 30000)   # name resolution may take a while
+Check "[W19c] unknown server: error message, previous listing stays" { (Last 'failed tab') -match 'gibtsnicht-e2e' -and (Last 'address=') -match 'address=\\\\localhost\s*$' }
+if ($shared) { Remove-SmbShare -Name 'e2efreigabe' -Force -ErrorAction SilentlyContinue }
+
 $p.Refresh()
 Check "[W13] app still running" { -not $p.HasExited }
 Check "[W14] no panic" { (Log) -notmatch '(?i)panic' }

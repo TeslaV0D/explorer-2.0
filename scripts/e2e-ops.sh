@@ -195,6 +195,10 @@ xdotool key Home Return; sleep 1.2
 check "[58b] opening a drive navigates to its root" "last 'navigate tab' | grep -qE 'User / at='"
 xdotool key BackSpace; sleep 1.2
 check "[58c] up from the root goes to 'Dieser PC'" "last 'navigate tab' | grep -q ' ::dieser-pc '"
+echo "-- M5.6c: network server path (Windows only, Linux: clear error)"
+goto '\\localhost'
+check "[59] server path gives a clear error, no crash" "last 'failed tab' | grep -qF 'localhost'"
+check "[59b] the previous listing stays" "last 'address=' | grep -q 'address=::dieser-pc'"
 check "[52] process alive" "kill -0 $PID"
 kill $PID; wait $PID 2>/dev/null
 check "[52b] no panic" "! grep -qi panic $LOG"

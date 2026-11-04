@@ -40,7 +40,13 @@
 - **Bug (CI #32/#33, UI-Matrix)**: OLE-Drop-Target wurde nie registriert („Invalid window handle“) – der Timer lief, bevor Slint das native Fenster erzeugt hatte → Ablegen aus anderen Apps wäre tot gewesen. Fix: Registrierung wiederholt bis HWND existiert (50 ms, max. 5 s), sonst Rückfall auf In-App-DnD.
 - Neu: **Windows-E2E mit echter Tastatur/Maus** (`scripts/e2e-windows.ps1`, CI-Schritt im Release-Job, Screenshots bei Fehler).
 
-### M5.6a/b Papierkorb-Ansicht + „Dieser PC“ (lokal grün, CI ausstehend)
+### M5.6c Netzwerk (lokal grün, CI ausstehend)
+- `\\server` in der Adresszeile → Freigaben des Servers als Ordnerliste (`NetShareEnum` Level 1); Admin-Freigaben (`C$`, `ADMIN$`, `IPC$`), Drucker und `…$` ausgeblendet wie im Explorer; Freigabe-Kommentar steht in „Typ“.
+- Server will Anmeldung → Windows-Anmeldedialog (`WNetAddConnection3W`, Fenster als Owner, im Hintergrund-Thread), danach neu laden; gilt auch für Ordner in Freigaben (Zugriff verweigert / Anmeldung fehlgeschlagen) – höchstens einmal pro Pfad, keine Dialog-Schleifen.
+- „Hoch“ von `\\nas\film` → `\\nas` (Freigabe vorausgewählt), vom Server → „Dieser PC“; Breadcrumb `\\nas › film › …`; im Server-Ordner kann nichts angelegt werden.
+- Tests: Unit (Pfad-Parsing, Filter, Fehlercodes), Windows-Unit gegen `localhost`, Windows-E2E W18–W19c mit echter SMB-Freigabe (`New-SmbShare`), Linux-E2E [59] (klare Fehlermeldung).
+
+### M5.6a/b Papierkorb-Ansicht + „Dieser PC“ ✅ (CI-Run #39, alles grün inkl. Windows-E2E W15–W17b)
 - `core::places::VirtualPlace` (Platzhalter-Pfade `::papierkorb` / `::dieser-pc`, nie mit echten Pfaden verwechselbar) → Tabs, Verlauf, Sitzung, Breadcrumb funktionieren unverändert; Adress-Aliase: „Papierkorb“, `shell:RecycleBinFolder`, „Dieser PC“, `shell:MyComputerFolder`, Explorer-CLSIDs.
 - `ops::trashview`: Liste mit echtem Dateinamen (Windows-Anzeigenamen ohne Endung → Endung aus `$R…`), gleiche Namen eindeutig („a.txt (2)“), Wiederherstellen verweigert Überschreiben, endgültig löschen, leeren.
 - Sicherheit: in virtuellen Orten liefern `pane_dir`/`selected_paths`/`entry_at` nichts → Einfügen, Neuer Ordner, Drops, Umbenennen können nie auf einem Platzhalter-Pfad landen; nicht erlaubte Befehle melden „Hier nicht möglich“.

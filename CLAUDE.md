@@ -44,7 +44,7 @@
 - **R-001 Ein-Knopf-Reset / „Notausgang“** (2026-11-03, Lehre aus File Pilot, wo nur Windows-Neuinstallation half): Jede Windows-Integration (Win+E, Ordner-Verben/Default-Handler, explorer.exe-Proxy/IFEO, Kontextmenü-Einträge, Autostart, Umgebungsvariablen/PATH, Verknüpfungen, Dateizuordnungen, Hotkeys) muss **mit einem Knopf vollständig rückgängig** zu machen sein – in der App **und** über ein eigenständiges Recovery-Tool, das auch funktioniert, wenn die App selbst nicht startet (inkl. Abgesichertem Modus). Jede Änderung wird vorher mit Originalwert in einem Journal gesichert; Reset stellt exakt den Ursprungszustand her. Pflicht-Test: Integration an → Reset → Registry/Umgebung identisch zum Snapshot vorher. Gilt ab M7, Architektur schon vorher berücksichtigen.
 
 ## Meilenstein-Stand
-- M0 ✅ · M1 ✅ (Run #10) · M1.5 ✅ Renderer-Wahl + Einstellungen + Icon (Run #13) · M2 ✅ (Run #16) · M3 ✅ (Run #19) · M4 ✅ (Run #26) · **M5 läuft: M5.0–M5.5 ✅ (Run #37)**, nächster Schritt M5.6 virtuelle Orte
+- M0 ✅ · M1 ✅ (Run #10) · M1.5 ✅ Renderer-Wahl + Einstellungen + Icon (Run #13) · M2 ✅ (Run #16) · M3 ✅ (Run #19) · M4 ✅ (Run #26) · **M5 läuft: M5.0–M5.5 ✅ (Run #37), M5.6a/b ✅ (Run #39)**, M5.6c Netzwerk in CI
 - Arbeitsregel (Boss): nächste Stufe erst, wenn die aktuelle vollständig abgeschlossen, getestet und CI-grün ist.
 
 ## Code-Layout (seit M0)
@@ -56,6 +56,7 @@
 - `crates/core`: zusätzlich `settings.rs` (key=value, tolerant, inkl. Sortierung), `renderer.rs` (`classify_gl`, `decide`, `Reason`, `status_de`), `selection.rs` (Explorer-Auswahlmodell, `remap` für Refresh), `typeahead.rs`, `breadcrumb.rs` (`crumbs`/`fit`, Win/UNC/Unix); `type_label`/`extension`, `SortKey::Type`
 - `crates/ops` (`explorer-ops`): `exec.rs` (Job-Engine: `run` synchron/testbar, `spawn` Thread + `JobHandle` cancel/pause/answer/is_finished, Events Started/Progress/Conflict/Finished, `Report.done` = Undo-Journal), `undo.rs` (`entry_from_report`, `undo`, `TrashSnapshot`, `UndoStack`), `simple.rs` (rename/new_folder), `names.rs`, `clipboard.rs` (CF_HDROP, `examples/clip.rs` für CI-Interop), `win_copy.rs`; Tests `tests/ops.rs`
 - `crates/shell` (`explorer-shell`): `icons.rs` (`icon_key`, `IconRegistry`, `bgra_to_rgba`, `load_icon`), `types.rs` (`type_name`, Cache pro Endung), `win.rs` (`SHGetFileInfoW`, HICON→RGBA, `CoInitializeEx`) – andere Plattformen liefern `None` → UI-Fallback
+- Netzwerk: `fs::network` (`server_root`/`share_of`/`share_root_parent` rein + getestet, `shares` = `NetShareEnum` Level 1, `connect` = Anmeldedialog `WNetAddConnection3W`); nav: Server-Pfad `\\nas` → `share-loader`-Thread, kein Watcher, `pane_dir` = None (nichts anlegen); `FsErrorKind::LoginRequired`, `ask_login` einmal pro Pfad (`Tab.login_tried`)
 - Virtuelle Orte: `core::places::VirtualPlace` (Platzhalter-Pfade), `ops::trashview` (Papierkorb), nav: `load_virtual`, `VirtualData` am Tab, `pane_place`/`selected_trash`; **in virtuellen Orten liefern `pane_dir`/`selected_paths`/`entry_at` None/leer** (Schutz vor Dateioperationen auf Platzhaltern)
 - `crates/app/src/fileops.rs`: UI-Seite der Dateioperationen (Clipboard, Jobs/Panel, Dialoge, Rename, Undo/Redo, DnD); nav.rs liefert Helfer (`selected_paths`, `refresh_dirs` mit Nach-Auswahl/-Umbenennen, `show_rename`, `set_cut`)
 - E2E M4: `scripts/e2e-ops.sh` (von e2e.sh aufgerufen, einzeln lauffähig)

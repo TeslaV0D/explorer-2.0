@@ -70,9 +70,9 @@ Legende: `[ ]` offen · `[~]` in Arbeit · `[x]` erledigt · Prio P0/P1/P2
   - [x] M5.4 Eigenschaften (`SHObjectProperties`/`SHMultiFileProperties`, Alt+Enter; „Öffnen mit“ kommt über das Shell-Menü)
   - [x] M5.5 OLE-Drag&Drop mit anderen Apps (Windows-E2E zieht per echter Maus): Ziehen aus der App (`DoDragDrop` + `SHCreateDataObject`), Ablegen in die App (`RegisterDragDrop`, Winit-Handler ersetzen), Standard-Aktion je Laufwerk wie Explorer
   - [~] M5.6 Virtuelle Orte (schneller Pfad bleibt für normale Ordner):
-    - [~] M5.6a Papierkorb-Ansicht: Liste (Gelöscht am, Ursprünglicher Ort, Größe), Wiederherstellen, endgültig löschen, leeren, Ablegen auf Papierkorb = löschen, Seitenleiste, Adress-Aliase – lokal grün, CI ausstehend
-    - [~] M5.6b „Dieser PC“: Laufwerke mit Speicherplatz, Klick auf Überschrift in der Seitenleiste, „Hoch“ vom Laufwerk → Dieser PC – lokal grün, CI ausstehend
-    - [ ] M5.6c Netzwerk: `\\server` → Freigaben (`NetShareEnum`), Anmeldedialog bei Bedarf
+    - [x] M5.6a Papierkorb-Ansicht: Liste (Gelöscht am, Ursprünglicher Ort, Größe), Wiederherstellen, endgültig löschen, leeren, Ablegen auf Papierkorb = löschen, Seitenleiste, Adress-Aliase (CI-Run #39)
+    - [x] M5.6b „Dieser PC“: Laufwerke mit Speicherplatz, Klick auf Überschrift in der Seitenleiste, „Hoch“ vom Laufwerk → Dieser PC (CI-Run #39)
+    - [~] M5.6c Netzwerk: `\\server` → Freigaben (`NetShareEnum`, ohne Admin-Freigaben `C$`/`IPC$`), Kommentar in „Typ“, Anmeldedialog (`WNetAddConnection3W`) bei Zugriff verweigert – einmal pro Ordner, „Hoch“ von Freigabe → Server, Breadcrumb `\\nas › film` – lokal grün, CI ausstehend
     - [ ] M5.6d Bibliotheken / weitere Shell-Orte (`IShellFolder`), echtes Papierkorb-/PC-Icon
     - [ ] Später: Undo für „Wiederherstellen“, Shell-Kontextmenü im Papierkorb
   - [ ] M5.7 Thumbnails (für spätere Symbol-Ansicht vorbereitet, Cache)
