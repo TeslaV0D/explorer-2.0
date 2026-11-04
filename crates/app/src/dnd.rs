@@ -153,6 +153,12 @@ pub fn os_drag(win: &MainWindow, pi: usize, row: usize) {
         let Some(w) = weak.upgrade() else { return };
         let hwnd = crate::fileops::window_handle(&w);
         trace(&format!("ole drag start n={}", items.len()));
+        if !explorer_shell::primary_button_down() {
+            // released in the moment between the drag threshold and now: no drag,
+            // otherwise OLE would drop wherever the mouse moves next
+            trace("ole drag skipped: button released");
+            return;
+        }
         let res = explorer_shell::start_drag(hwnd, &items);
         trace(&format!("ole drag result {res:?}"));
         // the drag's modal loop swallowed the button release

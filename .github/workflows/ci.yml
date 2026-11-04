@@ -132,6 +132,9 @@ jobs:
       - name: Compare Skia vs FemtoVG (start time, robustness, screenshots)
         shell: pwsh
         run: pwsh -File scripts/renderer-compare.ps1 (Resolve-Path target/release/explorer2.exe).Path "$env:RUNNER_TEMP\mesa-app" "$env:RUNNER_TEMP\cmp"
+      - name: FemtoVG test build for a real-GPU check (Boss)
+        uses: actions/upload-artifact@v4
+        with: { name: explorer2-femtovg-test, path: target/femto/release/explorer2.exe }
   build-windows-release:
     runs-on: windows-latest
     needs: test
@@ -253,7 +256,7 @@ jobs:
           # 2b) OLE drag out (modal loop inside the running event loop): must not crash or hang
           $r = Invoke-App 'ole-drag' $exe @{ EXPLORER2_CONFIG_DIR = $cfgA; EXPLORER2_TEST_OLE_DRAG = '1' } 9
           Expect $r 'ole drag start n=1' 'drag started'
-          Expect $r 'ole drag result (Ok|Err)' 'drag returned (no hang)'
+          Expect $r 'ole drag skipped: button released' 'no drag without a pressed button (would drop on the next mouse move)'
           # 3) Forced GPU without GPU: Skia falls back by itself, app keeps working
           $r = Invoke-App 'forced-gpu' $exe @{ EXPLORER2_CONFIG_DIR = "$env:RUNNER_TEMP\cfg-gpu"; EXPLORER2_RENDERER = 'gpu' }
           Expect $r 'renderer choice=Gpu reason="forced' 'GPU forced'

@@ -16,8 +16,8 @@ mod win_dnd;
 mod win_menu;
 
 pub use dnd::{
-    default_effect, register_drop_target, same_volume, start_drag, DropEffect, DropEvent, DropKeys,
-    DropPhase,
+    default_effect, primary_button_down, register_drop_target, same_volume, start_drag, DropEffect,
+    DropEvent, DropKeys, DropPhase,
 };
 pub use icons::{
     bgra_to_rgba, icon_key, init_thread, load_icon, Icon, IconKey, IconRegistry, IconSize,

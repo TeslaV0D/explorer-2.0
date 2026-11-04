@@ -99,6 +99,20 @@ pub fn register_drop_target(
     }
 }
 
+/// Is the primary mouse button still held? A drag must only start while it is:
+/// OLE otherwise waits for the next input and would drop wherever the mouse
+/// moves next.
+pub fn primary_button_down() -> bool {
+    #[cfg(windows)]
+    {
+        crate::win_dnd::primary_button_down()
+    }
+    #[cfg(not(windows))]
+    {
+        false
+    }
+}
+
 /// Starts a system drag of `items` (all in one folder) from window `hwnd`.
 /// Blocks until dropped (modal). Returns what the target did.
 pub fn start_drag(hwnd: isize, items: &[PathBuf]) -> Result<DropEffect, String> {

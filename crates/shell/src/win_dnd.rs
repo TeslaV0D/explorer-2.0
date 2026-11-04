@@ -187,6 +187,21 @@ pub fn start_drag(hwnd: isize, items: &[PathBuf]) -> Result<DropEffect, String> 
     }
 }
 
+/// Is the primary mouse button held right now (respects swapped buttons)?
+pub fn primary_button_down() -> bool {
+    use windows::Win32::UI::Input::KeyboardAndMouse::{GetAsyncKeyState, VK_LBUTTON, VK_RBUTTON};
+    use windows::Win32::UI::WindowsAndMessaging::{GetSystemMetrics, SM_SWAPBUTTON};
+    // SAFETY: plain state queries.
+    unsafe {
+        let vk = if GetSystemMetrics(SM_SWAPBUTTON) != 0 {
+            VK_RBUTTON
+        } else {
+            VK_LBUTTON
+        };
+        (GetAsyncKeyState(vk.0 as i32) as u16 & 0x8000) != 0
+    }
+}
+
 pub fn screen_to_client(hwnd: isize, x: i32, y: i32) -> (i32, i32) {
     let mut p = POINT { x, y };
     // SAFETY: valid window handle (or harmless failure).
