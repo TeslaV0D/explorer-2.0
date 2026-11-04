@@ -40,7 +40,7 @@
 - **Bug (CI #32/#33, UI-Matrix)**: OLE-Drop-Target wurde nie registriert („Invalid window handle“) – der Timer lief, bevor Slint das native Fenster erzeugt hatte → Ablegen aus anderen Apps wäre tot gewesen. Fix: Registrierung wiederholt bis HWND existiert (50 ms, max. 5 s), sonst Rückfall auf In-App-DnD.
 - Neu: **Windows-E2E mit echter Tastatur/Maus** (`scripts/e2e-windows.ps1`, CI-Schritt im Release-Job, Screenshots bei Fehler).
 
-### M5.6d2 Bibliotheken (lokal grün, CI ausstehend)
+### M5.6d2 Bibliotheken ✅ (CI-Run #44) → **M5.6 virtuelle Orte komplett**
 - `shell::libraries`/`library` (`IShellLibrary` über die `.library-ms`-Dateien in `FOLDERID_Libraries`): lokalisierter Name, Mitgliedsordner (nur Dateisystem), Datei fürs Icon.
 - Ansicht „Bibliotheken“ (`::bibliotheken`, Aliase „Bibliotheken“, `shell:Libraries`, CLSID): Zeilen mit echtem Bibliotheks-Icon und „N Ordner“; Bibliothek mit **einem** Ordner öffnet ihn direkt, mit mehreren → `::bibliothek:<Stamm>` listet ihre Ordner (Spalte „Ordner“ = übergeordneter Pfad).
 - `shell:DocumentsLibrary`/`MusicLibrary`/`PicturesLibrary`/`VideosLibrary`/`CameraRoll`/`SavedPicturesLibrary` → Bibliothek; Hoch aus einer Bibliothek → „Bibliotheken“; Breadcrumb „Bibliotheken › Name“; Sitzung merkt sich Bibliotheks-Tabs.
