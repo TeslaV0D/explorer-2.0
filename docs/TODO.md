@@ -77,9 +77,9 @@ Legende: `[ ]` offen · `[~]` in Arbeit · `[x]` erledigt · Prio P0/P1/P2
     - [x] M5.6d2 Bibliotheken (`IShellLibrary`): Ansicht „Bibliotheken“, Bibliothek mit einem Ordner öffnet ihn, mit mehreren zeigt ihre Ordner; `shell:Libraries`/`shell:DocumentsLibrary` … (CI-Run #44)
     - [ ] Später: zusammengeführte Bibliotheks-Ansicht (Inhalte aller Ordner in einer Liste, wie Explorer) – braucht Dateioperationen mit Pfad pro Zeile
     - [ ] Später: Undo für „Wiederherstellen“, Shell-Kontextmenü im Papierkorb
-  - [~] M5.7 Kachel-Ansicht + Vorschaubilder (Boss: Weg 1) – lokal grün, CI ausstehend
-    - [~] M5.7a Vorschaubilder: `IShellItemImageFactory` (Windows-Thumbnail-Cache, sonst großes Icon), 2 Worker, nur sichtbare Kacheln, neueste zuerst, 96-MB-Speichergrenze (LRU), Schlüssel inkl. Änderungszeit
-    - [~] M5.7b Kachel-Ansicht: Mittel/Groß/Extra groß (48/96/256 px), Strg+Shift+1/2/3/6, Strg+Mausrad (gedrosselt), Knöpfe „Details/Symbole“ in der Statusleiste, Raster-Navigation (←→↑↓, Bild↑↓), Klick/Strg/Shift, Doppelklick, Kontextmenü, F2 über der Beschriftung, Ziehen & Ablegen (auch OLE, Trefferprüfung im Raster), Einstellung `view` gespeichert
+  - [x] M5.7 Kachel-Ansicht + Vorschaubilder (Boss: Weg 1) – CI-Run #48
+    - [x] M5.7a Vorschaubilder: `IShellItemImageFactory` (Windows-Thumbnail-Cache, sonst großes Icon), 2 Worker, nur sichtbare Kacheln, neueste zuerst, 96-MB-Speichergrenze (LRU), Schlüssel inkl. Änderungszeit
+    - [x] M5.7b Kachel-Ansicht: Mittel/Groß/Extra groß (48/96/256 px), Strg+Shift+1/2/3/6, Strg+Mausrad (gedrosselt), Knöpfe „Details/Symbole“ in der Statusleiste, Raster-Navigation (←→↑↓, Bild↑↓), Klick/Strg/Shift, Doppelklick, Kontextmenü, F2 über der Beschriftung, Ziehen & Ablegen (auch OLE, Trefferprüfung im Raster), Einstellung `view` gespeichert
     - [ ] Später: Spaltenköpfe in der Kachel-Ansicht durch Sortier-Menü ersetzen; Rahmen-Auswahl (Lasso) für beide Ansichten; Ansicht pro Ordner merken
 - [ ] M6 Ordneroptionen-Parität, Themes, Command Palette, Inspector
 - [ ] **R-001 Ein-Knopf-Reset** für alle Integrationen (App-Knopf + eigenständiges Recovery-Tool + Journal + CI-Snapshot-Test) – Voraussetzung, bevor irgendeine Integration ausgeliefert wird

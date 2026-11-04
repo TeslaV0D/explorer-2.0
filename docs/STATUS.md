@@ -40,13 +40,14 @@
 - **Bug (CI #32/#33, UI-Matrix)**: OLE-Drop-Target wurde nie registriert („Invalid window handle“) – der Timer lief, bevor Slint das native Fenster erzeugt hatte → Ablegen aus anderen Apps wäre tot gewesen. Fix: Registrierung wiederholt bis HWND existiert (50 ms, max. 5 s), sonst Rückfall auf In-App-DnD.
 - Neu: **Windows-E2E mit echter Tastatur/Maus** (`scripts/e2e-windows.ps1`, CI-Schritt im Release-Job, Screenshots bei Fehler).
 
-### M5.7 Kachel-Ansicht + Vorschaubilder (lokal grün, CI ausstehend)
+### M5.7 Kachel-Ansicht + Vorschaubilder ✅ (CI-Run #48; W28c: echtes PNG-Vorschaubild, Kachel-Mitte exakt R220 G20 B20) → **M5 komplett**
 - `core::view::ViewMode` (Details/Mittel/Groß/Extra groß, 48/96/256 px, Kachelmaße, `step` für Strg+Mausrad, Explorer-Kürzel Strg+Shift+1/2/3/6 inkl. US/DE-Shift-Zeichen), Einstellung `view` in settings.ini.
 - `shell::thumbnail(path, px)`: `IShellItemImageFactory::GetImage` (Vorschau aus dem Windows-Thumbnail-Cache, sonst großes Shell-Icon), vormultipliziertes BGRA → RGBA; Windows-Test mit selbst geschriebener BMP.
 - `app::thumbs`: 2 Worker, nur sichtbare Kacheln, neueste Anfrage zuerst, weggescrollte werden übersprungen, 96-MB-Grenze (LRU, kommen beim Zurückscrollen neu), Schlüssel inkl. Änderungszeit (bearbeitetes Bild → neue Vorschau).
 - UI: Raster als zweite ListView über **stabile** Zeilen-/Spalten-Modelle aus Rust (ein `int`-Repeater hätte bei jeder Auswahländerung alle Kacheln neu gebaut → Doppelklick/Hover kaputt, gemessen per `init`-Debug), Kachel = gleiche Interaktion wie eine Zeile (Klick/Strg/Shift, Ziehen einer Mehrfachauswahl, Rechtsklick, Doppelklick, Slint-DnD/OLE-Drag), Pfeiltasten im Raster, F2-Feld über der Beschriftung, Kontextmenü per Tastatur an der Kachel, OLE-Drop-Trefferprüfung mit Zeilenhöhe/Spalten.
 - Strg+Mausrad gedrosselt (max. 1 Stufe/250 ms, ab Start gemessen): X11 liefert einen Rad-Klick doppelt, Touchpads viele kleine Ereignisse.
 - Tests: Unit (ViewMode, Tasten im Raster, Trefferprüfung im Raster, BGRA), Linux-E2E [62]–[62h] (132/132), Windows-E2E W28–W30 (echtes rotes PNG → roter Pixel in der Kachel).
+- Runs #45–#47 rot: der Windows-Server-Runner hat **keinen BMP-Vorschau-Anbieter** (Shell gab das Icon) → `Thumb { image, preview }` (erst `THUMBNAILONLY`, dann `ICONONLY`), Tests unterscheiden beide Fälle; PNG-Vorschau gibt es dort.
 
 ### M5.6d2 Bibliotheken ✅ (CI-Run #44) → **M5.6 virtuelle Orte komplett**
 - `shell::libraries`/`library` (`IShellLibrary` über die `.library-ms`-Dateien in `FOLDERID_Libraries`): lokalisierter Name, Mitgliedsordner (nur Dateisystem), Datei fürs Icon.
