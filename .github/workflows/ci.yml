@@ -233,5 +233,15 @@ jobs:
           $r = Invoke-App 'mesa-forced-gpu' $mesaExe @{ EXPLORER2_CONFIG_DIR = "$env:RUNNER_TEMP\cfg-mesa-gpu"; EXPLORER2_RENDERER = 'gpu' }
           if ($r.text -match 'Failed to initialize Skia opengl surface') { throw "[mesa-forced-gpu] Skia GL surface failed even with an OpenGL 4.x driver" }
           Write-Host "  ok: Skia OpenGL surface initialised on Mesa (GL path works)"
+      - name: "Windows E2E (real keyboard + mouse: rename, undo, clipboard, recycle bin, context menu, properties, OLE drag)"
+        shell: powershell
+        run: |
+          New-Item -ItemType Directory -Force "$env:RUNNER_TEMP\e2e-win" | Out-Null
+          powershell -ExecutionPolicy Bypass -File scripts/e2e-windows.ps1 (Resolve-Path "target/release/explorer2.exe").Path "$env:RUNNER_TEMP\e2e-win"
+          if ($LASTEXITCODE) { throw "Windows E2E failed" }
+      - name: Upload Windows E2E screenshots on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with: { name: e2e-windows-screenshots, path: "${{ runner.temp }}/e2e-win/*.png" }
       - uses: actions/upload-artifact@v4
         with: { name: explorer2-windows-x64, path: target/release/explorer2.exe }
