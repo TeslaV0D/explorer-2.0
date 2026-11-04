@@ -82,11 +82,11 @@ Legende: `[ ]` offen · `[~]` in Arbeit · `[x]` erledigt · Prio P0/P1/P2
     - [x] M5.7b Kachel-Ansicht: Mittel/Groß/Extra groß (48/96/256 px), Strg+Shift+1/2/3/6, Strg+Mausrad (gedrosselt), Knöpfe „Details/Symbole“ in der Statusleiste, Raster-Navigation (←→↑↓, Bild↑↓), Klick/Strg/Shift, Doppelklick, Kontextmenü, F2 über der Beschriftung, Ziehen & Ablegen (auch OLE, Trefferprüfung im Raster), Einstellung `view` gespeichert
     - [ ] Später: Spaltenköpfe in der Kachel-Ansicht durch Sortier-Menü ersetzen; Rahmen-Auswahl (Lasso) für beide Ansichten; Ansicht pro Ordner merken
 - [~] M6 Ordneroptionen-Parität, Themes, Command Palette, Inspector (Boss: Reihenfolge M6.1 → M6.4)
-  - [~] M6.1 Ordneroptionen wie im Explorer
+  - [x] M6.1 Ordneroptionen wie im Explorer (CI-Run #49–#51)
     - [x] M6.1a Einstellungs-Panel „Ordneroptionen“: Dateinamenerweiterungen anzeigen (aus = Endung bekannter Typen ausblenden, Windows: in HKCR registriert; F2 bearbeitet dann nur den Stamm, Endung bleibt), geschützte Systemdateien anzeigen, Öffnen durch einfachen Klick (Markieren durch Zeigen, Doppelklick-Schutz) – CI-Run #49
-    - [~] M6.1b Sortier-Menü „Sortieren ▾“ in der Statusleiste (Spalte behält Richtung, Richtung getrennt), Kachel-Ansicht ohne Spaltenköpfe, Rahmen-Auswahl auf freier Fläche in beiden Ansichten (Strg = hinzufügen) – lokal grün, CI ausstehend
+    - [x] M6.1b Sortier-Menü „Sortieren ▾“ in der Statusleiste (Spalte behält Richtung, Richtung getrennt), Kachel-Ansicht ohne Spaltenköpfe, Rahmen-Auswahl auf freier Fläche in beiden Ansichten (Strg = hinzufügen) – CI-Run #51
     - [ ] Später: Rahmen-Auswahl mit Auto-Scroll am Rand; Rahmen auch aus dem freien Teil einer Detail-Zeile starten (Explorer)
-    - [~] M6.1c Ansicht pro Ordner merken (`views.ini`, max. 5000 Ordner, älteste fallen raus; Windows ohne Groß/Klein) + „Aktuelle Ansicht für alle Ordner“; Ansicht pro Tab → zwei Panes können verschieden aussehen – lokal grün, CI ausstehend
+    - [x] M6.1c Ansicht pro Ordner merken (`views.ini`, max. 5000 Ordner, älteste fallen raus; Windows ohne Groß/Klein) + „Aktuelle Ansicht für alle Ordner“; Ansicht pro Tab → zwei Panes können verschieden aussehen – CI-Run #51
   - [ ] M6.2 Inspector (Detail-Seitenleiste: große Vorschau, Metadaten)
   - [ ] M6.3 Befehlspalette (Strg+Shift+P)
   - [ ] M6.4 Farbschemata (Hell/Dunkel/System, Akzentfarbe)

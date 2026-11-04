@@ -40,14 +40,14 @@
 - **Bug (CI #32/#33, UI-Matrix)**: OLE-Drop-Target wurde nie registriert („Invalid window handle“) – der Timer lief, bevor Slint das native Fenster erzeugt hatte → Ablegen aus anderen Apps wäre tot gewesen. Fix: Registrierung wiederholt bis HWND existiert (50 ms, max. 5 s), sonst Rückfall auf In-App-DnD.
 - Neu: **Windows-E2E mit echter Tastatur/Maus** (`scripts/e2e-windows.ps1`, CI-Schritt im Release-Job, Screenshots bei Fehler).
 
-### M6.1c Ansicht pro Ordner (lokal grün, CI ausstehend)
+### M6.1c Ansicht pro Ordner ✅ (CI-Run #51) → **M6.1 komplett**
 - `core::views::FolderViews` (rein, getestet): Ordner → Ansicht, LRU bis 5000, Windows case-insensitiv, toleranter Parser; Datei `views.ini` (`modus<TAB>pfad`, atomar geschrieben).
 - Ansicht hängt jetzt am **Tab** (beim Navigieren: gemerkte Ansicht des Ordners, sonst Standard); `PaneData` trägt Modus + Kachelmaße → linke und rechte Pane können verschieden aussehen. Umschalten merkt die Ansicht für den Ordner.
 - Einstellungen: „Aktuelle Ansicht für alle Ordner“ → wird Standard (`view` in settings.ini), alle gemerkten Ordner vergessen.
 - Tests: Unit, Linux-E2E [67]–[67e] (154/154).
 
-### M6.1b Sortier-Menü + Rahmen-Auswahl (lokal grün, CI ausstehend)
-- CI-Run #50 rot am **Erststart-Gate** (frische VM: 2140 ms > 1000 ms; Fenster→Event-Loop 1,6 s statt ~0,4 s in #40/#48). Verdacht: Zeichen „▾“ im neuen Sortieren-Knopf fehlt in Segoe UI → Schrift-Fallback-Suche beim ersten Rendern. Fix: Dreieck und Auswahlpunkt gezeichnet statt als Zeichen; neue Zeitmarken `init done`/`run` im Trace zur Eingrenzung, falls es nicht daran lag.
+### M6.1b Sortier-Menü + Rahmen-Auswahl ✅ (CI-Run #51)
+- CI-Run #50 rot am **Erststart-Gate** (frische VM: 2140 ms > 1000 ms; Fenster→Event-Loop 1,6 s statt ~0,4 s in #40/#48). Verdacht: Zeichen „▾“ im neuen Sortieren-Knopf fehlt in Segoe UI → Schrift-Fallback-Suche beim ersten Rendern. Fix: Dreieck und Auswahlpunkt gezeichnet statt als Zeichen; neue Zeitmarken `init done`/`run` im Trace. **Bestätigt in #51**: Fenster→Event-Loop 1627 ms (#50) → 456 ms (#51, #48: 409 ms), Erststart 2140 → 702 ms; Init selbst nur 8 ms, die Zeit steckt im ersten Frame.
 - „Sortieren ▾“ in der Statusleiste (Popup): Name/Änderungsdatum/Typ/Größe (Richtung bleibt), Auf-/Absteigend; aktuelle Wahl mit Punkt. Kachel-Ansicht ohne Spaltenköpfe (wie Explorer).
 - Rahmen-Auswahl: Ziehen auf freier Fläche (unter den Zeilen, neben/zwischen Kacheln) zeichnet einen Rahmen; berührte Einträge werden live markiert, mit Strg zusätzlich zur Auswahl vom Start. `core::view::band_hits` + `Selection::set_band` (rein, getestet).
 - Gefunden: Slint feuert `clicked` **vor** dem Pointer-Up-Ereignis → Rahmen wird im Pointer-Ereignis abgeschlossen, nicht in `clicked` (sonst kam das Ende nie an).
