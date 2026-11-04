@@ -1940,6 +1940,7 @@ pub fn set_option(win: &MainWindow, name: &str, on: bool) {
         "show_extensions" => s.show_extensions = on,
         "show_protected" => s.show_protected = on,
         "single_click" => s.single_click = on,
+        "system_accent" => s.system_accent = on,
         _ => {}
     });
     if let Err(e) = res {
@@ -1955,6 +1956,7 @@ pub fn set_option(win: &MainWindow, name: &str, on: bool) {
             invalidate_all(win);
         }
         "single_click" => win.set_opt_single_click(on),
+        "system_accent" => crate::theme::set_use_accent(win, on),
         _ => {}
     }
 }

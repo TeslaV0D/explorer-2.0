@@ -323,6 +323,72 @@ if (WaitFor 'done tab=1 ' 15000) {
 if (-not $p.HasExited) { Stop-Process -Id $p.Id -Force }
 Check "[W33b] no panic" { (Log) -notmatch '(?i)panic' }
 if ($script:fail) { Write-Host "----- trace (options)"; Write-Host (Log) }
+$optFail = $script:fail
+
+# M6.4: colour scheme follows Windows live (real registry; restored afterwards)
+function Pixel([int]$x, [int]$y) {
+  $c = Pt $x $y
+  $b = New-Object System.Drawing.Bitmap 1, 1
+  $g = [System.Drawing.Graphics]::FromImage($b); $g.CopyFromScreen($c.X, $c.Y, 0, 0, (New-Object System.Drawing.Size 1, 1)); $g.Dispose()
+  $px = $b.GetPixel(0, 0); $b.Dispose(); return $px
+}
+function Near($px, [int]$r, [int]$g, [int]$b) { [math]::Abs($px.R - $r) -le 3 -and [math]::Abs($px.G - $g) -le 3 -and [math]::Abs($px.B - $b) -le 3 }
+function Palette([int[]]$rgb) { # 8 shades, RGBA; only Light 2 / Accent / Dark 1 matter
+  $bytes = New-Object byte[] 32
+  for ($i = 0; $i -lt 8; $i++) { $bytes[$i * 4] = $rgb[0]; $bytes[$i * 4 + 1] = $rgb[1]; $bytes[$i * 4 + 2] = $rgb[2] }
+  return ,$bytes
+}
+$pers = 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Themes\Personalize'
+$acc = 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Accent'
+$origLight = (Get-ItemProperty $pers -Name AppsUseLightTheme -ErrorAction SilentlyContinue).AppsUseLightTheme
+$accExisted = Test-Path $acc
+$origPal = (Get-ItemProperty $acc -Name AccentPalette -ErrorAction SilentlyContinue).AccentPalette
+if (-not (Test-Path $pers)) { New-Item -Path $pers -Force | Out-Null }
+if (-not $accExisted) { New-Item -Path $acc -Force | Out-Null }
+Set-ItemProperty $pers -Name AppsUseLightTheme -Value 1 -Type DWord
+Set-ItemProperty $acc -Name AccentPalette -Value (Palette @(0, 120, 212)) -Type Binary
+$th = New-Item -ItemType Directory -Force "$R\farben"
+Set-Content "$th\a.txt" "a"; Set-Content "$th\b.txt" "b"
+$cfg3 = "$Work\cfg-theme"; New-Item -ItemType Directory -Force $cfg3 | Out-Null
+$script:log = "$Work\win-e2e-theme.log"; $env:EXPLORER2_CONFIG_DIR = $cfg3
+$p = Start-Process -FilePath $Exe -ArgumentList "`"$th`"" -PassThru -RedirectStandardError $script:log
+try {
+  if (WaitFor 'done tab=1 ' 15000) {
+    Start-Sleep -Seconds 1
+    $p.Refresh(); $script:hwnd = $p.MainWindowHandle
+    [void][W]::ShowWindow($script:hwnd, 3); Start-Sleep -Milliseconds 800
+    Focus
+    Write-Host "theme: $(Last 'theme why=init')"
+    Check "[W37] start: light system, accent from AccentPalette" { (Last 'theme why=init') -match 'choice=system dark=false .*system_dark=false system_accent=#0078d4' }
+    Check "[W37b] title bar set" { (Log) -match 'theme title bar dark=false' }
+    $bg = Pixel $LISTX (RowY 6); Write-Host "list background: $bg"
+    Check "[W37c] list background light" { Near $bg 250 250 250 }
+    Set-ItemProperty $pers -Name AppsUseLightTheme -Value 0 -Type DWord
+    Check "[W38] Windows switched to dark -> the app follows live" { WaitFor 'theme why=system choice=system dark=true' 5000 }
+    Start-Sleep -Milliseconds 800
+    $bg = Pixel $LISTX (RowY 6); Write-Host "list background: $bg"; Shot "w38-dark"
+    Check "[W38b] list background dark (#191919)" { Near $bg 25 25 25 }
+    Check "[W38c] title bar dark" { WaitFor 'theme title bar dark=true' 3000 }
+    Set-ItemProperty $acc -Name AccentPalette -Value (Palette @(16, 124, 16)) -Type Binary
+    Check "[W39] accent changed in Windows -> selection follows live" { WaitFor 'system_accent=#107c10' 5000 }
+    Click $LISTX (RowY 0); Start-Sleep -Milliseconds 600
+    $sel = Pixel ($LISTX + 150) (RowY 0); Write-Host "selection: $sel"
+    Check "[W39b] the selection is green now" { $sel.G -gt $sel.R + 20 -and $sel.G -gt $sel.B + 20 }
+    Set-ItemProperty $pers -Name AppsUseLightTheme -Value 1 -Type DWord
+    Check "[W40] back to light" { WaitFor 'theme why=system choice=system dark=false' 5000 }
+    $p.Refresh()
+    Check "[W40b] app still running, no panic" { -not $p.HasExited -and (Log) -notmatch '(?i)panic' }
+  } else { Fail "[W37] theme start did not load" }
+} finally {
+  if (-not $p.HasExited) { Stop-Process -Id $p.Id -Force }
+  # restore the runner's registry exactly
+  if ($null -eq $origLight) { Remove-ItemProperty $pers -Name AppsUseLightTheme -ErrorAction SilentlyContinue }
+  else { Set-ItemProperty $pers -Name AppsUseLightTheme -Value $origLight -Type DWord }
+  if (-not $accExisted) { Remove-Item $acc -Recurse -Force -ErrorAction SilentlyContinue }
+  elseif ($null -eq $origPal) { Remove-ItemProperty $acc -Name AccentPalette -ErrorAction SilentlyContinue }
+  else { Set-ItemProperty $acc -Name AccentPalette -Value $origPal -Type Binary }
+}
+if ($script:fail -and -not $optFail) { Write-Host "----- trace (theme)"; Write-Host (Log) }
 $script:log = $mainLog
 if ($script:fail) { Write-Host "----- trace"; Write-Host (Log) }
 exit $script:fail

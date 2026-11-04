@@ -12,6 +12,7 @@ pub mod renderer;
 pub mod selection;
 pub mod session;
 pub mod settings;
+pub mod theme;
 pub mod typeahead;
 pub mod view;
 pub mod views;

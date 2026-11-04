@@ -8,6 +8,7 @@ mod dnd;
 mod icons;
 mod libraries;
 mod menu;
+mod theme;
 mod thumbs;
 mod types;
 #[cfg(windows)]
@@ -18,6 +19,8 @@ mod win_dnd;
 mod win_lib;
 #[cfg(windows)]
 mod win_menu;
+#[cfg(windows)]
+mod win_theme;
 
 pub use dnd::{
     default_effect, primary_button_down, register_drop_target, same_volume, start_drag, DropEffect,
@@ -32,6 +35,7 @@ pub use menu::{
     client_to_screen, menu_entries, own_verb, show_context_menu, show_properties, MenuEntry,
     MenuOutcome, OwnVerb,
 };
+pub use theme::{set_dark_title_bar, system_theme, watch_system_theme};
 pub use thumbs::{premultiplied_bgra_to_rgba, thumbnail, Thumb};
 pub use types::{known_type, type_name, TypeNames};
 

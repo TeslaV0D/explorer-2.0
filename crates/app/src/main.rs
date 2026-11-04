@@ -10,6 +10,7 @@ mod keys;
 mod nav;
 mod open;
 mod palette;
+mod theme;
 mod thumbs;
 
 use std::io::Write;
@@ -72,6 +73,8 @@ fn main() -> Result<(), slint::PlatformError> {
 
     let win = MainWindow::new()?;
     nav::trace_line(&format!("window created at={:.1}ms", nav::since_start_ms()));
+    theme::init(&win, settings.theme, settings.system_accent);
+    on!(win, on_set_theme, |w, t| theme::set_choice(&w, t.as_str()));
     win.set_hw_accel(settings.hardware_acceleration);
     win.set_renderer_status(gfx::status_text(&renderer).into());
     win.on_toggle_hw_accel({

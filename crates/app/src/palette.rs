@@ -206,6 +206,9 @@ fn execute(win: &MainWindow, pi: usize, id: &str) {
         "go-thispc" => nav::navigate(win, pi, "::dieser-pc"),
         "go-libraries" => nav::navigate(win, pi, "::bibliotheken"),
         "settings" => win.set_settings_open(true),
+        "theme-system" => crate::theme::set_choice(win, "system"),
+        "theme-light" => crate::theme::set_choice(win, "light"),
+        "theme-dark" => crate::theme::set_choice(win, "dark"),
         other => nav::trace_line(&format!("palette: unknown command {other}")),
     }
 }

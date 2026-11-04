@@ -30,6 +30,10 @@ pub struct Settings {
     pub inspector: bool,
     /// Command palette: most recently used command ids, newest first.
     pub recent_commands: Vec<String>,
+    /// Farbschema: System (follows Windows) / Hell / Dunkel.
+    pub theme: crate::theme::ThemeChoice,
+    /// "Windows-Akzentfarbe verwenden" (else the default blue).
+    pub system_accent: bool,
 }
 
 impl Default for Settings {
@@ -47,6 +51,8 @@ impl Default for Settings {
             single_click: false,
             inspector: false,
             recent_commands: Vec::new(),
+            theme: crate::theme::ThemeChoice::System,
+            system_accent: true,
         }
     }
 }
@@ -100,12 +106,14 @@ impl Settings {
                         s.sort_desc = b;
                     }
                 }
-                "show_extensions" | "show_protected" | "single_click" | "inspector" => {
+                "show_extensions" | "show_protected" | "single_click" | "inspector"
+                | "system_accent" => {
                     if let Some(b) = parse_bool(v) {
                         match k {
                             "show_extensions" => s.show_extensions = b,
                             "show_protected" => s.show_protected = b,
                             "inspector" => s.inspector = b,
+                            "system_accent" => s.system_accent = b,
                             _ => s.single_click = b,
                         }
                     }
@@ -117,6 +125,11 @@ impl Settings {
                         .filter(|x| !x.is_empty())
                         .map(String::from)
                         .collect();
+                }
+                "theme" => {
+                    if let Some(t) = crate::theme::ThemeChoice::parse(v) {
+                        s.theme = t;
+                    }
                 }
                 "view" => {
                     if let Some(m) = crate::view::ViewMode::parse(v) {
@@ -148,7 +161,9 @@ impl Settings {
              show_protected = {}\n\
              single_click = {}\n\
              inspector = {}\n\
-             recent_commands = {}\n",
+             recent_commands = {}\n\
+             theme = {}\n\
+             system_accent = {}\n",
             self.hardware_acceleration,
             self.show_hidden,
             self.gpu_probe_version,
@@ -159,7 +174,9 @@ impl Settings {
             self.show_protected,
             self.single_click,
             self.inspector,
-            self.recent_commands.join(",")
+            self.recent_commands.join(","),
+            self.theme.as_str(),
+            self.system_accent
         )
     }
 
@@ -204,6 +221,8 @@ mod tests {
             single_click: true,
             inspector: true,
             recent_commands: vec!["paste".into(), "inspector".into()],
+            theme: crate::theme::ThemeChoice::Dark,
+            system_accent: false,
         };
         assert_eq!(Settings::parse(&s.serialize()), s);
     }

@@ -161,6 +161,9 @@ pub const ALL: &[Command] = &[
     ),
     c("empty-trash", "Papierkorb leeren", "", Need::Trash),
     c("settings", "Einstellungen", "", Need::Always),
+    c("theme-system", "Farbschema: Wie Windows", "", Need::Always),
+    c("theme-light", "Farbschema: Hell", "", Need::Always),
+    c("theme-dark", "Farbschema: Dunkel", "", Need::Always),
 ];
 
 pub fn by_id(id: &str) -> Option<&'static Command> {

@@ -240,7 +240,7 @@ echo "-- M6.1a: folder options (settings panel)"
 F=$R/opt; mkdir -p "$F/Ordner/Tief"; echo x > "$F/x.txt"
 goto "$F"
 # rows: 0 Ordner, 1 x.txt
-SETTINGS_BTN="1144 20"; OPT_EXT="835 205"; OPT_CLICK="835 257"; SETTINGS_CLOSE="1138 352"; VIEW_ALL="926 312"
+SETTINGS_BTN="1144 20"; OPT_EXT="835 205"; OPT_CLICK="835 257"; SETTINGS_CLOSE="1138 447"; VIEW_ALL="926 312"
 xdotool mousemove $SETTINGS_BTN click 1; sleep 0.6
 xdotool mousemove $OPT_EXT click 1; sleep 1.2
 check "[63] 'Dateinamenerweiterungen anzeigen' off hides known extensions" "last 'option show_extensions' | grep -q '=false' && last 'shown' | grep -qF '\"x\"' && ! last 'shown' | grep -qF 'x.txt'"
@@ -354,4 +354,49 @@ xdotool key alt+Left; sleep 1
 check "[52] process alive" "kill -0 $PID"
 kill $PID; wait $PID 2>/dev/null
 check "[52b] no panic" "! grep -qi panic $LOG"
+
+echo "== [70] M6.4: colour schemes (light / dark / follow the system, accent colour)"
+# measured by pixel (CLAUDE.md): list background, selection, a std-widget button
+TW=$R/theme; mkdir -p "$TW"; echo a > "$TW/a.txt"; echo b > "$TW/b.txt"; echo c > "$TW/c.txt"
+TCFG=$W/config-theme; mkdir -p "$TCFG"
+px() { convert "$W/$1.png" -format "%[pixel:p{$2,$3}]" info: 2>/dev/null; }
+red() { echo "$1" | sed -E 's/srgba?\(([0-9]+),.*/\1/'; }
+green_wins() { echo "$1" | awk -F'[(),]' '{ exit !($3 > $2 + 20 && $3 > $4 + 20) }'; }
+theme_run() { # <log> [env...]
+  local log=$1; shift
+  env EXPLORER2_CONFIG_DIR=$TCFG "$@" $EXE "$TW" > $log 2>&1 & PID=$!
+  sleep 2.5; focus; LOG=$log
+}
+theme_run $W/trace-70.log
+check "[70] first start follows the system (light here) with the original colours" "last 'theme why=init' | grep -q 'choice=system dark=false accent=#0067c0 selection=#cce8ff'"
+xdotool mousemove 900 680; sleep 0.3; shot t70-light
+P=$(px t70-light $LIST_X $(row_y 5)); B=$(px t70-light $NEWFOLDER_X 9)
+check "[70b] light: list background #fafafa ($P), button light ($B)" "[ '$P' = 'srgb(250,250,250)' ] && [ \$(red '$B') -gt 200 ]"
+T_DARK="1002 383"; T_ACCENT="835 414"   # settings panel: "Dunkel", "Windows-Akzentfarbe verwenden"
+xdotool mousemove $SETTINGS_BTN click 1; sleep 0.6; xdotool mousemove $T_DARK click 1; sleep 0.8
+check "[70c] 'Dunkel' in the settings switches live and is saved" "last 'theme why=choice' | grep -q 'choice=dark dark=true' && grep -qx 'theme = dark' $TCFG/settings.ini"
+xdotool mousemove $SETTINGS_CLOSE click 1; sleep 0.4
+xdotool mousemove $LIST_X $(row_y 0) click 1; sleep 0.4; xdotool mousemove 900 680; sleep 0.3; shot t70-dark
+P=$(px t70-dark $LIST_X $(row_y 5)); S=$(px t70-dark $((LIST_X + 200)) $(row_y 0)); B=$(px t70-dark $NEWFOLDER_X 9); C=$(px t70-dark $SIDEBAR_X 600)
+check "[70d] dark: list #191919 ($P), selection #1c3f63 ($S), sidebar #202020 ($C)" "[ '$P' = 'srgb(25,25,25)' ] && [ '$S' = 'srgb(28,63,99)' ] && [ '$C' = 'srgb(32,32,32)' ]"
+check "[70e] the std widgets follow (dark button: $B)" "[ \$(red '$B') -lt 90 ]"
+kill $PID; wait $PID 2>/dev/null
+theme_run $W/trace-70f.log
+check "[70f] restart starts dark right away (before the first frame)" "last 'theme why=init' | grep -q 'choice=dark dark=true' && ! grep -q 'theme why=init choice=[a-z]* dark=false' $LOG"
+kill $PID; wait $PID 2>/dev/null
+sed -i 's/^theme = .*/theme = system/' $TCFG/settings.ini
+theme_run $W/trace-70g.log EXPLORER2_SYSTEM_THEME=dark EXPLORER2_ACCENT=#107c10
+check "[70g] 'Wie Windows' follows a dark system with its accent" "last 'theme why=init' | grep -q 'choice=system dark=true .* system_dark=true system_accent=#107c10'"
+xdotool mousemove $LIST_X $(row_y 1) click 1; sleep 0.4; xdotool mousemove 900 680; sleep 0.3; shot t70-green
+S=$(px t70-green $((LIST_X + 200)) $(row_y 1))
+check "[70h] the selection takes the accent's hue (green: $S)" "green_wins '$S'"
+xdotool mousemove $SETTINGS_BTN click 1; sleep 0.6; xdotool mousemove $T_ACCENT click 1; sleep 0.8
+check "[70h2] unticking 'Windows-Akzentfarbe' goes back to the blue" "last 'theme why=accent' | grep -q 'dark=true accent=#4cc2ff selection=#1c3f63' && grep -qx 'system_accent = false' $TCFG/settings.ini"
+xdotool mousemove $T_ACCENT click 1; sleep 0.6; xdotool mousemove $SETTINGS_CLOSE click 1; sleep 0.4
+xdotool key ctrl+shift+p; sleep 0.4; xdotool type --delay 40 "hell"; sleep 0.5; xdotool key Return; sleep 1
+check "[70i] 'Hell' overrides the dark system" "last 'theme why=choice' | grep -q 'choice=light dark=false'"
+xdotool key ctrl+shift+p; sleep 0.4; xdotool type --delay 40 "wie windows"; sleep 0.5; xdotool key Return; sleep 1
+check "[70j] back to 'Wie Windows' = dark again" "last 'theme why=choice' | grep -q 'choice=system dark=true'"
+check "[70k] process alive, no panic" "kill -0 $PID && ! grep -qi panic $LOG"
+kill $PID; wait $PID 2>/dev/null
 exit $FAIL

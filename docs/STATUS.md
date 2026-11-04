@@ -40,6 +40,14 @@
 - **Bug (CI #32/#33, UI-Matrix)**: OLE-Drop-Target wurde nie registriert („Invalid window handle“) – der Timer lief, bevor Slint das native Fenster erzeugt hatte → Ablegen aus anderen Apps wäre tot gewesen. Fix: Registrierung wiederholt bis HWND existiert (50 ms, max. 5 s), sonst Rückfall auf In-App-DnD.
 - Neu: **Windows-E2E mit echter Tastatur/Maus** (`scripts/e2e-windows.ps1`, CI-Schritt im Release-Job, Screenshots bei Fehler).
 
+### M6.4 Farbschemata (CI ausstehend)
+- Einstellungen → **Farbschema: Wie Windows / Hell / Dunkel** (+ Befehlspalette „Farbschema: …“), Häkchen **„Windows-Akzentfarbe verwenden“**; gespeichert in settings.ini (`theme`, `system_accent`).
+- **Alle Farben zentral** in `core::theme::tokens` (37 Tokens) → Slint-Global `Theme`; main.slint hat keine Hex-Farbe mehr. Hell = exakt der bisherige Look (Auswahl weiterhin #cce8ff).
+- Akzent: Auswahl, Hover, aktueller Ort, Ablageziel übernehmen den **Farbton** des Windows-Akzents bei gleicher Helligkeit (Gelb wird nicht grell); Fokusrahmen/aktive Pane/Fortschritt nutzen Windows' eigene Schattierung (AccentPalette „Dark 1“ hell, „Light 2“ dunkel), bei Bedarf auf Kontrast ≥ 4,5 nachgedunkelt/-aufgehellt.
+- „Wie Windows“ folgt **live**: Registry-Watcher (`RegNotifyChangeKeyValue` auf Themes + DWM + Accent) → neu lesen → nur bei Änderung anwenden. Std-Widgets (Buttons, Checkboxen, Scrollbalken) über `Palette.color-scheme`, Titelleiste über `DWMWA_USE_IMMERSIVE_DARK_MODE`.
+- Kein Hell-Aufblitzen: Schema wird vor dem ersten Bild gesetzt (Registry-Lesen ~0,01 ms im Startpfad).
+- Tests: core-Unit (WCAG-Kontrast aller Text-/Hintergrund-Paare für 12 Akzente × hell/dunkel inkl. Gelb/Weiß/Schwarz, Akzent-Rahmen ≥ 3:1, HSL-Rundlauf, AccentPalette/ABGR-Format, Settings-Rundlauf), Linux-E2E [70]–[70k] per **Pixelmessung** (Liste #fafafa → #191919, Auswahl #1c3f63, Seitenleiste #202020, Std-Button dunkel, Neustart startet dunkel, System dunkel + grüner Akzent → grüne Auswahl, Akzent-Häkchen aus → Blau), Windows-E2E W37–W40 mit **echter Registry** (live dunkel/hell, live Akzentwechsel, Titelleiste; Registry danach exakt wiederhergestellt).
+
 ### M6.3 Befehlspalette ✅ (CI-Run #55)
 - **Strg+Shift+P** öffnet ein Suchfeld oben mittig; ↑/↓/Bild↑/Bild↓ wählen, Enter führt aus, Esc/Klick daneben schließt.
 - `core::commands` (rein, getestet): **ein** Verzeichnis aller 45 Befehle (ID, deutscher Name, Kürzel, Bedingung: Auswahl / echter Ordner / Einfügen möglich / Rückgängig / Wiederholen / Papierkorb), `fuzzy_score` (Teilfolge, Umlaute gefaltet, Wortanfänge + aufeinanderfolgende Treffer zählen), `rank` (zuletzt benutzte zuerst), `push_recent`.
