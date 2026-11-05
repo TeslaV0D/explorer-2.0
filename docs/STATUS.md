@@ -1,6 +1,6 @@
 # Zwischenstand
 
-**Stand:** 2026-11-04 · **Phase:** 1 · M0–M5 ✅ · **M6 ✅ komplett (CI-Run #58)** · nächster Schritt: R-001 / M7 (Freigabe Boss) · **Branch:** `claude/relaxed-pasteur-ufhh1p`
+**Stand:** 2026-11-05 · **Phase:** 1 · M0–M6 ✅ · **R-001 Ein-Knopf-Reset ✅ (CI-Run #61)** · nächster Schritt: M7 Windows-Integration (Freigabe Boss) · **Branch:** `claude/relaxed-pasteur-ufhh1p`
 
 ## M5 – Shell-Integration (läuft, Freigabe Boss 2026-11-04)
 ### CI-Run #37 – alles grün ✅ (M5.0–M5.5)
@@ -40,7 +40,7 @@
 - **Bug (CI #32/#33, UI-Matrix)**: OLE-Drop-Target wurde nie registriert („Invalid window handle“) – der Timer lief, bevor Slint das native Fenster erzeugt hatte → Ablegen aus anderen Apps wäre tot gewesen. Fix: Registrierung wiederholt bis HWND existiert (50 ms, max. 5 s), sonst Rückfall auf In-App-DnD.
 - Neu: **Windows-E2E mit echter Tastatur/Maus** (`scripts/e2e-windows.ps1`, CI-Schritt im Release-Job, Screenshots bei Fehler).
 
-### R-001 Ein-Knopf-Reset („Notausgang“) – R-001a/b ✅ (CI-Run #59), R-001c (CI ausstehend)
+### R-001 Ein-Knopf-Reset („Notausgang“) ✅ komplett (CI-Run #59–#61)
 - Neue Crate **`explorer-integrate`**: jede Windows-Integration (ab M7) läuft nur über `apply()`. Vor jeder Änderung steht der Zustand vorher im **Journal** (write-ahead, atomar mit Flush, Spiegelkopie, Prüfsumme; Registry-Werte roh als Typ + Bytes → bit-genauer Rückbau; Dateien mit Sicherung).
 - `reset()`: Journal rückwärts – nur wo der Wert **noch uns gehört**; hat eine andere Software ihn inzwischen geändert, bleibt er und steht im Bericht („von anderer Software geändert – belassen“). Eigene Schlüssel nur, wenn leer. Danach **Sweep der bekannten Integrationsstellen** (Ordner-Verben Folder/Directory/Drive, eigene Kontextmenü-Einträge, Win+E, `HKCU\Software\Explorer2`; erkannt am Befehl mit `explorer2`) → funktioniert auch ohne oder mit kaputtem Journal. Fehler (z. B. HKLM ohne Admin) bleiben im Journal für den nächsten Versuch. Umgebung → `WM_SETTINGCHANGE`.
 - **`explorer2-recover.exe`**: Konsole, keine UI/GPU (läuft auch im Abgesicherten Modus), `--status` (Exit 1 = aktiv), `--yes`, sonst Nachfrage; als zweite Datei im Windows-Artefakt.
@@ -48,6 +48,7 @@
 - Tests: 13 Unit-Tests gegen die Fake-Registry (u. a. Absturz zwischen Journal und Änderung, fremd geänderte Werte, HKLM verweigert → zweiter Versuch, Dateien, Formatschäden) + Windows-Unit-Test gegen die echte Registry (ohne Sweep, damit ein Entwickler-PC nie angefasst wird).
 - Gefunden beim Testen: ein Schlüssel, unter dem ein Rückbau scheiterte, flog als „nicht leer“ aus dem Journal → zweiter Versuch hätte ihn liegen lassen; jetzt bleibt er drin.
 - **CI #60 rot**, zwei Funde: (1) **echter Bug**: Palette-Befehl mit Dialog (Zurücksetzen, aber auch „Endgültig löschen“/„Papierkorb leeren“) – Enter im Dialog kam nicht an, weil die Fokus-Rückgabe der schließenden Palette mit dem Dialog-Fokus konkurrierte → Befehle laufen jetzt einen Event-Loop-Durchlauf später; Linux-E2E [71f2] deckt den Weg ab. (2) W11 wartete starr 2,5 s auf den Eigenschaften-Dialog der Shell; er kam später, blieb offen und nahm W12–W17 den Fokus → Test pollt jetzt bis 10 s und wartet aufs Schließen.
+- **CI #61 grün**: Windows-E2E 68/68 (W41: echte Integration per App-Palette zurückgesetzt – 6 Werte/Dateien, 7 Schlüssel, 0 Fehler, Fremdwert exakt zurück; W11 Dialog nach 261 ms), R-001-Snapshot 15/15, Linux-E2E 188/188.
 - R-001c: Einstellungen → **„Windows-Integration“** (Status beim Öffnen, Knopf „Alle Windows-Integrationen zurücksetzen“ nur wenn etwas aktiv ist, Nachfrage mit Stand), Palette-Befehl; Linux-E2E [71]–[71g] (beschädigtes Journal per Knopf zurückgesetzt, 187/187), Windows-E2E W41–W41h (echte Integration per App-Palette zurückgesetzt).
 
 ### M6.4 Farbschemata ✅ (CI-Run #58) → **M6 komplett**
