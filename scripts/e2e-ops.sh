@@ -434,6 +434,7 @@ kill $PID; wait $PID 2>/dev/null
 echo "== [72] M8: install from the app (palette -> question -> continue in the installed copy)"
 IDIR=$R/inst/Programs/Explorer2; SDIR="$R/inst/Start/Explorer 2.0"
 LOG=$W/trace-72.log
+[ -x "$(dirname "$EXE")/explorer2-recover" ] || echo "NOTE  [72] explorer2-recover missing next to $EXE (build -p explorer-integrate --bins) - the installer refuses then"
 EXPLORER2_CONFIG_DIR=$W/config-install EXPLORER2_INSTALL_DIR=$IDIR EXPLORER2_STARTMENU_DIR="$SDIR" \
   $EXE "$TW" > $LOG 2>&1 & PID=$!
 sleep 2.5; focus
