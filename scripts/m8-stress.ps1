@@ -63,7 +63,8 @@ function Stats {
 function Navs { @(Select-String -Path $log -Pattern 'navigate tab=' -SimpleMatch).Count }
 function Cycle([int]$i) {
   EnsureFront
-  if ($i % 20 -eq 0) { K '{HOME}' }
+  # 20 folders, then files: back to the top before Down passes the last folder
+  if ($i % 19 -eq 0) { K '{HOME}' }
   K '{DOWN}'; K '{ENTER}' 150
   if ($i % 5 -eq 0) { K '^+6' 120; K '^+1' }
   if ($i % 7 -eq 0) {
@@ -123,6 +124,7 @@ Check "[S2b] the image cache stays in its budget ($([math]::Round($tc / 1MB, 1))
 Check "[S3] no handle leak (phase B +$($c.handles - $b.handles), limit +40)" { ($c.handles - $b.handles) -le 40 }
 Check "[S4] no thread leak (+$($c.threads - $a.threads), limit +4)" { ($c.threads - $a.threads) -le 4 }
 Check "[S5] no GDI/USER object leak (icons, menus: +$($c.gdi - $a.gdi) / +$($c.user - $a.user), limit +30)" { ($c.gdi - $a.gdi) -le 30 -and ($c.user - $a.user) -le 30 }
+Check "[S7] nothing else came to the front (the rounds only navigate, never open a file)" { $script:stolen.Count -eq 0 }
 $p.Refresh()
 Check "[S6] process alive, no panic" { -not $p.HasExited -and (Get-Content $log -Raw) -notmatch '(?i)panic' }
 if (-not $p.HasExited) { Stop-Process -Id $p.Id -Force }

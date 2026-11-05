@@ -26,7 +26,8 @@ sleep 2.5; focus
 # RSS (KiB), open files, threads
 stats() { echo "$(awk '/VmRSS/{print $2}' /proc/$PID/status) $(ls /proc/$PID/fd | wc -l) $(ls /proc/$PID/task | wc -l)"; }
 cycle() {
-  [ $(( $1 % 20 )) -eq 0 ] && xdotool key Home
+  # 20 folders, then files: back to the top before Down passes the last folder
+  [ $(( $1 % 19 )) -eq 0 ] && xdotool key Home
   xdotool key Down Return; sleep 0.12
   if [ $(( $1 % 5 )) -eq 0 ]; then xdotool key ctrl+shift+6; sleep 0.1; xdotool key ctrl+shift+1; fi
   if [ $(( $1 % 7 )) -eq 0 ]; then : > "$SD/churn-$1"; rm -f "$SD/churn-$(( $1 - 7 ))"; fi
