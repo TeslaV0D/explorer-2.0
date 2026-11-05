@@ -7,7 +7,7 @@ use crate::keys::KeyAction;
 use crate::{nav, MainWindow, PaletteItem};
 use explorer_core::commands::{self, fuzzy_score, push_recent, rank, Need};
 use explorer_core::view::ViewMode;
-use slint::{Model, ModelRc, VecModel};
+use slint::{ComponentHandle, Model, ModelRc, VecModel};
 use std::cell::RefCell;
 use std::rc::Rc;
 
@@ -156,7 +156,15 @@ pub fn run(win: &MainWindow, index: i32) {
         win.set_error(e.into());
     }
     nav::trace_line(&format!("palette run {id}"));
-    execute(win, pi, id);
+    // run once the palette is gone and the list has its focus back: a command
+    // that opens a dialog (confirm, conflict) must get the focus after that,
+    // not race it (Enter in the dialog went nowhere, CI #60 W41)
+    let weak = win.as_weak();
+    slint::Timer::single_shot(std::time::Duration::ZERO, move || {
+        if let Some(w) = weak.upgrade() {
+            execute(&w, pi, id);
+        }
+    });
 }
 
 fn execute(win: &MainWindow, pi: usize, id: &str) {

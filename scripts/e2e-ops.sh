@@ -422,6 +422,12 @@ xdotool key Return; sleep 1
 check "[71e] confirmed: reset ran, damaged journal removed" "last 'integration reset restored' | grep -q 'errors=0 journal=Damaged' && [ ! -e '$ICFG/integration-journal.txt' ]"
 check "[71f] status afterwards: nothing active" "last 'integration status' | grep -q 'entries=0 active_points=0 journal=None'"
 xdotool mousemove $SETTINGS_CLOSE click 1; sleep 0.4
+# the same from the palette: the dialog must get the keyboard (Enter went nowhere, CI #60)
+printf 'v1\nvalue\tHKCU\tzz\n' > "$ICFG/integration-journal.txt"
+xdotool key ctrl+shift+p; sleep 0.4; xdotool type --delay 40 "integrationen zur"; sleep 0.5; xdotool key Return; sleep 0.8
+xdotool key Return; sleep 1
+check "[71f2] palette -> question -> Enter resets" "[ \$(grep -c 'integration reset restored' $LOG) -eq 2 ] && [ ! -e '$ICFG/integration-journal.txt' ]"
+xdotool mousemove $SETTINGS_CLOSE click 1; sleep 0.4
 check "[71g] process alive, no panic" "kill -0 $PID && ! grep -qi panic $LOG"
 kill $PID; wait $PID 2>/dev/null
 exit $FAIL

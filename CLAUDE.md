@@ -134,6 +134,8 @@
 - Windows-E2E: `scripts/e2e-windows.ps1` (SendKeys + SetCursorPos/mouse_event, Fenster maximiert, Runner-Bildschirm 1024×768, DPI 1.0); Foreground-Lock mit Alt-Druck vor `SetForegroundWindow` umgehen.
 - Papierkorb-Restore immer gegen Snapshot **vor** der Aktion (gleicher Originalpfad kann mehrfach im Papierkorb liegen).
 - Slint std-widgets exportieren ein Global `Palette` → eigene Komponente nicht `Palette` nennen (Befehlspalette heißt `CommandPalette`). `Palette.color-scheme` ist in-out: setzen = Std-Widgets fest hell/dunkel; Slint färbt Std-Widgets selbst mit dem Windows-Akzent (`DwmGetColorizationColor`, nur Farbton).
+- Palette-Befehle laufen per `Timer::single_shot(ZERO)` **nach** dem Schließen der Palette: sonst gewinnt die Fokus-Rückgabe an die Liste gegen den Dialog-Fokus, Enter im Dialog geht ins Leere (CI #60 W41, galt auch für „Endgültig löschen“/„Papierkorb leeren“ aus der Palette).
+- Windows-E2E: Shell-Dialoge (Eigenschaften) kommen asynchron und manchmal spät → pollen statt fester Wartezeit und warten, bis sie zu sind (sonst klaut ein später Dialog den Fokus der Folgeschritte, CI #60 W11→W17).
 - Tests gegen die echte Registry nie mit `reset()` (fegt die echten Integrationsstellen = würde eine aktive Integration des Entwicklers entfernen) → `reset_with(.., &[])`.
 - Snapshot-Tests nie über ganz `HKCU\Software\Classes` (MuiCache u. a. ändern sich beim Programmstart von selbst) → nur die Integrationsbereiche exportieren.
 - Sandbox-Plattenkontingent: `target/debug` wächst auf >10 GB → bei „Bus error“ im Linker/„no space“ `rm -rf target/debug`.

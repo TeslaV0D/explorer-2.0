@@ -149,12 +149,20 @@ Keys '{ESC}'; Start-Sleep -Milliseconds 600
 Check "[W10] right-click shows the shell menu (closed with Esc)" { (Last 'context menu result') -match 'Dismissed' }
 
 # properties dialog (shell window in our process)
-Keys '%{ENTER}'; Start-Sleep -Milliseconds 2500
-$titles = [W]::Titles([uint32]$p.Id)
-Write-Host "windows of the app: $titles"
-# title like "a Properties" / "Eigenschaften von a" (the shell hides known extensions)
-Check "[W11] Alt+Enter opens the properties dialog" { $titles -match '(^|\|)(a Properties|Eigenschaften von a)(\.txt)?\|' }
-foreach ($t in 'Properties', 'Eigenschaften') { [W]::CloseTitled([uint32]$p.Id, $t) }; Start-Sleep -Milliseconds 500
+Keys '%{ENTER}'
+# title like "a Properties" / "Eigenschaften von a" (the shell hides known extensions).
+# The shell builds the dialog asynchronously and sometimes slowly: poll, and make sure it
+# is closed again - a late dialog would steal the focus from the following steps (CI #60)
+$propRe = '(^|\|)(a Properties|Eigenschaften von a)(\.txt)?\|'
+$sw = [Diagnostics.Stopwatch]::StartNew()
+do { Start-Sleep -Milliseconds 250; $titles = [W]::Titles([uint32]$p.Id) } while ($titles -notmatch $propRe -and $sw.ElapsedMilliseconds -lt 10000)
+Write-Host "windows of the app after $($sw.ElapsedMilliseconds) ms: $titles"
+Check "[W11] Alt+Enter opens the properties dialog" { $titles -match $propRe }
+$sw.Restart()
+do {
+  foreach ($t in 'Properties', 'Eigenschaften') { [W]::CloseTitled([uint32]$p.Id, $t) }
+  Start-Sleep -Milliseconds 300; $titles = [W]::Titles([uint32]$p.Id)
+} while ($titles -match $propRe -and $sw.ElapsedMilliseconds -lt 5000)
 Focus
 
 # real OLE drag & drop with the mouse: b.txt (row 3) onto folder "Ordner" (row 1)
@@ -393,6 +401,7 @@ $themeFail = $script:fail
 
 # R-001: a real integration (registry + environment + file) is undone by the app's button
 $selftest = Join-Path (Split-Path $Exe) 'examples\r001_selftest.exe'
+$failBefore = $script:fail; $script:fail = 0
 if (Test-Path $selftest) {
   $cfg4 = "$Work\cfg-integration"; New-Item -ItemType Directory -Force $cfg4 | Out-Null
   $env:EXPLORER2_CONFIG_DIR = $cfg4
@@ -425,8 +434,9 @@ if (Test-Path $selftest) {
     if (-not $p.HasExited) { Stop-Process -Id $p.Id -Force }
     & reg.exe delete 'HKCU\Software\Explorer2R001Probe' /f 2>$null | Out-Null
   }
-  if ($script:fail -and -not $themeFail) { Write-Host "----- trace (integration)"; Write-Host (Log) }
+  if ($script:fail) { Write-Host "----- trace (integration)"; Write-Host (Log) }
 } else { Fail "[W41] $selftest missing (build the r001_selftest example)" }
+$script:fail = $script:fail -bor $failBefore
 $script:log = $mainLog
 if ($script:fail) { Write-Host "----- trace"; Write-Host (Log) }
 exit $script:fail
