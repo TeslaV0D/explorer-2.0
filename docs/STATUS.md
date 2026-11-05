@@ -1,6 +1,6 @@
 # Zwischenstand
 
-**Stand:** 2026-11-05 · **Phase:** 1 · M0–M6 ✅ · **R-001 Ein-Knopf-Reset ✅ (CI-Run #61)** · nächster Schritt: M7 Windows-Integration (Freigabe Boss) · **Branch:** `claude/relaxed-pasteur-ufhh1p`
+**Stand:** 2026-11-05 · **Phase:** 1 · M0–M6 ✅ · **R-001 Ein-Knopf-Reset ✅ (CI-Run #61)** · **M7.1 Ordner öffnen + Kontextmenü (läuft)** · **Branch:** `claude/relaxed-pasteur-ufhh1p`
 
 ## M5 – Shell-Integration (läuft, Freigabe Boss 2026-11-04)
 ### CI-Run #37 – alles grün ✅ (M5.0–M5.5)
@@ -39,6 +39,13 @@
 
 - **Bug (CI #32/#33, UI-Matrix)**: OLE-Drop-Target wurde nie registriert („Invalid window handle“) – der Timer lief, bevor Slint das native Fenster erzeugt hatte → Ablegen aus anderen Apps wäre tot gewesen. Fix: Registrierung wiederholt bis HWND existiert (50 ms, max. 5 s), sonst Rückfall auf In-App-DnD.
 - Neu: **Windows-E2E mit echter Tastatur/Maus** (`scripts/e2e-windows.ps1`, CI-Schritt im Release-Job, Screenshots bei Fehler).
+
+### M7.1 Ordner öffnen + Kontextmenü (CI ausstehend)
+- Einstellungen → „Windows-Integration“: **„Ordner mit Explorer 2.0 öffnen (Doppelklick, „Ordner öffnen“)“** und **„„In Explorer 2.0 öffnen“ im Kontextmenü“**, einzeln an/aus (auch per Palette); nur unter Windows sichtbar. Aus = exakt der Zustand vorher (nur die Werte dieser Funktion, Rest bleibt im Journal).
+- Ordner öffnen: eigenes Verb `explorer2open` als **Standard-Verb** von `Directory` und `Drive` (Windows liefert dort `none`, ohne eigenes Standard-Verb fiele alles auf `Folder` = Explorer zurück). `Folder` (Systemsteuerung, Papierkorb, …) bleibt bei Windows, Windows' `open`-Verb unangetastet.
+- Sicherheit: Exe verschoben/gelöscht → beim nächsten Start werden die Einträge auf die laufende Exe umgebogen (sonst „Windows findet … nicht“ bei jedem Ordner); beim Einschalten Kopie von `explorer2-recover.exe` nach `%LOCALAPPDATA%\Explorer2` (überlebt das Löschen des App-Ordners); Hinweis „nicht verschieben“.
+- Gefunden: Laufwerke kommen als `"C:\"` → nach Windows-Quoting `C:"` → `launch_arg` repariert (Test).
+- Tests: integrate 18 Unit (u. a. Funktionen einzeln an/aus = Snapshot, verschobene Exe, fremd übernommenes Standard-Verb bleibt, Sweep ohne Journal räumt alle Funktionen, `Folder` nie berührt, jede Änderung im Manifest); R-001-CI-Test [R5]–[R5e] (Funktionen mit/ohne Journal zurück = Snapshot); Windows-E2E W42–W42m: per Palette an → **echtes ShellExecute auf einen Ordner startet Explorer 2.0 dort**, Laufwerk `C:\` kommt heil an, Kontextmenü-Eintrag sichtbar + per `InvokeVerb` aufrufbar, `Folder` unberührt, beide aus → `reg export` identisch zu vorher.
 
 ### R-001 Ein-Knopf-Reset („Notausgang“) ✅ komplett (CI-Run #59–#61)
 - Neue Crate **`explorer-integrate`**: jede Windows-Integration (ab M7) läuft nur über `apply()`. Vor jeder Änderung steht der Zustand vorher im **Journal** (write-ahead, atomar mit Flush, Spiegelkopie, Prüfsumme; Registry-Werte roh als Typ + Bytes → bit-genauer Rückbau; Dateien mit Sicherung).

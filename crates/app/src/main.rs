@@ -58,7 +58,8 @@ fn main() -> Result<(), slint::PlatformError> {
 
     // A path on the command line wins over the saved session (like `explorer.exe C:\x`).
     let start = arg.map(|a| {
-        let p = PathBuf::from(nav::clean_input(&a));
+        // folder verbs hand over `"C:\"`, which arrives as `C:"` (CRT quoting)
+        let p = PathBuf::from(explorer_core::address::launch_arg(&a));
         let p = std::path::absolute(&p).unwrap_or(p);
         explorer_fs::nearest_existing_ancestor(&p).unwrap_or(p)
     });
@@ -72,12 +73,19 @@ fn main() -> Result<(), slint::PlatformError> {
         None
     };
 
+    if let (Some(a), Some(p)) = (std::env::args().nth(1), &start) {
+        nav::trace_line(&format!("launch arg={a:?} start={}", p.display()));
+    }
     let win = MainWindow::new()?;
     nav::trace_line(&format!("window created at={:.1}ms", nav::since_start_ms()));
     theme::init(&win, settings.theme, settings.system_accent);
     on!(win, on_set_theme, |w, t| theme::set_choice(&w, t.as_str()));
     on!(win, on_settings_opened, |w| integration::refresh(&w));
     on!(win, on_integration_reset, |w| integration::ask_reset(&w));
+    on!(win, on_integration_feature, |w, id, on| {
+        integration::set_feature(&w, id.as_str(), on)
+    });
+    integration::startup(&win);
     win.set_hw_accel(settings.hardware_acceleration);
     win.set_renderer_status(gfx::status_text(&renderer).into());
     win.on_toggle_hw_accel({

@@ -4,6 +4,7 @@
 //!
 //!   r001_selftest full <file>      every kind of change (journal reset)
 //!   r001_selftest manifest         only known points (reset without journal)
+//!   r001_selftest features         every M7 feature, through the features API
 
 use explorer_integrate::{apply, Change, JournalPaths, KeyPath, RegData};
 use std::io::Write;
@@ -37,6 +38,23 @@ fn main() {
         .collect::<Vec<_>>()
         .as_slice()
     {
+        ["features"] => {
+            let paths = JournalPaths::default_paths().expect("config dir");
+            let mut reg = explorer_integrate::system_registry().expect("Windows only");
+            let exe = std::path::Path::new(r"C:\Program Files\Explorer2\explorer2.exe");
+            for f in explorer_integrate::features::ALL {
+                match explorer_integrate::features::enable(reg.as_mut(), &paths, f, exe) {
+                    Ok(n) => {
+                        let _ = writeln!(std::io::stdout(), "feature {} on: {n} changes", f.id());
+                    }
+                    Err(e) => {
+                        let _ = writeln!(std::io::stderr(), "feature {} failed: {e}", f.id());
+                        std::process::exit(1);
+                    }
+                }
+            }
+            return;
+        }
         ["manifest"] => {}
         ["full", file] => {
             plan.extend([

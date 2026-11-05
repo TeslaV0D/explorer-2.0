@@ -156,6 +156,21 @@ pub fn expand_home(s: &str, home: Option<&str>) -> String {
     }
 }
 
+/// A folder handed over on the command line by Windows (folder verbs:
+/// `"explorer2.exe" "%1"`). The C runtime's quoting rules turn the drive
+/// root `"C:\"` into `C:"` (backslash + quote = literal quote) → undo that,
+/// strip surrounding quotes, give a bare drive (`C:`) its root.
+pub fn launch_arg(s: &str) -> String {
+    let mut t = s.trim();
+    t = t.strip_prefix('"').unwrap_or(t);
+    let mut out = t.trim_end_matches('"').to_string();
+    let b = out.as_bytes();
+    if b.len() == 2 && b[1] == b':' && b[0].is_ascii_alphabetic() {
+        out.push('\\');
+    }
+    out
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -216,5 +231,16 @@ mod tests {
         assert_eq!(expand_home("~other", Some("/home/b")), "~other");
         assert_eq!(expand_home("/a/~", Some("/home/b")), "/a/~");
         assert_eq!(expand_home("~", None), "~");
+    }
+
+    #[test]
+    fn launch_args_from_windows() {
+        assert_eq!(launch_arg(r#"C:""#), r"C:\", "\"C:\\\" after CRT parsing");
+        assert_eq!(launch_arg("D:"), r"D:\");
+        assert_eq!(launch_arg(r#""C:\Users\a b""#), r"C:\Users\a b");
+        assert_eq!(launch_arg(r"C:\Users\a b"), r"C:\Users\a b");
+        assert_eq!(launch_arg(r"\\nas\share"), r"\\nas\share");
+        assert_eq!(launch_arg("  /home/x  "), "/home/x");
+        assert_eq!(launch_arg(""), "");
     }
 }

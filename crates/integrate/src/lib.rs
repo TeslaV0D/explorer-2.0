@@ -8,6 +8,7 @@
 //! also covers a lost or damaged journal. The same code runs in the app
 //! (settings button) and in the standalone `explorer2-recover` tool.
 
+pub mod features;
 pub mod journal;
 pub mod manifest;
 pub mod model;
@@ -205,6 +206,62 @@ pub fn reset_with<R: Registry + ?Sized>(
     paths: &JournalPaths,
     points: &[Point],
 ) -> ResetReport {
+    revert(reg, paths, None, points)
+}
+
+/// Undo only what lies below `roots` (one integration feature); the rest
+/// stays in the journal. Keys above the roots that we created go when empty.
+pub fn revert_within<R: Registry + ?Sized>(
+    reg: &mut R,
+    paths: &JournalPaths,
+    scopes: &[Scope],
+) -> ResetReport {
+    revert(reg, paths, Some(scopes), &[])
+}
+
+/// What one feature owns: a whole key tree, or only the values of one key
+/// (e.g. the default verb in `Directory\shell`, a key shared with others).
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct Scope {
+    pub key: KeyPath,
+    pub deep: bool,
+}
+
+impl Scope {
+    pub fn tree(key: KeyPath) -> Scope {
+        Scope { key, deep: true }
+    }
+
+    pub fn values_of(key: KeyPath) -> Scope {
+        Scope { key, deep: false }
+    }
+
+    fn has_value_key(&self, k: &KeyPath) -> bool {
+        if self.deep {
+            k.is_within(&self.key)
+        } else {
+            k.norm() == self.key.norm()
+        }
+    }
+}
+
+fn revert<R: Registry + ?Sized>(
+    reg: &mut R,
+    paths: &JournalPaths,
+    scope: Option<&[Scope]>,
+    points: &[Point],
+) -> ResetReport {
+    let in_scope = |k: &KeyPath| scope.is_none_or(|ss| ss.iter().any(|s| s.has_value_key(k)));
+    let key_in_scope =
+        |k: &KeyPath| scope.is_none_or(|ss| ss.iter().any(|s| s.deep && k.is_within(&s.key)));
+    // created keys above (or holding) a scope, e.g. `Directory\shell`:
+    // removed only when empty
+    let above_scope = |k: &KeyPath| {
+        scope.is_some_and(|ss| {
+            ss.iter()
+                .any(|s| s.key.is_within(k) && !(s.deep && s.key.norm() == k.norm()))
+        })
+    };
     let (state, j) = match load(paths) {
         Loaded::None => (JournalState::None, Journal::default()),
         Loaded::Ok(j) => (JournalState::Ok, j),
@@ -224,6 +281,8 @@ pub fn reset_with<R: Registry + ?Sized>(
     for e in j.entries.iter().rev() {
         match e {
             Entry::Key { .. } => {}
+            Entry::Value { key, .. } if !in_scope(key) => unresolved.push(e.clone()),
+            Entry::File { .. } if scope.is_some() => unresolved.push(e.clone()),
             Entry::Value {
                 key,
                 name,
@@ -295,6 +354,11 @@ pub fn reset_with<R: Registry + ?Sized>(
     // keys we created, deepest first – only when empty
     for e in j.entries.iter().rev() {
         if let Entry::Key { key } = e {
+            let above = above_scope(key) && !key_in_scope(key);
+            if !key_in_scope(key) && !above {
+                unresolved.push(e.clone());
+                continue;
+            }
             match (reg.key_exists(key), reg.key_is_empty(key)) {
                 (Ok(false), _) => {}
                 (Ok(true), Ok(true)) => match reg.delete_empty_key(key) {
@@ -304,8 +368,11 @@ pub fn reset_with<R: Registry + ?Sized>(
                         unresolved.push(e.clone());
                     }
                 },
-                // still holds something we failed to undo → retry next time
-                (Ok(true), Ok(false)) if unresolved.iter().any(|u| entry_within(u, key)) => {
+                // still holds something we failed to undo (or another feature
+                // of ours) → stays in the journal
+                (Ok(true), Ok(false))
+                    if above || unresolved.iter().any(|u| entry_within(u, key)) =>
+                {
                     unresolved.push(e.clone())
                 }
                 (Ok(true), Ok(false)) => r.kept.push(format!("{key} (nicht leer)")),
@@ -373,6 +440,35 @@ pub fn sweep<R: Registry + ?Sized>(
                     }
                 }
                 let mut k = Some(key);
+                while let Some(cur) = k {
+                    if cur.norm() == stop.norm() || !cur.is_within(&stop) {
+                        break;
+                    }
+                    if !matches!(reg.key_exists(&cur), Ok(true))
+                        || !matches!(reg.key_is_empty(&cur), Ok(true))
+                    {
+                        break;
+                    }
+                    if let Err(e) = reg.delete_empty_key(&cur) {
+                        errors.push(format!("{cur}: {e}"));
+                        break;
+                    }
+                    k = cur.parent();
+                }
+            }
+            Point::OwnVerb { key, stop } => {
+                if !matches!(reg.key_exists(&key), Ok(true)) {
+                    continue;
+                }
+                n += 1;
+                if dry_run {
+                    continue;
+                }
+                if let Err(e) = reg.delete_tree(&key) {
+                    errors.push(format!("{key}: {e}"));
+                    continue;
+                }
+                let mut k = key.parent();
                 while let Some(cur) = k {
                     if cur.norm() == stop.norm() || !cur.is_within(&stop) {
                         break;

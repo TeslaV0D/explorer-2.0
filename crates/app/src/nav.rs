@@ -289,6 +289,7 @@ pub fn since_start_ms() -> f64 {
 
 fn trace_enabled() -> bool {
     std::env::var_os("EXPLORER2_TRACE").is_some()
+        || std::env::var_os("EXPLORER2_TRACE_FILE").is_some()
 }
 
 pub fn trace_line(msg: &str) {
@@ -298,6 +299,28 @@ pub fn trace_line(msg: &str) {
 fn trace(msg: &str) {
     if trace_enabled() {
         let _ = writeln!(std::io::stderr(), "[trace] {msg}");
+        trace_file(msg);
+    }
+}
+
+/// `EXPLORER2_TRACE_FILE`: also append the trace to a file – for instances
+/// started by Windows (folder verbs), whose stderr nobody sees.
+fn trace_file(msg: &str) {
+    use std::sync::{Mutex, OnceLock};
+    static FILE: OnceLock<Option<Mutex<std::fs::File>>> = OnceLock::new();
+    let f = FILE.get_or_init(|| {
+        let p = std::env::var_os("EXPLORER2_TRACE_FILE")?;
+        std::fs::OpenOptions::new()
+            .create(true)
+            .append(true)
+            .open(p)
+            .ok()
+            .map(Mutex::new)
+    });
+    if let Some(f) = f {
+        if let Ok(mut f) = f.lock() {
+            let _ = writeln!(f, "[trace] pid={} {msg}", std::process::id());
+        }
     }
 }
 

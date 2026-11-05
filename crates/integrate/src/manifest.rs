@@ -21,6 +21,9 @@ pub enum Point {
         also: &'static [&'static str],
         stop: KeyPath,
     },
+    /// A shell verb only we use (`…\shell\explorer2`): removed with
+    /// everything below, then empty parents pruned up to (not incl.) `stop`.
+    OwnVerb { key: KeyPath, stop: KeyPath },
     /// A key that only we use: removed with everything below.
     OwnTree(KeyPath),
 }
@@ -43,9 +46,25 @@ pub fn points() -> Vec<Point> {
             v.push(verb(class, vb));
         }
     }
+    // M7.1 "open folders": own default verb + the class' default verb value
+    for class in ["Directory", "Drive"] {
+        v.push(Point::OwnVerb {
+            key: KeyPath::hkcu(&format!(r"Software\Classes\{class}\shell\explorer2open")),
+            stop: KeyPath::hkcu(r"Software\Classes"),
+        });
+        v.push(Point::Value {
+            key: KeyPath::hkcu(&format!(r"Software\Classes\{class}\shell")),
+            probe: "",
+            also: &[],
+            stop: KeyPath::hkcu(r"Software\Classes"),
+        });
+    }
     // own context menu entries ("In Explorer 2.0 öffnen")
     for class in ["Directory", r"Directory\Background", "Drive"] {
-        v.push(verb(class, "explorer2"));
+        v.push(Point::OwnVerb {
+            key: KeyPath::hkcu(&format!(r"Software\Classes\{class}\shell\explorer2")),
+            stop: KeyPath::hkcu(r"Software\Classes"),
+        });
     }
     // stage 2: Win+E ("This PC" opens a new window)
     v.push(verb(

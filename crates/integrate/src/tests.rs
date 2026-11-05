@@ -439,6 +439,16 @@ fn manifest_points_are_sane() {
             manifest::Point::OwnTree(k) => {
                 assert!(k.path.to_lowercase().contains("explorer2"), "{k}")
             }
+            manifest::Point::OwnVerb { key, stop } => {
+                assert!(
+                    key.is_within(&stop)
+                        && key
+                            .path
+                            .rsplit_once(r"shell\")
+                            .is_some_and(|(_, v)| v.starts_with("explorer2")),
+                    "{key}"
+                )
+            }
         }
     }
     assert!(manifest::is_ours(r#""C:\Tools\Explorer2.EXE" "%1""#));
@@ -455,4 +465,151 @@ fn key_paths() {
     assert!(!KeyPath::hkcu(r"Software\ClassesX").is_within(&KeyPath::hkcu(r"Software\Classes")));
     assert_eq!(RegData::sz("a").text().as_deref(), Some("a"));
     assert_eq!(RegData::dword(1).text(), None);
+}
+
+mod feature_tests {
+    use super::*;
+    use crate::features::{self, Feature, State};
+    use std::path::Path;
+
+    const A: &str = r"C:\Program Files\Explorer2\explorer2.exe";
+    const B: &str = r"D:\Tools\Explorer2\explorer2.exe";
+
+    #[test]
+    fn features_switch_on_and_off_independently() {
+        let (_d, paths) = dir();
+        let mut reg = machine();
+        let before = reg.clone();
+        let exe = Path::new(A);
+        features::enable(&mut reg, &paths, Feature::ContextMenu, exe).unwrap();
+        let only_menu = reg.clone();
+        features::enable(&mut reg, &paths, Feature::FolderOpen, exe).unwrap();
+        assert_eq!(features::state(&reg, Feature::FolderOpen, exe), State::On);
+        assert_eq!(features::state(&reg, Feature::ContextMenu, exe), State::On);
+        let text = |k: &str| {
+            reg.get(&KeyPath::hkcu(k), "")
+                .unwrap()
+                .and_then(|d| d.text())
+        };
+        assert_eq!(
+            text(r"Software\Classes\Directory\shell\explorer2open\command").as_deref(),
+            Some(r#""C:\Program Files\Explorer2\explorer2.exe" "%1""#)
+        );
+        assert_eq!(
+            text(r"Software\Classes\Directory\shell").as_deref(),
+            Some("explorer2open"),
+            "our verb is the default verb"
+        );
+        assert_eq!(
+            text(r"Software\Classes\Directory\shell\open\command"),
+            None,
+            "Windows' open untouched"
+        );
+        // off again: exactly the state with only the context menu
+        let r = features::disable(&mut reg, &paths, Feature::FolderOpen);
+        assert!(r.ok(), "{r:?}");
+        assert_eq!(features::state(&reg, Feature::FolderOpen, exe), State::Off);
+        assert_eq!(features::state(&reg, Feature::ContextMenu, exe), State::On);
+        assert!(
+            reg.same_content(&only_menu),
+            "shared parent keys stay while needed"
+        );
+        let r = features::disable(&mut reg, &paths, Feature::ContextMenu);
+        assert!(r.ok() && r.kept.is_empty(), "{r:?}");
+        assert!(reg.same_content(&before), "everything as before");
+        assert_eq!(load(&paths), Loaded::None, "journal empty → removed");
+    }
+
+    #[test]
+    fn a_moved_exe_is_recognised_and_re_pointed() {
+        let (_d, paths) = dir();
+        let mut reg = machine();
+        let before = reg.clone();
+        features::enable(&mut reg, &paths, Feature::FolderOpen, Path::new(A)).unwrap();
+        match features::state(&reg, Feature::FolderOpen, Path::new(B)) {
+            State::OnElsewhere(old) => assert!(old.contains(A), "{old}"),
+            other => panic!("{other:?}"),
+        }
+        features::enable(&mut reg, &paths, Feature::FolderOpen, Path::new(B)).unwrap();
+        assert_eq!(
+            features::state(&reg, Feature::FolderOpen, Path::new(B)),
+            State::On
+        );
+        features::disable(&mut reg, &paths, Feature::FolderOpen);
+        assert!(
+            reg.same_content(&before),
+            "the original from before the first enable"
+        );
+    }
+
+    #[test]
+    fn foreign_changes_make_a_feature_partial_and_survive() {
+        let (_d, paths) = dir();
+        let mut reg = machine();
+        let exe = Path::new(A);
+        features::enable(&mut reg, &paths, Feature::FolderOpen, exe).unwrap();
+        // another file manager takes over the default verb afterwards
+        let shell = KeyPath::hkcu(r"Software\Classes\Directory\shell");
+        reg.set(&shell, "", &RegData::sz("openindopus")).unwrap();
+        assert_eq!(
+            features::state(&reg, Feature::FolderOpen, exe),
+            State::Partial
+        );
+        let r = features::disable(&mut reg, &paths, Feature::FolderOpen);
+        assert!(!r.kept.is_empty());
+        assert_eq!(
+            reg.get(&shell, "").unwrap(),
+            Some(RegData::sz("openindopus"))
+        );
+    }
+
+    #[test]
+    fn without_journal_the_sweep_removes_every_feature() {
+        let (_d, paths) = dir();
+        let mut reg = machine();
+        let before = reg.clone();
+        for f in features::ALL {
+            features::enable(&mut reg, &paths, f, Path::new(A)).unwrap();
+        }
+        std::fs::remove_file(&paths.primary).unwrap();
+        std::fs::remove_file(&paths.mirror).unwrap();
+        let r = reset(&mut reg, &paths);
+        assert!(r.ok(), "{r:?}");
+        assert!(reg.same_content(&before), "manifest covers all features");
+    }
+
+    #[test]
+    fn virtual_folders_are_never_taken_over() {
+        for f in features::ALL {
+            for c in f.changes(Path::new(A)) {
+                if let Change::SetValue { key, .. } = c {
+                    assert!(
+                        !key.path.to_lowercase().contains(r"classes\folder"),
+                        "{key}: Folder also opens Control Panel & co."
+                    );
+                    assert!(
+                        f.scopes().iter().any(|s| if s.deep {
+                            key.is_within(&s.key)
+                        } else {
+                            key.norm() == s.key.norm()
+                        }),
+                        "{key} outside the scopes of {f:?}"
+                    );
+                    assert!(
+                        manifest::points().iter().any(|p| match p {
+                            manifest::Point::Value { key: k, .. } => key.norm() == k.norm(),
+                            manifest::Point::OwnVerb { key: k, .. } => key.is_within(k),
+                            manifest::Point::OwnTree(k) => key.is_within(k),
+                        }),
+                        "{key} missing in the manifest"
+                    );
+                }
+            }
+            assert_eq!(Feature::parse(f.id()), Some(f));
+        }
+        assert_eq!(
+            features::command(Path::new(A), "%V"),
+            r#""C:\Program Files\Explorer2\explorer2.exe" "%V""#
+        );
+    }
 }

@@ -91,6 +91,18 @@ $r = Run $recover @('--yes')
 Check "[R3b] reset ok" { $r.code -eq 0 }
 Same "[R3c] reset without journal" $before 'after3'
 
+Write-Host "== 3b) the M7 features (folder verbs, context menu) - with and without journal"
+$r = Run $self @('features')
+Check "[R5] features switched on" { $r.code -eq 0 -and (Get-ItemProperty 'HKCU:\Software\Classes\Directory\shell').'(default)' -eq 'explorer2open' }
+$r = Run $recover @('--yes')
+Check "[R5b] reset ok" { $r.code -eq 0 }
+Same "[R5c] features reset from the journal" $before 'after5'
+$r = Run $self @('features')
+Remove-Item $journal, $mirror -Force
+$r = Run $recover @('--yes')
+Check "[R5d] reset ok without journal" { $r.code -eq 0 }
+Same "[R5e] features reset without journal (manifest sweep)" $before 'after5b'
+
 Write-Host "== 4) nothing to do"
 $r = Run $recover @('--yes')
 Check "[R4] second reset: nothing to do (exit 0)" { $r.code -eq 0 -and $r.text -match 'nichts zu tun' }

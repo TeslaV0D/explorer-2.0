@@ -437,6 +437,93 @@ if (Test-Path $selftest) {
   if ($script:fail) { Write-Host "----- trace (integration)"; Write-Host (Log) }
 } else { Fail "[W41] $selftest missing (build the r001_selftest example)" }
 $script:fail = $script:fail -bor $failBefore
+
+# M7.1: folder verbs + context menu, switched on/off in the app; the real
+# ShellExecute path ("open folder" of any program) must start Explorer 2.0
+$failBefore = $script:fail; $script:fail = 0
+$cfg5 = "$Work\cfg-m71"; New-Item -ItemType Directory -Force $cfg5 | Out-Null
+$env:EXPLORER2_CONFIG_DIR = $cfg5
+$launched = "$Work\launched.log"; Remove-Item $launched -ErrorAction SilentlyContinue
+$env:EXPLORER2_TRACE_FILE = $launched   # inherited by instances that Windows starts
+$classes = 'HKCU\Software\Classes'
+function SnapM7([string]$name) {
+  foreach ($k in 'Directory', 'Drive', 'Folder') {
+    $f = "$Work\m7-$name-$k.reg"
+    & reg.exe export "$classes\$k" $f /y 2>$null | Out-Null
+    if ($LASTEXITCODE -eq 0) { "$k=" + (Get-FileHash $f).Hash } else { "$k=(absent)" }
+  }
+}
+function Instances { @(Get-CimInstance Win32_Process -Filter "Name='explorer2.exe'" | Where-Object { $_.ProcessId -ne $p.Id }) }
+function KillInstances { Instances | ForEach-Object { Stop-Process -Id $_.ProcessId -Force -ErrorAction SilentlyContinue } }
+function Launched([string]$pattern, [int]$ms = 8000) {
+  $sw = [Diagnostics.Stopwatch]::StartNew()
+  while ($sw.ElapsedMilliseconds -lt $ms) {
+    if ((Test-Path $launched) -and ((Get-Content $launched -Raw) -match $pattern)) { return $true }
+    Start-Sleep -Milliseconds 200
+  }
+  return $false
+}
+$m7before = SnapM7 'before'
+Write-Host "classes before: $($m7before -join ', ')"
+$target = New-Item -ItemType Directory -Force "$R\m71 ziel"
+Set-Content "$target\drin.txt" "x"
+$script:log = "$Work\win-e2e-m71.log"
+$p = Start-Process -FilePath $Exe -ArgumentList "`"$R`"" -PassThru -RedirectStandardError $script:log
+try {
+  if (WaitFor 'done tab=1 ' 15000) {
+    Start-Sleep -Seconds 1
+    $p.Refresh(); $script:hwnd = $p.MainWindowHandle
+    [void][W]::ShowWindow($script:hwnd, 3); Start-Sleep -Milliseconds 800
+    Focus
+    Keys '^+p'; Keys 'ordner mit explorer'; Keys '{ENTER}'; Start-Sleep -Milliseconds 800
+    Check "[W42] palette switches 'open folders with Explorer 2.0' on" { (Last 'integration feature folder-open on') -match 'n=8' }
+    $cmd = (Get-ItemProperty "HKCU:\Software\Classes\Directory\shell\explorer2open\command" -ErrorAction SilentlyContinue).'(default)'
+    $def = (Get-ItemProperty "HKCU:\Software\Classes\Directory\shell" -ErrorAction SilentlyContinue).'(default)'
+    Write-Host "registered: default verb '$def', command $cmd"
+    Check "[W42b] our verb is the default verb and points to this exe" { $def -eq 'explorer2open' -and $cmd -eq ('"' + $Exe + '" "%1"') }
+    Check "[W42c] the recovery tool was copied to LOCALAPPDATA" { Test-Path "$env:LOCALAPPDATA\Explorer2\explorer2-recover.exe" }
+    # what any program does to open a folder (ShellExecute, default verb)
+    Start-Process -FilePath $target.FullName
+    Check "[W42d] ShellExecute on a folder starts Explorer 2.0 there" { Launched ([regex]::Escape("start=$($target.FullName)")) }
+    KillInstances
+    Start-Process -FilePath 'C:\'
+    Check "[W42e] a drive root arrives intact (`"C:\`" quoting)" { Launched 'start=C:\\\s' }
+    KillInstances
+    Keys '^+p'; Keys 'im kontextmenu ein'; Keys '{ENTER}'; Start-Sleep -Milliseconds 800
+    Check "[W42f] palette switches the context menu entry on" { (Last 'integration feature context-menu on') -match 'n=9' }
+    $sh = New-Object -ComObject Shell.Application
+    $item = $sh.Namespace($R).ParseName((Split-Path $target.FullName -Leaf))
+    $verbs = @($item.Verbs() | ForEach-Object { $_.Name })
+    Write-Host "verbs: $($verbs -join ' | ')"
+    Check "[W42g] 'In Explorer 2.0 öffnen' is in the folder's context menu" { $verbs -match 'Explorer 2\.0' }
+    Remove-Item $launched -ErrorAction SilentlyContinue
+    $item.InvokeVerb('explorer2')
+    Check "[W42h] the context menu entry opens the folder in Explorer 2.0" { Launched ([regex]::Escape("start=$($target.FullName)")) }
+    KillInstances
+    Check "[W42i] Folder (Control Panel, Recycle Bin …) is not touched" { (SnapM7 'mid')[2] -eq $m7before[2] }
+    # both off again -> exactly as before
+    Keys '^+p'; Keys 'ordner mit explorer'; Keys '{ENTER}'; Start-Sleep -Milliseconds 800
+    Keys '^+p'; Keys 'im kontextmenu ein'; Keys '{ENTER}'; Start-Sleep -Milliseconds 800
+    Check "[W42j] both switched off without errors" { (Last 'integration feature folder-open off') -match 'errors=0' -and (Last 'integration feature context-menu off') -match 'errors=0' }
+    $after = SnapM7 'after'
+    Check "[W42k] registry exactly as before ($($after -join ', '))" { -not (Compare-Object $m7before $after) }
+    Check "[W42l] journal empty again" { -not (Test-Path "$cfg5\integration-journal.txt") }
+    $p.Refresh()
+    Check "[W42m] app still running, no panic" { -not $p.HasExited -and (Log) -notmatch '(?i)panic' }
+  } else { Fail "[W42] M7.1 start did not load" }
+} finally {
+  KillInstances
+  if (-not $p.HasExited) { Stop-Process -Id $p.Id -Force }
+  # never leave the runner with our verbs (later steps open folders)
+  $rec = Join-Path (Split-Path $Exe) 'explorer2-recover.exe'
+  if (Test-Path $rec) { & $rec --yes | Out-Null }
+  Remove-Item Env:\EXPLORER2_TRACE_FILE -ErrorAction SilentlyContinue
+}
+if ($script:fail) {
+  Write-Host "----- trace (M7.1)"; Write-Host (Log)
+  if (Test-Path $launched) { Write-Host "----- launched instances"; Get-Content $launched | Write-Host }
+}
+$script:fail = $script:fail -bor $failBefore
 $script:log = $mainLog
 if ($script:fail) { Write-Host "----- trace"; Write-Host (Log) }
 exit $script:fail

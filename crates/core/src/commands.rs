@@ -165,6 +165,18 @@ pub const ALL: &[Command] = &[
     c("theme-light", "Farbschema: Hell", "", Need::Always),
     c("theme-dark", "Farbschema: Dunkel", "", Need::Always),
     c(
+        "toggle-folder-open",
+        "Ordner mit Explorer 2.0 öffnen ein/aus",
+        "",
+        Need::Always,
+    ),
+    c(
+        "toggle-context-menu",
+        "„In Explorer 2.0 öffnen“ im Kontextmenü ein/aus",
+        "",
+        Need::Always,
+    ),
+    c(
         "integration-reset",
         "Alle Windows-Integrationen zurücksetzen",
         "",

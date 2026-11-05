@@ -5,6 +5,8 @@
 Es gibt **keine** offizielle „Default File Manager“-Einstellung in Windows. Ersatz = mehrere Einstiegspunkte einzeln übernehmen. Stufen von sicher → riskant:
 
 ## Stufe 1 – Ordner-Verben in der Registry (sicher, reversibel, HKCU)
+> **Umsetzung M7.1 (D-021):** nicht `open` überschreiben, sondern eigenes Verb `explorer2open` unter `HKCU\Software\Classes\{Directory,Drive}\shell` + dort Standard-Verb (`@`) = `explorer2open` (Windows liefert `none` → fällt sonst auf `Folder` = Explorer durch). **`Folder` bleibt unangetastet** (öffnet auch Systemsteuerung, Papierkorb …). Kontextmenü: eigenes Verb `explorer2` (Directory `%1`, Directory\Background `%V`, Drive `%1`). Alles über `explorer-integrate` (Journal, Manifest, Reset).
+
 Wenn irgendeine App einen Ordner „öffnet“ (`ShellExecute`, „Ordner öffnen“ in Browsern/IDEs, Doppelklick auf Ordner-Verknüpfung), löst Windows das Verb `open` auf `Folder`/`Directory`/`Drive` auf.
 - `HKCU\Software\Classes\Directory\shell\open\command` → `"explorer2.exe" "%1"`
 - `HKCU\Software\Classes\Folder\shell\open\command` → dito, plus leerer Wert `DelegateExecute` (ohne ihn greift der Standard-Handler weiter) ⚠️
