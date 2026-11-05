@@ -705,6 +705,11 @@ impl Index {
         hits
     }
 
+    /// Flags, sizes and times as slices (tight loops over the columns).
+    pub(crate) fn columns(&self) -> (&[u8], &[u64], &[i64]) {
+        (&self.flags, &self.size, &self.mtime)
+    }
+
     pub(crate) fn flags_of(&self, i: usize) -> u8 {
         self.flags[i]
     }

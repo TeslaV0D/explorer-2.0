@@ -285,7 +285,11 @@ jobs:
       - name: Upload Windows E2E screenshots on failure
         if: failure()
         uses: actions/upload-artifact@v4
-        with: { name: e2e-windows-screenshots, path: "${{ runner.temp }}/e2e-win/*.png" }
+        with:
+          name: e2e-windows-screenshots
+          path: |
+            ${{ runner.temp }}/e2e-win/*.png
+            ${{ runner.temp }}/m83c/*.png
       - uses: actions/upload-artifact@v4
         with:
           name: explorer2-windows-x64

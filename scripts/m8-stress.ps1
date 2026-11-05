@@ -26,6 +26,7 @@ public static class S {
 New-Item -ItemType Directory -Force $Work | Out-Null
 $env:EXPLORER2_CONFIG_DIR = Join-Path $Work 'cfg'
 $env:EXPLORER2_TRACE = '1'
+$env:EXPLORER2_TRACE_KEYS = '1'   # where every key lands (diagnosis, CI #75/#76)
 $sd = Join-Path $Work 'stress'
 foreach ($i in 1..20) {
   $d = New-Item -ItemType Directory -Force (Join-Path $sd ('d{0:d2}' -f $i))
@@ -101,6 +102,22 @@ if ($script:stolen.Count) {
   Write-Host "    focus taken $($script:stolen.Count)x by: $names (re-focused)"
 }
 Check "[S1] the rounds really ran ($($n3 - $n1) navigations)" { ($n3 - $n1) -ge (2 * $Rounds) }
+if (($n3 - $n1) -lt (2 * $Rounds)) {
+  # the keys reached our window but did nothing: show what the app did last
+  $lines = @(Get-Content $log)
+  $lastNav = ($lines | Select-String 'navigate tab=' | Select-Object -Last 1)
+  $at = if ($lastNav) { $lastNav.LineNumber } else { 0 }
+  Write-Host "    ----- trace around the last navigation (line $at of $($lines.Count))"
+  $lines[[math]::Max(0, $at - 15)..[math]::Min($lines.Count - 1, $at + 60)] | ForEach-Object { Write-Host "    | $_" }
+  Write-Host "    ----- last 40 trace lines"
+  $lines | Select-Object -Last 40 | ForEach-Object { Write-Host "    | $_" }
+  $shot = Join-Path $Work 'stress-fail.png'
+  Add-Type -AssemblyName System.Drawing
+  $b = [System.Windows.Forms.Screen]::PrimaryScreen.Bounds
+  $bmp = New-Object System.Drawing.Bitmap $b.Width, $b.Height
+  [System.Drawing.Graphics]::FromImage($bmp).CopyFromScreen($b.Location, [System.Drawing.Point]::Empty, $b.Size)
+  $bmp.Save($shot); Write-Host "    screenshot: $shot"
+}
 Check "[S2] memory flat: phase B +$gb MiB without the image cache (limit +6; phase A +$ga)" { $gb -lt 6 }
 Check "[S2b] the image cache stays in its budget ($([math]::Round($tc / 1MB, 1)) MiB, limit 96)" { $tc -le 96MB }
 Check "[S3] no handle leak (phase B +$($c.handles - $b.handles), limit +40)" { ($c.handles - $b.handles) -le 40 }

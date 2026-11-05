@@ -228,6 +228,19 @@ impl Query {
         self.groups.is_empty()
     }
 
+    /// Only size/date/kind conditions: evaluated straight on the columns.
+    fn columns_only(&self) -> bool {
+        fn col(t: &Term) -> bool {
+            match t {
+                Term::Size(..) | Term::Date(..) | Term::Kind { .. } | Term::Any => true,
+                Term::Not(t) => col(t),
+                Term::All(ts) => ts.iter().all(col),
+                _ => false,
+            }
+        }
+        !self.groups.is_empty() && self.groups.iter().flatten().all(col)
+    }
+
     /// The whole query is one plain word/prefix/suffix: its buffer hits are
     /// the result (no per-candidate check beyond removed/scope).
     fn exact_needle(&self) -> bool {
@@ -758,6 +771,20 @@ fn glob(p: &[char], s: &str) -> bool {
     p[pi..].iter().all(|&c| c == '*')
 }
 
+/// [`Term`] on the columns of one entry (only for [`Query::columns_only`]).
+fn col_match(t: &Term, flags: u8, size: u64, mtime: i64) -> bool {
+    let dir = flags & FLAG_DIR != 0;
+    match t {
+        Term::Any => true,
+        Term::Size(lo, hi) => !dir && *lo <= size && size < *hi,
+        Term::Date(lo, hi) => mtime != 0 && *lo <= mtime && mtime < *hi,
+        Term::Kind { dir: d } => dir == *d,
+        Term::Not(t) => !col_match(t, flags, size, mtime),
+        Term::All(ts) => ts.iter().all(|t| col_match(t, flags, size, mtime)),
+        _ => false,
+    }
+}
+
 /// Per-query precomputed data.
 struct Pre {
     /// `path:word` terms: entry (or an ancestor) matches.
@@ -1001,6 +1028,21 @@ pub(crate) fn run(index: &Index, q: &Query, scope: Option<u32>) -> Vec<u32> {
                 .map(|i| i as u32)
                 .filter(|&id| ok(id, true))
                 .collect()
+        })
+    } else if q.columns_only() {
+        let (flags, size, mtime) = index.columns();
+        let parts = if n < 50_000 { 1 } else { threads };
+        par(parts, n, &|r| {
+            r.filter(|&i| {
+                let f = flags[i];
+                f & (FLAG_GONE | FLAG_DIRTY) == 0
+                    && q.groups
+                        .iter()
+                        .all(|g| g.iter().any(|t| col_match(t, f, size[i], mtime[i])))
+                    && scope.is_none_or(|s| index.is_under(i as u32, s))
+            })
+            .map(|i| i as u32)
+            .collect()
         })
     } else if n < 50_000 || threads < 2 {
         scan(0..n)
