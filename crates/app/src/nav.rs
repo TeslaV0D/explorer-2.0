@@ -297,6 +297,7 @@ pub fn trace_line(msg: &str) {
 }
 
 fn trace(msg: &str) {
+    crate::crash::remember(msg);
     if trace_enabled() {
         let _ = writeln!(std::io::stderr(), "[trace] {msg}");
         trace_file(msg);

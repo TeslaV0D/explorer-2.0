@@ -1,6 +1,7 @@
 #![cfg_attr(all(windows, not(debug_assertions)), windows_subsystem = "windows")]
 
 mod config;
+mod crash;
 mod dnd;
 mod fileops;
 mod gfx;
@@ -49,6 +50,7 @@ macro_rules! on {
 
 fn main() -> Result<(), slint::PlatformError> {
     nav::mark_process_start();
+    crash::install();
     let arg = std::env::args().nth(1);
     if arg.as_deref() == Some("--version") {
         attach_parent_console();
@@ -74,10 +76,19 @@ fn main() -> Result<(), slint::PlatformError> {
         explorer_fs::nearest_existing_ancestor(&p).unwrap_or(p)
     });
 
+    // start guard: the last starts died → safe start (software, no session)
+    let guard = crash::begin();
+    let safe = guard.safe_mode();
+    if crash::probe_crashed_before() {
+        gfx::mark_probe_crashed();
+    }
+    nav::trace_line(&format!("start guard {guard:?} safe={safe}"));
+    crash::test_hook();
+
     // Must run before the first window exists (renderer is chosen per process).
-    let renderer = gfx::select();
+    let renderer = gfx::select(safe);
     let settings = config::load();
-    let session = if start.is_none() {
+    let session = if start.is_none() && !safe {
         config::load_session()
     } else {
         None
@@ -98,6 +109,32 @@ fn main() -> Result<(), slint::PlatformError> {
         integration::set_feature(&w, id.as_str(), on)
     });
     integration::startup(&win);
+    {
+        let failed = match guard {
+            explorer_core::guard::Verdict::Guard { failed } => failed,
+            explorer_core::guard::Verdict::Skip => 0,
+        };
+        let reports = crash::take_new_reports();
+        if let Some(text) = explorer_core::guard::notice_de(reports, safe, failed) {
+            nav::trace_line(&format!("notice reports={reports} safe={safe}"));
+            win.set_notice(text.into());
+            win.set_notice_folder(reports > 0);
+        }
+    }
+    on!(win, on_notice_open, |w| {
+        if let Some(dir) = crash::crash_dir() {
+            let _ = open::open_path(&dir);
+        }
+        w.set_notice("".into());
+    });
+    // ran long enough: this start was fine
+    slint::Timer::single_shot(
+        std::time::Duration::from_secs(explorer_core::guard::STABLE_AFTER_SECS),
+        || {
+            crash::stable();
+            nav::trace_line("start guard: stable");
+        },
+    );
     win.set_hw_accel(settings.hardware_acceleration);
     win.set_renderer_status(gfx::status_text(&renderer).into());
     win.on_toggle_hw_accel({
@@ -305,6 +342,7 @@ fn main() -> Result<(), slint::PlatformError> {
     );
 
     win.window().on_close_requested(|| {
+        crash::stable();
         fileops::shutdown();
         nav::save_session_now();
         slint::CloseRequestResponse::HideWindow
@@ -322,6 +360,7 @@ fn main() -> Result<(), slint::PlatformError> {
     // startup phases for the first-start gate: init done -> run -> event loop running
     nav::trace_line(&format!("run at={:.1}ms", nav::since_start_ms()));
     let res = win.run();
+    crash::stable();
     nav::save_session_now();
     res
 }

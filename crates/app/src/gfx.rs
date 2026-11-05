@@ -36,8 +36,25 @@ pub fn status_text(sel: &Selection) -> String {
     status_de(sel.choice, &sel.reason)
 }
 
-pub fn select() -> Selection {
+/// `safe`: the last starts died (start guard) → software, no probe.
+pub fn select(safe: bool) -> Selection {
     let t0 = Instant::now();
+    if safe && std::env::var_os("SLINT_BACKEND").is_none() {
+        let _ = slint::BackendSelector::new()
+            .backend_name("winit".into())
+            .renderer_name("software".into())
+            .select();
+        trace_line(&format!(
+            "renderer choice=Software reason=\"{}\" at={:.1}ms",
+            Reason::SafeMode,
+            since_start_ms()
+        ));
+        return Selection {
+            choice: RendererChoice::Software,
+            reason: Reason::SafeMode,
+            background: BackgroundProbe::None,
+        };
+    }
     if std::env::var_os("SLINT_BACKEND").is_some() {
         let sel = Selection {
             choice: RendererChoice::PlatformDefault,
@@ -113,6 +130,18 @@ pub fn select() -> Selection {
     }
 }
 
+/// The last GPU probe took its process down (driver crash): never again.
+pub fn mark_probe_crashed() {
+    let res = config::update(|s| {
+        s.gpu_probe = Some(GpuProbeCache::Unusable);
+        s.gpu_probe_version = VERSION.into();
+    });
+    trace_line(&format!(
+        "gpu probe crashed last time -> cached as unusable saved={}",
+        res.is_ok()
+    ));
+}
+
 fn store_probe(r: &ProbeResult) {
     let cache = match r {
         ProbeResult::Usable { .. } => GpuProbeCache::Usable,
@@ -140,7 +169,10 @@ pub fn probe_in_background(sel: &Selection) {
             std::thread::sleep(delay);
             let before = config::load().gpu_probe;
             let p0 = Instant::now();
+            // a probe that takes the process down marks the GPU unusable (M8.3)
+            crate::crash::probe_begin();
             let r = explorer_gpu::probe_opengl();
+            crate::crash::probe_end();
             let probe_ms = p0.elapsed().as_secs_f64() * 1000.0;
             store_probe(&r);
             let after = config::load().gpu_probe;

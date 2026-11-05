@@ -1035,6 +1035,7 @@ dependencies = [
  "explorer-integrate",
  "explorer-ops",
  "explorer-shell",
+ "libc",
  "raw-window-handle",
  "slint",
  "slint-build",

@@ -448,4 +448,41 @@ EXPLORER2_CONFIG_DIR=$W/config-install EXPLORER2_INSTALL_DIR=$IDIR EXPLORER2_STA
   "$IDIR/explorer2-recover" --uninstall --quiet > $W/uninstall-72.log 2>&1; sleep 2
 check "[72d] uninstall removes program folder and Start menu entries" "[ ! -e '$IDIR' ] && [ ! -e '$SDIR' ]"
 ls /tmp 2>/dev/null | grep explorer2-uninstall | sed 's|^|/tmp/|' | xargs -r rm -f
+
+echo "== [73] M8.3: crash report + start guard (2 failed starts -> safe start)"
+CC=$W/config-crash; CR=$CC/crash; LOG=$W/trace-73.log
+mkdir -p "$CC" "$TW/safe-sub"
+printf '[pane]\nactive_tab = 0\ntab = %s\n' "$TW/safe-sub" > "$CC/session.ini"
+EXPLORER2_CONFIG_DIR=$CC EXPLORER2_TEST_CRASH=panic timeout 20 $EXE > $W/crash-73a.log 2>&1; A=$?
+REP=$(ls $CR/crash-*.txt 2>/dev/null | head -1)
+check "[73] a panic at start writes a report (exit $A)" "[ $A -ne 0 ] && [ -n '$REP' ] && grep -q 'Ursache: Panic' '$REP' && grep -q 'test crash requested' '$REP' && grep -q 'start guard' '$REP'"
+EXPLORER2_CONFIG_DIR=$CC EXPLORER2_TEST_CRASH=native timeout 20 $EXE > $W/crash-73b.log 2>&1
+check "[73b] two dead starts are counted" "grep -q 'failed=1' $CC/start-guard.txt"
+EXPLORER2_CONFIG_DIR=$CC env -u SLINT_BACKEND $EXE > $LOG 2>&1 & PID=$!
+sleep 2.5
+check "[73c] third start is a safe one: software renderer, session not restored" "last 'start guard' | grep -q 'failed: 2 } safe=true' && last 'renderer choice' | grep -q 'safe start' && ! grep -q 'safe-sub' $LOG"
+check "[73d] the notice names the crash and the safe start" "last 'notice ' | grep -q 'reports=1 safe=true' && ls $CR | grep -q 'seen.txt'"
+shot crash-notice
+sleep 4
+check "[73e] after 5 s the start counts as stable (guard removed)" "grep -q 'start guard: stable' $LOG && [ ! -e $CC/start-guard.txt ]"
+kill $PID; wait $PID 2>/dev/null
+EXPLORER2_CONFIG_DIR=$CC env -u SLINT_BACKEND $EXE > $LOG 2>&1 & PID=$!
+sleep 1.5
+check "[73f] next start is normal again, no notice (report already shown)" "last 'start guard' | grep -q 'failed: 0 } safe=false' && ! last 'renderer choice' | grep -q 'safe start' && ! grep -q 'notice ' $LOG"
+kill $PID; wait $PID 2>/dev/null
+check "[73g] kill (SIGTERM) right after start is no crash" "[ ! -e $CC/start-guard.txt ]"
+EXPLORER2_CONFIG_DIR=$CC EXPLORER2_TEST_CRASH=panic-later $EXE > $W/crash-73h.log 2>&1 & PID=$!
+sleep 8
+N=$(ls $CR | grep -c -v seen)
+check "[73h] a panic in a worker thread during use: report with thread name, no start counted" "! kill -0 $PID 2>/dev/null && [ $N -eq 1 ] && grep -q 'Thread: test-crash' $CR/\$(ls $CR | grep -v seen) && [ ! -e $CC/start-guard.txt ]"
+EXPLORER2_CONFIG_DIR=$CC $EXE > $LOG 2>&1 & PID=$!
+sleep 1.5
+check "[73i] next start: notice about the crash, but no safe start" "last 'notice ' | grep -q 'reports=1 safe=false' && last 'start guard' | grep -q 'safe=false'"
+kill $PID; wait $PID 2>/dev/null
+# a GPU probe that took its process down (marker left by a dead pid)
+printf 'pid=999999\nfailed=0\n' > $CC/gpu-probe.txt
+EXPLORER2_CONFIG_DIR=$CC $EXE > $LOG 2>&1 & PID=$!
+sleep 1.5
+check "[73j] a GPU probe that crashed the app marks the GPU unusable" "grep -q 'gpu probe crashed last time' $LOG && grep -q 'gpu_probe = unusable' $CC/settings.ini && [ ! -e $CC/gpu-probe.txt ]"
+kill $PID; wait $PID 2>/dev/null
 exit $FAIL

@@ -1060,6 +1060,10 @@ export component MainWindow inherits Window {
     in property <string> install-status;
     in property <string> install-button;
     callback install-now();
+    // crash report / safe start notice (M8.3)
+    in-out property <string> notice;
+    in property <bool> notice-folder;
+    callback notice-open();
     changed settings-open => { if (root.settings-open) { root.settings-opened(); } }
     in property <string> renderer-status;
     in property <string> sort-key: "name";
@@ -1462,6 +1466,33 @@ export component MainWindow inherits Window {
                         Button { text: "Abbrechen"; clicked => { root.confirm-answer(false); } }
                     }
                 }
+            }
+        }
+    }
+
+    // ---------- notice after a crash / safe start (overlay: nothing shifts) ----------
+    if root.notice != "" : Rectangle {
+        width: min(640px, root.width - 32px);
+        height: notice-layout.preferred-height;
+        x: (root.width - self.width) / 2;
+        y: root.height - self.height - 34px;
+        background: Theme.c.card;
+        border-radius: 6px;
+        border-width: 1px;
+        border-color: Theme.c.warning;
+        drop-shadow-blur: 12px;
+        drop-shadow-color: Theme.c.shadow;
+        notice-layout := HorizontalLayout {
+            padding: 10px; spacing: 8px;
+            Rectangle { width: 4px; border-radius: 2px; background: Theme.c.warning; }
+            Text {
+                text: root.notice; wrap: word-wrap; vertical-alignment: center;
+                color: Theme.c.text; horizontal-stretch: 1;
+            }
+            VerticalLayout {
+                alignment: center; spacing: 4px;
+                if root.notice-folder : Button { text: "Bericht anzeigen"; clicked => { root.notice-open(); } }
+                Button { text: "OK"; clicked => { root.notice = ""; } }
             }
         }
     }

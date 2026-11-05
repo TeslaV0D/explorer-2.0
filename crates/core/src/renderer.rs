@@ -94,6 +94,8 @@ pub enum Reason {
     ProbePending,
     /// `SLINT_BACKEND` set by the user/developer: toolkit decides.
     ToolkitEnv,
+    /// The last starts died: software rendering for this start (M8.3).
+    SafeMode,
 }
 
 /// English, for traces/logs.
@@ -107,6 +109,7 @@ impl std::fmt::Display for Reason {
             Reason::NoProbe => f.write_str("no GPU probe on this platform"),
             Reason::ProbePending => f.write_str("GPU probe pending (background)"),
             Reason::ToolkitEnv => f.write_str("SLINT_BACKEND set"),
+            Reason::SafeMode => f.write_str("safe start after failed starts"),
         }
     }
 }
@@ -129,6 +132,7 @@ pub fn status_de(choice: RendererChoice, reason: &Reason) -> String {
             "GPU-Prüfung läuft im Hintergrund – gilt ab dem nächsten Start".to_string()
         }
         Reason::ToolkitEnv => "per SLINT_BACKEND festgelegt".to_string(),
+        Reason::SafeMode => "sicherer Start nach abgebrochenen Starts".to_string(),
     };
     format!("Aktuell: {what} ({why})")
 }
