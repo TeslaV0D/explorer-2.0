@@ -63,6 +63,14 @@ fn copy_recover_tool(exe: &Path) -> Option<PathBuf> {
 /// Read the current state into the settings panel (on open, after changes).
 pub fn refresh(win: &MainWindow) {
     win.set_integration_available(explorer_integrate::system_registry().is_some());
+    match crate::installer::describe() {
+        Some((text, button)) => {
+            win.set_install_available(true);
+            win.set_install_status(text.into());
+            win.set_install_button(button.into());
+        }
+        None => win.set_install_available(false),
+    }
     let Some(paths) = JournalPaths::default_paths() else {
         win.set_integration_status("Konfigurationsordner nicht gefunden.".into());
         win.set_integration_active(false);
@@ -242,6 +250,24 @@ pub fn reset(win: &MainWindow) {
     // show the outcome where the button is
     win.set_integration_status(r.summary_de().into());
     win.set_settings_open(true);
+}
+
+/// Button / palette "Installieren": ask first.
+pub fn ask_install(win: &MainWindow) {
+    refresh(win);
+    if win.get_install_button().is_empty() {
+        nav::trace_line("install: already running the installed copy");
+        win.set_settings_open(true);
+        return;
+    }
+    crate::fileops::confirm_install(
+        win,
+        &format!(
+            "{}\n\nDanach läuft Explorer 2.0 aus dem Installationsordner weiter (dieses Fenster schließt sich).",
+            win.get_install_status()
+        ),
+        &win.get_install_button(),
+    );
 }
 
 #[cfg(test)]

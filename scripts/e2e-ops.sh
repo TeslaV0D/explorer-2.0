@@ -430,4 +430,21 @@ check "[71f2] palette -> question -> Enter resets" "[ \$(grep -c 'integration re
 xdotool mousemove $SETTINGS_CLOSE click 1; sleep 0.4
 check "[71g] process alive, no panic" "kill -0 $PID && ! grep -qi panic $LOG"
 kill $PID; wait $PID 2>/dev/null
+
+echo "== [72] M8: install from the app (palette -> question -> continue in the installed copy)"
+IDIR=$R/inst/Programs/Explorer2; SDIR="$R/inst/Start/Explorer 2.0"
+LOG=$W/trace-72.log
+EXPLORER2_CONFIG_DIR=$W/config-install EXPLORER2_INSTALL_DIR=$IDIR EXPLORER2_STARTMENU_DIR="$SDIR" \
+  $EXE "$TW" > $LOG 2>&1 & PID=$!
+sleep 2.5; focus
+xdotool key ctrl+shift+p; sleep 0.4; xdotool type --delay 40 "installieren"; sleep 0.5; xdotool key Return; sleep 0.8
+check "[72] palette 'installieren' asks first" "last 'confirm install' >/dev/null"
+xdotool key Return; sleep 2.5
+check "[72b] installed: program files + Start menu entries" "[ -x '$IDIR/explorer2' ] && [ -x '$IDIR/explorer2-recover' ] && [ -f '$SDIR/Explorer 2.0.lnk' ] && last 'install ok' | grep -q 'shortcuts=2'"
+check "[72c] the old window closed, the installed copy runs" "! kill -0 $PID 2>/dev/null && pgrep -f '$IDIR/explorer2' >/dev/null"
+pkill -f "$IDIR/explorer2" ; sleep 0.5
+EXPLORER2_CONFIG_DIR=$W/config-install EXPLORER2_INSTALL_DIR=$IDIR EXPLORER2_STARTMENU_DIR="$SDIR" \
+  "$IDIR/explorer2-recover" --uninstall --quiet > $W/uninstall-72.log 2>&1; sleep 2
+check "[72d] uninstall removes program folder and Start menu entries" "[ ! -e '$IDIR' ] && [ ! -e '$SDIR' ]"
+ls /tmp 2>/dev/null | grep explorer2-uninstall | sed 's|^|/tmp/|' | xargs -r rm -f
 exit $FAIL

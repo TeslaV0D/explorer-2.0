@@ -218,6 +218,7 @@ fn execute(win: &MainWindow, pi: usize, id: &str) {
         "theme-light" => crate::theme::set_choice(win, "light"),
         "theme-dark" => crate::theme::set_choice(win, "dark"),
         "integration-reset" => crate::integration::ask_reset(win),
+        "install" => crate::integration::ask_install(win),
         "toggle-folder-open" => crate::integration::toggle_feature(win, "folder-open"),
         "toggle-context-menu" => crate::integration::toggle_feature(win, "context-menu"),
         "toggle-win-e" => crate::integration::toggle_feature(win, "win-e"),

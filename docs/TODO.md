@@ -104,7 +104,10 @@ Legende: `[ ]` offen · `[~]` in Arbeit · `[x]` erledigt · Prio P0/P1/P2
   - [x] M7.2 Win+E: `HKCU\…\CLSID\{52205FD8-…}\shell\opennewwindow\command` = Exe (ohne Ordner = letzte Sitzung) + leerer `DelegateExecute`; Schalter + Palette; Windows-E2E W43 (echtes Win+E per `keybd_event`, vorher Prüfung, ob die Runner-Shell Win+E überhaupt verarbeitet) – CI-Run #67
   - [ ] M7.3 `explorer.exe`-Aufrufe (IFEO-Proxy, HKLM/Admin, hohes Risiko) – **verschoben** (Boss, D-022), erst nach Praxistest von M7.1/7.2
   - [ ] Auf echtem Windows 11 prüfen (Boss): Doppelklick auf Ordner/Laufwerk auf dem Desktop, „Ordner öffnen“ aus Browser-Downloads, Kontextmenü (Win11: unter „Weitere Optionen“)
-- [ ] M8 Installer, Recovery-Tool, Härtung, Beta
+- [~] M8 Installer, Recovery-Tool, Härtung, Beta (Boss: eigener Installer in Rust, D-023)
+  - [ ] M8.1 Installer-Kern: `explorer2.exe --install` (pro Benutzer, ohne Admin), Startmenü (App + „Windows-Standard wiederherstellen“), Apps & Features, Integrationen auf installierte Exe umbiegen, Update über laufende App, `explorer2-recover --uninstall [--quiet]` (Reset + Programmordner per Temp-Kopie, Schutz vor fremden Ordnern); CI `scripts/m8-install.ps1` (echte Standardpfade, Start über Startmenü, Deinstallation über `QuietUninstallString` → alles wie vorher)
+  - [ ] M8.2 Einstellungen → „Installation“ (portabel/installiert, Installieren/Aktualisieren mit Nachfrage, danach Neustart aus dem Installationsordner) + Palette; Linux-E2E [72]
+  - [ ] Später: Code-Signatur (SmartScreen), automatische Updates, `.reg`/PowerShell-Fallback, Verknüpfung auf dem Desktop (optional)
 
 ## Technische Schulden / Follow-ups
 - [x] Exe-Größe: 19,7 → **16,5 MB** (Run #29, `opt-level="s"`, CI-Gate < 20 MB). Weitere Ideen bei Bedarf: – vor M5 prüfen: `opt-level="z"`/`lto`/`strip`, unnötige Slint-Features (Wayland?), Skia vs. femtovg; vorher 17,2 MB (Budget < 20 MB ok, Ideal < 10 MB verfehlt) → in M2 prüfen: Skia vs. femtovg/Software-Renderer, `opt-level="z"`-Vergleich

@@ -44,6 +44,18 @@ enum Confirm {
     PurgeTrash(Vec<explorer_ops::trashview::TrashEntry>),
     /// R-001: undo every Windows integration.
     IntegrationReset,
+    /// M8: install this copy.
+    Install,
+}
+
+/// Ask before installing (settings / palette).
+pub fn confirm_install(win: &MainWindow, text: &str, ok: &str) {
+    OPS.with_borrow_mut(|o| o.confirm = Some(Confirm::Install));
+    win.set_settings_open(false);
+    win.set_confirm_text(text.into());
+    win.set_confirm_ok(ok.into());
+    win.set_confirm_open(true);
+    trace("confirm install");
 }
 
 /// Ask before the one-button reset (settings / palette).
@@ -1118,6 +1130,7 @@ pub fn confirm_answer(win: &MainWindow, ok: bool) {
         ),
         (true, Some(Confirm::PurgeTrash(items))) => trash_action(win, TrashAction::Purge, items),
         (true, Some(Confirm::IntegrationReset)) => crate::integration::reset(win),
+        (true, Some(Confirm::Install)) => crate::installer::install_and_restart(win),
         _ => {}
     }
     nav::focus_pane(nav::active_pane());

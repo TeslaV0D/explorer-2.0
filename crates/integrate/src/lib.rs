@@ -9,6 +9,7 @@
 //! (settings button) and in the standalone `explorer2-recover` tool.
 
 pub mod features;
+pub mod install;
 pub mod journal;
 pub mod manifest;
 pub mod model;

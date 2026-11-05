@@ -6,6 +6,7 @@ mod fileops;
 mod gfx;
 mod icons;
 mod inspector;
+mod installer;
 mod integration;
 mod keys;
 mod nav;
@@ -55,6 +56,15 @@ fn main() -> Result<(), slint::PlatformError> {
         let _ = writeln!(std::io::stdout(), "explorer2 {}", env!("CARGO_PKG_VERSION"));
         return Ok(());
     }
+    if arg.as_deref() == Some("--install") {
+        attach_parent_console();
+        let quiet = std::env::args().any(|a| a == "--quiet");
+        std::process::exit(installer::cli(quiet));
+    }
+    // update left-overs (`explorer2.old-<pid>`) once they are no longer in use
+    if let Some(dir) = installer::exe_dir() {
+        explorer_integrate::install::clean_old_files(&dir);
+    }
 
     // A path on the command line wins over the saved session (like `explorer.exe C:\x`).
     let start = arg.map(|a| {
@@ -83,6 +93,7 @@ fn main() -> Result<(), slint::PlatformError> {
     on!(win, on_set_theme, |w, t| theme::set_choice(&w, t.as_str()));
     on!(win, on_settings_opened, |w| integration::refresh(&w));
     on!(win, on_integration_reset, |w| integration::ask_reset(&w));
+    on!(win, on_install_now, |w| integration::ask_install(&w));
     on!(win, on_integration_feature, |w, id, on| {
         integration::set_feature(&w, id.as_str(), on)
     });

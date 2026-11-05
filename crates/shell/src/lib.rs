@@ -18,6 +18,8 @@ mod win_dnd;
 #[cfg(windows)]
 mod win_lib;
 #[cfg(windows)]
+mod win_link;
+#[cfg(windows)]
 mod win_menu;
 #[cfg(windows)]
 mod win_theme;
@@ -38,6 +40,23 @@ pub use menu::{
 pub use theme::{set_dark_title_bar, system_theme, watch_system_theme};
 pub use thumbs::{premultiplied_bgra_to_rgba, thumbnail, Thumb};
 pub use types::{known_type, type_name, TypeNames};
+
+/// Bytes of a shortcut to `target` (Windows `.lnk` via the shell; a
+/// `.desktop`-style text elsewhere, for tests).
+pub fn shortcut_bytes(
+    target: &std::path::Path,
+    args: &str,
+    description: &str,
+) -> std::io::Result<Vec<u8>> {
+    #[cfg(windows)]
+    return win_link::make(target, args, description);
+    #[cfg(not(windows))]
+    Ok(format!(
+        "[Desktop Entry]\nType=Application\nName={description}\nExec=\"{}\" {args}\n",
+        target.display()
+    )
+    .into_bytes())
+}
 
 /// Screen pixels → window-client pixels (Windows); identity elsewhere.
 pub fn screen_to_client(hwnd: isize, x: i32, y: i32) -> (i32, i32) {

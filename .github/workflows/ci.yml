@@ -109,6 +109,9 @@ jobs:
       - name: "R-001 reset: snapshot -> integration on -> reset -> snapshot identical (reg.exe)"
         shell: pwsh
         run: pwsh -File scripts/r001-snapshot.ps1 (Resolve-Path target/release).Path "$env:RUNNER_TEMP\r001"
+      - name: "M8 install -> Start menu -> update while running -> uninstall (Apps & Features) -> as before"
+        shell: pwsh
+        run: pwsh -File scripts/m8-install.ps1 (Resolve-Path target/release).Path "$env:RUNNER_TEMP\m8"
       - name: Smoke test exe (starts, prints version, manifest embedded)
         shell: pwsh
         run: |

@@ -73,6 +73,8 @@ pub fn points() -> Vec<Point> {
     ));
     // our own namespace (selftest, future per-user state)
     v.push(Point::OwnTree(KeyPath::hkcu(r"Software\Explorer2")));
+    // M8: the "Apps & Features" entry of the installation
+    v.push(Point::OwnTree(crate::install::uninstall_key()));
     v
 }
 

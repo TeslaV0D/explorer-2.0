@@ -1055,6 +1055,11 @@ export component MainWindow inherits Window {
     in-out property <bool> feat-context-menu;
     in-out property <bool> feat-win-e;
     callback integration-feature(string, bool);
+    // M8: installation
+    in property <bool> install-available;
+    in property <string> install-status;
+    in property <string> install-button;
+    callback install-now();
     changed settings-open => { if (root.settings-open) { root.settings-opened(); } }
     in property <string> renderer-status;
     in property <string> sort-key: "name";
@@ -1566,6 +1571,13 @@ export component MainWindow inherits Window {
                     enabled: root.integration-active;
                     clicked => { root.integration-reset(); }
                 }
+            }
+            if root.install-available : Rectangle { height: 1px; background: Theme.c.line; }
+            if root.install-available : Text { text: "Installation"; font-size: 13px; font-weight: 600; }
+            if root.install-available : Text { text: root.install-status; font-size: 11px; color: Theme.c.muted; wrap: word-wrap; }
+            if root.install-available && root.install-button != "" : HorizontalLayout {
+                alignment: start;
+                Button { text: root.install-button; clicked => { root.install-now(); } }
             }
             HorizontalLayout {
                 alignment: end;

@@ -61,6 +61,8 @@ Lehre aus File Pilot: Nach einem Fehler half dort nur eine Windows-Neuinstallati
 - **Pflicht-Test in CI (Windows-Runner/VM)**: Snapshot (Registry-Bereiche, Umgebung) → alle Integrationen an → Reset → Snapshot muss **identisch** sein; dazu Test „Journal fehlt/beschädigt“ → Reset nutzt bekannte Standardwerte.
 
 ## Installation & Sicherheit
+> **Umsetzung M8 (D-023):** eigener Installer in Rust statt Inno Setup/MSIX – pro Benutzer (`%LOCALAPPDATA%\Programs\Explorer2`), Startmenü + Apps & Features über das Integrations-Journal, Deinstallation = R-001-Reset + Programmordner. HKLM/Admin nur, falls M7.3 später kommt.
+
 - Installer (Inno Setup/WiX) **und** Portable-Modus; HKCU-first, HKLM nur für Stufe 3 (separat bestätigt).
 - **Jede Änderung protokollieren + Rückbau-Funktion** („Alles auf Windows-Standard zurücksetzen“ in Settings und als Standalone-Recovery).
 - Kein Kernel-Treiber, keine DLL-Injection in Fremdprozesse in Phase 1.

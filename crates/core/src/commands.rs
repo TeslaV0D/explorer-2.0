@@ -183,6 +183,12 @@ pub const ALL: &[Command] = &[
         Need::Always,
     ),
     c(
+        "install",
+        "Explorer 2.0 installieren / aktualisieren",
+        "",
+        Need::Always,
+    ),
+    c(
         "integration-reset",
         "Alle Windows-Integrationen zurücksetzen",
         "",
