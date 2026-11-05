@@ -40,7 +40,7 @@
 - **Bug (CI #32/#33, UI-Matrix)**: OLE-Drop-Target wurde nie registriert („Invalid window handle“) – der Timer lief, bevor Slint das native Fenster erzeugt hatte → Ablegen aus anderen Apps wäre tot gewesen. Fix: Registrierung wiederholt bis HWND existiert (50 ms, max. 5 s), sonst Rückfall auf In-App-DnD.
 - Neu: **Windows-E2E mit echter Tastatur/Maus** (`scripts/e2e-windows.ps1`, CI-Schritt im Release-Job, Screenshots bei Fehler).
 
-### M8.3a Absturzbericht + Start-Wächter (CI ausstehend)
+### M8.3a Absturzbericht + Start-Wächter ✅ (CI-Run #70)
 - **Absturzbericht**: Panic in jedem Thread (Panic-Hook) und unter Windows unbehandelte Ausnahmen (`SetUnhandledExceptionFilter`: Code, Adresse als `exe+0x…`) schreiben `%APPDATA%\Explorer2\crash\crash-<UTC>-<pid>.txt` – Version, Ursache, Thread, Meldung, Ort und die **letzten 200 Protokollzeilen** (laufen immer im Speicher mit, auch ohne `EXPLORER2_TRACE`). Kein „funktioniert nicht mehr“-Dialog. Max. 10 Berichte.
 - Nächster Start: Hinweis-Karte unten (Overlay, verschiebt nichts) „… wurde beim letzten Mal unerwartet beendet“ + „Bericht anzeigen“ (öffnet den Ordner); jeder Bericht wird einmal gemeldet (`.seen.txt`).
 - **Start-Wächter** (`start-guard.txt`, Logik rein in `core::guard`): ein Start, der keine 5 s übersteht, zählt als abgebrochen; nach **2 in Folge** ist der nächste Start **sicher** (Software-Darstellung, keine Sitzung, keine GPU-Prüfung) – ein kaputter GPU-Treiber oder ein Sitzungseintrag, der abstürzt, sperrt niemanden aus. Läuft der sichere Start stabil, ist der nächste wieder normal. Zweite laufende Instanz (gleiche Exe, Datei < 60 s alt) wird erkannt, PID-Wiederverwendung durch fremde Prozesse auch (Prozessname). Linux: SIGTERM (`kill`, Abmelden) ist gewolltes Ende, kein Absturz.
