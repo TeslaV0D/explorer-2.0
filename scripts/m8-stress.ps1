@@ -2,7 +2,7 @@
 # opened/closed, view switches, file churn in the watched folder. Private
 # memory, handles, threads and GDI/USER objects (icons!) must stay flat.
 #   powershell -File scripts/m8-stress.ps1 <exe> <work dir> [rounds]
-param([Parameter(Mandatory)] [string]$Exe, [Parameter(Mandatory)] [string]$Work, [int]$Rounds = 150)
+param([Parameter(Mandatory)] [string]$Exe, [Parameter(Mandatory)] [string]$Work, [int]$Rounds = 120)
 $ErrorActionPreference = 'Continue'
 $script:fail = 0
 function Pass($m) { Write-Host "PASS  $m" }
@@ -60,23 +60,35 @@ function Cycle([int]$i) {
   K '^t'; K '^w'
 }
 
-Write-Host "== M8.3c endurance on Windows: $Rounds rounds"
+Write-Host "== M8.3c endurance on Windows: warm-up + 2 x $Rounds rounds"
+# image cache (thumbnail LRU, by design up to 96 MB) as last reported by the app
+function ThumbBytes {
+  $m = @(Select-String -Path $log -Pattern 'thumbs loaded n=\d+ previews=\d+ kept=\d+ bytes=(\d+)')
+  if ($m.Count) { [double]$m[-1].Matches[0].Groups[1].Value } else { 0 }
+}
+function Show($label, $s, $t, $n) {
+  Write-Host ("    {0}: private={1:n1} MiB (image cache {2:n1} MiB) handles={3} threads={4} gdi={5} user={6} navigations={7}" -f $label, ($s.priv / 1MB), ($t / 1MB), $s.handles, $s.threads, $s.gdi, $s.user, $n)
+}
 Focus
 foreach ($i in 1..30) { Cycle $i }
 Start-Sleep -Seconds 2
-$a = Stats; $n1 = Navs
-$sw = [Diagnostics.Stopwatch]::StartNew()
+$a = Stats; $ta = ThumbBytes; $n1 = Navs; Show 'after warm-up' $a $ta $n1
 foreach ($i in 31..(30 + $Rounds)) { Cycle $i }
 Start-Sleep -Seconds 3
-$b = Stats; $n2 = Navs
-$mib = [math]::Round(($b.priv - $a.priv) / 1MB, 1)
-Write-Host ("    after warm-up: private={0:n1} MiB handles={1} threads={2} gdi={3} user={4}" -f ($a.priv / 1MB), $a.handles, $a.threads, $a.gdi, $a.user)
-Write-Host ("    after {0} rounds ({1:n0} s): private={2:n1} MiB handles={3} threads={4} gdi={5} user={6} | navigations {7} -> {8}" -f $Rounds, $sw.Elapsed.TotalSeconds, ($b.priv / 1MB), $b.handles, $b.threads, $b.gdi, $b.user, $n1, $n2)
-Check "[S1] the rounds really ran ($($n2 - $n1) navigations)" { ($n2 - $n1) -ge $Rounds }
-Check "[S2] private memory stays flat (+$mib MiB, limit +40)" { $mib -lt 40 }
-Check "[S3] no handle leak (+$($b.handles - $a.handles), limit +60)" { ($b.handles - $a.handles) -le 60 }
-Check "[S4] no thread leak (+$($b.threads - $a.threads), limit +4)" { ($b.threads - $a.threads) -le 4 }
-Check "[S5] no GDI/USER object leak (icons, menus: +$($b.gdi - $a.gdi) / +$($b.user - $a.user), limit +30)" { ($b.gdi - $a.gdi) -le 30 -and ($b.user - $a.user) -le 30 }
+$b = Stats; $tb = ThumbBytes; $n2 = Navs; Show "after $Rounds rounds" $b $tb $n2
+foreach ($i in (31 + $Rounds)..(30 + 2 * $Rounds)) { Cycle $i }
+Start-Sleep -Seconds 3
+$c = Stats; $tc = ThumbBytes; $n3 = Navs; Show "after $(2 * $Rounds) rounds" $c $tc $n3
+# growth not explained by the (bounded) image cache, per phase
+$ga = [math]::Round((($b.priv - $a.priv) - ($tb - $ta)) / 1MB, 1)
+$gb = [math]::Round((($c.priv - $b.priv) - ($tc - $tb)) / 1MB, 1)
+Write-Host "    growth without image cache: phase A +$ga MiB, phase B +$gb MiB"
+Check "[S1] the rounds really ran ($($n3 - $n1) navigations)" { ($n3 - $n1) -ge (2 * $Rounds) }
+Check "[S2] memory flat: phase B +$gb MiB without the image cache (limit +6; phase A +$ga)" { $gb -lt 6 }
+Check "[S2b] the image cache stays in its budget ($([math]::Round($tc / 1MB, 1)) MiB, limit 96)" { $tc -le 96MB }
+Check "[S3] no handle leak (phase B +$($c.handles - $b.handles), limit +40)" { ($c.handles - $b.handles) -le 40 }
+Check "[S4] no thread leak (+$($c.threads - $a.threads), limit +4)" { ($c.threads - $a.threads) -le 4 }
+Check "[S5] no GDI/USER object leak (icons, menus: +$($c.gdi - $a.gdi) / +$($c.user - $a.user), limit +30)" { ($c.gdi - $a.gdi) -le 30 -and ($c.user - $a.user) -le 30 }
 $p.Refresh()
 Check "[S6] process alive, no panic" { -not $p.HasExited -and (Get-Content $log -Raw) -notmatch '(?i)panic' }
 if (-not $p.HasExited) { Stop-Process -Id $p.Id -Force }
