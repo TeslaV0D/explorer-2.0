@@ -183,6 +183,12 @@ pub const ALL: &[Command] = &[
         Need::Always,
     ),
     c(
+        "toggle-single-instance",
+        "Ordner im offenen Fenster öffnen (neuer Tab) ein/aus",
+        "",
+        Need::Always,
+    ),
+    c(
         "install",
         "Explorer 2.0 installieren / aktualisieren",
         "",

@@ -130,10 +130,12 @@ mod unix {
     use std::sync::OnceLock;
 
     static GUARD: OnceLock<CString> = OnceLock::new();
+    /// The single-instance socket, once we listen on it (M8.3b).
+    pub(super) static SOCK: OnceLock<CString> = OnceLock::new();
 
     extern "C" fn on_term(_: libc::c_int) {
-        if let Some(p) = GUARD.get() {
-            // SAFETY: unlink and _exit are async-signal-safe; the path was built before.
+        for p in [GUARD.get(), SOCK.get()].into_iter().flatten() {
+            // SAFETY: unlink and _exit are async-signal-safe; the paths were built before.
             unsafe {
                 libc::unlink(p.as_ptr());
             }
@@ -208,6 +210,23 @@ mod win {
                 std::ptr::null(),
             );
         }
+    }
+}
+
+/// We listen on the single-instance socket: a kill must free the name at
+/// once (else the next start waits for an answer from a dead process).
+#[cfg(unix)]
+pub fn own_socket(path: &Path) {
+    if let Ok(c) = std::ffi::CString::new(path.as_os_str().as_encoded_bytes()) {
+        let _ = unix::SOCK.set(c);
+    }
+}
+
+#[cfg(unix)]
+pub fn release_socket() {
+    use std::os::unix::ffi::OsStrExt;
+    if let Some(p) = unix::SOCK.get() {
+        let _ = std::fs::remove_file(std::ffi::OsStr::from_bytes(p.as_bytes()));
     }
 }
 

@@ -1039,6 +1039,7 @@ export component MainWindow inherits Window {
     in-out property <bool> opt-show-ext: true;
     in-out property <bool> opt-show-protected;
     in-out property <bool> opt-single-click;
+    in-out property <bool> opt-single-instance: true;
     callback set-option(string, bool);
     // colour scheme: "system" | "light" | "dark"
     in property <string> theme-choice: "system";
@@ -1593,6 +1594,11 @@ export component MainWindow inherits Window {
                 text: "Win+E öffnet Explorer 2.0";
                 checked <=> root.feat-win-e;
                 toggled => { root.integration-feature("win-e", self.checked); }
+            }
+            if root.integration-available : CheckBox {
+                text: "Ordner im offenen Fenster öffnen (als neuen Tab)";
+                checked <=> root.opt-single-instance;
+                toggled => { root.set-option("single_instance", self.checked); }
             }
             Text { text: root.integration-status; font-size: 11px; color: Theme.c.muted; wrap: word-wrap; }
             HorizontalLayout {

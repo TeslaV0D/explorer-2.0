@@ -485,4 +485,39 @@ EXPLORER2_CONFIG_DIR=$CC $EXE > $LOG 2>&1 & PID=$!
 sleep 1.5
 check "[73j] a GPU probe that crashed the app marks the GPU unusable" "grep -q 'gpu probe crashed last time' $LOG && grep -q 'gpu_probe = unusable' $CC/settings.ini && [ ! -e $CC/gpu-probe.txt ]"
 kill $PID; wait $PID 2>/dev/null
+
+echo "== [74] M8.3b: one window - a second start opens a tab in the running one"
+IC=$W/config-inst; LOG=$W/trace-74.log; mkdir -p "$IC" "$TW/inst-a"
+EXPLORER2_CONFIG_DIR=$IC $EXE "$TW" > $LOG 2>&1 & PID=$!
+sleep 2.5
+SOCK=$(last 'instance: serving' | sed 's/.*serving //')
+check "[74] the first window listens ($SOCK)" "[ -S '$SOCK' ] && [ \"\$(stat -c %a '$SOCK')\" = 600 ]"
+T0=$(date +%s%N)
+EXPLORER2_CONFIG_DIR=$IC timeout 10 $EXE "$TW/inst-a" > $W/inst-74b.log 2>&1; B=$?
+MS=$(( ($(date +%s%N) - T0) / 1000000 ))
+check "[74b] a second start with a folder hands over and exits (exit $B, $MS ms)" "[ $B -eq 0 ] && grep -q 'hand over Done' $W/inst-74b.log && [ $MS -lt 3000 ] && ! grep -q 'start guard' $W/inst-74b.log"
+sleep 0.8
+check "[74c] the running window opened it in a new tab" "last 'instance: open' | grep -q 'inst-a' && grep -qE 'navigate tab=[0-9]+ gen=[0-9]+ [A-Za-z]+ $TW/inst-a at=' $LOG"
+N0=$(grep -c 'tab new' $LOG)
+EXPLORER2_CONFIG_DIR=$IC timeout 10 $EXE > $W/inst-74d.log 2>&1; B=$?
+sleep 0.5
+check "[74d] a second start without a folder = new tab (exit $B)" "[ $B -eq 0 ] && [ \$(grep -c 'tab new' $LOG) -gt $N0 ] && last 'instance: open' | grep -q '(new tab)'"
+kill -STOP $PID
+EXPLORER2_CONFIG_DIR=$IC $EXE "$TW/inst-a" > $W/inst-74e.log 2>&1 & P2=$!
+sleep 6
+check "[74e] a hung instance: the second start opens its own window after the wait" "kill -0 $P2 2>/dev/null && grep -q 'hand over NoAnswer' $W/inst-74e.log && grep -q 'done tab=' $W/inst-74e.log"
+kill $P2; wait $P2 2>/dev/null; kill -CONT $PID; sleep 0.5
+EXPLORER2_CONFIG_DIR=$IC $EXE --new-instance "$TW/inst-a" > $W/inst-74f.log 2>&1 & P2=$!
+sleep 2.5
+check "[74f] --new-instance: own window, no hand-over, folder is not '--new-instance'" "kill -0 $P2 2>/dev/null && ! grep -q 'hand over' $W/inst-74f.log && grep -q 'start=$TW/inst-a' $W/inst-74f.log"
+kill $P2; wait $P2 2>/dev/null
+focus
+xdotool key ctrl+shift+p; sleep 0.4; xdotool type --delay 40 "offenen fenster"; sleep 0.5; xdotool key Return; sleep 0.8
+check "[74g] palette switches it off (saved)" "last 'option single_instance' | grep -q '=false' && grep -q 'single_instance = false' $IC/settings.ini"
+EXPLORER2_CONFIG_DIR=$IC $EXE "$TW/inst-a" > $W/inst-74h.log 2>&1 & P2=$!
+sleep 2.5
+check "[74h] switched off: a second start opens its own window" "kill -0 $P2 2>/dev/null && ! grep -q 'hand over' $W/inst-74h.log"
+kill $P2; wait $P2 2>/dev/null
+kill $PID; wait $PID 2>/dev/null
+check "[74i] after kill the socket is gone (next start does not wait)" "[ ! -e '$SOCK' ]"
 exit $FAIL

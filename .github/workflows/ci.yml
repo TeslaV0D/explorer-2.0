@@ -116,6 +116,9 @@ jobs:
       - name: "M8.3 crash report (Windows exception, panic) + safe start after two dead starts"
         shell: pwsh
         run: pwsh -File scripts/m8-crash.ps1 (Resolve-Path target/release).Path "$env:RUNNER_TEMP\m83"
+      - name: "M8.3b one window: second start -> tab in the running window (named pipe, hung instance, --new-instance)"
+        shell: pwsh
+        run: pwsh -File scripts/m8-instance.ps1 (Resolve-Path target/release).Path "$env:RUNNER_TEMP\m83b"
       - name: Smoke test exe (starts, prints version, manifest embedded)
         shell: pwsh
         run: |

@@ -1965,6 +1965,7 @@ pub fn set_option(win: &MainWindow, name: &str, on: bool) {
         "show_protected" => s.show_protected = on,
         "single_click" => s.single_click = on,
         "system_accent" => s.system_accent = on,
+        "single_instance" => s.single_instance = on,
         _ => {}
     });
     if let Err(e) = res {
@@ -1981,6 +1982,7 @@ pub fn set_option(win: &MainWindow, name: &str, on: bool) {
         }
         "single_click" => win.set_opt_single_click(on),
         "system_accent" => crate::theme::set_use_accent(win, on),
+        "single_instance" => win.set_opt_single_instance(on),
         _ => {}
     }
 }
@@ -2243,12 +2245,23 @@ pub fn tab_select(win: &MainWindow, pi: usize, ti: usize) {
 
 /// New tab next to the current one, showing the same folder (Ctrl+T).
 pub fn tab_new(win: &MainWindow, pi: usize) {
+    insert_tab(win, pi, None);
+}
+
+/// A second start handed over (M8.3b): new tab in the active pane at `path`
+/// (`None` = like Ctrl+T).
+pub fn open_tab_at(win: &MainWindow, path: Option<PathBuf>) {
+    let pi = APP.with_borrow(|app| app.active_pane);
+    insert_tab(win, pi, path);
+}
+
+fn insert_tab(win: &MainWindow, pi: usize, at_path: Option<PathBuf>) {
     activate_pane(win, pi);
     let id = APP.with_borrow_mut(|app| {
         let id = app.next_tab_id;
         app.next_tab_id += 1;
         let p = app.panes.get_mut(pi)?;
-        let path = p.tab().path.clone();
+        let path = at_path.or_else(|| p.tab().path.clone());
         let at = p.active + 1;
         p.tabs.insert(at, Tab::new(id, path));
         p.active = at;

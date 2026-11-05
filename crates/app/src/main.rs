@@ -8,6 +8,7 @@ mod gfx;
 mod icons;
 mod inspector;
 mod installer;
+mod instance;
 mod integration;
 mod keys;
 mod nav;
@@ -51,7 +52,10 @@ macro_rules! on {
 fn main() -> Result<(), slint::PlatformError> {
     nav::mark_process_start();
     crash::install();
-    let arg = std::env::args().nth(1);
+    // flags (`--new-instance`) are not the folder to open
+    let arg = std::env::args()
+        .skip(1)
+        .find(|a| a != "--new-instance" && a != "--quiet");
     if arg.as_deref() == Some("--version") {
         attach_parent_console();
         // Never panic on a closed/invalid stdout (GUI subsystem, panic=abort).
@@ -69,12 +73,31 @@ fn main() -> Result<(), slint::PlatformError> {
     }
 
     // A path on the command line wins over the saved session (like `explorer.exe C:\x`).
+    let arg_text = arg.clone();
     let start = arg.map(|a| {
         // folder verbs hand over `"C:\"`, which arrives as `C:"` (CRT quoting)
         let p = PathBuf::from(explorer_core::address::launch_arg(&a));
         let p = std::path::absolute(&p).unwrap_or(p);
         explorer_fs::nearest_existing_ancestor(&p).unwrap_or(p)
     });
+
+    match (&arg_text, &start) {
+        (Some(a), Some(p)) => nav::trace_line(&format!("launch arg={a:?} start={}", p.display())),
+        _ => nav::trace_line("launch without folder"),
+    }
+    // a window is open already: it opens the folder in a new tab (M8.3b)
+    let args: Vec<String> = std::env::args().skip(1).collect();
+    if instance::wanted(&args) {
+        let t0 = std::time::Instant::now();
+        let r = instance::hand_over(start.as_deref());
+        nav::trace_line(&format!(
+            "instance: hand over {r:?} in {:.1}ms",
+            t0.elapsed().as_secs_f64() * 1000.0
+        ));
+        if r == instance::HandOver::Done {
+            return Ok(());
+        }
+    }
 
     // start guard: the last starts died → safe start (software, no session)
     let guard = crash::begin();
@@ -94,10 +117,6 @@ fn main() -> Result<(), slint::PlatformError> {
         None
     };
 
-    match (std::env::args().nth(1), &start) {
-        (Some(a), Some(p)) => nav::trace_line(&format!("launch arg={a:?} start={}", p.display())),
-        _ => nav::trace_line("launch without folder"),
-    }
     let win = MainWindow::new()?;
     nav::trace_line(&format!("window created at={:.1}ms", nav::since_start_ms()));
     theme::init(&win, settings.theme, settings.system_accent);
@@ -283,6 +302,7 @@ fn main() -> Result<(), slint::PlatformError> {
     on!(win, on_apply_view_all, |w| nav::apply_view_all(&w));
     dnd::init(&win);
     win.set_opt_single_click(settings.single_click);
+    win.set_opt_single_instance(settings.single_instance);
     on!(win, on_set_option, |w, n, on| nav::set_option(
         &w,
         n.as_str(),
@@ -357,10 +377,12 @@ fn main() -> Result<(), slint::PlatformError> {
         ));
     });
     gfx::probe_in_background(&renderer);
+    instance::serve(&win);
     // startup phases for the first-start gate: init done -> run -> event loop running
     nav::trace_line(&format!("run at={:.1}ms", nav::since_start_ms()));
     let res = win.run();
     crash::stable();
+    instance::shutdown();
     nav::save_session_now();
     res
 }

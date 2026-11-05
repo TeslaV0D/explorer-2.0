@@ -75,7 +75,9 @@ pub fn cli(quiet: bool) -> i32 {
                 }
             ));
             if !quiet {
-                let _ = std::process::Command::new(ip.app()).spawn();
+                let _ = std::process::Command::new(ip.app())
+                    .arg("--new-instance")
+                    .spawn();
             }
             0
         }
@@ -134,7 +136,10 @@ pub fn install_and_restart(win: &crate::MainWindow) {
                 return;
             }
             crate::nav::save_session_now();
-            match std::process::Command::new(ip.app()).spawn() {
+            match std::process::Command::new(ip.app())
+                .arg("--new-instance")
+                .spawn()
+            {
                 Ok(_) => {
                     crate::nav::trace_line("install: continuing in the installed copy");
                     let _ = slint::quit_event_loop();

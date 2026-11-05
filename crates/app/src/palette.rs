@@ -222,6 +222,11 @@ fn execute(win: &MainWindow, pi: usize, id: &str) {
         "toggle-folder-open" => crate::integration::toggle_feature(win, "folder-open"),
         "toggle-context-menu" => crate::integration::toggle_feature(win, "context-menu"),
         "toggle-win-e" => crate::integration::toggle_feature(win, "win-e"),
+        "toggle-single-instance" => {
+            let on = !win.get_opt_single_instance();
+            nav::set_option(win, "single_instance", on);
+            win.set_settings_open(true);
+        }
         other => nav::trace_line(&format!("palette: unknown command {other}")),
     }
 }

@@ -34,6 +34,9 @@ pub struct Settings {
     pub theme: crate::theme::ThemeChoice,
     /// "Windows-Akzentfarbe verwenden" (else the default blue).
     pub system_accent: bool,
+    /// A second start (folder double click, Win+E) opens a tab in the
+    /// running window instead of a new window (M8.3b).
+    pub single_instance: bool,
 }
 
 impl Default for Settings {
@@ -53,6 +56,7 @@ impl Default for Settings {
             recent_commands: Vec::new(),
             theme: crate::theme::ThemeChoice::System,
             system_accent: true,
+            single_instance: true,
         }
     }
 }
@@ -107,13 +111,14 @@ impl Settings {
                     }
                 }
                 "show_extensions" | "show_protected" | "single_click" | "inspector"
-                | "system_accent" => {
+                | "system_accent" | "single_instance" => {
                     if let Some(b) = parse_bool(v) {
                         match k {
                             "show_extensions" => s.show_extensions = b,
                             "show_protected" => s.show_protected = b,
                             "inspector" => s.inspector = b,
                             "system_accent" => s.system_accent = b,
+                            "single_instance" => s.single_instance = b,
                             _ => s.single_click = b,
                         }
                     }
@@ -163,7 +168,8 @@ impl Settings {
              inspector = {}\n\
              recent_commands = {}\n\
              theme = {}\n\
-             system_accent = {}\n",
+             system_accent = {}\n\
+             single_instance = {}\n",
             self.hardware_acceleration,
             self.show_hidden,
             self.gpu_probe_version,
@@ -176,7 +182,8 @@ impl Settings {
             self.inspector,
             self.recent_commands.join(","),
             self.theme.as_str(),
-            self.system_accent
+            self.system_accent,
+            self.single_instance
         )
     }
 
@@ -223,6 +230,7 @@ mod tests {
             recent_commands: vec!["paste".into(), "inspector".into()],
             theme: crate::theme::ThemeChoice::Dark,
             system_accent: false,
+            single_instance: false,
         };
         assert_eq!(Settings::parse(&s.serialize()), s);
     }
