@@ -99,10 +99,10 @@ Legende: `[ ]` offen · `[~]` in Arbeit · `[x]` erledigt · Prio P0/P1/P2
   - [x] R-001b `explorer2-recover.exe` (Konsole, `--status`/`--yes`) + CI-Pflichttest `scripts/r001-snapshot.ps1` (reg.exe-Export vorher = nachher: aus Journal, über Spiegel, ganz ohne Journal) – CI-Run #59
   - [x] R-001c Einstellungen → „Windows-Integration“ (Status + „Alle Windows-Integrationen zurücksetzen“ mit Nachfrage) + Palette; Linux-E2E [71]–[71g] (188/188), Windows-E2E W41–W41h – CI-Run #61
   - [ ] Später (M7/M8): `.reg`/PowerShell-Fallback-Skript + Startmenü-Eintrag „Windows-Standard wiederherstellen“, Deinstallation ruft Reset, Selbstheilung beim explorer.exe-Proxy, HKLM-Journal-Kopie in `%ProgramData%`
-- [~] M7 Windows-Integration Stufe 1–3 (siehe `WINDOWS-INTEGRATION.md`) + Verifikationspunkte auf echtem Windows
+- [x] M7 Windows-Integration Stufe 1–2 (Stufe 3 verschoben, D-022) (siehe `WINDOWS-INTEGRATION.md`) + Verifikationspunkte auf echtem Windows
   - [x] M7.1 Ordner öffnen (eigenes Standard-Verb `explorer2open` für Directory/Drive, `Folder` bleibt bei Windows) + „In Explorer 2.0 öffnen“ im Kontextmenü (Ordner, Laufwerk, Ordner-Hintergrund); einzeln schaltbar (Einstellungen + Palette), Aus = exakt vorheriger Zustand; Exe verschoben → beim Start neu verknüpft; Notfall-Werkzeug-Kopie in `%LOCALAPPDATA%\Explorer2`; `"C:\"`-Quoting repariert; Windows-E2E W42 (echtes ShellExecute), R-001-Test [R5] – CI-Run #64
   - [x] M7.2 Win+E: `HKCU\…\CLSID\{52205FD8-…}\shell\opennewwindow\command` = Exe (ohne Ordner = letzte Sitzung) + leerer `DelegateExecute`; Schalter + Palette; Windows-E2E W43 (echtes Win+E per `keybd_event`, vorher Prüfung, ob die Runner-Shell Win+E überhaupt verarbeitet) – CI-Run #67
-  - [ ] M7.3 `explorer.exe`-Aufrufe (IFEO-Proxy, HKLM/Admin, hohes Risiko) – **Entscheidung Boss nötig**
+  - [ ] M7.3 `explorer.exe`-Aufrufe (IFEO-Proxy, HKLM/Admin, hohes Risiko) – **verschoben** (Boss, D-022), erst nach Praxistest von M7.1/7.2
   - [ ] Auf echtem Windows 11 prüfen (Boss): Doppelklick auf Ordner/Laufwerk auf dem Desktop, „Ordner öffnen“ aus Browser-Downloads, Kontextmenü (Win11: unter „Weitere Optionen“)
 - [ ] M8 Installer, Recovery-Tool, Härtung, Beta
 

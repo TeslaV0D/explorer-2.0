@@ -1,6 +1,6 @@
 # Zwischenstand
 
-**Stand:** 2026-11-05 · **Phase:** 1 · M0–M6 ✅ · **R-001 Ein-Knopf-Reset ✅ (CI-Run #61)** · **M7.1 Ordner öffnen + Kontextmenü (läuft)** · **Branch:** `claude/relaxed-pasteur-ufhh1p`
+**Stand:** 2026-11-05 · **Phase:** 1 · M0–M7 ✅ (M7.3 verschoben) · R-001 ✅ · nächster Schritt: **M8 Installer + Recovery** · **Branch:** `claude/relaxed-pasteur-ufhh1p`
 
 ## M5 – Shell-Integration (läuft, Freigabe Boss 2026-11-04)
 ### CI-Run #37 – alles grün ✅ (M5.0–M5.5)
@@ -39,6 +39,8 @@
 
 - **Bug (CI #32/#33, UI-Matrix)**: OLE-Drop-Target wurde nie registriert („Invalid window handle“) – der Timer lief, bevor Slint das native Fenster erzeugt hatte → Ablegen aus anderen Apps wäre tot gewesen. Fix: Registrierung wiederholt bis HWND existiert (50 ms, max. 5 s), sonst Rückfall auf In-App-DnD.
 - Neu: **Windows-E2E mit echter Tastatur/Maus** (`scripts/e2e-windows.ps1`, CI-Schritt im Release-Job, Screenshots bei Fehler).
+
+### M7 ✅ komplett (7.1 + 7.2); M7.3 IFEO verschoben (Boss, D-022) – nächster Schritt M8 Installer + Recovery
 
 ### M7.2 Win+E ✅ (CI-Run #67)
 - Einstellungen/Palette: **„Win+E öffnet Explorer 2.0“** – `HKCU\Software\Classes\CLSID\{52205FD8-5DFB-447D-801A-D0B52F2E83E1}\shell\opennewwindow\command` = `"…\explorer2.exe"` (ohne Ordner → letzte Sitzung) + leerer `DelegateExecute` (sonst bleibt Explorers COM-Handler). Über Journal/Manifest wie M7.1, Aus = exakt vorher (`CLSID` selbst wird nur entfernt, wenn wir ihn angelegt haben und er leer ist).
