@@ -1044,6 +1044,12 @@ export component MainWindow inherits Window {
     in property <string> theme-choice: "system";
     in-out property <bool> opt-system-accent: true;
     callback set-theme(string);
+    // R-001: Windows integration status + one-button reset
+    in property <string> integration-status;
+    in property <bool> integration-active;
+    callback settings-opened();
+    callback integration-reset();
+    changed settings-open => { if (root.settings-open) { root.settings-opened(); } }
     in property <string> renderer-status;
     in property <string> sort-key: "name";
     in property <bool> sort-desc;
@@ -1528,6 +1534,17 @@ export component MainWindow inherits Window {
                 text: "Windows-Akzentfarbe verwenden";
                 checked <=> root.opt-system-accent;
                 toggled => { root.set-option("system_accent", self.checked); }
+            }
+            Rectangle { height: 1px; background: Theme.c.line; }
+            Text { text: "Windows-Integration"; font-size: 13px; font-weight: 600; }
+            Text { text: root.integration-status; font-size: 11px; color: Theme.c.muted; wrap: word-wrap; }
+            HorizontalLayout {
+                alignment: start;
+                Button {
+                    text: "Alle Windows-Integrationen zurücksetzen";
+                    enabled: root.integration-active;
+                    clicked => { root.integration-reset(); }
+                }
             }
             HorizontalLayout {
                 alignment: end;

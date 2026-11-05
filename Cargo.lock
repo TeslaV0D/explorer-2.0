@@ -1032,6 +1032,7 @@ dependencies = [
  "explorer-core",
  "explorer-fs",
  "explorer-gpu",
+ "explorer-integrate",
  "explorer-ops",
  "explorer-shell",
  "raw-window-handle",

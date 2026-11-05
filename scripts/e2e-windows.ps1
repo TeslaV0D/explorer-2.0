@@ -389,6 +389,44 @@ try {
   else { Set-ItemProperty $acc -Name AccentPalette -Value $origPal -Type Binary }
 }
 if ($script:fail -and -not $optFail) { Write-Host "----- trace (theme)"; Write-Host (Log) }
+$themeFail = $script:fail
+
+# R-001: a real integration (registry + environment + file) is undone by the app's button
+$selftest = Join-Path (Split-Path $Exe) 'examples\r001_selftest.exe'
+if (Test-Path $selftest) {
+  $cfg4 = "$Work\cfg-integration"; New-Item -ItemType Directory -Force $cfg4 | Out-Null
+  $env:EXPLORER2_CONFIG_DIR = $cfg4
+  $lnk = "$Work\r001-startmenu.lnk"
+  & reg.exe add 'HKCU\Software\Explorer2R001Probe' /v keep /t REG_SZ /d 'original value' /f | Out-Null
+  & $selftest full $lnk | Out-Host
+  $verbKey = 'HKCU:\Software\Classes\Directory\shell\open\command'
+  Check "[W41] integration applied (folder verb, environment, file)" { (Get-ItemProperty $verbKey -ErrorAction SilentlyContinue).'(default)' -match 'explorer2' -and (Test-Path $lnk) }
+  $script:log = "$Work\win-e2e-integration.log"
+  $p = Start-Process -FilePath $Exe -ArgumentList "`"$R`"" -PassThru -RedirectStandardError $script:log
+  try {
+    if (WaitFor 'done tab=1 ' 15000) {
+      Start-Sleep -Seconds 1
+      $p.Refresh(); $script:hwnd = $p.MainWindowHandle
+      [void][W]::ShowWindow($script:hwnd, 3); Start-Sleep -Milliseconds 800
+      Focus
+      Keys '^+p'; Keys 'integrationen zur'; Keys '{ENTER}'
+      Check "[W41b] palette: the reset asks first" { WaitFor 'confirm integration reset' 3000 }
+      Keys '{ENTER}'
+      Check "[W41c] reset ran without errors" { (WaitFor 'integration reset restored' 5000) -and (Last 'integration reset restored') -match 'errors=0 journal=Ok' }
+      Write-Host "reset: $(Last 'integration reset restored')"
+      Check "[W41d] folder verb gone again" { -not (Test-Path $verbKey) }
+      Check "[W41e] overwritten value restored exactly" { (Get-ItemProperty 'HKCU:\Software\Explorer2R001Probe').keep -eq 'original value' }
+      Check "[W41f] environment variable and file removed" { $null -eq (Get-ItemProperty 'HKCU:\Environment').EXPLORER2_R001 -and -not (Test-Path $lnk) }
+      Check "[W41g] journal gone, status: nothing active" { -not (Test-Path "$cfg4\integration-journal.txt") -and (Last 'integration status') -match 'entries=0 active_points=0' }
+      $p.Refresh()
+      Check "[W41h] app still running, no panic" { -not $p.HasExited -and (Log) -notmatch '(?i)panic' }
+    } else { Fail "[W41] integration start did not load" }
+  } finally {
+    if (-not $p.HasExited) { Stop-Process -Id $p.Id -Force }
+    & reg.exe delete 'HKCU\Software\Explorer2R001Probe' /f 2>$null | Out-Null
+  }
+  if ($script:fail -and -not $themeFail) { Write-Host "----- trace (integration)"; Write-Host (Log) }
+} else { Fail "[W41] $selftest missing (build the r001_selftest example)" }
 $script:log = $mainLog
 if ($script:fail) { Write-Host "----- trace"; Write-Host (Log) }
 exit $script:fail

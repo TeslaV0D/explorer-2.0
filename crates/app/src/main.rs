@@ -6,6 +6,7 @@ mod fileops;
 mod gfx;
 mod icons;
 mod inspector;
+mod integration;
 mod keys;
 mod nav;
 mod open;
@@ -75,6 +76,8 @@ fn main() -> Result<(), slint::PlatformError> {
     nav::trace_line(&format!("window created at={:.1}ms", nav::since_start_ms()));
     theme::init(&win, settings.theme, settings.system_accent);
     on!(win, on_set_theme, |w, t| theme::set_choice(&w, t.as_str()));
+    on!(win, on_settings_opened, |w| integration::refresh(&w));
+    on!(win, on_integration_reset, |w| integration::ask_reset(&w));
     win.set_hw_accel(settings.hardware_acceleration);
     win.set_renderer_status(gfx::status_text(&renderer).into());
     win.on_toggle_hw_accel({

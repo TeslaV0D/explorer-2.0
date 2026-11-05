@@ -46,6 +46,8 @@ Gehören zur Shell (`explorer.exe`). Kein Ersatz geplant; wir bleiben Dateimanag
 | **„Öffnen mit“/Dateizuordnung** | Wir sind Ordner-Handler, *nicht* Standard-App für Dateitypen. `UserChoice` ist hash-geschützt → nicht umgehen. |
 
 ## R-001: Ein-Knopf-Reset (harte Anforderung, Boss)
+> **Umgesetzt** (2026-11-05, Crate `explorer-integrate`, D-020): Journal, App-Knopf, `explorer2-recover.exe`, CI-Snapshot-Test inkl. „Journal fehlt/beschädigt“. Offen bis M7/M8: `.reg`/PowerShell-Fallback-Skript, Startmenü-Eintrag, Deinstallation, Selbstheilung (Stufe 3), HKLM-Kopie in `%ProgramData%` (Spiegel liegt aktuell in `%LOCALAPPDATA%`). **Regel für M7:** jede neue Integration nur über `apply()` und ihre Stellen in `manifest::points()` eintragen.
+
 Lehre aus File Pilot: Nach einem Fehler half dort nur eine Windows-Neuinstallation. Das darf bei uns **nie** passieren.
 - **Journal**: Vor jeder Änderung (Registry-Schlüssel/-Werte, IFEO, Win+E-Verb, Kontextmenü, Autostart, Umgebungsvariablen/PATH, Verknüpfungen, Dateizuordnungen, Hotkey-Hooks) wird der **Originalzustand** (Wert, Typ, „existierte nicht“) in ein Journal geschrieben (`%APPDATA%\Explorer2\integration-journal.json` + Kopie in `%ProgramData%` für HKLM-Teile).
 - **Reset-Knopf in der App** („Alle Windows-Integrationen zurücksetzen“): spielt das Journal rückwärts ab, entfernt alle eigenen Schlüssel, startet ggf. `explorer.exe` neu.

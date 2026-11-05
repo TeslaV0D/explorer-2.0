@@ -13,6 +13,7 @@ gpu-femtovg = ["slint/renderer-femtovg"]
 
 [dependencies]
 explorer-core = { path = "../core" }
+explorer-integrate = { path = "../integrate" }
 explorer-fs = { path = "../fs" }
 explorer-gpu = { path = "../gpu" }
 explorer-ops = { path = "../ops" }

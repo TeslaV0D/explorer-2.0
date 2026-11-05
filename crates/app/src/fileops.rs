@@ -42,6 +42,18 @@ struct Job {
 enum Confirm {
     DeletePermanent(Vec<PathBuf>),
     PurgeTrash(Vec<explorer_ops::trashview::TrashEntry>),
+    /// R-001: undo every Windows integration.
+    IntegrationReset,
+}
+
+/// Ask before the one-button reset (settings / palette).
+pub fn confirm_integration_reset(win: &MainWindow, text: &str) {
+    OPS.with_borrow_mut(|o| o.confirm = Some(Confirm::IntegrationReset));
+    win.set_settings_open(false);
+    win.set_confirm_text(text.into());
+    win.set_confirm_ok("Zurücksetzen".into());
+    win.set_confirm_open(true);
+    trace("confirm integration reset");
 }
 
 struct Rename {
@@ -1105,6 +1117,7 @@ pub fn confirm_answer(win: &MainWindow, ok: bool) {
             false,
         ),
         (true, Some(Confirm::PurgeTrash(items))) => trash_action(win, TrashAction::Purge, items),
+        (true, Some(Confirm::IntegrationReset)) => crate::integration::reset(win),
         _ => {}
     }
     nav::focus_pane(nav::active_pane());

@@ -240,7 +240,7 @@ echo "-- M6.1a: folder options (settings panel)"
 F=$R/opt; mkdir -p "$F/Ordner/Tief"; echo x > "$F/x.txt"
 goto "$F"
 # rows: 0 Ordner, 1 x.txt
-SETTINGS_BTN="1144 20"; OPT_EXT="835 205"; OPT_CLICK="835 257"; SETTINGS_CLOSE="1138 447"; VIEW_ALL="926 312"
+SETTINGS_BTN="1144 20"; OPT_EXT="835 205"; OPT_CLICK="835 257"; SETTINGS_CLOSE="1138 542"; VIEW_ALL="926 312"
 xdotool mousemove $SETTINGS_BTN click 1; sleep 0.6
 xdotool mousemove $OPT_EXT click 1; sleep 1.2
 check "[63] 'Dateinamenerweiterungen anzeigen' off hides known extensions" "last 'option show_extensions' | grep -q '=false' && last 'shown' | grep -qF '\"x\"' && ! last 'shown' | grep -qF 'x.txt'"
@@ -398,5 +398,30 @@ check "[70i] 'Hell' overrides the dark system" "last 'theme why=choice' | grep -
 xdotool key ctrl+shift+p; sleep 0.4; xdotool type --delay 40 "wie windows"; sleep 0.5; xdotool key Return; sleep 1
 check "[70j] back to 'Wie Windows' = dark again" "last 'theme why=choice' | grep -q 'choice=system dark=true'"
 check "[70k] process alive, no panic" "kill -0 $PID && ! grep -qi panic $LOG"
+kill $PID; wait $PID 2>/dev/null
+
+echo "== [71] R-001: Windows integration status + one-button reset (settings, palette)"
+ICFG=$W/config-integration; mkdir -p "$ICFG"
+T_RESET="956 502"   # settings panel: "Alle Windows-Integrationen zurücksetzen"
+LOG=$W/trace-71.log
+EXPLORER2_CONFIG_DIR=$ICFG $EXE "$TW" > $LOG 2>&1 & PID=$!
+sleep 2.5; focus
+xdotool mousemove $SETTINGS_BTN click 1; sleep 0.8
+check "[71] opening the settings reads the integration status" "last 'integration status' | grep -q 'entries=0 active_points=0 journal=None'"
+xdotool mousemove $SETTINGS_CLOSE click 1; sleep 0.4
+xdotool key ctrl+shift+p; sleep 0.4; xdotool type --delay 40 "integrationen zur"; sleep 0.5; xdotool key Return; sleep 0.8
+check "[71b] palette: nothing active -> no dialog, settings show the state" "last 'palette run' | grep -q 'integration-reset' && last 'integration reset: nothing active' >/dev/null && ! grep -q 'confirm integration reset' $LOG"
+xdotool mousemove $SETTINGS_CLOSE click 1; sleep 0.4
+# a damaged journal (e.g. after a crash): the reset must still work
+printf 'v1\nvalue\tHKCU\tzz\n' > "$ICFG/integration-journal.txt"
+xdotool mousemove $SETTINGS_BTN click 1; sleep 0.8
+check "[71c] damaged journal is reported" "last 'integration status' | grep -q 'journal=Damaged'"
+xdotool mousemove $T_RESET click 1; sleep 0.8
+check "[71d] the button asks first" "last 'confirm integration reset' >/dev/null"
+xdotool key Return; sleep 1
+check "[71e] confirmed: reset ran, damaged journal removed" "last 'integration reset restored' | grep -q 'errors=0 journal=Damaged' && [ ! -e '$ICFG/integration-journal.txt' ]"
+check "[71f] status afterwards: nothing active" "last 'integration status' | grep -q 'entries=0 active_points=0 journal=None'"
+xdotool mousemove $SETTINGS_CLOSE click 1; sleep 0.4
+check "[71g] process alive, no panic" "kill -0 $PID && ! grep -qi panic $LOG"
 kill $PID; wait $PID 2>/dev/null
 exit $FAIL

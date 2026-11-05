@@ -164,6 +164,12 @@ pub const ALL: &[Command] = &[
     c("theme-system", "Farbschema: Wie Windows", "", Need::Always),
     c("theme-light", "Farbschema: Hell", "", Need::Always),
     c("theme-dark", "Farbschema: Dunkel", "", Need::Always),
+    c(
+        "integration-reset",
+        "Alle Windows-Integrationen zurücksetzen",
+        "",
+        Need::Always,
+    ),
 ];
 
 pub fn by_id(id: &str) -> Option<&'static Command> {

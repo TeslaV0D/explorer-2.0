@@ -94,7 +94,11 @@ Legende: `[ ]` offen · `[~]` in Arbeit · `[x]` erledigt · Prio P0/P1/P2
     - [x] Erststart-Gate: Warnung ab 1 s, rot ab 2 s (Boss: Variante 1, D-018)
   - [x] M6.4 Farbschemata: Wie Windows (live) / Hell / Dunkel, Windows-Akzentfarbe (Auswahl-Familie im Farbton des Akzents, Rahmen in Windows-Schattierung), alle Farben zentral + kontrastgetestet, Std-Widgets + Titelleiste folgen – CI-Run #58
     - [ ] Später: Windows-Kontrastdesigns (High Contrast) respektieren; Akzent-Häkchen auch für Std-Widgets (Slint färbt sie selbst nach `DwmGetColorizationColor`)
-- [ ] **R-001 Ein-Knopf-Reset** für alle Integrationen (App-Knopf + eigenständiges Recovery-Tool + Journal + CI-Snapshot-Test) – Voraussetzung, bevor irgendeine Integration ausgeliefert wird
+- [~] **R-001 Ein-Knopf-Reset** für alle Integrationen (App-Knopf + eigenständiges Recovery-Tool + Journal + CI-Snapshot-Test) – Voraussetzung, bevor irgendeine Integration ausgeliefert wird
+  - [x] R-001a Crate `explorer-integrate`: Write-Ahead-Journal (atomar, Spiegel, Prüfsumme), `apply`/`reset`/`sweep`/`status`, rohe Registry-Werte, Dateien mit Sicherung, Umgebung + WM_SETTINGCHANGE, fremd geänderte Werte bleiben, Fehler bleiben im Journal; 13 Unit-Tests (Fake-Registry) + Test gegen echte Registry – CI-Run #59
+  - [x] R-001b `explorer2-recover.exe` (Konsole, `--status`/`--yes`) + CI-Pflichttest `scripts/r001-snapshot.ps1` (reg.exe-Export vorher = nachher: aus Journal, über Spiegel, ganz ohne Journal) – CI-Run #59
+  - [ ] R-001c Einstellungen → „Windows-Integration“ (Status + „Alle Windows-Integrationen zurücksetzen“ mit Nachfrage) + Palette; Linux-E2E [71], Windows-E2E W41
+  - [ ] Später (M7/M8): `.reg`/PowerShell-Fallback-Skript + Startmenü-Eintrag „Windows-Standard wiederherstellen“, Deinstallation ruft Reset, Selbstheilung beim explorer.exe-Proxy, HKLM-Journal-Kopie in `%ProgramData%`
 - [ ] M7 Windows-Integration Stufe 1–3 (siehe `WINDOWS-INTEGRATION.md`) + Verifikationspunkte auf echtem Windows
 - [ ] M8 Installer, Recovery-Tool, Härtung, Beta
 
