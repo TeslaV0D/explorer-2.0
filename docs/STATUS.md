@@ -1,6 +1,6 @@
 # Zwischenstand
 
-**Stand:** 2026-11-05 · **Phase:** 1 · M0–M7 ✅ (M7.3 verschoben) · R-001 ✅ · **M8.1/M8.2 Installer ✅ (Run #69)** · **M8.3 Härtung (läuft)** · **Branch:** `claude/relaxed-pasteur-ufhh1p`
+**Stand:** 2026-11-05 · **Phase:** 1 · M0–M7 ✅ (M7.3 verschoben) · R-001 ✅ · **M8.1/M8.2 Installer ✅ (Run #69)** · **M8.3 Härtung ✅ (Run #70–#73)** · **Branch:** `claude/relaxed-pasteur-ufhh1p`
 
 ## M5 – Shell-Integration (läuft, Freigabe Boss 2026-11-04)
 ### CI-Run #37 – alles grün ✅ (M5.0–M5.5)
@@ -40,11 +40,12 @@
 - **Bug (CI #32/#33, UI-Matrix)**: OLE-Drop-Target wurde nie registriert („Invalid window handle“) – der Timer lief, bevor Slint das native Fenster erzeugt hatte → Ablegen aus anderen Apps wäre tot gewesen. Fix: Registrierung wiederholt bis HWND existiert (50 ms, max. 5 s), sonst Rückfall auf In-App-DnD.
 - Neu: **Windows-E2E mit echter Tastatur/Maus** (`scripts/e2e-windows.ps1`, CI-Schritt im Release-Job, Screenshots bei Fehler).
 
-### M8.3c Zufallsdaten-Tests + Dauertest (CI ausstehend)
+### M8.3c Zufallsdaten-Tests + Dauertest ✅ (CI-Run #72/#73) → M8.3 komplett
 - **Zufallsdaten-Tests** (deterministisch, eigener Xorshift-Generator, keine neue Abhängigkeit): alle Datei-Parser (settings, session, views, Start-Wächter, Instanz-Protokoll) und Text-Helfer (Adresszeile, Breadcrumb, Palette-Suche, Anzeigename/Umbenennen, Bildgröße, Textvorschau, Farbe) mit Zufallstext und beschädigten echten Dateien. Eigenschaften: kein Panic; was eingelesen wurde, übersteht Speichern + Laden unverändert. Lokal je 420 000 Runden über 6 Seeds sauber; CI 4000 pro Test (~1 s).
 - **Journal (R-001)**: ein echtes Journal (alle Integrationen an) – **jede** abgeschnittene Fassung wird als beschädigt erkannt (bis auf das letzte `\n`, Inhalt + Prüfsumme sind dann vollständig), keine Veränderung geht durch, liest sich exakt zurück; lokal 400 000 Runden über 4 Seeds.
 - **Funde + Fixes**: (1) `views.ini` mit einzelnem `\r` am Dateiende → Pfad mit `\r`, beim nächsten Speichern verändert → abgeschnitten; (2) `session.ini`: Tab-Pfade mit `\r` wurden gelesen, aber nie geschrieben → beim Lesen verworfen; (3) Journal: Inhalt **nach** der Prüfsummenzeile war ungeschützt (nur durch Handbearbeitung möglich, unsere Speicherung ist atomar) → gilt jetzt als beschädigt; Prüfsumme muss exakt im geschriebenen Format stehen (führende Null zählte vorher als gleich).
 - **Dauertest** Linux (`scripts/e2e-stress.sh`, von e2e.sh aufgerufen): 150 Runden à Ordner öffnen/hoch, Tab auf/zu, alle 5 Runden Kachel-↔Details-Ansicht, alle 7 Runden Datei-Wechsel im beobachteten Ordner; Messung nach 30 Aufwärmrunden vs. Ende. Lokal: 447 Navigationen in 75 s, **RSS +0,5 MiB (24,2 → 24,6 MiB), Dateien ±0, Threads ±0**. Windows (`scripts/m8-stress.ps1`, echte Tastatur): dasselbe mit Private Bytes, Handles, Threads, GDI-/USER-Objekten (Icon-Lecks).
+- **CI-Messwerte**: Linux #72: RSS 25,2 → 25,5 MiB (448 Navigationen), Dateien 20 ±0, Threads 8 ±0. Windows #72: Private Bytes +14,2 MiB → genauer angesehen: #73 mit zwei Messphasen – Aufwärmen 58,4 MiB (Bild-Cache 37,5), nach 120 Runden 71,6 (Cache 50,0), nach 240 Runden 72,4 (Cache 50,0) → **ohne Bild-Cache Phase A +0,7 MiB, Phase B +0,8 MiB = kein Leck**; der Zuwachs war der Kachel-Bild-Cache (LRU, Budget 96 MiB, bleibt bei 50 stehen). Handles 588 → 586, Threads 16, GDI 53 ±0, USER +3.
 
 ### M8.3b Eine Instanz ✅ (CI-Run #71)
 - Läuft schon ein Fenster, gibt ein zweiter Start (Ordner-Doppelklick über M7.1, Win+E, Startmenü, Kommandozeile) seinen Ordner dorthin ab: **neuer Tab** in der aktiven Ansicht (ohne Ordner = wie Strg+T), ein minimiertes Fenster kommt wieder hoch und nach vorn (`AllowSetForegroundWindow` vom neuen Prozess), der zweite Prozess beendet sich sofort – vor Fenster, Renderer und Start-Wächter.
