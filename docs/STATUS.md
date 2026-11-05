@@ -1,6 +1,6 @@
 # Zwischenstand
 
-**Stand:** 2026-11-05 · **Phase:** 1 · M0–M7 ✅ (M7.3 verschoben) · R-001 ✅ · **M8 Installer (läuft)** · **Branch:** `claude/relaxed-pasteur-ufhh1p`
+**Stand:** 2026-11-05 · **Phase:** 1 · M0–M7 ✅ (M7.3 verschoben) · R-001 ✅ · **M8.1/M8.2 Installer ✅ (Run #69)** · M8 Härtung/Beta offen · **Branch:** `claude/relaxed-pasteur-ufhh1p`
 
 ## M5 – Shell-Integration (läuft, Freigabe Boss 2026-11-04)
 ### CI-Run #37 – alles grün ✅ (M5.0–M5.5)
@@ -40,13 +40,14 @@
 - **Bug (CI #32/#33, UI-Matrix)**: OLE-Drop-Target wurde nie registriert („Invalid window handle“) – der Timer lief, bevor Slint das native Fenster erzeugt hatte → Ablegen aus anderen Apps wäre tot gewesen. Fix: Registrierung wiederholt bis HWND existiert (50 ms, max. 5 s), sonst Rückfall auf In-App-DnD.
 - Neu: **Windows-E2E mit echter Tastatur/Maus** (`scripts/e2e-windows.ps1`, CI-Schritt im Release-Job, Screenshots bei Fehler).
 
-### M8.1/M8.2 Installer (CI ausstehend)
+### M8.1/M8.2 Installer ✅ (CI-Run #69)
 - Boss-Entscheidung: **eigener Installer in Rust** (D-023), pro Benutzer, ohne Administratorrechte.
 - `explorer2.exe --install [--quiet]` bzw. Einstellungen → „Installation“ → „Installieren“ (mit Nachfrage): kopiert App + Notfall-Werkzeug nach `%LOCALAPPDATA%\Programs\Explorer2`, legt im Startmenü „Explorer 2.0“ und „Explorer 2.0 – Windows-Standard wiederherstellen“ an (`.lnk` per `IShellLinkW`), trägt sich in **Apps & Features** ein (Version, Größe, Deinstallieren) und startet danach aus dem Installationsordner weiter. Startmenü + Eintrag laufen **über das Journal** – der Ein-Knopf-Reset und `explorer2-recover` entfernen sie mit.
 - Integrationen, die aus einer heruntergeladenen Kopie eingeschaltet wurden, werden auf die installierte Exe umgebogen (nur eindeutig eigene; fremd übernommene bleiben).
 - Update über eine laufende App: die laufende Exe wird beiseite umbenannt (`*.old-<pid>`), beim nächsten Start aufgeräumt.
 - Deinstallation (Apps & Features / `explorer2-recover --uninstall [--quiet]`): kompletter R-001-Reset (alle Integrationen, Startmenü, Eintrag), dann löscht eine Temp-Kopie den Programmordner – **nur, wenn er ausschließlich unsere Dateien enthält** (Test mit fremder Datei) – und sich selbst; Einstellungen bleiben.
 - Tests: integrate 24 Unit (Installieren → Deinstallieren = Snapshot, Update = ein Eintrag + erstes Original, Integrationen folgen der installierten Exe, fehlende Dateien → nichts journalisiert, fremder Ordner wird nie gelöscht, Eintrag im Manifest), Linux-Funktionstest + E2E [72] (Palette → Nachfrage → installierte Kopie läuft, alte schließt; Deinstallation räumt alles), Windows-CI `scripts/m8-install.ps1` [I1]–[U6] mit den echten Standardpfaden.
+- CI #68: Windows komplett grün (I1–U6), Linux [72b–d] rot – der E2E-Job baute nur `explorer2`, ohne `explorer2-recover` daneben verweigert der Installer (gewollt). Fix: Job baut `-p explorer-integrate --bins` mit → #69 grün.
 
 ### M7 ✅ komplett (7.1 + 7.2); M7.3 IFEO verschoben (Boss, D-022) – nächster Schritt M8 Installer + Recovery
 
