@@ -73,8 +73,9 @@ fn main() -> Result<(), slint::PlatformError> {
         None
     };
 
-    if let (Some(a), Some(p)) = (std::env::args().nth(1), &start) {
-        nav::trace_line(&format!("launch arg={a:?} start={}", p.display()));
+    match (std::env::args().nth(1), &start) {
+        (Some(a), Some(p)) => nav::trace_line(&format!("launch arg={a:?} start={}", p.display())),
+        _ => nav::trace_line("launch without folder"),
     }
     let win = MainWindow::new()?;
     nav::trace_line(&format!("window created at={:.1}ms", nav::since_start_ms()));

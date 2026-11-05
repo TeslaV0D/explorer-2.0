@@ -527,6 +527,82 @@ if ($script:fail) {
   if (Test-Path $launched) { Write-Host "----- launched instances"; Get-Content $launched | Write-Host }
 }
 $script:fail = $script:fail -bor $failBefore
+
+# M7.2: Win+E opens Explorer 2.0 (real key press; only where the runner's shell
+# handles Win+E at all - checked first with Windows' own Explorer)
+$failBefore = $script:fail; $script:fail = 0
+function PressWinE {
+  [W]::keybd_event(0x5B, 0, 0, [UIntPtr]::Zero); [W]::keybd_event(0x45, 0, 0, [UIntPtr]::Zero)
+  [W]::keybd_event(0x45, 0, 2, [UIntPtr]::Zero); [W]::keybd_event(0x5B, 0, 2, [UIntPtr]::Zero)
+}
+$shellApp = New-Object -ComObject Shell.Application
+function ExplorerWindows { @($shellApp.Windows()).Count }
+function CloseExplorerWindows { foreach ($w in @($shellApp.Windows())) { try { $w.Quit() } catch {} } }
+$clsidKey = 'HKCU\Software\Classes\CLSID\{52205FD8-5DFB-447D-801A-D0B52F2E83E1}'
+function SnapWinE([string]$name) {
+  $ErrorActionPreference = 'Continue'
+  $f = "$Work\m72-$name.reg"
+  & reg.exe export $clsidKey $f /y 2>$null | Out-Null
+  if ($LASTEXITCODE -eq 0) { (Get-FileHash $f).Hash } else { '(absent)' }
+}
+CloseExplorerWindows; Start-Sleep -Milliseconds 500
+$n0 = ExplorerWindows; PressWinE; Start-Sleep -Seconds 4
+$baseline = (ExplorerWindows) -gt $n0
+Write-Host "Win+E baseline: Explorer windows $n0 -> $(ExplorerWindows) (handled by the shell: $baseline)"
+CloseExplorerWindows; Start-Sleep -Milliseconds 500
+$winEBefore = SnapWinE 'before'
+$cfg6 = "$Work\cfg-m72"; New-Item -ItemType Directory -Force $cfg6 | Out-Null
+$env:EXPLORER2_CONFIG_DIR = $cfg6
+Remove-Item $launched -ErrorAction SilentlyContinue
+$env:EXPLORER2_TRACE_FILE = $launched
+$script:log = "$Work\win-e2e-m72.log"
+$p = Start-Process -FilePath $Exe -ArgumentList "`"$R`"" -PassThru -RedirectStandardError $script:log
+try {
+  if (WaitFor 'done tab=1 ' 15000) {
+    Start-Sleep -Seconds 1
+    $p.Refresh(); $script:hwnd = $p.MainWindowHandle
+    [void][W]::ShowWindow($script:hwnd, 3); Start-Sleep -Milliseconds 800
+    Focus
+    Keys '^+p'; Keys 'win{+}e'; Keys '{ENTER}'; Start-Sleep -Milliseconds 800
+    Check "[W43] palette switches 'Win+E opens Explorer 2.0' on" { (Last 'integration feature win-e on') -match 'n=2' }
+    $cmd = (Get-ItemProperty "HKCU:\Software\Classes\CLSID\{52205FD8-5DFB-447D-801A-D0B52F2E83E1}\shell\opennewwindow\command" -ErrorAction SilentlyContinue)
+    Write-Host "registered: $($cmd.'(default)') DelegateExecute='$($cmd.DelegateExecute)'"
+    Check "[W43b] Win+E verb points to this exe (empty DelegateExecute)" { $cmd.'(default)' -eq ('"' + $Exe + '"') -and $cmd.DelegateExecute -eq '' }
+    if ($baseline) {
+      Remove-Item $launched -ErrorAction SilentlyContinue
+      $n1 = ExplorerWindows
+      PressWinE
+      Check "[W43c] Win+E starts Explorer 2.0" { Launched 'launch without folder' }
+      Start-Sleep -Milliseconds 800
+      Check "[W43d] ... and no Windows Explorer window" { (ExplorerWindows) -le $n1 }
+      KillInstances; CloseExplorerWindows
+    } else {
+      Write-Host "NOTE  the runner's shell does not handle Win+E (no Explorer window in the baseline) - registry checked only"
+    }
+    Keys '^+p'; Keys 'win{+}e'; Keys '{ENTER}'; Start-Sleep -Milliseconds 800
+    Check "[W43e] switched off without errors" { (Last 'integration feature win-e off') -match 'errors=0' }
+    $winEAfter = SnapWinE 'after'
+    Check "[W43f] CLSID key exactly as before ($winEBefore)" { $winEAfter -eq $winEBefore }
+    if ($baseline) {
+      $n2 = ExplorerWindows; PressWinE; Start-Sleep -Seconds 4
+      Check "[W43g] off again: Win+E opens Windows' Explorer as before" { (ExplorerWindows) -gt $n2 }
+      CloseExplorerWindows
+    }
+    $p.Refresh()
+    Check "[W43h] app still running, no panic" { -not $p.HasExited -and (Log) -notmatch '(?i)panic' }
+  } else { Fail "[W43] M7.2 start did not load" }
+} finally {
+  KillInstances
+  if (-not $p.HasExited) { Stop-Process -Id $p.Id -Force }
+  $rec = Join-Path (Split-Path $Exe) 'explorer2-recover.exe'
+  if (Test-Path $rec) { & $rec --yes | Out-Null }
+  Remove-Item Env:\EXPLORER2_TRACE_FILE -ErrorAction SilentlyContinue
+}
+if ($script:fail) {
+  Write-Host "----- trace (M7.2)"; Write-Host (Log)
+  if (Test-Path $launched) { Write-Host "----- launched instances"; Get-Content $launched | Write-Host }
+}
+$script:fail = $script:fail -bor $failBefore
 $script:log = $mainLog
 if ($script:fail) { Write-Host "----- trace"; Write-Host (Log) }
 exit $script:fail

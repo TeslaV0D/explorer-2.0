@@ -40,6 +40,10 @@
 - **Bug (CI #32/#33, UI-Matrix)**: OLE-Drop-Target wurde nie registriert („Invalid window handle“) – der Timer lief, bevor Slint das native Fenster erzeugt hatte → Ablegen aus anderen Apps wäre tot gewesen. Fix: Registrierung wiederholt bis HWND existiert (50 ms, max. 5 s), sonst Rückfall auf In-App-DnD.
 - Neu: **Windows-E2E mit echter Tastatur/Maus** (`scripts/e2e-windows.ps1`, CI-Schritt im Release-Job, Screenshots bei Fehler).
 
+### M7.2 Win+E (CI ausstehend)
+- Einstellungen/Palette: **„Win+E öffnet Explorer 2.0“** – `HKCU\Software\Classes\CLSID\{52205FD8-5DFB-447D-801A-D0B52F2E83E1}\shell\opennewwindow\command` = `"…\explorer2.exe"` (ohne Ordner → letzte Sitzung) + leerer `DelegateExecute` (sonst bleibt Explorers COM-Handler). Über Journal/Manifest wie M7.1, Aus = exakt vorher (`CLSID` selbst wird nur entfernt, wenn wir ihn angelegt haben und er leer ist).
+- Windows-E2E W43–W43h: echtes Win+E per `keybd_event`; vorher Prüfung, ob die Runner-Shell Win+E überhaupt verarbeitet (sonst nur Registry-Prüfung + NOTE); an → Explorer 2.0 startet, kein Explorer-Fenster; aus → CLSID-Schlüssel identisch, Win+E öffnet wieder Windows' Explorer.
+
 ### M7.1 Ordner öffnen + Kontextmenü – funktional grün (CI #63), CI formal rot am Erststart-Gate (VM)
 - **CI #63**: Windows-E2E **81/81** inkl. W42–W42m: echtes ShellExecute auf einen Ordner und auf `C:\` startet Explorer 2.0 dort, Kontextmenü zeigt „Öffnen (Explorer 2.0)“ (Standard) + „In Explorer 2.0 öffnen“, `InvokeVerb` öffnet, `Folder` unberührt, beide aus → `reg export` identisch; R-001-Snapshot inkl. [R5]–[R5e]; Linux-E2E 188/188. Rot nur das Erststart-Gate (D-018): 3305 ms bei `probe_ms` **1189** (sonst 70–170), `window created` schon bei 897 ms vor jedem App-Code (sonst ~150) → VM; normaler Start best-of-3 **86,8 ms** (Budget 300). Boss: Gate an die VM koppeln (rot ab 2 s nur bei `probe_ms` < 300, sonst Warnung) → D-018 ergänzt.
 - CI #62: W42 lief nicht (PS 5.1 + `reg export` auf fehlenden Schlüssel = Abbruch, Testskript-Fehler) → behoben; `[forced-gpu]` hing einmalig nach Skias GL-Rückfall (in #63 wieder 505 ms).

@@ -78,6 +78,7 @@ pub fn refresh(win: &MainWindow) {
             match f {
                 Feature::FolderOpen => win.set_feat_folder_open(on),
                 Feature::ContextMenu => win.set_feat_context_menu(on),
+                Feature::WinE => win.set_feat_win_e(on),
             }
             states.push(format!("{}={s:?}", f.id()));
         }
@@ -158,6 +159,7 @@ pub fn toggle_feature(win: &MainWindow, id: &str) {
     let on = match Feature::parse(id) {
         Some(Feature::FolderOpen) => win.get_feat_folder_open(),
         Some(Feature::ContextMenu) => win.get_feat_context_menu(),
+        Some(Feature::WinE) => win.get_feat_win_e(),
         None => return,
     };
     // the panel shows the result

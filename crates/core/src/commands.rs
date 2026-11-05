@@ -177,6 +177,12 @@ pub const ALL: &[Command] = &[
         Need::Always,
     ),
     c(
+        "toggle-win-e",
+        "Win+E öffnet Explorer 2.0 ein/aus",
+        "",
+        Need::Always,
+    ),
+    c(
         "integration-reset",
         "Alle Windows-Integrationen zurücksetzen",
         "",

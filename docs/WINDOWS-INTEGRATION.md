@@ -15,6 +15,8 @@ Wenn irgendeine App einen Ordner „öffnet“ (`ShellExecute`, „Ordner öffne
 - Zusätzlich eigene Einträge „In Explorer 2.0 öffnen“ im Kontextmenü (`Directory\Background\shell`) – harmlos als Fallback.
 
 ## Stufe 2 – Win+E und „Dieser PC“ ⚠️
+> **Umsetzung M7.2:** Registry-Weg (CLSID-Verb `opennewwindow` + leerer `DelegateExecute`), kein Tastatur-Hook. Feature `win-e` in `explorer-integrate`.
+
 - Win+E startet über den Shell-Hotkey ein „Computer“-Fenster. Bekannter Registry-Weg: `HKCU\Software\Classes\CLSID\{52205FD8-5DFB-447D-801A-D0B52F2E83E1}\shell\opennewwindow\command` mit eigenem Befehl (+ leerer `DelegateExecute`).
 - Alternative/Fallback: Low-Level-Keyboard-Hook (`WH_KEYBOARD_LL`) in unserem Hintergrundprozess, der Win+E abfängt und verschluckt. Nachteil: Hook muss laufen (Autostart/Tray), Antivirus-Sensibilität.
 - Entscheidung später per Praxistest, welcher Weg auf Win10/Win11 stabil ist.

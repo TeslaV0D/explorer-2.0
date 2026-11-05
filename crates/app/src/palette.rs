@@ -220,6 +220,7 @@ fn execute(win: &MainWindow, pi: usize, id: &str) {
         "integration-reset" => crate::integration::ask_reset(win),
         "toggle-folder-open" => crate::integration::toggle_feature(win, "folder-open"),
         "toggle-context-menu" => crate::integration::toggle_feature(win, "context-menu"),
+        "toggle-win-e" => crate::integration::toggle_feature(win, "win-e"),
         other => nav::trace_line(&format!("palette: unknown command {other}")),
     }
 }

@@ -1053,6 +1053,7 @@ export component MainWindow inherits Window {
     in property <bool> integration-available;
     in-out property <bool> feat-folder-open;
     in-out property <bool> feat-context-menu;
+    in-out property <bool> feat-win-e;
     callback integration-feature(string, bool);
     changed settings-open => { if (root.settings-open) { root.settings-opened(); } }
     in property <string> renderer-status;
@@ -1551,6 +1552,11 @@ export component MainWindow inherits Window {
                 text: "„In Explorer 2.0 öffnen“ im Kontextmenü";
                 checked <=> root.feat-context-menu;
                 toggled => { root.integration-feature("context-menu", self.checked); }
+            }
+            if root.integration-available : CheckBox {
+                text: "Win+E öffnet Explorer 2.0";
+                checked <=> root.feat-win-e;
+                toggled => { root.integration-feature("win-e", self.checked); }
             }
             Text { text: root.integration-status; font-size: 11px; color: Theme.c.muted; wrap: word-wrap; }
             HorizontalLayout {

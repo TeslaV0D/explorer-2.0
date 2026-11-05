@@ -22,9 +22,14 @@ pub enum Feature {
     /// "In Explorer 2.0 öffnen" in the context menu of folders, drives and
     /// the folder background.
     ContextMenu,
+    /// Win+E (and "open a new window" of File Explorer's start object).
+    WinE,
 }
 
-pub const ALL: [Feature; 2] = [Feature::FolderOpen, Feature::ContextMenu];
+pub const ALL: [Feature; 3] = [Feature::FolderOpen, Feature::ContextMenu, Feature::WinE];
+
+/// The shell object Win+E opens a new window of (Windows 10/11).
+pub const WIN_E_CLSID: &str = "{52205FD8-5DFB-447D-801A-D0B52F2E83E1}";
 
 const CLASSES: &str = r"Software\Classes";
 /// Our verb for "open folders" (its name contains the manifest marker).
@@ -44,6 +49,7 @@ impl Feature {
         match self {
             Feature::FolderOpen => "folder-open",
             Feature::ContextMenu => "context-menu",
+            Feature::WinE => "win-e",
         }
     }
 
@@ -55,6 +61,7 @@ impl Feature {
         match self {
             Feature::FolderOpen => "Ordner mit Explorer 2.0 öffnen",
             Feature::ContextMenu => "„In Explorer 2.0 öffnen“ im Kontextmenü",
+            Feature::WinE => "Win+E öffnet Explorer 2.0",
         }
     }
 
@@ -74,6 +81,9 @@ impl Feature {
                 .into_iter()
                 .map(|c| Scope::tree(classes(&format!(r"{c}\shell\explorer2"))))
                 .collect(),
+            Feature::WinE => vec![Scope::tree(classes(&format!(
+                r"CLSID\{WIN_E_CLSID}\shell\opennewwindow"
+            )))],
         }
     }
 
@@ -121,6 +131,19 @@ impl Feature {
                 ]
             })
             .collect(),
+            Feature::WinE => {
+                let key = classes(&format!(r"CLSID\{WIN_E_CLSID}\shell\opennewwindow\command"));
+                vec![
+                    // no folder: Explorer 2.0 starts with its last session
+                    set(
+                        key.clone(),
+                        "",
+                        RegData::sz(&format!("\"{}\"", exe.display())),
+                    ),
+                    // empty DelegateExecute = our command instead of Explorer's COM handler
+                    set(key, "DelegateExecute", RegData::sz("")),
+                ]
+            }
         }
     }
 }
