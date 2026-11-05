@@ -40,7 +40,7 @@
 - **Bug (CI #32/#33, UI-Matrix)**: OLE-Drop-Target wurde nie registriert („Invalid window handle“) – der Timer lief, bevor Slint das native Fenster erzeugt hatte → Ablegen aus anderen Apps wäre tot gewesen. Fix: Registrierung wiederholt bis HWND existiert (50 ms, max. 5 s), sonst Rückfall auf In-App-DnD.
 - Neu: **Windows-E2E mit echter Tastatur/Maus** (`scripts/e2e-windows.ps1`, CI-Schritt im Release-Job, Screenshots bei Fehler).
 
-### M8.3b Eine Instanz (CI ausstehend)
+### M8.3b Eine Instanz ✅ (CI-Run #71)
 - Läuft schon ein Fenster, gibt ein zweiter Start (Ordner-Doppelklick über M7.1, Win+E, Startmenü, Kommandozeile) seinen Ordner dorthin ab: **neuer Tab** in der aktiven Ansicht (ohne Ordner = wie Strg+T), ein minimiertes Fenster kommt wieder hoch und nach vorn (`AllowSetForegroundWindow` vom neuen Prozess), der zweite Prozess beendet sich sofort – vor Fenster, Renderer und Start-Wächter.
 - Kanal: Windows Named Pipe `\\.\pipe\explorer2-<Sitzung>-<Hash>` (nur lokale Clients, Standard-ACL = gleicher Benutzer, nächste Pipe-Instanz entsteht vor dem Schließen der aktuellen → der Name verschwindet nie), Linux Unix-Socket im Temp-Ordner, Rechte 0600. Name pro Konfig-Ordner → Tests/portable Kopien mit eigenem `EXPLORER2_CONFIG_DIR` stören sich nicht. Protokoll rein in `core::instance` (eine Zeile, alles Fremde wird verworfen).
 - **Kein Aussperren**: „ok“ kommt erst, wenn der UI-Thread den Tab wirklich geöffnet hat; antwortet die laufende Instanz nicht (hängt), öffnet der zweite Start nach 4 s sein eigenes Fenster. Wer den Namen nicht bekommt (`--new-instance`, alte Instanz schließt gerade), versucht es alle 2 s und übernimmt danach. Linux: SIGTERM gibt den Socket sofort frei.
