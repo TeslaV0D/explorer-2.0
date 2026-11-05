@@ -214,7 +214,12 @@ jobs:
           $gateErrors = @()
           $vm = [regex]::Match($r.text, 'probe_ms=([\d.]+)').Groups[1].Value
           Write-Host "[auto-fresh] VM speed indicator: background probe_ms=$vm (typical 70-170)"
-          if ($r.cold -gt 2000) { $gateErrors += "[auto-fresh] first start sanity gate exceeded: $($r.cold) ms > 2000 ms (probe_ms=$vm)" }
+          # D-018 coupled to the VM (Boss, 2026-11-05): red above 2 s only on a VM of
+          # normal speed (background probe < 300 ms); a slow VM (#57: 521, #63: 1189)
+          # cannot judge the first start -> warning with the numbers instead
+          $vmMs = if ($vm) { [double]$vm } else { 0 }
+          if ($r.cold -gt 2000 -and $vmMs -lt 300) { $gateErrors += "[auto-fresh] first start sanity gate exceeded: $($r.cold) ms > 2000 ms (probe_ms=$vm)" }
+          elseif ($r.cold -gt 2000) { Write-Host "::warning title=VM too slow to judge the first start::[auto-fresh] first start $($r.cold) ms, but probe_ms=$vm (normal 70-170) - not gated" }
           if ($r.cold -gt 1000) { Write-Host "::warning title=First start slow::[auto-fresh] first start $($r.cold) ms > 1000 ms (VM variance or a real regression - compare 'run at' / 'event loop running' with earlier runs)" }
           # 2) Normal starts: cached result, delayed re-probe; cold start budget 300 ms (best of 3, D-008)
           $colds = @()
