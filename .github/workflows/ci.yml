@@ -103,7 +103,12 @@ jobs:
       - uses: dtolnay/rust-toolchain@stable
       - uses: Swatinem/rust-cache@v2
       - id: build
-        run: cargo build --release -p explorer2
+        run: |
+          cargo build --release -p explorer2
+          cargo build --release -p explorer-integrate --bins --example r001_selftest
+      - name: "R-001 reset: snapshot -> integration on -> reset -> snapshot identical (reg.exe)"
+        shell: pwsh
+        run: pwsh -File scripts/r001-snapshot.ps1 (Resolve-Path target/release).Path "$env:RUNNER_TEMP\r001"
       - name: Smoke test exe (starts, prints version, manifest embedded)
         shell: pwsh
         run: |
@@ -260,4 +265,8 @@ jobs:
         uses: actions/upload-artifact@v4
         with: { name: e2e-windows-screenshots, path: "${{ runner.temp }}/e2e-win/*.png" }
       - uses: actions/upload-artifact@v4
-        with: { name: explorer2-windows-x64, path: target/release/explorer2.exe }
+        with:
+          name: explorer2-windows-x64
+          path: |
+            target/release/explorer2.exe
+            target/release/explorer2-recover.exe
