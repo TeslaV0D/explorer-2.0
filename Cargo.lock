@@ -997,6 +997,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "explorer-index"
+version = "0.0.1"
+dependencies = [
+ "explorer-core",
+ "memchr",
+ "regex",
+]
+
+[[package]]
 name = "explorer-integrate"
 version = "0.0.1"
 dependencies = [

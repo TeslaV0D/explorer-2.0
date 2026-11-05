@@ -66,6 +66,8 @@ jobs:
           "clipboard interop OK"
       - name: Benchmark 100k folder (budgets from PLAN-BASICS)
         run: cargo run --release -p explorer-fs --example bench -- --files 100000 --runs 9 --assert
+      - name: "Search benchmark: 1 M entries, name queries < 10 ms, index < 100 MB (PLAN-SEARCH)"
+        run: cargo run --release -p explorer-index --example bench -- 1000000 --gate
   e2e-linux:
     runs-on: ubuntu-latest
     needs: test

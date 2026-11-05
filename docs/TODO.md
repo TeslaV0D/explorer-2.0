@@ -126,7 +126,7 @@ Legende: `[ ]` offen · `[~]` in Arbeit · `[x]` erledigt · Prio P0/P1/P2
 
 ## Phase 2 – Systemweite Suche (Everything-Stil) – **läuft** (Boss 2026-11-05, Plan: `docs/PLAN-SEARCH.md`)
 - [~] S1 ohne Admin (D-024)
-  - [ ] S1.1 Index-Kern `explorer-index`: kompakte Struktur (Namens-Arena, Elternkette), Einfügen/Löschen/Umbenennen, Abfragesprache (UND/ODER/NICHT, Phrase, `*?`, `ext:` `size:` `dm:` `file:` `folder:` `path:` `regex:`), parallele Suche, Sortierung; Benchmark 1 Mio Einträge < 10 ms, < 100 MB
+  - [~] S1.1 Index-Kern `explorer-index` (lokal fertig: 80 MB, Namensabfragen ≤ 8,1 ms, CI ausstehend): kompakte Struktur (Namens-Arena, Elternkette), Einfügen/Löschen/Umbenennen, Abfragesprache (UND/ODER/NICHT, Phrase, `*?`, `ext:` `size:` `dm:` `file:` `folder:` `path:` `regex:`), parallele Suche, Sortierung; Benchmark 1 Mio Einträge < 10 ms, < 100 MB
   - [ ] S1.2 Persistenz pro Laufwerk (Version, Volume-ID, Prüfsumme, atomar, beschädigt = neu bauen), Ausschlusslisten
   - [ ] S1.3 Aufbau (paralleler Durchlauf) + Live-Updates (rekursives ReadDirectoryChangesW, Überlauf → Teil-Rescan) + Abgleich beim Start über Ordner-Änderungszeiten
   - [ ] S1.4 UI: Suchfeld pro Tab (Strg+F/F3, ab aktuellem Ordner, Treffer mit allen Dateifunktionen) + globale Schnellsuche (Strg+Umschalt+F, Overlay), Index-Status

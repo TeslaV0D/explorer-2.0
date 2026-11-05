@@ -1,0 +1,11 @@
+[package]
+name = "explorer-index"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "Name index + query language for the instant search (Phase 2)"
+
+[dependencies]
+explorer-core = { path = "../core" }
+memchr = "2"
+regex = { version = "1", default-features = false, features = ["std", "unicode-case", "unicode-perl"] }
