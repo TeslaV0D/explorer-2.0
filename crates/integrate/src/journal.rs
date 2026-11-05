@@ -228,12 +228,20 @@ impl Journal {
         for line in s.split_inclusive('\n') {
             let body = line.trim_end_matches(['\n', '\r']);
             if let Some(sum) = body.strip_prefix("end\t") {
-                ended = u64::from_str_radix(sum, 16).ok() == Some(fnv64(&s.as_bytes()[..offset]));
+                // exactly as written (16 lower-case hex digits), not just the same number
+                ended = sum == format!("{:016x}", fnv64(&s.as_bytes()[..offset]));
                 offset += line.len();
                 continue;
             }
             offset += line.len();
-            if body.is_empty() || body.starts_with('#') || body == "v1" {
+            if body.is_empty() {
+                continue;
+            }
+            // anything after the checksum line is not covered by it (M8.3c)
+            if ended {
+                intact = false;
+            }
+            if body.starts_with('#') || body == "v1" {
                 continue;
             }
             match Journal::parse_line(body) {

@@ -275,6 +275,11 @@ jobs:
           New-Item -ItemType Directory -Force "$env:RUNNER_TEMP\e2e-win" | Out-Null
           powershell -ExecutionPolicy Bypass -File scripts/e2e-windows.ps1 (Resolve-Path "target/release/explorer2.exe").Path "$env:RUNNER_TEMP\e2e-win"
           if ($LASTEXITCODE) { throw "Windows E2E failed" }
+      - name: "M8.3c endurance on Windows (navigations, tabs, views, file churn: memory/handles/threads/GDI flat)"
+        shell: powershell
+        run: |
+          powershell -ExecutionPolicy Bypass -File scripts/m8-stress.ps1 (Resolve-Path "target/release/explorer2.exe").Path "$env:RUNNER_TEMP\m83c"
+          if ($LASTEXITCODE) { throw "Windows endurance test failed" }
       - name: Upload Windows E2E screenshots on failure
         if: failure()
         uses: actions/upload-artifact@v4

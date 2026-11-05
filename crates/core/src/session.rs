@@ -47,7 +47,10 @@ impl Session {
             match (k, panes.last_mut()) {
                 ("split", _) => split = v == "true",
                 ("active_pane", _) => active_pane = v.parse().unwrap_or(0),
-                ("tab", Some(p)) if !v.is_empty() && p.tabs.len() < MAX_TABS => {
+                // a stray `\r` cannot come from `serialize` (it skips such paths)
+                ("tab", Some(p))
+                    if !v.is_empty() && !v.contains('\r') && p.tabs.len() < MAX_TABS =>
+                {
                     p.tabs.push(v.to_string())
                 }
                 ("active_tab", Some(p)) => p.active_tab = v.parse().unwrap_or(0),

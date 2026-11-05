@@ -71,6 +71,8 @@ impl FolderViews {
     pub fn parse(text: &str, case_insensitive: bool) -> Self {
         let mut v = FolderViews::new(case_insensitive);
         for line in text.lines() {
+            // a lone `\r` at the very end (hand-edited file) is no part of a path
+            let line = line.strip_suffix('\r').unwrap_or(line);
             let Some((mode, path)) = line.split_once('\t') else {
                 continue;
             };

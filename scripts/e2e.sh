@@ -218,4 +218,6 @@ kill $PID; wait $PID 2>/dev/null
 
 # ---- M4 file operations (own script, runnable alone)
 "$(dirname "$0")/e2e-ops.sh" "$EXE" "$W" || FAIL=1
+# ---- M8.3c endurance (own script, runnable alone)
+"$(dirname "$0")/e2e-stress.sh" "$EXE" "$W" || FAIL=1
 exit $FAIL
