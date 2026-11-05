@@ -23,8 +23,34 @@ impl Rng {
 }
 
 const PARTS: &[&str] = &[
-    "bericht", "Bericht", "foto", "IMG", "img_", "garten", "Garten", "ü", "Ü", "straße", "test",
-    "a", "b", "2026", "(Kopie)", " ", "-", "_", ".", "x", "notes", "ÄÖÜ", "e\u{301}",
+    "ſtraße",
+    "\u{212a}elvin",
+    "IMG_123",
+    "Img_9",
+    "noteS",
+    "bericht",
+    "Bericht",
+    "foto",
+    "IMG",
+    "img_",
+    "garten",
+    "Garten",
+    "ü",
+    "Ü",
+    "straße",
+    "test",
+    "a",
+    "b",
+    "2026",
+    "(Kopie)",
+    " ",
+    "-",
+    "_",
+    ".",
+    "x",
+    "notes",
+    "ÄÖÜ",
+    "e\u{301}",
 ];
 const EXTS: &[&str] = &["txt", "jpg", "JPG", "pdf", "rs", "", "tar.gz"];
 
@@ -131,6 +157,21 @@ fn churn(fast: &mut Index, plain: &mut Index, seed: u64) {
 }
 
 const QUERIES: &[&str] = &[
+    r"regex:^img_\d{3}\.jpg$",
+    r"regex:^img_\d",
+    "regex:straße",
+    "regex:strasse",
+    "regex:kelvin",
+    r"regex:notes$",
+    "regex:bericht|notes",
+    "regex:(?-i)Bericht",
+    "case:regex:Bericht",
+    "regex:.*",
+    r"regex:\.jpg$",
+    "ſtraße",
+    "straße",
+    "kelvin",
+    "ext:jpg regex:img",
     "bericht",
     "BERICHT",
     "img_",

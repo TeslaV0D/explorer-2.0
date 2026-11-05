@@ -11,7 +11,7 @@
 //! regex:^a.*\d$    regular expression (name; with path: the full path)
 //! ```
 
-use crate::{Index, FLAG_DIR, FLAG_DIRTY, FLAG_GONE, NONE};
+use crate::{Index, EXT_NONE, EXT_OTHER, FLAG_DIR, FLAG_DIRTY, FLAG_GONE, NONE, SEP};
 use memchr::memmem::Finder;
 
 /// "Now" for relative dates (`dm:today`): Unix seconds + the local UTC offset.
@@ -77,13 +77,13 @@ impl Pat {
         }
     }
 
-    /// What to look for in the `\0`-separated name buffer (None = no shape
+    /// What to look for in the `\n`-separated name buffer (None = no shape
     /// the buffer search can do).
     fn buffer_needle(&self) -> Option<Vec<u8>> {
         match self {
             Pat::Sub(f) => Some(f.needle().to_vec()),
-            Pat::Prefix(p) => Some([&[0u8][..], p].concat()),
-            Pat::Suffix(s) => Some([&s[..], &[0u8][..]].concat()),
+            Pat::Prefix(p) => Some([&[SEP][..], p].concat()),
+            Pat::Suffix(s) => Some([&s[..], &[SEP][..]].concat()),
             Pat::Glob { .. } => None,
         }
     }
@@ -122,7 +122,11 @@ enum Term {
         /// (own name or an ancestor's contains it), see [`path_marks`].
         slot: Option<usize>,
     },
-    Ext(Vec<String>),
+    /// `slot`: its extension ids are resolved per query, see [`Pre`].
+    Ext {
+        exts: Vec<String>,
+        slot: usize,
+    },
     /// `lo..hi` (hi exclusive), files only.
     Size(u64, u64),
     /// `lo..hi` Unix seconds (hi exclusive).
@@ -133,6 +137,9 @@ enum Term {
     Regex {
         re: regex::Regex,
         path: bool,
+        /// Literals every match must contain (lower-case ASCII): their buffer
+        /// hits are the only candidates (prefilter, like regex engines do).
+        needles: Option<Vec<Vec<u8>>>,
     },
 }
 
@@ -142,6 +149,8 @@ pub struct Query {
     groups: Vec<Vec<Term>>,
     /// Number of precomputed `path:` terms.
     slots: usize,
+    /// Number of `ext:` terms.
+    ext_slots: usize,
 }
 
 impl Query {
@@ -149,6 +158,7 @@ impl Query {
         let mut groups: Vec<Vec<Term>> = Vec::new();
         let mut pending_or = false;
         let mut slots = 0usize;
+        let mut ext_slots = 0usize;
         for tok in tokenize(text) {
             if tok == "|" {
                 pending_or = !groups.is_empty();
@@ -177,7 +187,7 @@ impl Query {
             }
             let terms = parts
                 .iter()
-                .map(|p| parse_term(p, now, &mut slots))
+                .map(|p| parse_term(p, now, &mut slots, &mut ext_slots))
                 .collect::<Result<Vec<_>, _>>()?;
             match groups.last_mut() {
                 Some(g) if pending_or || starts_or => g.extend(terms),
@@ -185,7 +195,11 @@ impl Query {
             }
             pending_or = ends_or;
         }
-        Ok(Query { groups, slots })
+        Ok(Query {
+            groups,
+            slots,
+            ext_slots,
+        })
     }
 
     /// No condition at all (matches everything).
@@ -193,45 +207,64 @@ impl Query {
         self.groups.is_empty()
     }
 
-    /// Needles of the most selective group whose every alternative is a
-    /// plain name match: its buffer hits are the only candidates.
-    fn driver(&self) -> Option<Vec<Vec<u8>>> {
-        let needles = |t: &Term| -> Option<Vec<Vec<u8>>> {
+    /// How to find the candidates without looking at every entry: the most
+    /// selective group whose every alternative a fast path can do.
+    fn driver(&self) -> Option<Driver> {
+        let needles = |t: &Term| -> Option<Vec<u8>> {
             match t {
                 Term::Text {
                     pat,
                     path: false,
                     case: false,
                     ..
-                } => pat.buffer_needle().map(|n| vec![n]),
-                Term::Ext(exts) if !exts.is_empty() => Some(
-                    exts.iter()
-                        .map(|e| [b".", e.as_bytes(), &[0u8]].concat())
-                        .collect(),
-                ),
+                } => pat.buffer_needle(),
                 _ => None,
             }
         };
-        self.groups
+        // 1. words/prefixes/suffixes: one memmem pass per needle; a short
+        //    needle hits almost every name, and past two needles scanning wins
+        let text = self
+            .groups
             .iter()
-            .filter_map(|g| {
-                let all: Option<Vec<Vec<u8>>> = g
-                    .iter()
-                    .map(needles)
-                    .collect::<Option<Vec<_>>>()
-                    .map(|v| v.concat());
-                all
-            })
-            // a short needle hits almost every name, and each needle is one
-            // pass over all names: past that, scanning is cheaper
+            .filter_map(|g| g.iter().map(needles).collect::<Option<Vec<_>>>())
             .filter(|ns| {
                 ns.len() <= 2
                     && ns
                         .iter()
-                        .all(|n| n.iter().filter(|&&b| b != 0).count() >= 3)
+                        .all(|n| n.iter().filter(|&&b| b != SEP).count() >= 3)
             })
-            .max_by_key(|ns| ns.iter().map(Vec::len).min().unwrap_or(0))
+            .max_by_key(|ns| ns.iter().map(Vec::len).min().unwrap_or(0));
+        if let Some(ns) = text {
+            return Some(Driver::Needles(ns));
+        }
+        // 2. extensions: compare ids in one sequential array
+        if let Some(g) = self
+            .groups
+            .iter()
+            .find(|g| g.iter().all(|t| matches!(t, Term::Ext { .. })))
+        {
+            return Some(Driver::Exts(
+                g.iter()
+                    .filter_map(|t| match t {
+                        Term::Ext { slot, .. } => Some(*slot),
+                        _ => None,
+                    })
+                    .collect(),
+            ));
+        }
+        // 3. a regex alone in its group: its required literals
+        self.groups.iter().find_map(|g| match g.as_slice() {
+            [Term::Regex {
+                needles: Some(ns), ..
+            }] => Some(Driver::Needles(ns.clone())),
+            _ => None,
+        })
     }
+}
+
+enum Driver {
+    Needles(Vec<Vec<u8>>),
+    Exts(Vec<usize>),
 }
 
 /// Ids whose (stale or current) lower-case name in the ordered buffer
@@ -243,7 +276,7 @@ fn buffer_hits(
     range: std::ops::Range<usize>,
 ) -> Vec<u32> {
     let finder = Finder::new(needle);
-    let lead = usize::from(needle.first() == Some(&0));
+    let lead = usize::from(needle.first() == Some(&SEP));
     let mut out = Vec::new();
     let mut pos = range.start;
     let mut cur = 0usize; // id cursor (hits only move forward)
@@ -321,10 +354,17 @@ fn strip_prefix_ci<'a>(s: &'a str, prefix: &str) -> Option<&'a str> {
     .then(|| &s[prefix.len()..])
 }
 
-fn parse_term(s: &str, now: Now, slots: &mut usize) -> Result<Term, ParseError> {
+fn parse_term(
+    s: &str,
+    now: Now,
+    slots: &mut usize,
+    ext_slots: &mut usize,
+) -> Result<Term, ParseError> {
     if let Some(rest) = s.strip_prefix('!') {
         if !rest.is_empty() {
-            return Ok(Term::Not(Box::new(parse_term(rest, now, slots)?)));
+            return Ok(Term::Not(Box::new(parse_term(
+                rest, now, slots, ext_slots,
+            )?)));
         }
     }
     let (mut path, mut case) = (false, false);
@@ -352,7 +392,11 @@ fn parse_term(s: &str, now: Now, slots: &mut usize) -> Result<Term, ParseError> 
                 .map(|e| e.trim().trim_start_matches('.').to_lowercase())
                 .filter(|e| !e.is_empty())
                 .collect();
-            terms.push(Term::Ext(exts));
+            *ext_slots += 1;
+            terms.push(Term::Ext {
+                exts,
+                slot: *ext_slots - 1,
+            });
             rest = "";
         } else if let Some(r) = strip_prefix_ci(rest, "size:") {
             let (lo, hi) = parse_size(&unquote(r))
@@ -373,7 +417,12 @@ fn parse_term(s: &str, now: Now, slots: &mut usize) -> Result<Term, ParseError> 
                 .size_limit(1 << 20)
                 .build()
                 .map_err(|e| ParseError(format!("Regulärer Ausdruck ungültig: {e}")))?;
-            terms.push(Term::Regex { re, path });
+            let needles = if path || case {
+                None
+            } else {
+                regex_literals(&src)
+            };
+            terms.push(Term::Regex { re, path, needles });
             rest = "";
         } else {
             break;
@@ -403,6 +452,40 @@ fn parse_term(s: &str, now: Now, slots: &mut usize) -> Result<Term, ParseError> 
         1 => terms.pop().unwrap_or(Term::Any),
         _ => Term::All(terms),
     })
+}
+
+/// Prefix or suffix literals a regex match must contain, lower-cased, if
+/// they are few, ASCII and long enough to be selective.
+fn regex_literals(src: &str) -> Option<Vec<Vec<u8>>> {
+    use regex_syntax::hir::literal::{ExtractKind, Extractor};
+    let hir = regex_syntax::ParserBuilder::new().build().parse(src).ok()?;
+    let pick = |kind: ExtractKind| -> Option<Vec<Vec<u8>>> {
+        let mut ex = Extractor::new();
+        ex.kind(kind);
+        let seq = ex.extract(&hir);
+        let mut lits: Vec<Vec<u8>> = seq
+            .literals()?
+            .iter()
+            .map(|l| l.as_bytes().to_ascii_lowercase())
+            .collect();
+        lits.sort();
+        lits.dedup();
+        // ASCII only: non-ASCII letters may case-fold to forms that
+        // lower-casing does not produce
+        (!lits.is_empty() && lits.len() <= 2 && lits.iter().all(|l| l.len() >= 3 && l.is_ascii()))
+            .then_some(lits)
+    };
+    let pre = pick(ExtractKind::Prefix);
+    let suf = pick(ExtractKind::Suffix);
+    let min = |v: &Option<Vec<Vec<u8>>>| {
+        v.as_ref()
+            .map_or(0, |l| l.iter().map(Vec::len).min().unwrap_or(0))
+    };
+    if min(&suf) > min(&pre) {
+        suf
+    } else {
+        pre
+    }
 }
 
 fn unquote(s: &str) -> String {
@@ -621,9 +704,17 @@ fn glob(p: &[char], s: &str) -> bool {
     p[pi..].iter().all(|&c| c == '*')
 }
 
+/// Per-query precomputed data.
+struct Pre {
+    /// `path:word` terms: entry (or an ancestor) matches.
+    marks: Vec<Vec<bool>>,
+    /// `ext:` terms: the extension ids they accept.
+    exts: Vec<Vec<u16>>,
+}
+
 struct Ctx<'a> {
     index: &'a Index,
-    marks: &'a [Vec<bool>],
+    pre: &'a Pre,
     i: usize,
     path: Option<String>,
     lower_path: Option<String>,
@@ -657,15 +748,18 @@ fn matches(t: &Term, c: &mut Ctx) -> bool {
             let m = c.index.raw(c.i).2;
             m != 0 && (*lo..*hi).contains(&m)
         }
-        Term::Ext(exts) => {
-            !is_dir() && {
+        Term::Ext { exts, slot } => match c.index.ext_id(c.i) {
+            EXT_NONE => false,
+            // table full: compare the text
+            EXT_OTHER => {
                 let name = c.index.lower_bytes(c.i);
                 memchr::memrchr(b'.', name).is_some_and(|dot| {
                     dot > 0 && exts.iter().any(|x| x.as_bytes() == &name[dot + 1..])
                 })
             }
-        }
-        Term::Text { slot: Some(k), .. } => c.marks.get(*k).is_some_and(|m| m[c.i]),
+            id => c.pre.exts.get(*slot).is_some_and(|ids| ids.contains(&id)),
+        },
+        Term::Text { slot: Some(k), .. } => c.pre.marks.get(*k).is_some_and(|m| m[c.i]),
         Term::Text {
             pat, path, case, ..
         } => {
@@ -683,7 +777,7 @@ fn matches(t: &Term, c: &mut Ctx) -> bool {
             };
             pat.is_match(hay)
         }
-        Term::Regex { re, path } => {
+        Term::Regex { re, path, .. } => {
             if *path {
                 let p = c.path().to_string();
                 re.is_match(&p)
@@ -694,10 +788,10 @@ fn matches(t: &Term, c: &mut Ctx) -> bool {
     }
 }
 
-fn hit(index: &Index, q: &Query, marks: &[Vec<bool>], i: usize, scope: Option<u32>) -> bool {
+fn hit(index: &Index, q: &Query, pre: &Pre, i: usize, scope: Option<u32>) -> bool {
     let mut c = Ctx {
         index,
-        marks,
+        pre,
         i,
         path: None,
         lower_path: None,
@@ -742,38 +836,45 @@ fn path_marks(index: &Index, needle: &Finder) -> Vec<bool> {
     st.into_iter().map(|s| s == 1).collect()
 }
 
-fn precompute(index: &Index, q: &Query) -> Vec<Vec<bool>> {
-    let mut marks = vec![Vec::new(); q.slots];
-    fn walk<'a>(t: &'a Term, out: &mut Vec<(usize, &'a Finder<'static>)>) {
+fn precompute(index: &Index, q: &Query) -> Pre {
+    let mut pre = Pre {
+        marks: vec![Vec::new(); q.slots],
+        exts: vec![Vec::new(); q.ext_slots],
+    };
+    fn walk(t: &Term, index: &Index, pre: &mut Pre) {
         match t {
-            Term::Not(t) => walk(t, out),
-            Term::All(ts) => ts.iter().for_each(|t| walk(t, out)),
+            Term::Not(t) => walk(t, index, pre),
+            Term::All(ts) => ts.iter().for_each(|t| walk(t, index, pre)),
             Term::Text {
                 pat: Pat::Sub(f),
                 slot: Some(k),
                 ..
-            } => out.push((*k, f)),
+            } => pre.marks[*k] = path_marks(index, f),
+            Term::Ext { exts, slot } => {
+                // unknown extensions match nothing; a full table falls back to text
+                pre.exts[*slot] = exts.iter().filter_map(|e| index.ext_lookup(e)).collect();
+                pre.exts[*slot].push(EXT_OTHER);
+            }
             _ => {}
         }
     }
-    let mut todo = Vec::new();
-    q.groups.iter().flatten().for_each(|t| walk(t, &mut todo));
-    for (k, f) in todo {
-        marks[k] = path_marks(index, f);
-    }
-    marks
+    q.groups
+        .iter()
+        .flatten()
+        .for_each(|t| walk(t, index, &mut pre));
+    pre
 }
 
 /// Parallel sequential scan of the name-ordered part, plus the unsorted
 /// rest merged in by name.
 pub(crate) fn run(index: &Index, q: &Query, scope: Option<u32>) -> Vec<u32> {
     let scope = scope.filter(|&s| s != NONE && index.exists(s));
-    let marks = precompute(index, q);
+    let pre = precompute(index, q);
     let ok = |id: u32, skip_dirty: bool| {
         let f = index.flags_of(id as usize);
         f & FLAG_GONE == 0
             && !(skip_dirty && f & FLAG_DIRTY != 0)
-            && hit(index, q, &marks, id as usize, scope)
+            && hit(index, q, &pre, id as usize, scope)
     };
     let n = index.ordered();
     let threads = std::thread::available_parallelism()
@@ -782,36 +883,58 @@ pub(crate) fn run(index: &Index, q: &Query, scope: Option<u32>) -> Vec<u32> {
     let scan = |r: std::ops::Range<usize>| -> Vec<u32> {
         r.map(|i| i as u32).filter(|&id| ok(id, true)).collect()
     };
-    let driver = q.driver();
-    let main: Vec<u32> = if let Some(needles) = driver {
-        let (buf, starts) = index.ordered_names();
-        let parts = if buf.len() < 1 << 20 { 1 } else { threads };
-        let chunk = buf.len().div_ceil(parts.max(1)).max(1);
-        let mut cands: Vec<u32> = std::thread::scope(|s| {
+    // parallel over chunks; each chunk yields ascending ids → concatenation keeps order
+    let par = |parts: usize,
+               len: usize,
+               f: &(dyn Fn(std::ops::Range<usize>) -> Vec<u32> + Sync)|
+     -> Vec<u32> {
+        let parts = parts.max(1);
+        let chunk = len.div_ceil(parts).max(1);
+        std::thread::scope(|s| {
             let handles: Vec<_> = (0..parts)
-                .map(|t| {
-                    let needles = &needles;
-                    s.spawn(move || {
-                        let r = t * chunk..((t + 1) * chunk).min(buf.len());
-                        needles
-                            .iter()
-                            .flat_map(|nd| buffer_hits(buf, starts, nd, r.clone()))
-                            .collect::<Vec<u32>>()
-                    })
-                })
+                .map(|t| s.spawn(move || f(t * chunk..((t + 1) * chunk).min(len))))
                 .collect();
             let mut out = Vec::new();
             for h in handles {
                 out.extend(h.join().unwrap_or_default());
             }
             out
-        });
+        })
+    };
+    let verify = |mut cands: Vec<u32>| -> Vec<u32> {
         cands.sort_unstable();
         cands.dedup();
         cands
             .into_iter()
             .filter(|&id| (id as usize) < n && ok(id, true))
             .collect()
+    };
+    let driver = q.driver();
+    let main: Vec<u32> = if let Some(Driver::Needles(needles)) = &driver {
+        let (buf, starts) = index.ordered_names();
+        let parts = if buf.len() < 1 << 20 { 1 } else { threads };
+        verify(par(parts, buf.len(), &|r| {
+            needles
+                .iter()
+                .flat_map(|nd| buffer_hits(buf, starts, nd, r.clone()))
+                .collect()
+        }))
+    } else if let Some(Driver::Exts(slots)) = &driver {
+        let mut want: Vec<u16> = slots
+            .iter()
+            .flat_map(|&s| pre.exts[s].iter().copied())
+            .collect();
+        want.sort_unstable();
+        want.dedup();
+        let ids = &index.ext_ids()[..n];
+        let parts = if n < 50_000 { 1 } else { threads };
+        // already ascending: no sort needed before the check
+        par(parts, n, &|r| {
+            r.filter(|&i| want.binary_search(&ids[i]).is_ok())
+                .map(|i| i as u32)
+                .filter(|&id| ok(id, true))
+                .collect()
+        })
     } else if n < 50_000 || threads < 2 {
         scan(0..n)
     } else {

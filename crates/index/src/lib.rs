@@ -2,9 +2,9 @@
 //!
 //! Plain arrays instead of a node per allocation (~1 M entries < 100 MB):
 //! every entry has a parent, its lower-case name in one contiguous buffer
-//! (`\0` before and after every name → one SIMD pass finds a word in all
-//! names), the original name only where it differs, size, modification time
-//! and flags; children are a
+//! (`\n` before and after every name → one SIMD pass finds a word in all
+//! names, one regex pass with `^`/`$` per name), the original name only where
+//! it differs, an extension id, size, modification time and flags; children are a
 //! singly linked list (first child / next sibling) for path lookups during
 //! live updates. Search scans the arrays in parallel (see [`query`]).
 //!
@@ -25,6 +25,12 @@ const GONE: u8 = 2;
 const DIRTY: u8 = 4;
 /// `name_off` value: the original name equals the lower-case one.
 const SAME: u32 = u32::MAX;
+/// Separates the names in `lowers` (`\n` in a name is stored as U+FFFD there).
+pub(crate) const SEP: u8 = b'\n';
+/// Extension id: no extension (folders too).
+pub(crate) const EXT_NONE: u16 = 0;
+/// Extension id: table full, compare the text.
+pub(crate) const EXT_OTHER: u16 = u16::MAX;
 
 /// What the index keeps about an entry besides its name.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
@@ -56,8 +62,12 @@ pub struct Index {
     size: Vec<u64>,
     mtime: Vec<i64>,
     flags: Vec<u8>,
-    /// `\0name\0name\0…` lower-case, in id order after [`Index::rebuild_order`].
+    /// `\nname\nname\n…` lower-case, in id order after [`Index::rebuild_order`].
     lowers: Vec<u8>,
+    /// Extension of each entry as an id into `ext_names` (`ext:` compares numbers).
+    ext_id: Vec<u16>,
+    ext_names: Vec<String>,
+    ext_map: std::collections::HashMap<String, u16>,
     /// Original names that differ from their lower-case form.
     names: Vec<u8>,
     /// `lower_off` of the ordered part at the last rebuild (the buffer search
@@ -119,6 +129,7 @@ impl Index {
             + self.lowers.capacity()
             + self.names.capacity()
             + self.ord_off.capacity() * 4
+            + self.ext_id.capacity() * 2
     }
 
     pub fn reserve(&mut self, entries: usize, name_bytes: usize) {
@@ -136,6 +147,7 @@ impl Index {
         self.size.reserve(entries);
         self.mtime.reserve(entries);
         self.flags.reserve(entries);
+        self.ext_id.reserve(entries);
         self.lowers.reserve(name_bytes + entries + 1);
         self.names.reserve(name_bytes / 2);
     }
@@ -143,22 +155,18 @@ impl Index {
     fn push_name(&mut self, name: &str) -> (u32, u16, u32, u16) {
         // names longer than 64 KiB do not exist on any file system we index
         let name = &name[..floor_char_boundary(name, u16::MAX as usize)];
-        // a NUL never occurs in file names; it separates them in `lowers`
-        let clean;
-        let name = if name.contains('\0') {
-            clean = name.replace('\0', "\u{fffd}");
-            &clean[..floor_char_boundary(&clean, u16::MAX as usize)]
-        } else {
-            name
-        };
         if self.lowers.is_empty() {
-            self.lowers.push(0);
+            self.lowers.push(SEP);
         }
-        let lower = self.fold(name);
+        // `\n` separates the names in `lowers` (only Unix allows it in a name)
+        let mut lower = self.fold(name);
+        if lower.contains('\n') {
+            lower = lower.replace('\n', "\u{fffd}");
+        }
         let lower = &lower[..floor_char_boundary(&lower, u16::MAX as usize)];
         let loff = self.lowers.len() as u32;
         self.lowers.extend_from_slice(lower.as_bytes());
-        self.lowers.push(0);
+        self.lowers.push(SEP);
         if lower.as_bytes() == name.as_bytes() {
             return (SAME, name.len() as u16, loff, lower.len() as u16);
         }
@@ -173,7 +181,9 @@ impl Index {
         if s.is_ascii() {
             s.to_ascii_lowercase()
         } else {
-            s.to_lowercase()
+            // the long s is `s` for case-insensitive matching but stays `ſ`
+            // when lower-cased (regex literal prefilter, word search)
+            s.to_lowercase().replace('\u{17f}', "s")
         }
     }
 
@@ -190,8 +200,51 @@ impl Index {
         self.size.push(if meta.is_dir { 0 } else { meta.size });
         self.mtime.push(meta.mtime);
         self.flags.push(if meta.is_dir { DIR } else { 0 });
+        self.ext_id.push(EXT_NONE);
+        self.update_ext(id as usize);
         self.live += 1;
         id
+    }
+
+    /// Extension id from the current lower-case name (folders have none).
+    fn update_ext(&mut self, i: usize) {
+        let id = if self.flags[i] & DIR != 0 {
+            EXT_NONE
+        } else {
+            let lower = self.lower_bytes(i);
+            match memchr::memrchr(b'.', lower) {
+                Some(dot) if dot > 0 && dot + 1 < lower.len() => {
+                    let ext = String::from_utf8_lossy(&lower[dot + 1..]).into_owned();
+                    match self.ext_map.get(&ext) {
+                        Some(&e) => e,
+                        None if self.ext_names.len() + 1 < EXT_OTHER as usize => {
+                            if self.ext_names.is_empty() {
+                                self.ext_names.push(String::new()); // id 0 = none
+                            }
+                            let e = self.ext_names.len() as u16;
+                            self.ext_names.push(ext.clone());
+                            self.ext_map.insert(ext, e);
+                            e
+                        }
+                        None => EXT_OTHER,
+                    }
+                }
+                _ => EXT_NONE,
+            }
+        };
+        self.ext_id[i] = id;
+    }
+
+    pub(crate) fn ext_id(&self, i: usize) -> u16 {
+        self.ext_id[i]
+    }
+
+    pub(crate) fn ext_ids(&self) -> &[u16] {
+        &self.ext_id
+    }
+
+    pub(crate) fn ext_lookup(&self, ext: &str) -> Option<u16> {
+        self.ext_map.get(ext).copied()
     }
 
     /// A drive / mount point; its name is the full path (`C:\`, `/home/a`).
@@ -303,6 +356,7 @@ impl Index {
             self.size[i] = if meta.is_dir { 0 } else { meta.size };
             self.mtime[i] = meta.mtime;
             self.flags[i] = (self.flags[i] & !DIR) | if meta.is_dir { DIR } else { 0 };
+            self.update_ext(i);
         }
     }
 
@@ -456,6 +510,7 @@ impl Index {
         self.name_len[i] = nl;
         self.lower_off[i] = lo;
         self.lower_len[i] = ll;
+        self.update_ext(i);
         if self.parent[i] != new_parent {
             self.unlink(id);
             self.parent[i] = new_parent;

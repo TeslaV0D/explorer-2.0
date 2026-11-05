@@ -8,4 +8,5 @@ description = "Name index + query language for the instant search (Phase 2)"
 [dependencies]
 explorer-core = { path = "../core" }
 memchr = "2"
+regex-syntax = { version = "0.8", default-features = false, features = ["std", "unicode-case", "unicode-perl"] }
 regex = { version = "1", default-features = false, features = ["std", "unicode-case", "unicode-perl"] }
