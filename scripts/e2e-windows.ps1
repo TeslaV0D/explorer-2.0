@@ -447,6 +447,9 @@ $launched = "$Work\launched.log"; Remove-Item $launched -ErrorAction SilentlyCon
 $env:EXPLORER2_TRACE_FILE = $launched   # inherited by instances that Windows starts
 $classes = 'HKCU\Software\Classes'
 function SnapM7([string]$name) {
+  # Windows PowerShell 5.1 turns reg.exe's stderr ("key not found") into a
+  # terminating error under 'Stop' (CI #62) -> local 'Continue'
+  $ErrorActionPreference = 'Continue'
   foreach ($k in 'Directory', 'Drive', 'Folder') {
     $f = "$Work\m7-$name-$k.reg"
     & reg.exe export "$classes\$k" $f /y 2>$null | Out-Null
