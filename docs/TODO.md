@@ -124,12 +124,15 @@ Legende: `[ ]` offen · `[~]` in Arbeit · `[x]` erledigt · Prio P0/P1/P2
 - [ ] Echte Hardware-GPU-Probe nur über Boss-Test verifizierbar (CI hat keine GPU) → Artefakt auf eigenem PC testen: Einstellungen-Panel zeigt „GPU-Beschleunigung (<GPU-Name>)“
 - [ ] Linux: keine GPU-Probe (Plattform-Default) – nur Dev-Plattform, ok
 
-## Phase 2 – Systemweite Suche (voidtools/Everything-Stil)  *(später, nur beschrieben)*
-- [ ] NTFS-Index über MFT-Scan + USN-Journal-Live-Updates (Dienst/Admin-Helper nötig, Alternative: Verzeichnis-Walk für FAT/Netz)
-- [ ] Kompakter In-Memory-Index (Ziel: ~1 Mio Dateien ≈ 100 MB RAM, Initial-Index < 1 min)
-- [ ] Instant-Suche beim Tippen (<10 ms/Query), Sortierung nach Name/Pfad/Größe/Datum, Regex, Wildcards, Filter (`ext:`, `size:`, `dm:` – Everything-Syntax)
-- [ ] Persistenter Index (schneller Start), Ausschlusslisten, Netz/Wechseldatenträger optional
-- [ ] Integration: Suchfeld in jedem Tab, globale Hotkey-Suche, später optional Inhaltssuche
+## Phase 2 – Systemweite Suche (Everything-Stil) – **läuft** (Boss 2026-11-05, Plan: `docs/PLAN-SEARCH.md`)
+- [~] S1 ohne Admin (D-024)
+  - [ ] S1.1 Index-Kern `explorer-index`: kompakte Struktur (Namens-Arena, Elternkette), Einfügen/Löschen/Umbenennen, Abfragesprache (UND/ODER/NICHT, Phrase, `*?`, `ext:` `size:` `dm:` `file:` `folder:` `path:` `regex:`), parallele Suche, Sortierung; Benchmark 1 Mio Einträge < 10 ms, < 100 MB
+  - [ ] S1.2 Persistenz pro Laufwerk (Version, Volume-ID, Prüfsumme, atomar, beschädigt = neu bauen), Ausschlusslisten
+  - [ ] S1.3 Aufbau (paralleler Durchlauf) + Live-Updates (rekursives ReadDirectoryChangesW, Überlauf → Teil-Rescan) + Abgleich beim Start über Ordner-Änderungszeiten
+  - [ ] S1.4 UI: Suchfeld pro Tab (Strg+F/F3, ab aktuellem Ordner, Treffer mit allen Dateifunktionen) + globale Schnellsuche (Strg+Umschalt+F, Overlay), Index-Status
+  - [ ] S1.5 Hervorhebung, Sortierung, Suchverlauf, E2E Linux + Windows-CI
+- [ ] S2 optional mit Admin: MFT/USN-Dienst – erst nach Praxistest S1 + R-001-Erweiterung für Dienste
+- [ ] Später: Inhaltssuche, systemweiter Hotkey (Integration → R-001)
 
 ## Phase 3 – Datei-Aktions-Shortcuts (Sweetch-Stil)  *(später, nur beschrieben)*
 - [ ] Tray-Helper mit Kreismenü: Drag von Dateien auf Sektor oder Hotkey (Sweetch: Ctrl+Alt+Space) 
