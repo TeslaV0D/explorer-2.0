@@ -322,41 +322,32 @@ enum Driver {
 }
 
 /// Ids whose (stale or current) lower-case name in the ordered buffer
-/// contains `needle`, ascending; one hit per entry. Total work ≈ one pass
-/// over the buffer: after a hit the search goes on at the next name, and the
-/// hit → entry step gallops forward from the last entry (dense hits cost
-/// one or two steps, sparse ones a short binary search).
+/// contains `needle`, ascending; one hit per entry. One streaming SIMD pass
+/// (`memchr`/`memmem` iterators): hits inside the name already taken cost a
+/// comparison, the hit → entry step gallops forward from the last entry.
 fn buffer_hits(
     buf: &[u8],
     starts: &[u32],
     needle: &[u8],
     range: std::ops::Range<usize>,
 ) -> Vec<u32> {
-    if starts.is_empty() || needle.is_empty() {
+    if starts.is_empty() || needle.is_empty() || range.is_empty() {
         return Vec::new();
     }
-    let finder = Finder::new(needle);
     let lead = usize::from(needle.first() == Some(&SEP));
-    let window_end = (range.end + needle.len()).min(buf.len());
+    let window = &buf[range.start..(range.end + needle.len()).min(buf.len())];
     let mut out = Vec::new();
-    let mut pos = range.start;
     let mut cur = 0usize; // last entry known to start at or before the hit
-    while pos < range.end {
-        let Some(rel) = finder.find(&buf[pos..window_end]) else {
-            break;
-        };
-        let at = pos + rel;
+    let mut covered = 0usize; // hits before this belong to the last pushed entry
+    let mut take = |at: usize| -> bool {
         if at >= range.end {
-            break;
+            return false;
         }
-        let q = (at + lead) as u32;
-        if starts[0] > q {
-            pos = at + 1;
-            continue;
+        let q = at + lead;
+        if q < covered || (q as u64) < u64::from(starts[0]) {
+            return true;
         }
-        if starts[cur] > q {
-            cur = 0;
-        }
+        let q = q as u32;
         let (mut lo, mut step) = (cur, 1usize);
         while lo + step < starts.len() && starts[lo + step] <= q {
             lo += step;
@@ -365,10 +356,21 @@ fn buffer_hits(
         let hi = (lo + step + 1).min(starts.len());
         cur = lo + starts[lo..hi].partition_point(|&o| o <= q) - 1;
         out.push(cur as u32);
-        // next entry: further hits in this name add nothing
-        pos = starts.get(cur + 1).map_or(buf.len(), |&o| {
-            (o as usize).saturating_sub(lead).max(at + 1)
-        });
+        covered = starts.get(cur + 1).map_or(usize::MAX, |&o| o as usize);
+        true
+    };
+    if let [b] = needle {
+        for rel in memchr::memchr_iter(*b, window) {
+            if !take(range.start + rel) {
+                break;
+            }
+        }
+    } else {
+        for rel in memchr::memmem::find_iter(window, needle) {
+            if !take(range.start + rel) {
+                break;
+            }
+        }
     }
     out
 }
@@ -785,6 +787,15 @@ fn col_match(t: &Term, flags: u8, size: u64, mtime: i64) -> bool {
     }
 }
 
+/// Worker threads for one search (`EXPLORER2_INDEX_THREADS` for measurements).
+fn threads() -> usize {
+    std::env::var("EXPLORER2_INDEX_THREADS")
+        .ok()
+        .and_then(|v| v.parse().ok())
+        .unwrap_or_else(|| std::thread::available_parallelism().map_or(1, |n| n.get()))
+        .clamp(1, 16)
+}
+
 /// Per-query precomputed data.
 struct Pre {
     /// `path:word` terms: entry (or an ancestor) matches.
@@ -958,9 +969,7 @@ pub(crate) fn run(index: &Index, q: &Query, scope: Option<u32>) -> Vec<u32> {
             && hit(index, q, &pre, id as usize, scope)
     };
     let n = index.ordered();
-    let threads = std::thread::available_parallelism()
-        .map_or(1, |n| n.get())
-        .min(16);
+    let threads = threads();
     let scan = |r: std::ops::Range<usize>| -> Vec<u32> {
         r.map(|i| i as u32).filter(|&id| ok(id, true)).collect()
     };
@@ -975,9 +984,13 @@ pub(crate) fn run(index: &Index, q: &Query, scope: Option<u32>) -> Vec<u32> {
             let handles: Vec<_> = (0..parts)
                 .map(|t| s.spawn(move || f(t * chunk..((t + 1) * chunk).min(len))))
                 .collect();
-            let mut out = Vec::new();
-            for h in handles {
-                out.extend(h.join().unwrap_or_default());
+            let parts: Vec<Vec<u32>> = handles
+                .into_iter()
+                .map(|h| h.join().unwrap_or_default())
+                .collect();
+            let mut out = Vec::with_capacity(parts.iter().map(Vec::len).sum());
+            for p in parts {
+                out.extend_from_slice(&p);
             }
             out
         })
@@ -1031,18 +1044,35 @@ pub(crate) fn run(index: &Index, q: &Query, scope: Option<u32>) -> Vec<u32> {
         })
     } else if q.columns_only() {
         let (flags, size, mtime) = index.columns();
+        let (flags, size, mtime) = (&flags[..n], &size[..n], &mtime[..n]);
         let parts = if n < 50_000 { 1 } else { threads };
+        // one plain condition (the common case) without the group machinery
+        let single = match q.groups.as_slice() {
+            [g] => match g.as_slice() {
+                [t] => Some(t),
+                _ => None,
+            },
+            _ => None,
+        };
         par(parts, n, &|r| {
-            r.filter(|&i| {
+            let mut out = Vec::with_capacity(r.len() / 4);
+            for i in r {
                 let f = flags[i];
-                f & (FLAG_GONE | FLAG_DIRTY) == 0
-                    && q.groups
+                if f & (FLAG_GONE | FLAG_DIRTY) != 0 {
+                    continue;
+                }
+                let hit = match single {
+                    Some(t) => col_match(t, f, size[i], mtime[i]),
+                    None => q
+                        .groups
                         .iter()
-                        .all(|g| g.iter().any(|t| col_match(t, f, size[i], mtime[i])))
-                    && scope.is_none_or(|s| index.is_under(i as u32, s))
-            })
-            .map(|i| i as u32)
-            .collect()
+                        .all(|g| g.iter().any(|t| col_match(t, f, size[i], mtime[i]))),
+                };
+                if hit && scope.is_none_or(|s| index.is_under(i as u32, s)) {
+                    out.push(i as u32);
+                }
+            }
+            out
         })
     } else if n < 50_000 || threads < 2 {
         scan(0..n)
