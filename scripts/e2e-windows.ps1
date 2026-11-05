@@ -571,8 +571,14 @@ try {
     if ($baseline) {
       Remove-Item $launched -ErrorAction SilentlyContinue
       $n1 = ExplorerWindows
+      KillInstances
       PressWinE
-      Check "[W43c] Win+E starts Explorer 2.0" { Launched 'launch without folder' }
+      # started by explorer.exe (the shell), not by us: our environment (and so
+      # EXPLORER2_TRACE_FILE) is not inherited -> look at the process itself
+      $sw = [Diagnostics.Stopwatch]::StartNew()
+      do { Start-Sleep -Milliseconds 250; $inst = Instances } while ($inst.Count -eq 0 -and $sw.ElapsedMilliseconds -lt 8000)
+      $inst | ForEach-Object { Write-Host "instance: pid=$($_.ProcessId) parent=$($_.ParentProcessId) cmd=$($_.CommandLine)" }
+      Check "[W43c] Win+E starts Explorer 2.0 (without a folder)" { $inst.Count -ge 1 -and ($inst | Where-Object { $_.CommandLine -match 'explorer2\.exe"?\s*$' }) }
       Start-Sleep -Milliseconds 800
       Check "[W43d] ... and no Windows Explorer window" { (ExplorerWindows) -le $n1 }
       KillInstances; CloseExplorerWindows

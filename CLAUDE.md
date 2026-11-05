@@ -139,6 +139,7 @@
 - Palette-Befehle laufen per `Timer::single_shot(ZERO)` **nach** dem Schließen der Palette: sonst gewinnt die Fokus-Rückgabe an die Liste gegen den Dialog-Fokus, Enter im Dialog geht ins Leere (CI #60 W41, galt auch für „Endgültig löschen“/„Papierkorb leeren“ aus der Palette).
 - Windows-E2E: Shell-Dialoge (Eigenschaften) kommen asynchron und manchmal spät → pollen statt fester Wartezeit und warten, bis sie zu sind (sonst klaut ein später Dialog den Fokus der Folgeschritte, CI #60 W11→W17).
 - `e2e-windows.ps1` läuft unter **Windows PowerShell 5.1** mit `ErrorActionPreference = 'Stop'`: jede stderr-Zeile eines nativen Programms (z. B. `reg export` auf fehlenden Schlüssel) bricht das Skript ab, auch mit `2>$null` → in solchen Funktionen lokal `$ErrorActionPreference = 'Continue'` (CI #62).
+- Windows-E2E: Was **explorer.exe** startet (Win+E, Desktop-Doppelklick), erbt die Umgebung der Shell, nicht die des Testskripts → `EXPLORER2_TRACE_FILE`/`EXPLORER2_CONFIG_DIR` greifen dort nicht; solche Starts am Prozess prüfen (`Win32_Process` CommandLine), CI #65.
 - Windows-Kommandozeile: `"C:\"` (Laufwerk aus `%1`) kommt nach den CRT-Regeln als `C:"` an (`\"` = Anführungszeichen) → Start-Argumente immer durch `launch_arg`.
 - Tests gegen die echte Registry nie mit `reset()` (fegt die echten Integrationsstellen = würde eine aktive Integration des Entwicklers entfernen) → `reset_with(.., &[])`.
 - Snapshot-Tests nie über ganz `HKCU\Software\Classes` (MuiCache u. a. ändern sich beim Programmstart von selbst) → nur die Integrationsbereiche exportieren.
