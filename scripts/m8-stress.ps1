@@ -18,6 +18,8 @@ public static class S {
   [DllImport("user32.dll")] public static extern bool ShowWindow(IntPtr h, int c);
   [DllImport("user32.dll")] public static extern void keybd_event(byte vk, byte scan, uint f, UIntPtr e);
   [DllImport("user32.dll")] public static extern uint GetGuiResources(IntPtr p, uint flags);
+  [DllImport("user32.dll")] public static extern IntPtr GetForegroundWindow();
+  [DllImport("user32.dll", CharSet = CharSet.Unicode)] public static extern int GetWindowText(IntPtr h, System.Text.StringBuilder s, int n);
 }
 "@
 
@@ -39,6 +41,17 @@ function Focus {
   [void][S]::SetForegroundWindow($hwnd); Start-Sleep -Milliseconds 200
 }
 function K([string]$k, [int]$ms = 60) { [System.Windows.Forms.SendKeys]::SendWait($k); Start-Sleep -Milliseconds $ms }
+function Title([IntPtr]$h) { $sb = New-Object System.Text.StringBuilder 256; [void][S]::GetWindowText($h, $sb, 256); $sb.ToString() }
+$script:stolen = @()
+# keys only count while our window is in front (a late dialog or another
+# window must not swallow the rounds, CI #75)
+function EnsureFront {
+  $fg = [S]::GetForegroundWindow()
+  if ($fg -ne $hwnd) {
+    $script:stolen += (Title $fg)
+    Focus
+  }
+}
 function Stats {
   $p.Refresh()
   [pscustomobject]@{
@@ -48,7 +61,7 @@ function Stats {
 }
 function Navs { @(Select-String -Path $log -Pattern 'navigate tab=' -SimpleMatch).Count }
 function Cycle([int]$i) {
-  if ($i % 25 -eq 0) { Focus }
+  EnsureFront
   if ($i % 20 -eq 0) { K '{HOME}' }
   K '{DOWN}'; K '{ENTER}' 150
   if ($i % 5 -eq 0) { K '^+6' 120; K '^+1' }
@@ -83,6 +96,10 @@ $c = Stats; $tc = ThumbBytes; $n3 = Navs; Show "after $(2 * $Rounds) rounds" $c 
 $ga = [math]::Round((($b.priv - $a.priv) - ($tb - $ta)) / 1MB, 1)
 $gb = [math]::Round((($c.priv - $b.priv) - ($tc - $tb)) / 1MB, 1)
 Write-Host "    growth without image cache: phase A +$ga MiB, phase B +$gb MiB"
+if ($script:stolen.Count) {
+  $names = ($script:stolen | Group-Object | ForEach-Object { "'$($_.Name)' x$($_.Count)" }) -join ', '
+  Write-Host "    focus taken $($script:stolen.Count)x by: $names (re-focused)"
+}
 Check "[S1] the rounds really ran ($($n3 - $n1) navigations)" { ($n3 - $n1) -ge (2 * $Rounds) }
 Check "[S2] memory flat: phase B +$gb MiB without the image cache (limit +6; phase A +$ga)" { $gb -lt 6 }
 Check "[S2b] the image cache stays in its budget ($([math]::Round($tc / 1MB, 1)) MiB, limit 96)" { $tc -le 96MB }

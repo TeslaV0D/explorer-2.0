@@ -32,6 +32,8 @@ impl std::fmt::Display for ParseError {
 
 #[derive(Debug, Clone)]
 enum Pat {
+    /// One byte anywhere (memchr: no searcher set-up per short name).
+    Byte(u8),
     /// Anywhere (SIMD substring search).
     Sub(Box<Finder<'static>>),
     /// Wildcards without `?` in the middle: fast shapes.
@@ -48,6 +50,9 @@ enum Pat {
 impl Pat {
     fn new(text: &str, wild: bool) -> Pat {
         if !wild {
+            if let [b] = text.as_bytes() {
+                return Pat::Byte(*b);
+            }
             return Pat::Sub(Box::new(Finder::new(text.as_bytes()).into_owned()));
         }
         let stars = text.matches('*').count();
@@ -81,15 +86,31 @@ impl Pat {
     /// the buffer search can do).
     fn buffer_needle(&self) -> Option<Vec<u8>> {
         match self {
+            Pat::Byte(b) => Some(vec![*b]),
             Pat::Sub(f) => Some(f.needle().to_vec()),
             Pat::Prefix(p) => Some([&[SEP][..], p].concat()),
             Pat::Suffix(s) => Some([&s[..], &[SEP][..]].concat()),
-            Pat::Glob { .. } => None,
+            // a fixed start (`img_1*.png`) or the longest fixed piece
+            Pat::Glob { bytes, .. } => {
+                let first = bytes
+                    .iter()
+                    .position(|&b| b == b'*' || b == b'?')
+                    .unwrap_or(bytes.len());
+                if first > 0 {
+                    return Some([&[SEP][..], &bytes[..first]].concat());
+                }
+                bytes
+                    .split(|&b| b == b'*' || b == b'?')
+                    .max_by_key(|piece| piece.len())
+                    .filter(|piece| !piece.is_empty())
+                    .map(<[u8]>::to_vec)
+            }
         }
     }
 
     fn is_match(&self, hay: &[u8]) -> bool {
         match self {
+            Pat::Byte(b) => memchr::memchr(*b, hay).is_some(),
             Pat::Sub(f) => f.find(hay).is_some(),
             Pat::Prefix(p) => hay.starts_with(p),
             Pat::Suffix(p) => hay.ends_with(p),
@@ -207,10 +228,32 @@ impl Query {
         self.groups.is_empty()
     }
 
+    /// The whole query is one plain word/prefix/suffix: its buffer hits are
+    /// the result (no per-candidate check beyond removed/scope).
+    fn exact_needle(&self) -> bool {
+        match self.groups.as_slice() {
+            [g] => match g.as_slice() {
+                [Term::Text {
+                    pat,
+                    path: false,
+                    case: false,
+                    ..
+                }] => match pat {
+                    Pat::Byte(b) => *b != SEP,
+                    Pat::Sub(f) => !f.needle().contains(&SEP),
+                    Pat::Prefix(p) | Pat::Suffix(p) => !p.contains(&SEP),
+                    Pat::Glob { .. } => false,
+                },
+                _ => false,
+            },
+            _ => false,
+        }
+    }
+
     /// How to find the candidates without looking at every entry: the most
     /// selective group whose every alternative a fast path can do.
     fn driver(&self) -> Option<Driver> {
-        let needles = |t: &Term| -> Option<Vec<u8>> {
+        fn needles(t: &Term) -> Option<Vec<u8>> {
             match t {
                 Term::Text {
                     pat,
@@ -218,21 +261,19 @@ impl Query {
                     case: false,
                     ..
                 } => pat.buffer_needle(),
+                // every part must match: any part with a needle can drive
+                // (`folder:projekt`, `file:foo`)
+                Term::All(ts) => ts.iter().filter_map(needles).max_by_key(Vec::len),
                 _ => None,
             }
-        };
-        // 1. words/prefixes/suffixes: one memmem pass per needle; a short
-        //    needle hits almost every name, and past two needles scanning wins
+        }
+        // 1. words/prefixes/suffixes: one pass over the names per needle
+        //    (past two needles, scanning the entries wins)
         let text = self
             .groups
             .iter()
             .filter_map(|g| g.iter().map(needles).collect::<Option<Vec<_>>>())
-            .filter(|ns| {
-                ns.len() <= 2
-                    && ns
-                        .iter()
-                        .all(|n| n.iter().filter(|&&b| b != SEP).count() >= 3)
-            })
+            .filter(|ns| ns.len() <= 2 && ns.iter().all(|n| n.iter().any(|&b| b != SEP)))
             .max_by_key(|ns| ns.iter().map(Vec::len).min().unwrap_or(0));
         if let Some(ns) = text {
             return Some(Driver::Needles(ns));
@@ -268,20 +309,26 @@ enum Driver {
 }
 
 /// Ids whose (stale or current) lower-case name in the ordered buffer
-/// contains `needle`, ascending; one hit per entry.
+/// contains `needle`, ascending; one hit per entry. Total work ≈ one pass
+/// over the buffer: after a hit the search goes on at the next name, and the
+/// hit → entry step gallops forward from the last entry (dense hits cost
+/// one or two steps, sparse ones a short binary search).
 fn buffer_hits(
     buf: &[u8],
     starts: &[u32],
     needle: &[u8],
     range: std::ops::Range<usize>,
 ) -> Vec<u32> {
+    if starts.is_empty() || needle.is_empty() {
+        return Vec::new();
+    }
     let finder = Finder::new(needle);
     let lead = usize::from(needle.first() == Some(&SEP));
+    let window_end = (range.end + needle.len()).min(buf.len());
     let mut out = Vec::new();
     let mut pos = range.start;
-    let mut cur = 0usize; // id cursor (hits only move forward)
+    let mut cur = 0usize; // last entry known to start at or before the hit
     while pos < range.end {
-        let window_end = (range.end + needle.len()).min(buf.len());
         let Some(rel) = finder.find(&buf[pos..window_end]) else {
             break;
         };
@@ -290,18 +337,25 @@ fn buffer_hits(
             break;
         }
         let q = (at + lead) as u32;
-        cur += starts[cur..].partition_point(|&o| o <= q);
-        if cur == 0 {
+        if starts[0] > q {
             pos = at + 1;
             continue;
         }
-        let id = cur - 1;
-        out.push(id as u32);
+        if starts[cur] > q {
+            cur = 0;
+        }
+        let (mut lo, mut step) = (cur, 1usize);
+        while lo + step < starts.len() && starts[lo + step] <= q {
+            lo += step;
+            step *= 2;
+        }
+        let hi = (lo + step + 1).min(starts.len());
+        cur = lo + starts[lo..hi].partition_point(|&o| o <= q) - 1;
+        out.push(cur as u32);
         // next entry: further hits in this name add nothing
-        pos = starts.get(cur).map_or(buf.len(), |&o| {
+        pos = starts.get(cur + 1).map_or(buf.len(), |&o| {
             (o as usize).saturating_sub(lead).max(at + 1)
         });
-        cur = id;
     }
     out
 }
@@ -901,12 +955,25 @@ pub(crate) fn run(index: &Index, q: &Query, scope: Option<u32>) -> Vec<u32> {
             out
         })
     };
+    let exact = q.exact_needle();
     let verify = |mut cands: Vec<u32>| -> Vec<u32> {
-        cands.sort_unstable();
+        // one needle: chunks come in order (at most a boundary duplicate)
+        if !cands.windows(2).all(|w| w[0] <= w[1]) {
+            cands.sort_unstable();
+        }
         cands.dedup();
         cands
             .into_iter()
-            .filter(|&id| (id as usize) < n && ok(id, true))
+            .filter(|&id| {
+                (id as usize) < n
+                    && if exact {
+                        // stale bytes of renamed/removed entries are skipped here
+                        index.flags_of(id as usize) & (FLAG_GONE | FLAG_DIRTY) == 0
+                            && scope.is_none_or(|s| index.is_under(id, s))
+                    } else {
+                        ok(id, true)
+                    }
+            })
             .collect()
     };
     let driver = q.driver();
