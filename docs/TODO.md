@@ -131,6 +131,7 @@ Legende: `[ ]` offen · `[~]` in Arbeit · `[x]` erledigt · Prio P0/P1/P2
   - [~] S1.3 `explorer-search`: paralleler Aufbau, Abgleich beim Start über Ordner-Änderungszeiten (in Scheiben), Live-Updates (rekursiver Watcher, Stapel, Überlauf → Abgleich), Dienst pro Laufwerk (Generationen, Neu-Ordnen unter Lese-Sperre, nur exakte Stände speichern), Laufwerks-Kennung; CI-Beispiel `drive` auf `C:\` – **CI ausstehend**
     - [ ] Netzlaufwerke/USB: optional + abschaltbar (mit S1.4, Auswahl der Laufwerke)
     - [ ] Linux: inotify-Grenze (`max_user_watches`) im Index-Status anzeigen (mit S1.4)
+    - [ ] Watcher-Fehler/Überläufe zählen + letzten Grund im Status zeigen (CI Linux: eine Änderung kam per Voll-Abgleich statt per Ereignis an – funktioniert, aber auf großen Laufwerken teuer)
   - [ ] S1.4 UI: Suchfeld pro Tab (Strg+F/F3, ab aktuellem Ordner, Treffer mit allen Dateifunktionen) + globale Schnellsuche (Strg+Umschalt+F, Overlay), Index-Status
   - [ ] S1.5 Hervorhebung, Sortierung, Suchverlauf, E2E Linux + Windows-CI
 - [ ] S2 optional mit Admin: MFT/USN-Dienst – erst nach Praxistest S1 + R-001-Erweiterung für Dienste
