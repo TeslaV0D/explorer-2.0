@@ -1,6 +1,6 @@
 # Zwischenstand
 
-**Stand:** 2026-11-06 · **Phase:** 1 · M0–M7 ✅ (M7.3 verschoben) · R-001 ✅ · **M8.1/M8.2 Installer ✅ (Run #69)** · **M8.3 Härtung ✅ (Run #70–#73)** · **Phase 2 Suche: S1.1 ✅ (Run #78), S1.2 ✅ (Run #80), S1.3 ✅ (Run #83), S1.4a CI ausstehend** (Plan `docs/PLAN-SEARCH.md`) · **Branch:** `claude/relaxed-pasteur-ufhh1p`
+**Stand:** 2026-11-06 · **Phase:** 1 · M0–M7 ✅ (M7.3 verschoben) · R-001 ✅ · **M8.1/M8.2 Installer ✅ (Run #69)** · **M8.3 Härtung ✅ (Run #70–#73)** · **Phase 2 Suche: S1.1 ✅ (Run #78), S1.2 ✅ (Run #80), S1.3 ✅ (Run #83), S1.4 ✅ (Run #90)** (Plan `docs/PLAN-SEARCH.md`) · **Branch:** `claude/relaxed-pasteur-ufhh1p`
 
 ## M5 – Shell-Integration (läuft, Freigabe Boss 2026-11-04)
 ### CI-Run #37 – alles grün ✅ (M5.0–M5.5)
@@ -40,14 +40,14 @@
 - **Bug (CI #32/#33, UI-Matrix)**: OLE-Drop-Target wurde nie registriert („Invalid window handle“) – der Timer lief, bevor Slint das native Fenster erzeugt hatte → Ablegen aus anderen Apps wäre tot gewesen. Fix: Registrierung wiederholt bis HWND existiert (50 ms, max. 5 s), sonst Rückfall auf In-App-DnD.
 - Neu: **Windows-E2E mit echter Tastatur/Maus** (`scripts/e2e-windows.ps1`, CI-Schritt im Release-Job, Screenshots bei Fehler).
 
-### Phase 2 – S1.4c Globale Schnellsuche (CI ausstehend)
+### Phase 2 – S1.4c Globale Schnellsuche ✅ (CI-Run #90) → **S1.4 komplett**
 - Strg+Umschalt+F (oder Palette „Alle Laufwerke durchsuchen“): Overlay wie die Befehlspalette (`CommandPalette` mit eigenem Hinweis, Fußzeile, Leertext und zweiter Aktion Strg/Umschalt+Enter). Sucht über **alle** indexierten Laufwerke nach 120 ms Pause, ältere Abfragen werden verworfen.
 - Ranking der besten **50**: Name = Text (auch ohne Endung) → beginnt damit → kürzerer Name; bei Abfragesprache (`ext:`, `*`, `|` …) bleibt die Index-Reihenfolge. Ordner links gekürzt („…/Dokumente/Bericht“), weil das Ende den Unterschied macht.
 - Enter: Ordner im aktiven Tab öffnen, Datei mit ihrem Programm. Strg+Enter: im Ordner zeigen und markieren (`nav::show_in_folder` über `pending_select`). Fußzeile: „2 Laufwerke, 1.234.567 Einträge“ bzw. „Suchindex ist aus“.
 - **CI #86/#88/#89: [71e] rot, lokal immer grün.** Erster Verdacht (Fokusverlust des Dialogs) war falsch; das Trace-Ende aus der CI (#89, neue Diagnose) zeigte: der Klick auf den Reset-Knopf erzeugte gar keinen Dialog, sondern `selection … count=0` = einen Klick **in die Liste**. Ursachen: (1) mit dem neuen Abschnitt „Suche“ über „Windows-Integration“ hing die Knopfposition an der Statuszeile der Suche, die mit den Schriften des Runners umbricht (lokal knapp einzeilig) → Klick auf Text statt Knopf; (2) **das Panel ließ Klicks auf leere Flächen zur Liste durch** (echter UX-Bug: Klick ins Panel hob die Auswahl auf); (3) [71d] war ein **Falsch-Grün**: `last '…' >/dev/null` liefert den Exit-Code von `tail`, nicht von `grep` – dasselbe Muster in 5 weiteren Prüfungen. Fixes: Panel schluckt Klicks, „Suche“ steht hinter „Windows-Integration“ (Klickziele wie in CI erprobt, 502), kürzere Statuszeile, alle `last … >/dev/null` → `grep -q`. Der Dialog hält zusätzlich den Fokus (schadet nicht, war aber nicht die Ursache). Windows: [W44] 7/7, [W45] neu.
 - Tests: E2E [78]–[78f] (öffnen, `tief` → tief.pdf, Enter öffnet, `datei2` → datei2.txt vor datei20–29, Strg+Enter zeigt markiert, Esc), Windows [W45]/[W45b], Unit: Ranking, linksseitiges Kürzen.
 
-### Phase 2 – S1.4b Suchfeld pro Tab (CI ausstehend)
+### Phase 2 – S1.4b Suchfeld pro Tab ✅ (CI-Run #90; Windows [W44] 7/7)
 - Feld rechts neben der Adresszeile („Suchen in <Ordner>“), Strg+F / Strg+E / F3 (auch Palette „Suchen“). Tippen sucht nach 250 ms Pause; Enter sofort; ↓ in die Liste; Esc oder leeres Feld führt zurück zum Ordner.
 - Eine Suche ist eine Navigation zum Platzhalter `::suche:<Ordner>\u{1f}<Abfrage>` (`core::places::search_path`/`search_of`). Damit gibt es Verlauf, Tab-Titel „Suche: …“ und Brotkrume „Suche „…““ gratis. Erste Suche aus einem Ordner = ein Verlaufsschritt; Weitertippen ersetzt ihn; Verlassen nimmt den Ordner wieder vom Stapel (`History::return_to`), also keine Spur. Sitzung speichert den Ordner, nicht die Suche.
 - Treffer: `VirtualData::Search { paths, total, walked }` mit vollem Pfad pro Zeile (Namen wiederholen sich über Ordner). Dadurch funktionieren `selected_paths`/`entry_at`/`inspect_target`/Öffnen/Vorschaubilder → Öffnen, Kopieren, Ausschneiden, Umbenennen, Löschen, Ziehen, Kontextmenü, Inspector. Einfügen und Neuer Ordner sind in Treffern gesperrt (`pane_dir` = None). Eigene Leiste für Suchtreffer.
@@ -58,7 +58,7 @@
 - Einstellungs-Panel: „Schließen“ sitzt jetzt fest oben rechts (beim Scrollen erreichbar, verschiebt sich nicht mehr). Der E2E-Klick zielte auf die alte Position → Kaskade [63d]–[71f2] im lokalen Lauf, behoben.
 - Tests: E2E [76i] (ohne Index durchlaufen), [77]–[77k] (Strg+F, eine Suche pro Pause, Spalten, Öffnen eines Treffers aus einem anderen Ordner, Löschen in den Papierkorb, Treffer folgen dem Index, `ext:pdf`, Esc, keine Spur im Verlauf, Sitzung); Windows [W44]; Unit: Statuszeile, Ordner-Spalte, Sortierung der Treffer, `search_path`-Rundreise, `History::return_to`.
 
-### Phase 2 – S1.4a Such-Dienst in der App (CI ausstehend)
+### Phase 2 – S1.4a Such-Dienst in der App ✅ (CI-Run #90)
 - `app/src/search.rs`: Dienst startet **3 s nach dem Fenster** in einem eigenen Thread (Laufwerkssuche kann blockieren), nie im Startpfad. Laufwerke: feste lokale (Windows), sonst `$HOME`. Beim Beenden wird gewartet, bis gespeichert ist (Fenster ist da schon zu).
 - **Sperrdatei `index/lock`** (`File::try_lock`): Ein zweites Fenster (`--new-instance`, „eine Instanz“ aus) pflegt den Index nicht mit, sonst schrieben zwei Prozesse dieselben Dateien. Aus/Ein kurz hintereinander: Der neue Start wartet, bis der alte gespeichert hat (nie zwei Dienste auf denselben Dateien).
 - Einstellungen „Suche“: Ein/Aus (`index_enabled`), Status pro Laufwerk („bereit, 1.012.345 Einträge (aufgebaut in 3,4 s)“, „wird aufgebaut … 120.000 Einträge“, ohne Live-Aktualisierung + Grund, Speicherfehler), Knopf „Neu mit der Platte abgleichen“. Das Panel **scrollt**, wenn der Bildschirm zu klein ist (unter Windows mit Integrations- und Installations-Block sonst > 768 px).
