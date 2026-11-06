@@ -1,6 +1,6 @@
 # Zwischenstand
 
-**Stand:** 2026-11-06 · **Phase:** 1 · M0–M7 ✅ (M7.3 verschoben) · R-001 ✅ · **M8.1/M8.2 Installer ✅ (Run #69)** · **M8.3 Härtung ✅ (Run #70–#73)** · **Phase 2 Suche: S1.1 ✅ (Run #78), S1.2 ✅ (Run #80), S1.3 fertig, CI ausstehend** (Plan `docs/PLAN-SEARCH.md`) · **Branch:** `claude/relaxed-pasteur-ufhh1p`
+**Stand:** 2026-11-06 · **Phase:** 1 · M0–M7 ✅ (M7.3 verschoben) · R-001 ✅ · **M8.1/M8.2 Installer ✅ (Run #69)** · **M8.3 Härtung ✅ (Run #70–#73)** · **Phase 2 Suche: S1.1 ✅ (Run #78), S1.2 ✅ (Run #80), S1.3 ✅ (Run #83)** (Plan `docs/PLAN-SEARCH.md`) · **Branch:** `claude/relaxed-pasteur-ufhh1p`
 
 ## M5 – Shell-Integration (läuft, Freigabe Boss 2026-11-04)
 ### CI-Run #37 – alles grün ✅ (M5.0–M5.5)
@@ -40,7 +40,19 @@
 - **Bug (CI #32/#33, UI-Matrix)**: OLE-Drop-Target wurde nie registriert („Invalid window handle“) – der Timer lief, bevor Slint das native Fenster erzeugt hatte → Ablegen aus anderen Apps wäre tot gewesen. Fix: Registrierung wiederholt bis HWND existiert (50 ms, max. 5 s), sonst Rückfall auf In-App-DnD.
 - Neu: **Windows-E2E mit echter Tastatur/Maus** (`scripts/e2e-windows.ps1`, CI-Schritt im Release-Job, Screenshots bei Fehler).
 
-### Phase 2 – S1.3 Aufbau + Abgleich + Live-Updates (CI ausstehend)
+### Phase 2 – S1.3 Aufbau + Abgleich + Live-Updates ✅ (CI-Run #83)
+- **CI #83 Messläufe Windows (je 40 s):**
+
+  | Messlauf | Einträge/s | CPU |
+  |---|---|---|
+  | `C:\Windows` kalt | 5 363 | 10 % eines Kerns |
+  | `C:\Windows` **warm** | **206 928** | 305 % |
+  | `Program Files` kalt, normale Priorität + 32 Threads | 3 133 | 4 % |
+  | `Program Files (x86)` kalt, normale Priorität | 5 023 | 7 % |
+
+  Die **kalte VM-Platte (IOPS) bremst**, nicht unser Code und nicht die Priorität → „unter normal“ bleibt. Warm wären 1 Mio in ~5 s. Für sehr große Laufwerke bleibt S2 (MFT, sequenziell) der Weg.
+- **Gate `D:\` (Windows):** Live 204/203 ms, Laden 0 ms, Abgleich 22 ms.
+- **Linux `$HOME`:** Live best 29 ms, Laden 4 ms.
 - Neue Crate `explorer-search`:
   - `walk`: paralleler Erstaufbau. Lese-Threads lesen Ordner, ein Sammler schreibt in den Index. Links werden gelistet, nie betreten.
   - `refresh`: Abgleich nach dem Laden. Ein Ordner wird nur neu gelesen, wenn seine Änderungszeit anders ist oder ≥ Speicherzeit − 2 s; sonst kostet er ein `stat`. Läuft in Scheiben, damit Suchen weiterlaufen.
