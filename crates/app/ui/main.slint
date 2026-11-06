@@ -62,6 +62,10 @@ export struct Row {
     icon: int,
     // index into `thumbs` (icon view; 0 = not loaded yet)
     thumb: int,
+    // search results: the name around the matched part (shown bold); "" = no mark
+    hl-pre: string,
+    hl-hit: string,
+    hl-post: string,
 }
 
 export struct Crumb { label: string, path: string }
@@ -384,7 +388,10 @@ component FilePane inherits Rectangle {
     callback address-resized(float);
     callback search-input(string);
     callback search-accept(string);
+    callback search-run(string);
     callback search-escape();
+    // Up (true) / Down in the field: a query from the history, "" = none
+    callback search-history(bool) -> string;
     callback rename-commit(string);
     callback rename-cancel();
     in property <[image]> icons;
@@ -612,7 +619,16 @@ component FilePane inherits Rectangle {
                     accepted => { root.activate(); root.search-accept(self.text); }
                     key-pressed(e) => {
                         if (e.text == Key.Escape) { self.text = ""; root.search-escape(); return accept; }
-                        if (e.text == Key.DownArrow) { list-focus.focus(); return accept; }
+                        if (e.text == Key.UpArrow) {
+                            let t = root.search-history(true);
+                            if (t != "") { self.text = t; root.search-run(self.text); }
+                            return accept;
+                        }
+                        if (e.text == Key.DownArrow) {
+                            let t = root.search-history(false);
+                            if (t != "") { self.text = t; root.search-run(self.text); } else { list-focus.focus(); }
+                            return accept;
+                        }
                         reject
                     }
                 }
@@ -802,7 +818,15 @@ component FilePane inherits Rectangle {
                                         opacity: row.dim ? 0.45 : 1;
                                     }
                                 }
-                                Text { text: row.name; horizontal-stretch: 1; vertical-alignment: center; overflow: elide; opacity: row.dim ? 0.55 : 1; }
+                                if row.hl-hit == "" : Text { text: row.name; horizontal-stretch: 1; vertical-alignment: center; overflow: elide; opacity: row.dim ? 0.55 : 1; }
+                                // search hit: the matched letters bold (Slint has no partial styling)
+                                if row.hl-hit != "" : HorizontalLayout {
+                                    horizontal-stretch: 1;
+                                    spacing: 0px;
+                                    Text { text: row.hl-pre; vertical-alignment: center; }
+                                    Text { text: row.hl-hit; vertical-alignment: center; font-weight: 700; }
+                                    Text { text: row.hl-post; vertical-alignment: center; overflow: elide; horizontal-stretch: 1; }
+                                }
                                 Rectangle { width: 6px; }
                                 Text { text: row.modified; width: root.w-date; vertical-alignment: center; color: Theme.c.text4; overflow: elide; }
                                 Rectangle { width: 6px; }
@@ -924,6 +948,10 @@ component CommandPalette inherits Rectangle {
     in property <string> hint: "Befehl suchen …   (> springt zu Orten)";
     in property <string> footer;
     in property <string> empty-text: "Nichts gefunden";
+    // put a text into the field and search it (recent searches)
+    in property <int> fill-seq;
+    in property <string> fill-text;
+    changed fill-seq => { pal-input.text = root.fill-text; root.query(root.fill-text); }
     callback query(string);
     callback run(int);
     // Ctrl+Enter / Shift+Enter (quick search: show in its folder)
@@ -1162,6 +1190,8 @@ export component MainWindow inherits Window {
     in-out property <int> qs-sel;
     in property <string> qs-footer;
     in property <string> qs-empty;
+    in-out property <int> qs-fill-seq;
+    in property <string> qs-fill-text;
     callback qs-query(string);
     callback qs-run(int);
     callback qs-run-alt(int);
@@ -1220,7 +1250,9 @@ export component MainWindow inherits Window {
     callback address-resized(int, float);
     callback search-input(int, string);
     callback search-accept(int, string);
+    callback search-run(int, string);
     callback search-escape(int);
+    callback search-history(int, bool) -> string;
     callback toggle-split();
     callback open-place(string);
     callback toggle-hidden(bool);
@@ -1332,6 +1364,8 @@ export component MainWindow inherits Window {
                         address-resized(w) => { root.address-resized(pi, w); }
                         search-input(t) => { root.search-input(pi, t); }
                         search-accept(t) => { root.search-accept(pi, t); }
+                        search-run(t) => { root.search-run(pi, t); }
+                        search-history(older) => { return root.search-history(pi, older); }
                         search-escape => { root.search-escape(pi); }
                         rename-commit(t) => { root.rename-commit(pi, t); }
                         rename-cancel => { root.rename-cancel(pi); }
@@ -1598,6 +1632,8 @@ export component MainWindow inherits Window {
         hint: "Alle Laufwerke durchsuchen …";
         footer: root.qs-footer;
         empty-text: root.qs-empty;
+        fill-seq: root.qs-fill-seq;
+        fill-text: root.qs-fill-text;
         query(t) => { root.qs-query(t); }
         run(i) => { root.qs-run(i); }
         run-alt(i) => { root.qs-run-alt(i); }

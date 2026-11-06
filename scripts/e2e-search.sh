@@ -103,6 +103,27 @@ xdotool key ctrl+Return; sleep 1.5
 check "[78e] Ctrl+Enter shows it selected in its folder" "last 'show in folder' | grep -qF '$SR/a/datei2.txt' && wait_for \"last 'selection pane=0' | grep -q 'focus=datei2.txt'\" 3"
 xdotool key ctrl+shift+f; sleep 0.5; xdotool key Escape; sleep 0.4
 check "[78f] Esc closes it" "last 'quick search' | grep -q 'close'"
+
+echo "== [79] S1.5b: marked hits, sorting by the header, search history"
+# still in $SR/a (shown by [78e]); history so far: datei2, tief (quick search)
+focus; xdotool key ctrl+f; sleep 0.2; xdotool key ctrl+a; xdotool type --delay 30 "datei1"; xdotool key Return; sleep 1.2
+check "[79] Enter puts the search into the history (saved)" "grep -q 'search history saved=true query=.datei1.' $LOG && head -1 $IC/search-history.txt | grep -qx 'datei1'"
+check "[79b] the matched letters are marked" "last 'marks' | grep -qF '[datei1].txt'"
+xdotool mousemove 260 126 click 1; sleep 1.5
+check "[79c] header click: searched again in the new order (name descending)" "last 'sort key' | grep -q 'key=name desc=true' && wait_for \"last 'order' | grep -q 'order .\\\"datei19.txt'\" 3"
+xdotool mousemove 260 126 click 1; sleep 1.2
+focus; xdotool key ctrl+f; sleep 0.2; xdotool key Escape; sleep 0.8
+N0=$(grep -c 'search pane=0 scope=.* query=.datei1.' $LOG)
+xdotool key ctrl+f; sleep 0.2; xdotool key Up; sleep 1.2
+check "[79d] Up in the empty field: the last search again" "[ \$(grep -c 'search pane=0 scope=.* query=.datei1.' $LOG) -gt $N0 ]"
+xdotool key Escape; sleep 0.8
+N1=$(grep -c 'quick search query=.datei2.' $LOG)
+xdotool key ctrl+shift+f; sleep 0.5
+check "[79e] quick search: recent searches while nothing is typed" "last 'quick search open' | grep -q 'recent=3'"
+command -v import >/dev/null && import -window root "$W/79-recent.png"
+xdotool key Down Return; sleep 1.2
+check "[79f] Enter takes a recent search over and searches it" "last 'quick search recent' | grep -q 'datei2' && wait_for \"[ \\\$(grep -c 'quick search query=.datei2.' $LOG) -gt $N1 ]\" 3"
+xdotool key Escape; sleep 0.4
 kill $PID; wait $PID 2>/dev/null
 check "[77k] a search tab is saved as its folder (session)" "! grep -q '::suche' $IC/session.ini"
 exit $FAIL

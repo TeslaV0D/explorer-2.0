@@ -97,6 +97,10 @@ pub struct Status {
     pub save_error: Option<String>,
     /// `saved_at` of the last successful save (Unix seconds).
     pub saved: Option<i64>,
+    /// The watcher lost events this often (each time the drive was compared
+    /// with the disk afterwards); the last reason.
+    pub lost_events: u64,
+    pub last_loss: Option<String>,
     /// Changes applied by the watcher (units of work that changed something).
     pub live_changes: u64,
 }
@@ -129,10 +133,13 @@ impl Volume {
     }
 
     pub fn status(&self) -> Status {
-        self.status
+        let mut st = self
+            .status
             .lock()
             .unwrap_or_else(|e| e.into_inner())
-            .clone()
+            .clone();
+        (st.lost_events, st.last_loss) = self.pending.losses();
+        st
     }
 
     pub fn generation(&self) -> u64 {

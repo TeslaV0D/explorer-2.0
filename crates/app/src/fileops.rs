@@ -8,7 +8,7 @@
 use crate::nav::{self, trace_line as trace};
 use crate::{JobRow, MainWindow};
 use explorer_core::places::VirtualPlace;
-use explorer_core::{format_datetime, format_size};
+use explorer_core::{format_local, format_size};
 use explorer_ops::clipboard::{self, ClipFiles};
 use explorer_ops::exec::{
     Choice, Conflict, Done, Event, JobHandle, JobSpec, Kind, Progress, Report,
@@ -1051,7 +1051,7 @@ fn show_next_conflict(win: &MainWindow) {
     let info = |size: u64, mtime: Option<SystemTime>, is_dir: bool| {
         let date = mtime
             .and_then(|t| t.duration_since(SystemTime::UNIX_EPOCH).ok())
-            .map(|d| format_datetime(d.as_secs() as i64))
+            .map(|d| format_local(d.as_secs() as i64))
             .unwrap_or_default();
         if is_dir {
             format!("Ordner · {date}")

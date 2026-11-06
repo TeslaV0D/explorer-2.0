@@ -8,7 +8,7 @@
 
 use crate::{InfoRow, MainWindow};
 use explorer_core::inspect::{attributes_de, count_de, image_size, text_preview, totals};
-use explorer_core::{format_datetime, format_size};
+use explorer_core::{format_local, format_size};
 use slint::{ComponentHandle, ModelRc, VecModel};
 use std::cell::RefCell;
 use std::io::Read;
@@ -161,7 +161,7 @@ fn update(win: &MainWindow) {
                 rows.push(row("Größe", size));
             }
             if let Some(m) = e.modified {
-                rows.push(row("Geändert", format_datetime(m)));
+                rows.push(row("Geändert", format_local(m)));
             }
             rows.push(row("Attribute", attributes_de(e)));
             if let Some(p) = path {
@@ -328,10 +328,7 @@ fn file_facts(p: &Path, px: u32) -> Extra {
             .ok()
             .and_then(|t| t.duration_since(std::time::UNIX_EPOCH).ok())
         {
-            rows.push((
-                "Erstellt".to_string(),
-                format_datetime(secs.as_secs() as i64),
-            ));
+            rows.push(("Erstellt".to_string(), format_local(secs.as_secs() as i64)));
         }
     }
     let mut head = Vec::with_capacity(HEAD_BYTES);

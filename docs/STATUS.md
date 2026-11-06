@@ -1,6 +1,6 @@
 # Zwischenstand
 
-**Stand:** 2026-11-06 · **Phase:** 1 · M0–M7 ✅ (M7.3 verschoben) · R-001 ✅ · **M8.1/M8.2 Installer ✅ (Run #69)** · **M8.3 Härtung ✅ (Run #70–#73)** · **Phase 2 Suche: S1.1 ✅ (Run #78), S1.2 ✅ (Run #80), S1.3 ✅ (Run #83), S1.4 ✅ (Run #90)** (Plan `docs/PLAN-SEARCH.md`) · **Branch:** `claude/relaxed-pasteur-ufhh1p`
+**Stand:** 2026-11-06 · **Phase:** 1 · M0–M7 ✅ (M7.3 verschoben) · R-001 ✅ · **M8.1/M8.2 Installer ✅ (Run #69)** · **M8.3 Härtung ✅ (Run #70–#73)** · **Phase 2 Suche: S1.1 ✅ (Run #78), S1.2 ✅ (Run #80), S1.3 ✅ (Run #83), S1.4 ✅ (Run #90), S1.5a/b CI ausstehend** (Plan `docs/PLAN-SEARCH.md`) · **Branch:** `claude/relaxed-pasteur-ufhh1p`
 
 ## M5 – Shell-Integration (läuft, Freigabe Boss 2026-11-04)
 ### CI-Run #37 – alles grün ✅ (M5.0–M5.5)
@@ -39,6 +39,16 @@
 
 - **Bug (CI #32/#33, UI-Matrix)**: OLE-Drop-Target wurde nie registriert („Invalid window handle“) – der Timer lief, bevor Slint das native Fenster erzeugt hatte → Ablegen aus anderen Apps wäre tot gewesen. Fix: Registrierung wiederholt bis HWND existiert (50 ms, max. 5 s), sonst Rückfall auf In-App-DnD.
 - Neu: **Windows-E2E mit echter Tastatur/Maus** (`scripts/e2e-windows.ps1`, CI-Schritt im Release-Job, Screenshots bei Fehler).
+
+### Phase 2 – S1.5a/b Ortszeit, Watcher-Status, Hervorhebung, Suchverlauf (CI ausstehend)
+- **Ortszeit**: `core::local_offset_at(t)` (Versatz *dieses* Datums → Sommer-/Winterzeit richtig, über `chrono`, das ohnehin via Slint im Build ist) + `format_local` für Liste, Inspector, Dialoge; `dm:`-Abfragen rechnen „heute“ in Ortszeit. Test mit `TZ=Europe/Berlin`: Januar +1 h, Juli +2 h.
+- **Watcher-Status**: `Pending::lost(grund)` zählt verpasste Ereignisse (Puffer-Überlauf, Watcher-Fehler) → Status „Änderungen 2-mal verpasst, danach abgeglichen (zu viele Änderungen auf einmal)“; `watch::describe` macht aus notify-Fehlern Text (inotify-Grenze: „fs.inotify.max_user_watches erhöhen“).
+- **Hervorhebung**: `core::highlight` (`pieces` = wörtliche Stücke der Abfrage ohne `ext:`/`!`/Platzhalter, `find`/`split` ohne Groß/Klein zeichengenau) → Zeile bekommt `hl-pre/hl-hit/hl-post`, der Treffer wird **fett** gezeichnet (Slint kann Text nicht teilweise formatieren). Im Zufallstest: Stücke ergeben immer wieder den Namen.
+- **Suchverlauf**: `core::searches` (`parse`/`serialize`/`push`/`step`, max. 20) in `search-history.txt`; gespeichert bei Enter im Suchfeld, beim Öffnen eines Treffers, in der Schnellsuche. ↑/↓ im Tab-Suchfeld wie in einer Shell (ohne die Reihenfolge zu ändern), ↓ am Ende = in die Liste. Schnellsuche zeigt bei leerem Feld die letzten Suchen, Enter übernimmt eine ins Feld.
+- Sortieren per Spaltenkopf in Treffern: sucht neu in der Reihenfolge (war schon so, jetzt getestet).
+- Slint-Fund: eine `let`-Variable zweimal benutzt → generierter Rust-Code verschiebt sie („borrow of moved value“) → zweite Verwendung über `self.text`.
+- Platte voll (Sandbox): `target/debug` + alte E2E-Arbeitsordner (je 100k Dateien) im Scratchpad gelöscht.
+- Tests: E2E [79]–[79f], Unit: Ortszeit (+ Berlin), Hervorhebung, Verlauf, Status-Zeile; Fuzz: Hervorhebung + Verlaufsdatei.
 
 ### Phase 2 – S1.4c Globale Schnellsuche ✅ (CI-Run #90) → **S1.4 komplett**
 - Strg+Umschalt+F (oder Palette „Alle Laufwerke durchsuchen“): Overlay wie die Befehlspalette (`CommandPalette` mit eigenem Hinweis, Fußzeile, Leertext und zweiter Aktion Strg/Umschalt+Enter). Sucht über **alle** indexierten Laufwerke nach 120 ms Pause, ältere Abfragen werden verworfen.

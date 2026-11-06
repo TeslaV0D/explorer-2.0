@@ -977,6 +977,9 @@ dependencies = [
 [[package]]
 name = "explorer-core"
 version = "0.0.1"
+dependencies = [
+ "chrono",
+]
 
 [[package]]
 name = "explorer-fs"

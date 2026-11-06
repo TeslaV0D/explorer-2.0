@@ -30,6 +30,10 @@ static EPOCH: AtomicU64 = AtomicU64::new(0);
 static UI_PENDING: AtomicBool = AtomicBool::new(false);
 
 thread_local! {
+    /// Recently used searches, newest first (`search-history.txt`).
+    static HISTORY: RefCell<Vec<String>> = const { RefCell::new(Vec::new()) };
+    /// Up/Down browsing position per pane (0 = not browsing).
+    static CURSOR: RefCell<HashMap<usize, usize>> = RefCell::new(HashMap::new());
     /// Last traced phase per root (trace only on changes).
     static LAST: RefCell<HashMap<String, Phase>> = RefCell::new(HashMap::new());
 }
@@ -65,8 +69,59 @@ fn roots() -> Vec<PathBuf> {
     }
 }
 
+fn history_path() -> Option<PathBuf> {
+    crate::config::config_dir().map(|d| d.join("search-history.txt"))
+}
+
+fn load_history() {
+    let list = history_path()
+        .and_then(|p| std::fs::read_to_string(p).ok())
+        .map(|t| explorer_core::searches::parse(&t))
+        .unwrap_or_default();
+    HISTORY.with_borrow_mut(|h| *h = list);
+}
+
+/// Recently used searches, newest first.
+pub fn history() -> Vec<String> {
+    HISTORY.with_borrow(|h| h.clone())
+}
+
+/// `query` was used (Enter, a hit opened): to the front, saved.
+pub fn remember(query: &str) {
+    let text = HISTORY.with_borrow_mut(|h| {
+        explorer_core::searches::push(h, query);
+        explorer_core::searches::serialize(h)
+    });
+    CURSOR.with_borrow_mut(|c| c.clear());
+    if let Some(p) = history_path() {
+        let tmp = p.with_extension("txt.tmp");
+        let ok = p
+            .parent()
+            .is_some_and(|d| std::fs::create_dir_all(d).is_ok())
+            && std::fs::write(&tmp, text).is_ok()
+            && std::fs::rename(&tmp, &p).is_ok();
+        crate::nav::trace_line(&format!("search history saved={ok} query={query:?}"));
+    }
+}
+
+/// Up (`older`) / Down in the search field of pane `pi`: the query to show,
+/// or "" (Down past the newest: back to the list).
+pub fn history_step(pi: usize, older: bool) -> String {
+    let list = history();
+    let cur = CURSOR.with_borrow(|c| c.get(&pi).copied().unwrap_or(0));
+    let (next, q) = explorer_core::searches::step(&list, cur, older);
+    CURSOR.with_borrow_mut(|c| c.insert(pi, next));
+    q.unwrap_or_default()
+}
+
+/// Typing ends the browsing.
+pub fn history_reset(pi: usize) {
+    CURSOR.with_borrow_mut(|c| c.remove(&pi));
+}
+
 /// Called once after the window is set up.
 pub fn init(win: &MainWindow, enabled: bool) {
+    load_history();
     win.set_opt_index_enabled(enabled);
     if env_off() {
         win.set_search_status("Suchindex aus (EXPLORER2_INDEX=off).".into());
@@ -345,12 +400,12 @@ pub fn find(
     let now = std::time::SystemTime::now()
         .duration_since(std::time::UNIX_EPOCH)
         .map_or(0, |d| d.as_secs() as i64);
-    // dates in the list are shown in UTC as well (same "today")
+    // "today", "dm:2026-11-06" … in local time, like the date column
     let q = explorer_index::Query::parse(
         text,
         explorer_index::Now {
             unix: now,
-            utc_offset: 0,
+            utc_offset: explorer_core::local_offset_at(now),
         },
     )
     .map_err(|e| format!("Suche: {e}"))?;
@@ -452,6 +507,17 @@ pub(crate) fn status_line(root: &str, st: &Status) -> String {
             s.push_str(&format!(" ({e})"));
         }
     }
+    if st.lost_events > 0 {
+        let times = if st.lost_events == 1 {
+            "1-mal".to_string()
+        } else {
+            format!("{}-mal", st.lost_events)
+        };
+        s.push_str(&format!(
+            " – Änderungen {times} verpasst, danach abgeglichen ({})",
+            st.last_loss.as_deref().unwrap_or("unbekannt")
+        ));
+    }
     if let Some(e) = &st.save_error {
         s.push_str(&format!(" – Speichern fehlgeschlagen: {e}"));
     }
@@ -547,6 +613,13 @@ mod tests {
         assert_eq!(
             status_line("/home/a", &s),
             "/home/a: bereit, 1.012.345 Einträge – ohne Live-Aktualisierung (zu viele Überwachungen)"
+        );
+        let mut s = st(Phase::Ready, 7);
+        s.lost_events = 2;
+        s.last_loss = Some("zu viele Änderungen auf einmal".into());
+        assert_eq!(
+            status_line("C:\\", &s),
+            "C:\\: bereit, 7 Einträge – Änderungen 2-mal verpasst, danach abgeglichen (zu viele Änderungen auf einmal)"
         );
         let mut s = st(Phase::Refreshing, 5);
         s.save_error = Some("voll".into());

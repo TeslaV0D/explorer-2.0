@@ -15,7 +15,7 @@ use explorer_core::session::{PaneSession, Session};
 use explorer_core::typeahead::TypeAhead;
 use explorer_core::view::ViewMode;
 use explorer_core::{
-    format_count, format_datetime, format_size, format_usage, sort_entries_with_type_names, Entry,
+    format_count, format_local, format_size, format_usage, sort_entries_with_type_names, Entry,
     SortKey, SortSpec, ViewFilter,
 };
 use explorer_fs::places::{drive_display_name, used_fraction};
@@ -367,10 +367,13 @@ fn to_row(e: &Entry, dir: &Path, labels: &mut crate::icons::RowLabels) -> Row {
         } else {
             format_size(e.size).into()
         },
-        modified: e.modified.map(format_datetime).unwrap_or_default().into(),
+        modified: e.modified.map(format_local).unwrap_or_default().into(),
         kind: labels.type_name(e).into(),
         icon: labels.icon_id(dir, e),
         thumb: 0,
+        hl_pre: Default::default(),
+        hl_hit: Default::default(),
+        hl_post: Default::default(),
         is_dir: e.is_dir(),
         dim: e.hidden,
         selected: false,
@@ -552,9 +555,11 @@ fn finish_virtual(
 fn finish_search(
     found: crate::search::Found,
     scope: Option<&Path>,
+    query: &str,
     filter: ViewFilter,
     t0: Instant,
 ) -> Update {
+    let pieces = explorer_core::highlight::pieces(query);
     let mut labels = crate::icons::RowLabels::default();
     labels.show_extensions = filter.show_extensions;
     let mut entries = Vec::with_capacity(found.items.len());
@@ -564,6 +569,13 @@ fn finish_search(
         let dir = full.parent().map(Path::to_path_buf).unwrap_or_default();
         let mut r = to_row(&e, &dir, &mut labels);
         r.kind = folder_label(&dir, scope).into();
+        // the matched letters of the shown name (bold)
+        if let Some((a, b, c)) = explorer_core::highlight::split(&r.name, &pieces) {
+            let (a, b, c) = (a.to_string(), b.to_string(), c.to_string());
+            r.hl_pre = a.into();
+            r.hl_hit = b.into();
+            r.hl_post = c.into();
+        }
         rows.push(r);
         entries.push(e);
         paths.push(full);
@@ -1290,7 +1302,7 @@ fn navigate_tab(win: &MainWindow, id: TabId, target: PathBuf, reason: Reason, hi
                             found.walked,
                             t0.elapsed().as_secs_f64() * 1000.0
                         ));
-                        finish_search(found, scope_dir.as_deref(), filter, t0)
+                        finish_search(found, scope_dir.as_deref(), &query, filter, t0)
                     }
                     Err(message) => Update::Failed(FsError {
                         kind: FsErrorKind::Other,
@@ -1574,6 +1586,18 @@ fn apply(
                         })
                         .unwrap_or_default();
                         trace(&format!("shown {shown:?}"));
+                        // search results: the bold part of the first rows (tests)
+                        let marks: Vec<String> = with_tab(id, |t, _, _| {
+                            (0..t.model.row_count().min(4))
+                                .filter_map(|i| t.model.row_data(i))
+                                .filter(|r| !r.hl_hit.is_empty())
+                                .map(|r| format!("{}[{}]{}", r.hl_pre, r.hl_hit, r.hl_post))
+                                .collect()
+                        })
+                        .unwrap_or_default();
+                        if !marks.is_empty() {
+                            trace(&format!("marks {marks:?}"));
+                        }
                         // distinct type names (shell names on Windows), for tests
                         let kinds: Vec<String> = with_tab(id, |t, _, _| {
                             let mut k: Vec<String> = Vec::new();
@@ -1944,6 +1968,17 @@ pub fn show_in_folder(win: &MainWindow, pi: usize, path: &Path) {
 
 /// Typing in the search field of pane `pi`: searches once typing pauses.
 pub fn search_input(win: &MainWindow, pi: usize, text: &str) {
+    crate::search::history_reset(pi);
+    search_soon(win, pi, text);
+}
+
+/// A query from the history (Up/Down): search it, without reordering the history.
+pub fn search_run(win: &MainWindow, pi: usize, text: &str) {
+    SEARCH_TIMER.with(|t| t.stop());
+    run_search(win, pi, text);
+}
+
+fn search_soon(win: &MainWindow, pi: usize, text: &str) {
     let weak = win.as_weak();
     let text = text.to_string();
     SEARCH_TIMER.with(|t| {
@@ -1962,6 +1997,7 @@ pub fn search_input(win: &MainWindow, pi: usize, text: &str) {
 /// Enter in the search field: search now.
 pub fn search_accept(win: &MainWindow, pi: usize, text: &str) {
     SEARCH_TIMER.with(|t| t.stop());
+    crate::search::remember(text);
     run_search(win, pi, text);
 }
 
@@ -2277,6 +2313,12 @@ pub fn click_open(win: &MainWindow, pi: usize, index: usize) {
 /// Opens entry `index` of pane `pi`: folders navigate, files open with their default app.
 pub fn open_entry(win: &MainWindow, pi: usize, index: usize) {
     let Some(id) = active_tab_id(pi) else { return };
+    // opening a hit = the search was useful: into the history
+    if let Some(Some((_, q))) = with_tab(id, |t, _, _| {
+        t.path.as_deref().and_then(explorer_core::places::search_of)
+    }) {
+        crate::search::remember(&q);
+    }
     let target = with_tab(id, |t, _, _| {
         let e = t.entries.get(index)?;
         match &t.virtual_data {

@@ -130,14 +130,17 @@ Legende: `[ ]` offen · `[~]` in Arbeit · `[x]` erledigt · Prio P0/P1/P2
   - [x] S1.2 Persistenz pro Laufwerk (Version, Volume-Kennung, Prüfsumme, atomar, jede Beschädigung erkannt = neu bauen, nie Absturz; 1 Mio: Datei 69 MB, Laden 116 ms, Speichern 179 ms; CI-Gate Laden < 1 s) + Ausschlusslisten (`Exclusions`: Pfade + Namensmuster, Standard-Ausschlüsse, Einstellung `index_exclude`) – CI-Run #80 (Laden Linux 88 ms, Windows 69 ms)
   - [x] S1.3 `explorer-search`: paralleler Aufbau, Abgleich beim Start über Ordner-Änderungszeiten (in Scheiben), Live-Updates (rekursiver Watcher, Stapel, Überlauf → Abgleich), Dienst pro Laufwerk (Generationen, Neu-Ordnen unter Lese-Sperre, nur exakte Stände speichern), Laufwerks-Kennung; CI-Beispiel `drive` (Messläufe `C:\` kalt/warm/Priorität, Gate `D:\`) – CI-Run #83: kalte VM-Platte 5k/s, warm 207k/s, Live 204 ms
     - [ ] Netzlaufwerke/USB: optional + abschaltbar (mit S1.4, Auswahl der Laufwerke)
-    - [ ] Linux: inotify-Grenze (`max_user_watches`) im Index-Status anzeigen (mit S1.4)
-    - [ ] Watcher-Fehler/Überläufe zählen + letzten Grund im Status zeigen (CI Linux: eine Änderung kam per Voll-Abgleich statt per Ereignis an – funktioniert, aber auf großen Laufwerken teuer)
+    - [x] Linux: inotify-Grenze (`max_user_watches`) im Index-Status anzeigen (S1.5a: verständlicher Text)
+    - [x] Watcher-Fehler/Überläufe zählen + letzten Grund im Status zeigen (S1.5a)
   - [x] S1.4 UI (CI-Run #90)
     - [x] S1.4a Dienst in der App: Start 3 s nach dem Fenster im Hintergrund, Laufwerke = feste lokale (Linux `$HOME`), Sperrdatei `index/lock` (zweites Fenster indexiert nicht), Speichern beim Beenden, Status + Ein/Aus + „Neu abgleichen“ in den Einstellungen (Panel scrollt auf kleinen Bildschirmen), Palette `search-rescan`/`toggle-index`, Overrides `EXPLORER2_INDEX=off`/`EXPLORER2_INDEX_ROOTS`/`EXPLORER2_INDEX_DELAY_MS`, E2E [76] – CI #90
     - [x] S1.4b Suchfeld pro Tab (Strg+F/Strg+E/F3, ab aktuellem Ordner, Platzhalter `::suche:`, Treffer mit vollen Pfaden = alle Dateifunktionen, Spalte „Ordner“ relativ, max. 20.000 angezeigt, ohne Index Ordner durchlaufen, Treffer folgen dem Index, Esc/leeres Feld = zurück ohne Spur im Verlauf), E2E [76i], [77]–[77k], Windows [W44] – CI #89/#90
-    - [ ] Lokale Zeitzone für Datumsanzeige **und** `dm:`-Abfragen (beide bisher UTC)
+    - [x] Lokale Zeitzone für Datumsanzeige **und** `dm:`-Abfragen (S1.5a, Sommerzeit pro Datum)
     - [x] S1.4c globale Schnellsuche (Strg+Umschalt+F + Palette „Alle Laufwerke durchsuchen“): Overlay im Stil der Palette, beste 50 (exakter Name → Namensanfang → kürzer), Enter öffnet, Strg/Umschalt+Enter zeigt markiert im Ordner, Fußzeile mit Index-Umfang, E2E [78], Windows [W45] – CI #89/#90
-  - [ ] S1.5 Hervorhebung, Sortierung, Suchverlauf, E2E Linux + Windows-CI
+  - [~] S1.5 Feinschliff
+    - [~] S1.5a Ortszeit (Anzeige + `dm:`), verpasste Watcher-Ereignisse im Status – **CI ausstehend**
+    - [~] S1.5b Treffer fett markiert, Sortieren per Spaltenkopf in Treffern (getestet), Suchverlauf (↑/↓ im Suchfeld, Liste in der Schnellsuche), E2E [79] – **CI ausstehend**
+    - [ ] S1.5c Laufwerksauswahl (Netzlaufwerke/USB optional), E2E
 - [ ] S2 optional mit Admin: MFT/USN-Dienst – erst nach Praxistest S1 + R-001-Erweiterung für Dienste
 - [ ] Später: Inhaltssuche, systemweiter Hotkey (Integration → R-001)
 

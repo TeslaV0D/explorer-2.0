@@ -257,6 +257,22 @@ fn text_helpers_never_panic() {
             let _ = display::rename_result(&text, hidden);
         }
         let _ = theme::parse_hex(&text);
+        // search history file: tolerant, stable after one round trip
+        let h = explorer_core::searches::parse(&text);
+        assert!(h.len() <= explorer_core::searches::KEEP);
+        assert_eq!(
+            explorer_core::searches::parse(&explorer_core::searches::serialize(&h)),
+            h
+        );
+        // search highlight: never panics, the three parts are the name again
+        let other = random_text(&mut r);
+        for (name, query) in [(&text, &other), (&other, &text), (&text, &text)] {
+            let p = explorer_core::highlight::pieces(query);
+            if let Some((a, b, c)) = explorer_core::highlight::split(name, &p) {
+                assert_eq!(format!("{a}{b}{c}"), *name);
+                assert!(!b.is_empty());
+            }
+        }
         let _ = explorer_core::guard::notice_de(r.below(5), r.below(2) == 0, r.below(9) as u32);
         let mut bytes = text.into_bytes();
         bytes.extend((0..r.below(64)).map(|_| r.next() as u8));

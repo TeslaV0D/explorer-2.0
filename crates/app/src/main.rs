@@ -234,6 +234,12 @@ fn main() -> Result<(), slint::PlatformError> {
         &w,
         pi as usize
     ));
+    on!(win, on_search_run, |w, pi, t| nav::search_run(
+        &w,
+        pi as usize,
+        t.as_str()
+    ));
+    win.on_search_history(|pi, older| search::history_step(pi as usize, older).into());
     on!(win, on_open_place, |w, p| nav::open_place(&w, p.as_str()));
     on!(win, on_toggle_hidden, |w, on| nav::set_show_hidden(&w, on));
     on!(win, on_command, |w, c| fileops::command(

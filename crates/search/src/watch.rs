@@ -23,6 +23,9 @@ struct Inner {
     overflow: bool,
     stop: bool,
     debounce: Debounce,
+    /// Times events were lost (buffer overflow, watcher error) and why last.
+    lost: u64,
+    last_loss: Option<String>,
 }
 
 /// Far enough ahead to end any burst (resets the debounce).
@@ -48,6 +51,8 @@ impl Pending {
                 paths: HashSet::new(),
                 overflow: false,
                 stop: false,
+                lost: 0,
+                last_loss: None,
                 debounce: Debounce::new(quiet, max_wait),
             }),
             wake: Condvar::new(),
@@ -74,6 +79,23 @@ impl Pending {
     pub fn overflow(&self) {
         self.lock().overflow = true;
         self.wake.notify_all();
+    }
+
+    /// The watcher lost events (`why` for the status): compare the drive
+    /// with the disk, like [`Pending::overflow`], and count it.
+    pub fn lost(&self, why: String) {
+        let mut g = self.lock();
+        g.lost += 1;
+        g.last_loss = Some(why);
+        g.overflow = true;
+        drop(g);
+        self.wake.notify_all();
+    }
+
+    /// (times events were lost, last reason).
+    pub fn losses(&self) -> (u64, Option<String>) {
+        let g = self.lock();
+        (g.lost, g.last_loss.clone())
     }
 
     pub fn stop(&self) {
@@ -126,16 +148,31 @@ pub struct TreeWatcher {
 pub fn watch_tree(root: &Path, pending: Arc<Pending>) -> notify::Result<TreeWatcher> {
     let mut watcher =
         notify::recommended_watcher(move |res: notify::Result<notify::Event>| match res {
-            Ok(ev) if ev.need_rescan() => pending.overflow(),
+            Ok(ev) if ev.need_rescan() => pending.lost("zu viele Änderungen auf einmal".into()),
             Ok(ev) => {
                 if !ev.paths.is_empty() {
                     pending.push(ev.paths);
                 }
             }
-            Err(_) => pending.overflow(),
+            Err(e) => pending.lost(describe(&e)),
         })?;
-    watcher.watch(root, RecursiveMode::Recursive)?;
+    watcher
+        .watch(root, RecursiveMode::Recursive)
+        .map_err(|e| notify::Error::generic(&describe(&e)))?;
     Ok(TreeWatcher { _watcher: watcher })
+}
+
+/// A watcher error in words for the status line.
+pub fn describe(e: &notify::Error) -> String {
+    match &e.kind {
+        notify::ErrorKind::MaxFilesWatch => "zu viele Ordner für die Linux-Überwachung \
+             (fs.inotify.max_user_watches erhöhen)"
+            .into(),
+        notify::ErrorKind::PathNotFound => "Ordner nicht gefunden".into(),
+        notify::ErrorKind::Io(io) => format!("Ein-/Ausgabefehler: {io}"),
+        notify::ErrorKind::Generic(s) => s.clone(),
+        other => format!("{other:?}"),
+    }
 }
 
 #[cfg(test)]
@@ -158,6 +195,10 @@ mod tests {
         p.push([PathBuf::from("/c")]);
         assert_eq!(p.take(true).unwrap().paths, vec![PathBuf::from("/c")]);
         assert!(p.take(false).is_none(), "forced take resets the burst");
+        // lost events: counted with the reason, due at once
+        p.lost("Puffer voll".into());
+        assert_eq!(p.losses(), (1, Some("Puffer voll".into())));
+        assert!(p.take(false).unwrap().overflow);
         // overflow: due at once, paths kept
         p.push([PathBuf::from("/d")]);
         p.overflow();

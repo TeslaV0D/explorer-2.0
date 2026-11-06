@@ -22,6 +22,10 @@ struct State {
     model: Rc<VecModel<PaletteItem>>,
     /// Behind the rows: (full path, is folder).
     hits: Vec<(PathBuf, bool)>,
+    /// Nothing typed: the rows are recent searches (Enter takes one over).
+    recent: Vec<String>,
+    /// The text the shown hits belong to (goes into the history on Enter).
+    text: String,
     /// Newer queries win; results of older ones are dropped.
     gen: u64,
     cancel: Option<Arc<AtomicBool>>,
@@ -44,14 +48,13 @@ pub fn open(win: &MainWindow) {
     ST.with_borrow_mut(|s| {
         s.open = true;
         s.pane = pi;
-        s.hits.clear();
-        s.model.set_vec(Vec::new());
     });
-    win.set_qs_sel(0);
-    win.set_qs_footer(index_summary(win).into());
-    win.set_qs_empty("Tippen, um alle Laufwerke zu durchsuchen".into());
+    show_recent(win);
     win.set_qs_open(true);
-    nav::trace_line("quick search open");
+    nav::trace_line(&format!(
+        "quick search open recent={}",
+        ST.with_borrow(|s| s.recent.len())
+    ));
 }
 
 pub fn close(win: &MainWindow) {
@@ -66,6 +69,37 @@ pub fn close(win: &MainWindow) {
     win.set_qs_open(false);
     nav::focus_pane(pi);
     nav::trace_line("quick search close");
+}
+
+/// Nothing typed: the recent searches (Enter takes one into the field).
+fn show_recent(win: &MainWindow) {
+    let recent: Vec<String> = crate::search::history().into_iter().take(12).collect();
+    let rows: Vec<PaletteItem> = recent
+        .iter()
+        .map(|q| PaletteItem {
+            label: q.as_str().into(),
+            detail: "zuletzt gesucht".into(),
+            enabled: true,
+        })
+        .collect();
+    let any = !recent.is_empty();
+    ST.with_borrow_mut(|s| {
+        s.hits.clear();
+        s.text.clear();
+        s.recent = recent;
+        s.model.set_vec(rows);
+    });
+    win.set_qs_sel(0);
+    let summary = index_summary(win);
+    win.set_qs_footer(
+        if any {
+            format!("{summary} · Enter übernimmt eine frühere Suche")
+        } else {
+            summary
+        }
+        .into(),
+    );
+    win.set_qs_empty("Tippen, um alle Laufwerke zu durchsuchen".into());
 }
 
 /// What the index covers (footer while nothing is typed).
@@ -127,12 +161,7 @@ fn run_query(win: &MainWindow, text: &str) {
     });
     let text = text.trim().to_string();
     if text.is_empty() {
-        ST.with_borrow_mut(|s| {
-            s.hits.clear();
-            s.model.set_vec(Vec::new());
-        });
-        win.set_qs_footer(index_summary(win).into());
-        win.set_qs_empty("Tippen, um alle Laufwerke zu durchsuchen".into());
+        show_recent(win);
         return;
     }
     let weak = win.as_weak();
@@ -195,6 +224,8 @@ fn show(win: &MainWindow, text: &str, res: Result<crate::search::Found, String>,
         .collect();
     ST.with_borrow_mut(|s| {
         s.hits = items.iter().map(|(e, p)| (p.clone(), e.is_dir())).collect();
+        s.recent.clear();
+        s.text = text.to_string();
         s.model.set_vec(rows);
     });
     win.set_qs_sel(0);
@@ -261,10 +292,18 @@ pub(crate) fn rank(items: &mut [(explorer_core::Entry, PathBuf)], text: &str) {
 
 /// Enter (`alt` = Ctrl/Shift+Enter: show in its folder).
 pub fn run(win: &MainWindow, i: i32, alt: bool) {
+    // a recent search: into the field, searched right away (overlay stays)
+    if let Some(q) = ST.with_borrow(|s| s.recent.get(i.max(0) as usize).cloned()) {
+        nav::trace_line(&format!("quick search recent {q:?}"));
+        win.set_qs_fill_text(q.as_str().into());
+        win.set_qs_fill_seq(win.get_qs_fill_seq() + 1);
+        return;
+    }
     let hit = ST.with_borrow(|s| s.hits.get(i.max(0) as usize).cloned());
-    let pi = ST.with_borrow(|s| s.pane);
+    let (pi, text) = ST.with_borrow(|s| (s.pane, s.text.clone()));
     close(win);
     let Some((path, is_dir)) = hit else { return };
+    crate::search::remember(&text);
     nav::trace_line(&format!("quick search run alt={alt} {}", path.display()));
     if alt {
         nav::show_in_folder(win, pi, &path);
