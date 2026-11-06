@@ -47,7 +47,13 @@ jobs:
           "own reader (new process): $((& $clip get) -join ' | ')"
           # .NET API = what other Windows apps use (CF_HDROP); the Get-Clipboard cmdlet
           # returned nothing here although FileDrop was listed (cmdlet quirk, kept as info only)
-          $seen = @([System.Windows.Forms.Clipboard]::GetFileDropList())
+          # another process reads the clipboard: right after it was set, .NET can
+          # see it empty for a moment (CI #92) – read like an app would, retrying
+          $seen = @()
+          for ($i = 0; $i -lt 5 -and $seen.Count -lt 2; $i++) {
+            if ($i -gt 0) { Start-Sleep -Milliseconds 300 }
+            $seen = @([System.Windows.Forms.Clipboard]::GetFileDropList())
+          }
           "Windows (.NET GetFileDropList) sees: $($seen -join ', ')"
           "Get-Clipboard -Format FileDropList (info): $((Get-Clipboard -Format FileDropList -ErrorAction SilentlyContinue | ForEach-Object { "$_" }) -join ', ')"
           if ($seen.Count -ne 2 -or $seen[0] -ne $a.FullName -or $seen[1] -ne $b.FullName) { $fail += "Windows does not see our files" }
