@@ -76,7 +76,8 @@ xdotool type --delay 40 "datei1"; sleep 1.2
 check "[77b] typing searches below the folder (index, 11 hits)" \
   "wait_for \"grep -q 'search found query=.datei1. total=11 shown=11 walked=false' $LOG\" 5 && grep -q 'search pane=0 scope=$SR query=.datei1.' $LOG"
 check "[77c] one search step per pause, not per letter" "[ \$(grep -c 'search found' $LOG) -le 3 ]"
-check "[77d] results: name column + folder column" "last 'shown' | grep -q 'datei1.txt' && last 'kinds' | grep -qF '$SR/a'"
+command -v import >/dev/null && import -window root "$W/77-results.png"
+check "[77d] results: name column + folder column (relative: a)" "last 'shown' | grep -q 'datei1.txt' && last 'kinds' | grep -qF '[\"a\"]'"
 xdotool key Down; sleep 0.3; xdotool key Home Return; sleep 1
 check "[77e] Enter on a hit opens the real file (other folder than the tab)" "wait_for \"grep -qx '$SR/a/datei1.txt' $OPENED\" 3"
 xdotool key Down Delete; sleep 1.5

@@ -548,8 +548,13 @@ fn finish_virtual(
 }
 
 /// Rows of search results: the "Typ" column shows the folder of each hit
-/// (Explorer's "Ordner"); icons per real path.
-fn finish_search(found: crate::search::Found, filter: ViewFilter, t0: Instant) -> Update {
+/// (Explorer's "Ordner") relative to the searched folder; icons per real path.
+fn finish_search(
+    found: crate::search::Found,
+    scope: Option<&Path>,
+    filter: ViewFilter,
+    t0: Instant,
+) -> Update {
     let mut labels = crate::icons::RowLabels::default();
     labels.show_extensions = filter.show_extensions;
     let mut entries = Vec::with_capacity(found.items.len());
@@ -558,7 +563,7 @@ fn finish_search(found: crate::search::Found, filter: ViewFilter, t0: Instant) -
     for (e, full) in found.items {
         let dir = full.parent().map(Path::to_path_buf).unwrap_or_default();
         let mut r = to_row(&e, &dir, &mut labels);
-        r.kind = dir.to_string_lossy().as_ref().into();
+        r.kind = folder_label(&dir, scope).into();
         rows.push(r);
         entries.push(e);
         paths.push(full);
@@ -575,6 +580,19 @@ fn finish_search(found: crate::search::Found, filter: ViewFilter, t0: Instant) -
             total: found.total,
             walked: found.walked,
         },
+    }
+}
+
+/// "Ordner" column of a hit: below the searched folder relative (`a/b`),
+/// directly in it its name; a search over everything shows the full path.
+pub(crate) fn folder_label(dir: &Path, scope: Option<&Path>) -> String {
+    match scope.and_then(|s| dir.strip_prefix(s).ok().map(|r| (s, r))) {
+        Some((s, rel)) if rel.as_os_str().is_empty() => s
+            .file_name()
+            .map(|n| n.to_string_lossy().into_owned())
+            .unwrap_or_else(|| s.to_string_lossy().into_owned()),
+        Some((_, rel)) => rel.to_string_lossy().into_owned(),
+        None => dir.to_string_lossy().into_owned(),
     }
 }
 
@@ -904,6 +922,7 @@ fn sync_window(win: &MainWindow) {
         Some(VirtualPlace::Trash) => "trash",
         Some(VirtualPlace::ThisPc) => "thispc",
         Some(VirtualPlace::Libraries) => "libraries",
+        None if explorer_core::places::search_of(Path::new(&path)).is_some() => "search",
         None if explorer_core::places::is_placeholder(Path::new(&path)) => "libraries",
         None => "",
     };
@@ -1200,6 +1219,8 @@ fn navigate_tab(win: &MainWindow, id: TabId, target: PathBuf, reason: Reason, hi
         (Some(v), _) => v.path(),
         (None, Some(s)) => PathBuf::from(format!(r"\\{s}")),
         (None, None) if library.is_some() => target,
+        // a search placeholder is not a relative path
+        (None, None) if explorer_core::places::search_of(&target).is_some() => target,
         (None, None) => {
             let target = std::path::absolute(&target).unwrap_or(target);
             // show long names like Explorer (and keep path comparisons consistent with the shell)
@@ -1261,6 +1282,7 @@ fn navigate_tab(win: &MainWindow, id: TabId, target: PathBuf, reason: Reason, hi
             .spawn(move || {
                 let upd = match crate::search::find(scope.as_deref(), &query, sort, &cancel) {
                     Ok(found) => {
+                        let scope_dir = scope.clone();
                         trace(&format!(
                             "search found query={query:?} total={} shown={} walked={} in {:.1}ms",
                             found.total,
@@ -1268,7 +1290,7 @@ fn navigate_tab(win: &MainWindow, id: TabId, target: PathBuf, reason: Reason, hi
                             found.walked,
                             t0.elapsed().as_secs_f64() * 1000.0
                         ));
-                        finish_search(found, filter, t0)
+                        finish_search(found, scope_dir.as_deref(), filter, t0)
                     }
                     Err(message) => Update::Failed(FsError {
                         kind: FsErrorKind::Other,
@@ -3192,6 +3214,18 @@ pub(crate) fn refresh_dirs(
 mod tests {
     use super::*;
     use explorer_core::EntryKind;
+
+    #[test]
+    fn folder_column_of_hits() {
+        let s = Path::new("/home/boss/Docs");
+        assert_eq!(
+            folder_label(Path::new("/home/boss/Docs/a/b"), Some(s)),
+            "a/b"
+        );
+        assert_eq!(folder_label(Path::new("/home/boss/Docs"), Some(s)), "Docs");
+        assert_eq!(folder_label(Path::new("/srv/x"), Some(s)), "/srv/x");
+        assert_eq!(folder_label(Path::new("/srv/x"), None), "/srv/x");
+    }
 
     #[test]
     fn search_status_lines() {

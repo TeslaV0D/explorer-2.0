@@ -610,6 +610,44 @@ if ($script:fail) {
   if (Test-Path $launched) { Write-Host "----- launched instances"; Get-Content $launched | Write-Host }
 }
 $script:fail = $script:fail -bor $failBefore
+
+# ---- S1.4 search (W44): index of a test folder, search field, delete a hit
+$failSearch = $script:fail
+$sr = New-Item -ItemType Directory -Force "$Work\suche-root"
+New-Item -ItemType Directory -Force "$sr\a\b" | Out-Null
+1..12 | ForEach-Object { Set-Content "$sr\a\datei$_.txt" "x$_" }
+Set-Content "$sr\a\b\Tief.PDF" "t"
+$cfg7 = "$Work\cfg-search"; New-Item -ItemType Directory -Force $cfg7 | Out-Null
+$env:EXPLORER2_CONFIG_DIR = $cfg7; $env:EXPLORER2_INDEX = 'on'
+$env:EXPLORER2_INDEX_ROOTS = $sr.FullName; $env:EXPLORER2_INDEX_DELAY_MS = '300'
+$script:log = "$Work\win-e2e-search.log"
+$p = Start-Process -FilePath $Exe -ArgumentList "`"$sr`"" -PassThru -RedirectStandardError $script:log
+try {
+  if (WaitFor 'done tab=1 ' 15000) {
+    # root, a, b, 12 files, Tief.PDF
+    Check "[W44] index of the folder built in the background" { WaitFor 'phase=Ready entries=16 origin=built' 15000 }
+    Start-Sleep -Seconds 1
+    $p.Refresh(); $script:hwnd = $p.MainWindowHandle
+    [void][W]::ShowWindow($script:hwnd, 3); Start-Sleep -Milliseconds 800
+    Focus
+    Keys '^f'; Keys 'datei1'; Start-Sleep -Milliseconds 1200
+    Check "[W44b] Ctrl+F + typing: index search (datei1, datei10-12 = 4 hits)" { WaitFor 'search found query="datei1" total=4 shown=4 walked=false' 5000 }
+    Keys '^a'; Keys 'ext:pdf'; Start-Sleep -Milliseconds 1200
+    Check "[W44c] ext:pdf finds Tief.PDF (no case on Windows)" { WaitFor 'search found query="ext:pdf" total=1 ' 5000 }
+    Keys '{DOWN}'; Keys '{HOME}'; Keys '{DELETE}'; Start-Sleep -Milliseconds 1500
+    Check "[W44d] Delete on a hit: into the recycle bin" { -not (Test-Path "$sr\a\b\Tief.PDF") }
+    Check "[W44e] the results follow the index (0 hits)" { WaitFor 'search found query="ext:pdf" total=0 ' 8000 }
+    Keys '^f'; Keys '{ESC}'
+    Check "[W44f] Esc: back to the folder" { WaitFor 'search pane=0 closed' 3000 }
+    $p.Refresh()
+    Check "[W44g] app still running, no panic" { -not $p.HasExited -and (Log) -notmatch '(?i)panic' }
+  } else { Fail "[W44] search start did not load" }
+} finally {
+  if (-not $p.HasExited) { Stop-Process -Id $p.Id -Force }
+  Remove-Item Env:\EXPLORER2_INDEX_ROOTS, Env:\EXPLORER2_INDEX_DELAY_MS -ErrorAction SilentlyContinue
+  $env:EXPLORER2_INDEX = 'off'
+}
+if ($script:fail -ne $failSearch) { Write-Host "----- trace (search)"; Write-Host (Log) }
 $script:log = $mainLog
 if ($script:fail) { Write-Host "----- trace"; Write-Host (Log) }
 exit $script:fail

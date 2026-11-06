@@ -594,7 +594,10 @@ component FilePane inherits Rectangle {
             }
             // ---------- search field (S1.4b) ----------
             Rectangle {
-                width: min(240px, parent.width * 0.3);
+                // the address bar stretches, the field keeps its width (shrinks when narrow)
+                preferred-width: 240px;
+                min-width: 120px;
+                horizontal-stretch: 0;
                 border-width: 1px;
                 border-color: search-edit.has-focus ? Theme.c.accent : Theme.c.outline;
                 border-radius: 4px;
@@ -1233,6 +1236,14 @@ export component MainWindow inherits Window {
                         Button { text: "Ausschneiden"; enabled: root.has-selection; clicked => { root.command("cut"); } }
                         Button { text: "Kopieren"; enabled: root.has-selection; clicked => { root.command("copy"); } }
                         Button { text: "Einfügen"; enabled: root.can-paste; clicked => { root.command("paste"); } }
+                        Button { text: "Umbenennen"; enabled: root.has-selection; clicked => { root.command("rename"); } }
+                        Button { text: "Löschen"; enabled: root.has-selection; clicked => { root.command("delete"); } }
+                    }
+                    // search results: real files in many folders (no new folder / paste)
+                    if root.active-place == "search" : HorizontalLayout {
+                        spacing: 6px;
+                        Button { text: "Ausschneiden"; enabled: root.has-selection; clicked => { root.command("cut"); } }
+                        Button { text: "Kopieren"; enabled: root.has-selection; clicked => { root.command("copy"); } }
                         Button { text: "Umbenennen"; enabled: root.has-selection; clicked => { root.command("rename"); } }
                         Button { text: "Löschen"; enabled: root.has-selection; clicked => { root.command("delete"); } }
                     }

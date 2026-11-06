@@ -240,7 +240,7 @@ echo "-- M6.1a: folder options (settings panel)"
 F=$R/opt; mkdir -p "$F/Ordner/Tief"; echo x > "$F/x.txt"
 goto "$F"
 # rows: 0 Ordner, 1 x.txt
-SETTINGS_BTN="1144 20"; OPT_EXT="835 205"; OPT_CLICK="835 257"; SETTINGS_CLOSE="1138 542"; VIEW_ALL="926 312"
+SETTINGS_BTN="1144 20"; OPT_EXT="835 205"; OPT_CLICK="835 257"; SETTINGS_CLOSE="1130 63"; VIEW_ALL="926 312"
 xdotool mousemove $SETTINGS_BTN click 1; sleep 0.6
 xdotool mousemove $OPT_EXT click 1; sleep 1.2
 check "[63] 'Dateinamenerweiterungen anzeigen' off hides known extensions" "last 'option show_extensions' | grep -q '=false' && last 'shown' | grep -qF '\"x\"' && ! last 'shown' | grep -qF 'x.txt'"

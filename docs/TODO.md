@@ -134,7 +134,8 @@ Legende: `[ ]` offen · `[~]` in Arbeit · `[x]` erledigt · Prio P0/P1/P2
     - [ ] Watcher-Fehler/Überläufe zählen + letzten Grund im Status zeigen (CI Linux: eine Änderung kam per Voll-Abgleich statt per Ereignis an – funktioniert, aber auf großen Laufwerken teuer)
   - [~] S1.4 UI
     - [~] S1.4a Dienst in der App: Start 3 s nach dem Fenster im Hintergrund, Laufwerke = feste lokale (Linux `$HOME`), Sperrdatei `index/lock` (zweites Fenster indexiert nicht), Speichern beim Beenden, Status + Ein/Aus + „Neu abgleichen“ in den Einstellungen (Panel scrollt auf kleinen Bildschirmen), Palette `search-rescan`/`toggle-index`, Overrides `EXPLORER2_INDEX=off`/`EXPLORER2_INDEX_ROOTS`/`EXPLORER2_INDEX_DELAY_MS`, E2E [76] – **CI ausstehend**
-    - [ ] S1.4b Suchfeld pro Tab (Strg+F/F3, ab aktuellem Ordner, Treffer mit allen Dateifunktionen, Spalte „Ordner“)
+    - [~] S1.4b Suchfeld pro Tab (Strg+F/Strg+E/F3, ab aktuellem Ordner, Platzhalter `::suche:`, Treffer mit vollen Pfaden = alle Dateifunktionen, Spalte „Ordner“ relativ, max. 20.000 angezeigt, ohne Index Ordner durchlaufen, Treffer folgen dem Index, Esc/leeres Feld = zurück ohne Spur im Verlauf), E2E [76i], [77]–[77k], Windows [W44] – **CI ausstehend**
+    - [ ] Lokale Zeitzone für Datumsanzeige **und** `dm:`-Abfragen (beide bisher UTC)
     - [ ] S1.4c globale Schnellsuche (Strg+Umschalt+F, Overlay)
   - [ ] S1.5 Hervorhebung, Sortierung, Suchverlauf, E2E Linux + Windows-CI
 - [ ] S2 optional mit Admin: MFT/USN-Dienst – erst nach Praxistest S1 + R-001-Erweiterung für Dienste
