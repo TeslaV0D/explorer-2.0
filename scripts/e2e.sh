@@ -35,7 +35,8 @@ PY
 echo "hi" > $W/watch/a.txt; touch $W/watch/.hidden
 # Own HOME so the sidebar shows predictable quick-access folders.
 mkdir -p "$W/home/Desktop" "$W/home/Downloads/dl-sub" "$W/home/Documents"
-export EXPLORER2_TRACE=1 SLINT_BACKEND=winit-software EXPLORER2_CONFIG_DIR=$W/config HOME=$W/home
+# the search index has its own block (e2e-search.sh); here it would only add load
+export EXPLORER2_TRACE=1 SLINT_BACKEND=winit-software EXPLORER2_CONFIG_DIR=$W/config HOME=$W/home EXPLORER2_INDEX=off
 CFG=$W/config/settings.ini
 SESSION=$W/config/session.ini
 shot() { command -v import >/dev/null && import -window root "$W/$1.png" || true; }
@@ -220,4 +221,6 @@ kill $PID; wait $PID 2>/dev/null
 "$(dirname "$0")/e2e-ops.sh" "$EXE" "$W" || FAIL=1
 # ---- M8.3c endurance (own script, runnable alone)
 "$(dirname "$0")/e2e-stress.sh" "$EXE" "$W" || FAIL=1
+# ---- S1.4 search (own script, runnable alone)
+"$(dirname "$0")/e2e-search.sh" "$EXE" "$W" || FAIL=1
 exit $FAIL

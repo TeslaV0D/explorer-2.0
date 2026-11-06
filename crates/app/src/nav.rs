@@ -1966,6 +1966,7 @@ pub fn set_option(win: &MainWindow, name: &str, on: bool) {
         "single_click" => s.single_click = on,
         "system_accent" => s.system_accent = on,
         "single_instance" => s.single_instance = on,
+        "index_enabled" => s.index_enabled = on,
         _ => {}
     });
     if let Err(e) = res {
@@ -1983,6 +1984,7 @@ pub fn set_option(win: &MainWindow, name: &str, on: bool) {
         "single_click" => win.set_opt_single_click(on),
         "system_accent" => crate::theme::set_use_accent(win, on),
         "single_instance" => win.set_opt_single_instance(on),
+        "index_enabled" => crate::search::set_enabled(win, on),
         _ => {}
     }
 }

@@ -93,6 +93,8 @@ jobs:
   e2e-linux:
     runs-on: ubuntu-latest
     needs: test
+    # app tests without the search index (own block e2e-search.sh switches it on)
+    env: { EXPLORER2_INDEX: "off" }
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
@@ -123,6 +125,8 @@ jobs:
   build-windows-release:
     runs-on: windows-latest
     needs: test
+    # the index would read all of C:\ during the timing gates and E2E tests
+    env: { EXPLORER2_INDEX: "off" }
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable

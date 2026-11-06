@@ -227,6 +227,15 @@ fn execute(win: &MainWindow, pi: usize, id: &str) {
             nav::set_option(win, "single_instance", on);
             win.set_settings_open(true);
         }
+        "search-rescan" => {
+            crate::search::rescan(win);
+            win.set_settings_open(true);
+        }
+        "toggle-index" => {
+            let on = !win.get_opt_index_enabled();
+            nav::set_option(win, "index_enabled", on);
+            win.set_settings_open(true);
+        }
         other => nav::trace_line(&format!("palette: unknown command {other}")),
     }
 }

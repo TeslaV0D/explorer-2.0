@@ -16,6 +16,8 @@ explorer-core = { path = "../core" }
 explorer-integrate = { path = "../integrate" }
 explorer-fs = { path = "../fs" }
 explorer-gpu = { path = "../gpu" }
+explorer-index = { path = "../index" }
+explorer-search = { path = "../search" }
 explorer-ops = { path = "../ops" }
 explorer-shell = { path = "../shell" }
 slint = { version = "1", default-features = false, features = ["std", "compat-1-2", "backend-winit", "renderer-software", "raw-window-handle-06"] }

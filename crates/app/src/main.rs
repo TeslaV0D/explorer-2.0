@@ -14,6 +14,7 @@ mod keys;
 mod nav;
 mod open;
 mod palette;
+mod search;
 mod theme;
 mod thumbs;
 
@@ -344,6 +345,8 @@ fn main() -> Result<(), slint::PlatformError> {
     on!(win, on_pal_query, |w, t| palette::query(&w, t.as_str()));
     on!(win, on_pal_run, |w, i| palette::run(&w, i));
     on!(win, on_pal_close, |w| palette::close(&w));
+    search::init(&win, settings.index_enabled);
+    on!(win, on_search_rescan, |w| search::rescan(&w));
     nav::trace_line(&format!("init done at={:.1}ms", nav::since_start_ms()));
 
     // Drives come and go (USB sticks, network shares): refresh the sidebar periodically.
@@ -384,5 +387,7 @@ fn main() -> Result<(), slint::PlatformError> {
     crash::stable();
     instance::shutdown();
     nav::save_session_now();
+    // window is gone: wait for the index saves (cut-off changes are never saved)
+    search::shutdown();
     res
 }

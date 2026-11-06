@@ -1040,6 +1040,9 @@ export component MainWindow inherits Window {
     in-out property <bool> opt-show-protected;
     in-out property <bool> opt-single-click;
     in-out property <bool> opt-single-instance: true;
+    in-out property <bool> opt-index-enabled: true;
+    in property <string> search-status;
+    callback search-rescan();
     callback set-option(string, bool);
     // colour scheme: "system" | "light" | "dark"
     in property <string> theme-choice: "system";
@@ -1577,6 +1580,18 @@ export component MainWindow inherits Window {
                 text: "Windows-Akzentfarbe verwenden";
                 checked <=> root.opt-system-accent;
                 toggled => { root.set-option("system_accent", self.checked); }
+            }
+            Rectangle { height: 1px; background: Theme.c.line; }
+            Text { text: "Suche"; font-size: 13px; font-weight: 600; }
+            CheckBox {
+                text: "Laufwerke für die Suche indexieren";
+                checked <=> root.opt-index-enabled;
+                toggled => { root.set-option("index_enabled", self.checked); }
+            }
+            Text { text: root.search-status; font-size: 11px; color: Theme.c.muted; wrap: word-wrap; }
+            if root.opt-index-enabled : HorizontalLayout {
+                alignment: start;
+                Button { text: "Neu mit der Platte abgleichen"; clicked => { root.search-rescan(); } }
             }
             Rectangle { height: 1px; background: Theme.c.line; }
             Text { text: "Windows-Integration"; font-size: 13px; font-weight: 600; }

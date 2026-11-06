@@ -189,6 +189,13 @@ pub const ALL: &[Command] = &[
         Need::Always,
     ),
     c(
+        "search-rescan",
+        "Suchindex neu mit der Platte abgleichen",
+        "",
+        Need::Always,
+    ),
+    c("toggle-index", "Suchindex ein/aus", "", Need::Always),
+    c(
         "install",
         "Explorer 2.0 installieren / aktualisieren",
         "",

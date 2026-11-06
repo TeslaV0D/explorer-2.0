@@ -40,6 +40,8 @@ pub struct Settings {
     /// Search index: what to skip besides the defaults (`;`-separated paths
     /// and name patterns, see `explorer_index::Exclusions`).
     pub index_exclude: String,
+    /// Index the local drives for the search (Phase 2, S1.4).
+    pub index_enabled: bool,
 }
 
 impl Default for Settings {
@@ -61,6 +63,7 @@ impl Default for Settings {
             system_accent: true,
             single_instance: true,
             index_exclude: String::new(),
+            index_enabled: true,
         }
     }
 }
@@ -115,7 +118,7 @@ impl Settings {
                     }
                 }
                 "show_extensions" | "show_protected" | "single_click" | "inspector"
-                | "system_accent" | "single_instance" => {
+                | "system_accent" | "single_instance" | "index_enabled" => {
                     if let Some(b) = parse_bool(v) {
                         match k {
                             "show_extensions" => s.show_extensions = b,
@@ -123,6 +126,7 @@ impl Settings {
                             "inspector" => s.inspector = b,
                             "system_accent" => s.system_accent = b,
                             "single_instance" => s.single_instance = b,
+                            "index_enabled" => s.index_enabled = b,
                             _ => s.single_click = b,
                         }
                     }
@@ -175,7 +179,8 @@ impl Settings {
              theme = {}\n\
              system_accent = {}\n\
              single_instance = {}\n\
-             index_exclude = {}\n",
+             index_exclude = {}\n\
+             index_enabled = {}\n",
             self.hardware_acceleration,
             self.show_hidden,
             self.gpu_probe_version,
@@ -190,7 +195,8 @@ impl Settings {
             self.theme.as_str(),
             self.system_accent,
             self.single_instance,
-            self.index_exclude
+            self.index_exclude,
+            self.index_enabled
         )
     }
 
@@ -239,6 +245,7 @@ mod tests {
             system_accent: false,
             single_instance: false,
             index_exclude: r"C:\Windows\WinSxS;node_modules;*.tmp".into(),
+            index_enabled: false,
         };
         assert_eq!(Settings::parse(&s.serialize()), s);
     }
