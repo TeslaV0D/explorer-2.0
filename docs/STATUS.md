@@ -1,6 +1,6 @@
 # Zwischenstand
 
-**Stand:** 2026-11-06 · **Phase:** 1 · M0–M7 ✅ (M7.3 verschoben) · R-001 ✅ · **M8.1/M8.2 Installer ✅ (Run #69)** · **M8.3 Härtung ✅ (Run #70–#73)** · **Phase 2 Suche: S1.1 ✅ (Run #78), S1.2 ✅ (Run #80), S1.3 ✅ (Run #83), S1.4 ✅ (Run #90), S1.5a/b CI ausstehend** (Plan `docs/PLAN-SEARCH.md`) · **Branch:** `claude/relaxed-pasteur-ufhh1p`
+**Stand:** 2026-11-06 · **Phase:** 1 · M0–M7 ✅ (M7.3 verschoben) · R-001 ✅ · **M8.1/M8.2 Installer ✅ (Run #69)** · **M8.3 Härtung ✅ (Run #70–#73)** · **Phase 2 Suche: S1.1 ✅ (Run #78), S1.2 ✅ (Run #80), S1.3 ✅ (Run #83), S1.4 ✅ (Run #90), S1.5 ✅ (Run #91/#93) → **S1 komplett**, Praxistest offen** (Plan `docs/PLAN-SEARCH.md`) · **Branch:** `claude/relaxed-pasteur-ufhh1p`
 
 ## M5 – Shell-Integration (läuft, Freigabe Boss 2026-11-04)
 ### CI-Run #37 – alles grün ✅ (M5.0–M5.5)
@@ -40,13 +40,15 @@
 - **Bug (CI #32/#33, UI-Matrix)**: OLE-Drop-Target wurde nie registriert („Invalid window handle“) – der Timer lief, bevor Slint das native Fenster erzeugt hatte → Ablegen aus anderen Apps wäre tot gewesen. Fix: Registrierung wiederholt bis HWND existiert (50 ms, max. 5 s), sonst Rückfall auf In-App-DnD.
 - Neu: **Windows-E2E mit echter Tastatur/Maus** (`scripts/e2e-windows.ps1`, CI-Schritt im Release-Job, Screenshots bei Fehler).
 
-### Phase 2 – S1.5c Laufwerksauswahl (CI ausstehend)
+### Phase 2 – S1.5c Laufwerksauswahl ✅ (CI-Run #93) → **S1.5 komplett, S1 komplett**
+- CI #92 rot nur im Clipboard-Interop-Test (Windows): .NET `GetFileDropList` sah die gerade gesetzte Zwischenablage kurz leer, unser Lesen und `Get-Clipboard` sahen die Dateien → Test liest jetzt mit bis zu 5 Versuchen (wie eine App). #93 grün, lokal Linux-E2E 254/254.
+- **Nächster Schritt: Praxistest auf echtem Windows** (`docs/PRAXISTEST-SUCHE.md`), danach Entscheidung über S2.
 - `core::index_roots` (`Candidate`, `chosen`, `toggle`): Einstellung `index_roots` leer = **automatisch** (Windows: feste lokale Laufwerke; Linux: persönlicher Ordner), sonst `;`-Liste; `;` allein = ausdrücklich keins. Wird die Wahl wieder gleich der automatischen, steht die Einstellung wieder auf leer (später hinzukommende Platten werden mitgenommen). Gelistete, gerade fehlende Laufwerke (USB abgezogen) bleiben in der Liste, werden aber nicht indexiert.
 - Einstellungen „Suche“: alle Laufwerke mit Haken (Laufwerkssuche im Hintergrund), Netzlaufwerke/Wechseldatenträger/sonstige zuschaltbar, DVD/BD nie; **über** der Statuszeile (Klickziele stabil). Haken ändern = speichern + Dienst neu starten (alter stoppt und speichert, dann Start mit neuer Wahl). `EXPLORER2_INDEX_ROOTS` gewinnt weiterhin, `EXPLORER2_INDEX_CANDIDATES` ersetzt die Laufwerkssuche in Tests.
 - Test fand einen echten Fehler: `;` (ausdrücklich keins) wurde wie „automatisch“ behandelt.
 - Tests: Unit (automatisch, an/aus, zurück zu automatisch, fehlende Laufwerke, Unix-Groß/Klein), Fuzz, E2E [80]–[80f] (beide automatisch, Liste in den Einstellungen, abwählen → Neustart ohne, dessen Dateien nicht mehr gefunden, Wahl bleibt nach Neustart, wieder an = automatisch).
 
-### Phase 2 – S1.5a/b Ortszeit, Watcher-Status, Hervorhebung, Suchverlauf (CI ausstehend)
+### Phase 2 – S1.5a/b Ortszeit, Watcher-Status, Hervorhebung, Suchverlauf ✅ (CI-Run #91)
 - **Ortszeit**: `core::local_offset_at(t)` (Versatz *dieses* Datums → Sommer-/Winterzeit richtig, über `chrono`, das ohnehin via Slint im Build ist) + `format_local` für Liste, Inspector, Dialoge; `dm:`-Abfragen rechnen „heute“ in Ortszeit. Test mit `TZ=Europe/Berlin`: Januar +1 h, Juli +2 h.
 - **Watcher-Status**: `Pending::lost(grund)` zählt verpasste Ereignisse (Puffer-Überlauf, Watcher-Fehler) → Status „Änderungen 2-mal verpasst, danach abgeglichen (zu viele Änderungen auf einmal)“; `watch::describe` macht aus notify-Fehlern Text (inotify-Grenze: „fs.inotify.max_user_watches erhöhen“).
 - **Hervorhebung**: `core::highlight` (`pieces` = wörtliche Stücke der Abfrage ohne `ext:`/`!`/Platzhalter, `find`/`split` ohne Groß/Klein zeichengenau) → Zeile bekommt `hl-pre/hl-hit/hl-post`, der Treffer wird **fett** gezeichnet (Slint kann Text nicht teilweise formatieren). Im Zufallstest: Stücke ergeben immer wieder den Namen.

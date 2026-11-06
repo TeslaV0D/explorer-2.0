@@ -125,7 +125,7 @@ Legende: `[ ]` offen · `[~]` in Arbeit · `[x]` erledigt · Prio P0/P1/P2
 - [ ] Linux: keine GPU-Probe (Plattform-Default) – nur Dev-Plattform, ok
 
 ## Phase 2 – Systemweite Suche (Everything-Stil) – **läuft** (Boss 2026-11-05, Plan: `docs/PLAN-SEARCH.md`)
-- [~] S1 ohne Admin (D-024)
+- [x] S1 ohne Admin (D-024) – komplett (CI-Run #93), nächster Schritt: Praxistest (`docs/PRAXISTEST-SUCHE.md`)
   - [x] S1.1 Index-Kern `explorer-index` (82 MB / 1 Mio, Namensabfragen ≤ 5,1 ms Windows-CI, ≤ 3,2 ms Linux-CI; CI-Run #78): kompakte Struktur (Namens-Arena, Elternkette), Einfügen/Löschen/Umbenennen, Abfragesprache (UND/ODER/NICHT, Phrase, `*?`, `ext:` `size:` `dm:` `file:` `folder:` `path:` `regex:`), parallele Suche, Sortierung; Benchmark 1 Mio Einträge < 10 ms, < 100 MB
   - [x] S1.2 Persistenz pro Laufwerk (Version, Volume-Kennung, Prüfsumme, atomar, jede Beschädigung erkannt = neu bauen, nie Absturz; 1 Mio: Datei 69 MB, Laden 116 ms, Speichern 179 ms; CI-Gate Laden < 1 s) + Ausschlusslisten (`Exclusions`: Pfade + Namensmuster, Standard-Ausschlüsse, Einstellung `index_exclude`) – CI-Run #80 (Laden Linux 88 ms, Windows 69 ms)
   - [x] S1.3 `explorer-search`: paralleler Aufbau, Abgleich beim Start über Ordner-Änderungszeiten (in Scheiben), Live-Updates (rekursiver Watcher, Stapel, Überlauf → Abgleich), Dienst pro Laufwerk (Generationen, Neu-Ordnen unter Lese-Sperre, nur exakte Stände speichern), Laufwerks-Kennung; CI-Beispiel `drive` (Messläufe `C:\` kalt/warm/Priorität, Gate `D:\`) – CI-Run #83: kalte VM-Platte 5k/s, warm 207k/s, Live 204 ms
@@ -137,10 +137,11 @@ Legende: `[ ]` offen · `[~]` in Arbeit · `[x]` erledigt · Prio P0/P1/P2
     - [x] S1.4b Suchfeld pro Tab (Strg+F/Strg+E/F3, ab aktuellem Ordner, Platzhalter `::suche:`, Treffer mit vollen Pfaden = alle Dateifunktionen, Spalte „Ordner“ relativ, max. 20.000 angezeigt, ohne Index Ordner durchlaufen, Treffer folgen dem Index, Esc/leeres Feld = zurück ohne Spur im Verlauf), E2E [76i], [77]–[77k], Windows [W44] – CI #89/#90
     - [x] Lokale Zeitzone für Datumsanzeige **und** `dm:`-Abfragen (S1.5a, Sommerzeit pro Datum)
     - [x] S1.4c globale Schnellsuche (Strg+Umschalt+F + Palette „Alle Laufwerke durchsuchen“): Overlay im Stil der Palette, beste 50 (exakter Name → Namensanfang → kürzer), Enter öffnet, Strg/Umschalt+Enter zeigt markiert im Ordner, Fußzeile mit Index-Umfang, E2E [78], Windows [W45] – CI #89/#90
-  - [~] S1.5 Feinschliff
-    - [~] S1.5a Ortszeit (Anzeige + `dm:`), verpasste Watcher-Ereignisse im Status – **CI ausstehend**
-    - [~] S1.5b Treffer fett markiert, Sortieren per Spaltenkopf in Treffern (getestet), Suchverlauf (↑/↓ im Suchfeld, Liste in der Schnellsuche), E2E [79] – **CI ausstehend**
-    - [~] S1.5c Laufwerksauswahl in den Einstellungen (automatisch = feste lokale; Netz/USB/Linux-`/` zuschaltbar; DVD nie), Neustart des Dienstes, E2E [80] – **CI ausstehend**
+  - [x] S1.5 Feinschliff (CI-Run #91/#93)
+    - [x] S1.5a Ortszeit (Anzeige + `dm:`), verpasste Watcher-Ereignisse im Status – CI #91
+    - [x] S1.5b Treffer fett markiert, Sortieren per Spaltenkopf in Treffern (getestet), Suchverlauf (↑/↓ im Suchfeld, Liste in der Schnellsuche), E2E [79] – CI #91
+    - [~] S1.5c Laufwerksauswahl in den Einstellungen (automatisch = feste lokale; Netz/USB/Linux-`/` zuschaltbar; DVD nie), Neustart des Dienstes, E2E [80] – CI #93
+- [ ] **Praxistest S1 auf echtem Windows (Boss)** – Anleitung `docs/PRAXISTEST-SUCHE.md`, Artefakt aus CI-Run #93
 - [ ] S2 optional mit Admin: MFT/USN-Dienst – erst nach Praxistest S1 + R-001-Erweiterung für Dienste
 - [ ] Später: Inhaltssuche, systemweiter Hotkey (Integration → R-001)
 
