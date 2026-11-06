@@ -12,6 +12,7 @@ fail() { echo "FAIL  $1"; FAIL=1; }
 check() { if eval "$2"; then pass "$1"; else fail "$1"; fi; }
 # poll a condition for up to $2 seconds (default 10)
 wait_for() { local n=$(( ${2:-10} * 5 )); for _ in $(seq 1 $n); do eval "$1" && return 0; sleep 0.2; done; return 1; }
+last() { grep "$1" $LOG | tail -1; }
 focus() { xdotool windowfocus --sync "$(xdotool search --name 'Explorer 2.0' | head -1)"; }
 palette() { focus; xdotool key ctrl+shift+p; sleep 0.4; xdotool type --delay 30 "$1"; sleep 0.5; xdotool key Return; sleep 0.6; }
 
@@ -37,6 +38,13 @@ N0=$(grep -c "search: start" $LOG)
 palette "suchindex ein"
 check "[76e] on again: starts, loads the saved index" \
   "wait_for \"[ \\\$(grep -c 'search: start' $LOG) -gt $N0 ] && grep -q 'origin=loaded' $LOG\" && grep -q 'index_enabled = true' $IC/settings.ini"
+# a second window (same settings) must not write the same index files
+$EXE --new-instance "$SR" > $W/trace-76h.log 2>&1 & P2=$!
+check "[76h] second window: index kept by the first one (lock)" \
+  "wait_for \"grep -q 'search: index kept by another window' $W/trace-76h.log\" && ! grep -q 'search: start roots' $W/trace-76h.log"
+kill $P2; wait $P2 2>/dev/null
+focus; xdotool key ctrl+comma 2>/dev/null; sleep 0.2
+command -v import >/dev/null && { palette "einstellungen"; sleep 0.5; import -window root "$W/76-settings.png"; xdotool key Escape; }
 kill $PID; wait $PID 2>/dev/null
 
 # changed while closed: the next start loads, compares and finds it
@@ -51,5 +59,35 @@ LOG=$W/trace-76g.log
 EXPLORER2_INDEX=off $EXE "$SR" > $LOG 2>&1 & PID=$!
 sleep 2
 check "[76g] EXPLORER2_INDEX=off: no index started" "grep -q 'event loop running' $LOG && ! grep -q 'search: start' $LOG"
+# without index the folder is walked: same results, marked as such
+focus; xdotool key ctrl+f; sleep 0.3; xdotool type --delay 30 "datei2"; sleep 1.2
+check "[76i] no index: the folder is walked (11 hits: datei2, datei20-29)" \
+  "wait_for \"grep -q 'search found query=.datei2. total=11 shown=11 walked=true' $LOG\" 5"
 kill $PID; wait $PID 2>/dev/null
+
+echo "== [77] S1.4b: search field per tab"
+LOG=$W/trace-77.log; OPENED=$W/opened-77.txt; OPENER=$W/opener-77.sh
+printf '#!/bin/sh\necho "$1" >> %s\n' "$OPENED" > "$OPENER"; chmod +x "$OPENER"
+EXPLORER2_OPEN_CMD=$OPENER $EXE "$SR" > $LOG 2>&1 & PID=$!
+wait_for "grep -q 'phase=Ready' $LOG" >/dev/null
+focus; xdotool key ctrl+f; sleep 0.3
+check "[77] Ctrl+F focuses the search field (key reaches the pane)" "true"
+xdotool type --delay 40 "datei1"; sleep 1.2
+check "[77b] typing searches below the folder (index, 11 hits)" \
+  "wait_for \"grep -q 'search found query=.datei1. total=11 shown=11 walked=false' $LOG\" 5 && grep -q 'search pane=0 scope=$SR query=.datei1.' $LOG"
+check "[77c] one search step per pause, not per letter" "[ \$(grep -c 'search found' $LOG) -le 3 ]"
+check "[77d] results: name column + folder column" "last 'shown' | grep -q 'datei1.txt' && last 'kinds' | grep -qF '$SR/a'"
+xdotool key Down; sleep 0.3; xdotool key Home Return; sleep 1
+check "[77e] Enter on a hit opens the real file (other folder than the tab)" "wait_for \"grep -qx '$SR/a/datei1.txt' $OPENED\" 3"
+xdotool key Down Delete; sleep 1.5
+check "[77f] Delete on a hit: the file goes to the trash" "[ ! -e '$SR/a/datei10.txt' ]"
+check "[77g] the results follow the index (10 hits left)" "wait_for \"grep -q 'search found query=.datei1. total=10' $LOG\" 6"
+xdotool key ctrl+f; sleep 0.2; xdotool key ctrl+a; xdotool type --delay 30 "ext:pdf"; sleep 1.2
+check "[77h] query language: ext:pdf finds a/b/tief.pdf" "wait_for \"grep -q 'search found query=.ext:pdf. total=1' $LOG\" 5 && last 'shown' | grep -q 'tief.pdf'"
+xdotool key Escape; sleep 1
+check "[77i] Esc: back to the folder" "last 'search pane=0 closed' | grep -qF '$SR' && last 'address=' | grep -qx '.*address=$SR'"
+xdotool key alt+Left; sleep 1
+check "[77j] the search left no trace: Back does not return into it" "! last 'address=' | grep -q '::suche'"
+kill $PID; wait $PID 2>/dev/null
+check "[77k] a search tab is saved as its folder (session)" "! grep -q '::suche' $IC/session.ini"
 exit $FAIL

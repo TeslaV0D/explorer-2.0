@@ -22,6 +22,8 @@ pub enum KeyAction {
     Refresh,
     /// Ctrl+L / Alt+D: edit the address bar (Explorer shortcut).
     EditPath,
+    /// Ctrl+F / Ctrl+E / F3: the search field of the pane (S1.4b).
+    FocusSearch,
     /// Alt+← / Alt+→ (mouse side buttons are handled in the UI).
     Back,
     Forward,
@@ -79,6 +81,7 @@ const TAB: char = '\t';
 const BACKTAB: char = '\u{19}';
 const DELETE: char = '\u{7F}';
 const F2: char = '\u{F705}';
+const F3: char = '\u{F706}';
 const INSERT: char = '\u{F727}';
 const ESCAPE: char = '\u{1B}';
 const F10: char = '\u{F70D}';
@@ -152,6 +155,8 @@ pub fn map_key_grid(
         ' ' if ctrl => Some(KeyAction::ToggleFocused),
         'a' | 'A' if ctrl && !alt => Some(KeyAction::SelectAll),
         'l' | 'L' if ctrl && !alt => Some(KeyAction::EditPath),
+        'f' | 'F' | 'e' | 'E' if ctrl && !alt && !shift => Some(KeyAction::FocusSearch),
+        F3 if !ctrl && !alt => Some(KeyAction::FocusSearch),
         't' | 'T' if ctrl && !alt => Some(KeyAction::NewTab),
         'w' | 'W' if ctrl && !alt => Some(KeyAction::CloseTab),
         '\\' if ctrl && !alt => Some(KeyAction::ToggleSplit),

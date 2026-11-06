@@ -24,6 +24,15 @@ impl History {
         self.forward.clear();
     }
 
+    /// Leaving a search for the folder it came from (Esc, cleared field):
+    /// that folder is taken off the back stack, so the search leaves no
+    /// trace (no "back" into the folder you are in, nothing forward).
+    pub fn return_to(&mut self, folder: &std::path::Path) {
+        if self.back.last().is_some_and(|b| b == folder) {
+            self.back.pop();
+        }
+    }
+
     pub fn can_back(&self) -> bool {
         !self.back.is_empty()
     }
@@ -54,6 +63,20 @@ impl History {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn leaving_a_search_leaves_no_trace() {
+        let mut h = History::default();
+        h.visit(PathBuf::from("/a"));
+        h.visit(PathBuf::from("/a/b")); // then searched in /a/b
+        h.return_to(std::path::Path::new("/a/b"));
+        assert_eq!(h.back(PathBuf::from("/a/b")), Some(PathBuf::from("/a")));
+        // not the folder on top: nothing changes
+        let mut h = History::default();
+        h.visit(PathBuf::from("/x"));
+        h.return_to(std::path::Path::new("/y"));
+        assert!(h.can_back());
+    }
 
     fn p(s: &str) -> PathBuf {
         PathBuf::from(s)

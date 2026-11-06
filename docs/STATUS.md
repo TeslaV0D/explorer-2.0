@@ -1,6 +1,6 @@
 # Zwischenstand
 
-**Stand:** 2026-11-06 · **Phase:** 1 · M0–M7 ✅ (M7.3 verschoben) · R-001 ✅ · **M8.1/M8.2 Installer ✅ (Run #69)** · **M8.3 Härtung ✅ (Run #70–#73)** · **Phase 2 Suche: S1.1 ✅ (Run #78), S1.2 ✅ (Run #80), S1.3 ✅ (Run #83)** (Plan `docs/PLAN-SEARCH.md`) · **Branch:** `claude/relaxed-pasteur-ufhh1p`
+**Stand:** 2026-11-06 · **Phase:** 1 · M0–M7 ✅ (M7.3 verschoben) · R-001 ✅ · **M8.1/M8.2 Installer ✅ (Run #69)** · **M8.3 Härtung ✅ (Run #70–#73)** · **Phase 2 Suche: S1.1 ✅ (Run #78), S1.2 ✅ (Run #80), S1.3 ✅ (Run #83), S1.4a CI ausstehend** (Plan `docs/PLAN-SEARCH.md`) · **Branch:** `claude/relaxed-pasteur-ufhh1p`
 
 ## M5 – Shell-Integration (läuft, Freigabe Boss 2026-11-04)
 ### CI-Run #37 – alles grün ✅ (M5.0–M5.5)
@@ -39,6 +39,13 @@
 
 - **Bug (CI #32/#33, UI-Matrix)**: OLE-Drop-Target wurde nie registriert („Invalid window handle“) – der Timer lief, bevor Slint das native Fenster erzeugt hatte → Ablegen aus anderen Apps wäre tot gewesen. Fix: Registrierung wiederholt bis HWND existiert (50 ms, max. 5 s), sonst Rückfall auf In-App-DnD.
 - Neu: **Windows-E2E mit echter Tastatur/Maus** (`scripts/e2e-windows.ps1`, CI-Schritt im Release-Job, Screenshots bei Fehler).
+
+### Phase 2 – S1.4a Such-Dienst in der App (CI ausstehend)
+- `app/src/search.rs`: Dienst startet **3 s nach dem Fenster** in einem eigenen Thread (Laufwerkssuche kann blockieren), nie im Startpfad. Laufwerke: feste lokale (Windows), sonst `$HOME`. Beim Beenden wird gewartet, bis gespeichert ist (Fenster ist da schon zu).
+- **Sperrdatei `index/lock`** (`File::try_lock`): Ein zweites Fenster (`--new-instance`, „eine Instanz“ aus) pflegt den Index nicht mit, sonst schrieben zwei Prozesse dieselben Dateien. Aus/Ein kurz hintereinander: Der neue Start wartet, bis der alte gespeichert hat (nie zwei Dienste auf denselben Dateien).
+- Einstellungen „Suche“: Ein/Aus (`index_enabled`), Status pro Laufwerk („bereit, 1.012.345 Einträge (aufgebaut in 3,4 s)“, „wird aufgebaut … 120.000 Einträge“, ohne Live-Aktualisierung + Grund, Speicherfehler), Knopf „Neu mit der Platte abgleichen“. Das Panel **scrollt**, wenn der Bildschirm zu klein ist (unter Windows mit Integrations- und Installations-Block sonst > 768 px).
+- Palette: „Suchindex neu mit der Platte abgleichen“, „Suchindex ein/aus“.
+- Tests: E2E [76]–[76h] (Aufbau nach „event loop running“, Datei gespeichert, Palette Abgleich/Aus/Ein → geladen, zweites Fenster durch Sperre ausgeschlossen, nächster Start lädt + findet Offline-Änderung, `EXPLORER2_INDEX=off`). Alle anderen App-Tests laufen mit `EXPLORER2_INDEX=off` (CI job-weit), damit der Index ihre Zeitmessungen nicht stört.
 
 ### Phase 2 – S1.3 Aufbau + Abgleich + Live-Updates ✅ (CI-Run #83)
 - **CI #83 Messläufe Windows (je 40 s):**

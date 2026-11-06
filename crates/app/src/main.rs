@@ -219,6 +219,20 @@ fn main() -> Result<(), slint::PlatformError> {
         px
     ));
     on!(win, on_toggle_split, |w| nav::toggle_split(&w));
+    on!(win, on_search_input, |w, pi, t| nav::search_input(
+        &w,
+        pi as usize,
+        t.as_str()
+    ));
+    on!(win, on_search_accept, |w, pi, t| nav::search_accept(
+        &w,
+        pi as usize,
+        t.as_str()
+    ));
+    on!(win, on_search_escape, |w, pi| nav::search_escape(
+        &w,
+        pi as usize
+    ));
     on!(win, on_open_place, |w, p| nav::open_place(&w, p.as_str()));
     on!(win, on_toggle_hidden, |w, on| nav::set_show_hidden(&w, on));
     on!(win, on_command, |w, c| fileops::command(

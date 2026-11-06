@@ -18,6 +18,38 @@ const LIBRARIES: &str = "::bibliotheken";
 /// Prefix of one library: `::bibliothek:Documents` (stem of its .library-ms).
 const LIBRARY: &str = "::bibliothek:";
 
+/// Prefix of a search: `::suche:<scope>\u{1f}<query>` (S1.4b).
+const SEARCH: &str = "::suche:";
+const SEARCH_SEP: char = '\u{1f}';
+
+/// Placeholder of a search for `query` below `scope` (None: every indexed
+/// drive). Lives in the tab's history like a folder: Back returns to it.
+pub fn search_path(scope: Option<&Path>, query: &str) -> PathBuf {
+    let scope = scope
+        .map(|s| s.to_string_lossy().into_owned())
+        .unwrap_or_default();
+    // the separator and line breaks never come from typing; keep the path one line
+    let query: String = query
+        .chars()
+        .map(|c| {
+            if c == SEARCH_SEP || c == '\r' || c == '\n' {
+                ' '
+            } else {
+                c
+            }
+        })
+        .collect();
+    PathBuf::from(format!("{SEARCH}{scope}{SEARCH_SEP}{query}"))
+}
+
+/// `::suche:…` → (scope, query).
+pub fn search_of(p: &Path) -> Option<(Option<PathBuf>, String)> {
+    let rest = p.to_str()?.strip_prefix(SEARCH)?;
+    let (scope, query) = rest.split_once(SEARCH_SEP)?;
+    let scope = (!scope.is_empty()).then(|| PathBuf::from(scope));
+    Some((scope, query.to_string()))
+}
+
 /// Any placeholder path (virtual place or library) – file operations must
 /// never act on these.
 pub fn is_placeholder(p: &Path) -> bool {
@@ -106,6 +138,31 @@ impl VirtualPlace {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn search_paths_round_trip() {
+        let p = search_path(Some(Path::new(r"C:\Users\Boss")), "ext:pdf bericht");
+        assert!(is_placeholder(&p));
+        assert_eq!(VirtualPlace::from_path(&p), None);
+        assert_eq!(library_of(&p), None);
+        assert_eq!(
+            search_of(&p),
+            Some((
+                Some(PathBuf::from(r"C:\Users\Boss")),
+                "ext:pdf bericht".into()
+            ))
+        );
+        let all = search_path(None, "a\u{1f}b\nc");
+        assert_eq!(search_of(&all), Some((None, "a b c".into())));
+        assert_eq!(search_of(Path::new("::suche:")), None);
+        assert_eq!(search_of(Path::new("/home/a")), None);
+        // a scope with the prefix text inside is still split at the separator
+        let odd = search_path(Some(Path::new("/x/::suche:y")), "q");
+        assert_eq!(
+            search_of(&odd),
+            Some((Some(PathBuf::from("/x/::suche:y")), "q".into()))
+        );
+    }
 
     #[test]
     fn placeholder_paths_round_trip() {

@@ -402,7 +402,7 @@ kill $PID; wait $PID 2>/dev/null
 
 echo "== [71] R-001: Windows integration status + one-button reset (settings, palette)"
 ICFG=$W/config-integration; mkdir -p "$ICFG"
-T_RESET="956 502"   # settings panel: "Alle Windows-Integrationen zurücksetzen"
+T_RESET="956 625"   # settings panel (below "Suche", S1.4a): "Alle Windows-Integrationen zurücksetzen"
 LOG=$W/trace-71.log
 EXPLORER2_CONFIG_DIR=$ICFG $EXE "$TW" > $LOG 2>&1 & PID=$!
 sleep 2.5; focus

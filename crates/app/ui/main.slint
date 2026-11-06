@@ -119,6 +119,11 @@ export struct PaneData {
     // column headers (virtual places rename them: "Gelöscht am", "Ursprünglicher Ort")
     date-label: string,
     type-label: string,
+    // search field (S1.4b): query of the shown search ("" = none), focus
+    // request (Ctrl+F / F3), hint "Suchen in <Ordner>"
+    search-query: string,
+    search-seq: int,
+    search-scope: string,
 }
 
 // A running file operation (copy/move/delete) in the operations panel.
@@ -377,6 +382,9 @@ component FilePane inherits Rectangle {
     callback tab-close(int);
     callback tab-new();
     callback address-resized(float);
+    callback search-input(string);
+    callback search-accept(string);
+    callback search-escape();
     callback rename-commit(string);
     callback rename-cancel();
     in property <[image]> icons;
@@ -488,6 +496,11 @@ component FilePane inherits Rectangle {
     changed edit-seq => { root.start-edit(); }
     property <int> focus-seq: root.data.focus-seq;
     changed focus-seq => { list-focus.focus(); }
+    property <int> search-seq: root.data.search-seq;
+    changed search-seq => { search-edit.focus(); search-edit.select-all(); }
+    // another tab / Back: the field shows that tab's search (not while typing)
+    property <string> search-query: root.data.search-query;
+    changed search-query => { if (!search-edit.has-focus) { search-edit.text = root.search-query; } }
     property <int> rename-seq: root.data.rename-seq;
     changed rename-seq => { root.start-rename(); }
 
@@ -506,7 +519,7 @@ component FilePane inherits Rectangle {
     // Keyboard focus follows the active pane. A pane created by the split view is
     // instantiated after the request was made, so `changed` alone would miss it.
     changed active => { if (root.active) { list-focus.focus(); } }
-    init => { if (root.active) { list-focus.focus(); } root.report-geometry(); }
+    init => { if (root.active) { list-focus.focus(); } root.report-geometry(); search-edit.text = root.data.search-query; }
     property <length> addr-w: address.width;
     changed addr-w => { root.address-resized(self.addr-w / 1px); }
 
@@ -577,6 +590,36 @@ component FilePane inherits Rectangle {
                         reject
                     }
                     changed has-focus => { if (!self.has-focus && root.editing-path) { root.editing-path = false; root.cancel-edit(); } }
+                }
+            }
+            // ---------- search field (S1.4b) ----------
+            Rectangle {
+                width: min(240px, parent.width * 0.3);
+                border-width: 1px;
+                border-color: search-edit.has-focus ? Theme.c.accent : Theme.c.outline;
+                border-radius: 4px;
+                background: Theme.c.card;
+                clip: true;
+                search-edit := TextInput {
+                    x: 8px; width: parent.width - 16px;
+                    single-line: true;
+                    vertical-alignment: center;
+                    color: Theme.c.text;
+                    edited => { root.activate(); root.search-input(self.text); }
+                    accepted => { root.activate(); root.search-accept(self.text); }
+                    key-pressed(e) => {
+                        if (e.text == Key.Escape) { self.text = ""; root.search-escape(); return accept; }
+                        if (e.text == Key.DownArrow) { list-focus.focus(); return accept; }
+                        reject
+                    }
+                }
+                // hint while empty (Text takes no input: clicks reach the field)
+                if search-edit.text == "" : Text {
+                    x: 8px; width: parent.width - 16px;
+                    text: root.data.search-scope;
+                    color: Theme.c.faint;
+                    vertical-alignment: center;
+                    overflow: elide;
                 }
             }
         }
@@ -1154,6 +1197,9 @@ export component MainWindow inherits Window {
     callback tab-close(int, int);
     callback tab-new(int);
     callback address-resized(int, float);
+    callback search-input(int, string);
+    callback search-accept(int, string);
+    callback search-escape(int);
     callback toggle-split();
     callback open-place(string);
     callback toggle-hidden(bool);
@@ -1255,6 +1301,9 @@ export component MainWindow inherits Window {
                         tab-close(t) => { root.tab-close(pi, t); }
                         tab-new => { root.tab-new(pi); }
                         address-resized(w) => { root.address-resized(pi, w); }
+                        search-input(t) => { root.search-input(pi, t); }
+                        search-accept(t) => { root.search-accept(pi, t); }
+                        search-escape => { root.search-escape(pi); }
                         rename-commit(t) => { root.rename-commit(pi, t); }
                         rename-cancel => { root.rename-cancel(pi); }
                         icons: root.icons;
@@ -1514,14 +1563,20 @@ export component MainWindow inherits Window {
         x: root.width - self.width - 8px;
         y: 40px;
         width: 380px;
-        height: settings-layout.preferred-height;
+        // small screens: the panel scrolls instead of running off the bottom
+        height: min(settings-layout.preferred-height + 2px, root.height - self.y - 8px);
         background: Theme.c.card;
         border-color: Theme.c.outline;
         border-width: 1px;
         border-radius: 6px;
         drop-shadow-blur: 12px;
         drop-shadow-color: Theme.c.shadow;
-        settings-layout := VerticalLayout {
+        settings-scroll := ScrollView {
+          x: 1px; y: 1px; width: parent.width - 2px; height: parent.height - 2px;
+          viewport-width: self.visible-width;
+          viewport-height: settings-layout.preferred-height;
+          settings-layout := VerticalLayout {
+            width: settings-scroll.visible-width;
             padding: 14px;
             spacing: 8px;
             Text { text: "Einstellungen"; font-size: 15px; font-weight: 700; }
@@ -1631,10 +1686,13 @@ export component MainWindow inherits Window {
                 alignment: start;
                 Button { text: root.install-button; clicked => { root.install-now(); } }
             }
-            HorizontalLayout {
-                alignment: end;
-                Button { text: "Schließen"; clicked => { root.settings-open = false; } }
-            }
+          }
+        }
+        // fixed in the corner: reachable while scrolled, never moved by new sections
+        Button {
+            x: parent.width - self.width - 22px; y: 8px;
+            text: "Schließen";
+            clicked => { root.settings-open = false; }
         }
     }
 }

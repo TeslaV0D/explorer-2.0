@@ -189,6 +189,12 @@ pub const ALL: &[Command] = &[
         Need::Always,
     ),
     c(
+        "search",
+        "Suchen (im aktuellen Ordner)",
+        "Strg+F",
+        Need::Always,
+    ),
+    c(
         "search-rescan",
         "Suchindex neu mit der Platte abgleichen",
         "",

@@ -150,39 +150,74 @@ impl Volume {
 
     /// `scope`: only below this folder (a folder above the root = all).
     pub fn search(&self, q: &Query, scope: Option<&Path>, by: SortBy, descending: bool) -> Hits {
-        let g = self.index.read().unwrap_or_else(|e| e.into_inner());
-        // read under the lock: a writer bumps it while holding the write lock
         let generation = self.generation();
-        let Some(ix) = g.as_ref() else {
-            return Hits {
-                generation,
-                ids: Vec::new(),
-            };
-        };
-        let scope_id = match scope {
-            None => None,
-            Some(p) => {
-                let s = p.to_string_lossy();
-                let root = self.root.to_string_lossy();
-                if same_path(&s, &root) || inside(&root, &s) {
-                    None
-                } else {
-                    match ix.find(&s) {
-                        Some(id) => Some(id),
-                        None => {
-                            return Hits {
-                                generation,
-                                ids: Vec::new(),
-                            }
-                        }
-                    }
-                }
-            }
-        };
-        Hits {
+        self.search_with(q, scope, by, descending, |_, ids| Hits {
             generation,
-            ids: ix.search(q, scope_id, by, descending),
+            ids: ids.to_vec(),
+        })
+        .unwrap_or(Hits {
+            generation,
+            ids: Vec::new(),
+        })
+    }
+
+    /// Like [`Volume::search`], but `f` sees the index and the hits under the
+    /// same read lock (names, sizes and paths of exactly these ids). None
+    /// before the index exists. The scope folder itself is not a hit.
+    pub fn search_with<R>(
+        &self,
+        q: &Query,
+        scope: Option<&Path>,
+        by: SortBy,
+        descending: bool,
+        f: impl FnOnce(&Index, &[u32]) -> R,
+    ) -> Option<R> {
+        let g = self.index.read().unwrap_or_else(|e| e.into_inner());
+        let ix = g.as_ref()?;
+        let scope_id = match scope {
+            Some(p) if !self.inside_scope(p) => match ix.find(&p.to_string_lossy()) {
+                Some(id) => Some(id),
+                None => return Some(f(ix, &[])),
+            },
+            _ => None,
+        };
+        let mut ids = ix.search(q, scope_id, by, descending);
+        // neither the drive root nor the searched folder are results
+        ids.retain(|&id| ix.parent(id) != explorer_index::NONE && Some(id) != scope_id);
+        Some(f(ix, &ids))
+    }
+
+    /// The whole volume lies in `scope` (scope = root or above it).
+    fn inside_scope(&self, scope: &Path) -> bool {
+        let s = scope.to_string_lossy();
+        let root = self.root.to_string_lossy();
+        same_path(&s, &root) || inside(&root, &s)
+    }
+
+    /// `folder` is this volume's root or lies below it.
+    pub fn contains(&self, folder: &Path) -> bool {
+        let f = folder.to_string_lossy();
+        let root = self.root.to_string_lossy();
+        same_path(&f, &root) || inside(&f, &root)
+    }
+
+    /// Searching `scope` (None = everything) finds something here: the scope
+    /// is this volume, lies in it, or contains it.
+    pub fn covers(&self, scope: Option<&Path>) -> bool {
+        match scope {
+            None => true,
+            Some(s) => {
+                self.inside_scope(s) || inside(&s.to_string_lossy(), &self.root.to_string_lossy())
+            }
         }
+    }
+
+    /// The index exists (loaded or built): searches give results.
+    pub fn searchable(&self) -> bool {
+        self.index
+            .read()
+            .unwrap_or_else(|e| e.into_inner())
+            .is_some()
     }
 
     /// Full path of a hit (None if the index changed meanwhile: search again).

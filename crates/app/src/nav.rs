@@ -92,6 +92,13 @@ enum VirtualData {
     Targets(HashMap<String, PathBuf>),
     /// One library: its display name and row name → member folder.
     Library(String, HashMap<String, PathBuf>),
+    /// Search results: full path per row (index-aligned with `entries`;
+    /// names repeat across folders), all matches, folder walked (no index).
+    Search {
+        paths: Vec<PathBuf>,
+        total: usize,
+        walked: bool,
+    },
 }
 
 impl Tab {
@@ -123,6 +130,13 @@ impl Tab {
     fn title(&self) -> String {
         if let Some(v) = self.path.as_deref().and_then(VirtualPlace::from_path) {
             return v.label().to_string();
+        }
+        if let Some((_, q)) = self
+            .path
+            .as_deref()
+            .and_then(explorer_core::places::search_of)
+        {
+            return format!("Suche: {q}");
         }
         if let VirtualData::Library(display, _) = &self.virtual_data {
             return display.clone();
@@ -162,6 +176,8 @@ struct Pane {
     cols_model: Rc<VecModel<i32>>,
     /// Selection kept while a Ctrl rubber band is drawn (None = no band).
     band_base: Option<Vec<usize>>,
+    /// Focus request for the search field (Ctrl+F / F3).
+    search_seq: i32,
 }
 
 impl Pane {
@@ -179,6 +195,7 @@ impl Pane {
             cols: 1,
             cols_model: Rc::new(VecModel::from(vec![0])),
             band_base: None,
+            search_seq: 0,
             rename_index: -1,
             rename_seq: 0,
             rename_text: String::new(),
@@ -232,6 +249,13 @@ thread_local! {
     });
     // Separate cell: used inside selection changes, which already borrow APP.
     static TYPEAHEAD: RefCell<TypeAhead> = RefCell::new(TypeAhead::default());
+    /// Running search per tab: a newer one cancels it (folder walk without index).
+    static SEARCH_CANCEL: RefCell<HashMap<TabId, std::sync::Arc<std::sync::atomic::AtomicBool>>> =
+        RefCell::new(HashMap::new());
+    /// Typing in the search field: the search runs once typing pauses.
+    static SEARCH_TIMER: slint::Timer = slint::Timer::default();
+    /// Last reload of a search tab because the index changed (throttle).
+    static SEARCH_RELOADED: RefCell<HashMap<TabId, Instant>> = RefCell::new(HashMap::new());
     /// Paths marked by "cut" (shown faded until pasted or replaced).
     static CUT: RefCell<std::collections::HashSet<PathBuf>> = RefCell::new(Default::default());
 }
@@ -523,6 +547,58 @@ fn finish_virtual(
     }
 }
 
+/// Rows of search results: the "Typ" column shows the folder of each hit
+/// (Explorer's "Ordner"); icons per real path.
+fn finish_search(found: crate::search::Found, filter: ViewFilter, t0: Instant) -> Update {
+    let mut labels = crate::icons::RowLabels::default();
+    labels.show_extensions = filter.show_extensions;
+    let mut entries = Vec::with_capacity(found.items.len());
+    let mut rows = Vec::with_capacity(found.items.len());
+    let mut paths = Vec::with_capacity(found.items.len());
+    for (e, full) in found.items {
+        let dir = full.parent().map(Path::to_path_buf).unwrap_or_default();
+        let mut r = to_row(&e, &dir, &mut labels);
+        r.kind = dir.to_string_lossy().as_ref().into();
+        rows.push(r);
+        entries.push(e);
+        paths.push(full);
+    }
+    let n = entries.len();
+    Update::Rows {
+        entries,
+        rows,
+        hidden: 0,
+        done: Some((n, t0.elapsed())),
+        data_ready: t0.elapsed(),
+        vdata: VirtualData::Search {
+            paths,
+            total: found.total,
+            walked: found.walked,
+        },
+    }
+}
+
+/// Status line of search results.
+pub(crate) fn search_status(shown: usize, total: usize, walked: bool) -> String {
+    let mut s = if total == 0 {
+        "Keine Treffer".to_string()
+    } else if shown < total {
+        format!(
+            "{} von {} Treffern – Suche verfeinern",
+            format_count(shown),
+            format_count(total)
+        )
+    } else if total == 1 {
+        "1 Treffer".to_string()
+    } else {
+        format!("{} Treffer", format_count(total))
+    };
+    if walked {
+        s.push_str(" (Ordner durchsucht, ohne Index)");
+    }
+    s
+}
+
 fn dir_entry(name: String) -> Entry {
     Entry {
         name,
@@ -728,6 +804,7 @@ fn sync_pane(pi: usize) {
             p.cols_model.remove(p.cols_model.row_count() - 1);
         }
         let place = t.path.as_deref().and_then(VirtualPlace::from_path);
+        let search = t.path.as_deref().and_then(explorer_core::places::search_of);
         let data = PaneData {
             tabs: ModelRc::new(VecModel::from(
                 p.tabs
@@ -775,7 +852,14 @@ fn sync_pane(pi: usize) {
                 .map(|v| v.columns().0)
                 .unwrap_or("Änderungsdatum")
                 .into(),
-            type_label: place.map(|v| v.columns().1).unwrap_or("Typ").into(),
+            type_label: if search.is_some() {
+                "Ordner".into()
+            } else {
+                place.map(|v| v.columns().1).unwrap_or("Typ").into()
+            },
+            search_query: search.map(|(_, q)| q).unwrap_or_default().into(),
+            search_seq: p.search_seq,
+            search_scope: search_scope_label(t).into(),
         };
         if pi < app.pane_model.row_count() {
             app.pane_model.set_row_data(pi, data);
@@ -965,6 +1049,11 @@ pub fn current_session() -> Session {
                     .tabs
                     .iter()
                     .filter_map(|t| t.path.as_ref())
+                    // a search is not restored: its folder is
+                    .map(|p| match explorer_core::places::search_of(p) {
+                        Some((scope, _)) => scope.unwrap_or_else(|| VirtualPlace::ThisPc.path()),
+                        None => p.clone(),
+                    })
                     .map(|p| p.to_string_lossy().into_owned())
                     .collect(),
                 active_tab: p.active,
@@ -1158,6 +1247,43 @@ fn navigate_tab(win: &MainWindow, id: TabId, target: PathBuf, reason: Reason, hi
     let weak = win.as_weak();
     let path = target.clone();
     let t0 = Instant::now();
+    if let Some((scope, query)) = explorer_core::places::search_of(&target) {
+        with_tab(id, |t, _, _| t.loader = None);
+        // a newer search (typing on) cancels a walk that is still running
+        let cancel = std::sync::Arc::new(std::sync::atomic::AtomicBool::new(false));
+        SEARCH_CANCEL.with_borrow_mut(|m| {
+            if let Some(old) = m.insert(id, cancel.clone()) {
+                old.store(true, std::sync::atomic::Ordering::Relaxed);
+            }
+        });
+        let _ = std::thread::Builder::new()
+            .name("search".into())
+            .spawn(move || {
+                let upd = match crate::search::find(scope.as_deref(), &query, sort, &cancel) {
+                    Ok(found) => {
+                        trace(&format!(
+                            "search found query={query:?} total={} shown={} walked={} in {:.1}ms",
+                            found.total,
+                            found.items.len(),
+                            found.walked,
+                            t0.elapsed().as_secs_f64() * 1000.0
+                        ));
+                        finish_search(found, filter, t0)
+                    }
+                    Err(message) => Update::Failed(FsError {
+                        kind: FsErrorKind::Other,
+                        message,
+                    }),
+                };
+                let _ = slint::invoke_from_event_loop(move || {
+                    if let Some(w) = weak.upgrade() {
+                        apply(&w, id, gen, path, reason, upd, t0);
+                    }
+                });
+            });
+        sync_pane(pi);
+        return;
+    }
     if let Some(v) = place {
         // virtual place: one listing on a helper thread, no partial batches
         with_tab(id, |t, _, _| t.loader = None); // cancels a running folder load
@@ -1390,7 +1516,15 @@ fn apply(
                             .refresh_allowed_at
                             .max(Instant::now() + refresh_cooldown(took))
                     });
-                    let mut st = count_label(n);
+                    let search = with_tab(id, |t, _, _| match &t.virtual_data {
+                        VirtualData::Search { total, walked, .. } => Some((*total, *walked)),
+                        _ => None,
+                    })
+                    .flatten();
+                    let mut st = match search {
+                        Some((total, walked)) => search_status(n, total, walked),
+                        None => count_label(n),
+                    };
                     if hidden > 0 {
                         st.push_str(&format!(" ({} ausgeblendet)", format_count(hidden)));
                     }
@@ -1501,6 +1635,35 @@ fn apply(
 }
 
 fn show_crumbs(id: TabId, path: &Path, chars: usize) {
+    if let Some((scope, q)) = explorer_core::places::search_of(path) {
+        // the searched folder (click = back to it) + the search itself
+        let mut list: Vec<Crumb> = match &scope {
+            Some(s) => fit(
+                crumbs(&s.to_string_lossy()),
+                chars.saturating_sub(q.chars().count() + 10),
+            )
+            .into_iter()
+            .map(|c| Crumb {
+                label: c.label.into(),
+                path: c.path.into(),
+            })
+            .collect(),
+            None => vec![Crumb {
+                label: VirtualPlace::ThisPc.label().into(),
+                path: VirtualPlace::ThisPc
+                    .path()
+                    .to_string_lossy()
+                    .as_ref()
+                    .into(),
+            }],
+        };
+        list.push(Crumb {
+            label: format!("Suche „{q}“").into(),
+            path: path.to_string_lossy().as_ref().into(),
+        });
+        with_tab(id, |t, _, _| t.crumbs.set_vec(list));
+        return;
+    }
     if explorer_core::places::library_of(path).is_some() {
         let title = with_tab(id, |t, _, _| t.title()).unwrap_or_default();
         let two = vec![
@@ -1718,6 +1881,160 @@ fn invalidate_all(win: &MainWindow) {
     }
 }
 
+// ---------------------------------------------------------------- search (S1.4b)
+
+/// Where a search from this tab looks: a search's own folder, the folder
+/// shown, or everything (virtual places, servers).
+fn search_scope(t: &Tab) -> Option<PathBuf> {
+    let p = t.path.as_deref()?;
+    match explorer_core::places::search_of(p) {
+        Some((scope, _)) => scope,
+        None if !explorer_core::places::is_placeholder(p) && !is_server(p) => Some(p.to_path_buf()),
+        None => None,
+    }
+}
+
+/// Hint in the empty search field.
+fn search_scope_label(t: &Tab) -> String {
+    match search_scope(t) {
+        Some(s) => format!(
+            "Suchen in {}",
+            s.file_name()
+                .map(|n| n.to_string_lossy().into_owned())
+                .unwrap_or_else(|| s.to_string_lossy().into_owned())
+        ),
+        None => "Alle Laufwerke durchsuchen".into(),
+    }
+}
+
+/// Typing in the search field of pane `pi`: searches once typing pauses.
+pub fn search_input(win: &MainWindow, pi: usize, text: &str) {
+    let weak = win.as_weak();
+    let text = text.to_string();
+    SEARCH_TIMER.with(|t| {
+        t.start(
+            slint::TimerMode::SingleShot,
+            Duration::from_millis(250),
+            move || {
+                if let Some(w) = weak.upgrade() {
+                    run_search(&w, pi, &text);
+                }
+            },
+        )
+    });
+}
+
+/// Enter in the search field: search now.
+pub fn search_accept(win: &MainWindow, pi: usize, text: &str) {
+    SEARCH_TIMER.with(|t| t.stop());
+    run_search(win, pi, text);
+}
+
+/// Esc in the search field: back to the folder, focus to the list.
+pub fn search_escape(win: &MainWindow, pi: usize) {
+    SEARCH_TIMER.with(|t| t.stop());
+    run_search(win, pi, "");
+    request_focus(pi);
+}
+
+fn run_search(win: &MainWindow, pi: usize, text: &str) {
+    let Some(id) = active_tab_id(pi) else { return };
+    let Some((cur, scope)) = with_tab(id, |t, _, _| (t.path.clone(), search_scope(t))) else {
+        return;
+    };
+    let current = cur.as_deref().and_then(explorer_core::places::search_of);
+    let text = text.trim();
+    if text.is_empty() {
+        // field cleared: back to the folder, the search leaves no trace
+        if current.is_some() {
+            let folder = scope.unwrap_or_else(|| VirtualPlace::ThisPc.path());
+            trace(&format!("search pane={pi} closed -> {}", folder.display()));
+            with_tab(id, |t, _, _| t.history.return_to(&folder));
+            navigate_tab(win, id, folder, Reason::User, Hist::Keep);
+        }
+        return;
+    }
+    if current.as_ref().is_some_and(|(_, q)| q == text) {
+        return; // unchanged (Enter after the timer already ran)
+    }
+    trace(&format!(
+        "search pane={pi} scope={} query={text:?}",
+        scope
+            .as_ref()
+            .map(|s| s.display().to_string())
+            .unwrap_or_else(|| "(alle)".into())
+    ));
+    // the first search from a folder is a step in the history; typing on
+    // replaces it (Back = the folder, not every letter)
+    let hist = if current.is_some() {
+        Hist::Keep
+    } else {
+        Hist::Push
+    };
+    let target = explorer_core::places::search_path(scope.as_deref(), text);
+    navigate_tab(win, id, target, Reason::User, hist);
+}
+
+/// The index changed: visible search results are searched again (at most
+/// every 2 s per tab, the last change always comes through).
+pub fn search_index_changed(win: &MainWindow) {
+    const EVERY: Duration = Duration::from_secs(2);
+    let tabs: Vec<TabId> = APP.with_borrow(|app| {
+        app.panes
+            .iter()
+            .map(|p| p.tab())
+            .filter(|t| {
+                t.path
+                    .as_deref()
+                    .is_some_and(|p| explorer_core::places::search_of(p).is_some())
+            })
+            .map(|t| t.id)
+            .collect()
+    });
+    for id in tabs {
+        let now = Instant::now();
+        let wait = SEARCH_RELOADED.with_borrow_mut(|m| match m.get(&id) {
+            Some(&last) if now.duration_since(last) < EVERY => {
+                Some(EVERY - now.duration_since(last))
+            }
+            _ => {
+                m.insert(id, now);
+                None
+            }
+        });
+        match wait {
+            None => reload_tab(win, id),
+            Some(w) => {
+                // trailing reload; a burst schedules one (the map entry moves on)
+                let pending = SEARCH_RELOADED.with_borrow_mut(|m| {
+                    let e = m.entry(id).or_insert(now);
+                    if *e > now {
+                        true
+                    } else {
+                        *e = now + w;
+                        false
+                    }
+                });
+                if !pending {
+                    let weak = win.as_weak();
+                    slint::Timer::single_shot(w, move || {
+                        if let Some(win) = weak.upgrade() {
+                            let still = with_tab(id, |t, _, _| {
+                                t.path
+                                    .as_deref()
+                                    .is_some_and(|p| explorer_core::places::search_of(p).is_some())
+                            });
+                            if still == Some(true) {
+                                reload_tab(&win, id);
+                            }
+                        }
+                    });
+                }
+            }
+        }
+    }
+}
+
 // ---------------------------------------------------------------- public actions
 
 pub fn activate_pane(win: &MainWindow, pi: usize) {
@@ -1932,6 +2249,7 @@ pub fn open_entry(win: &MainWindow, pi: usize, index: usize) {
                 Some((targets.get(&e.name)?.clone(), true))
             }
             VirtualData::Trash(_) => None, // items in the trash do not open (restore first)
+            VirtualData::Search { paths, .. } => Some((paths.get(index)?.clone(), e.is_dir())),
             VirtualData::None => Some((t.path.as_ref()?.join(&e.name), e.is_dir())),
         }
     })
@@ -2117,6 +2435,7 @@ fn refresh_thumbs(win: &MainWindow, pi: usize) {
                         m.get(&e.name)?.clone()
                     }
                     (VirtualData::Trash(_), _) => return None,
+                    (VirtualData::Search { paths, .. }, _) => paths.get(i)?.clone(),
                     (VirtualData::None, Some(d)) => d.join(&e.name),
                     (VirtualData::None, None) => return None,
                 };
@@ -2457,6 +2776,7 @@ pub fn run_action(win: &MainWindow, pi: usize, action: KeyAction) {
             }
         }
         KeyAction::EditPath => request(pi, |p| p.edit_seq += 1),
+        KeyAction::FocusSearch => request(pi, |p| p.search_seq += 1),
         KeyAction::Back => back(win, pi),
         KeyAction::Forward => forward(win, pi),
         KeyAction::NewTab => tab_new(win, pi),
@@ -2619,6 +2939,14 @@ pub(crate) fn selected_paths(pi: usize) -> Vec<PathBuf> {
         return Vec::new();
     };
     with_tab(id, |t, _, _| {
+        let mut idx = t.selection.selected_indices();
+        if idx.is_empty() {
+            idx.extend(t.selection.focus());
+        }
+        // search results: real items in many folders
+        if let VirtualData::Search { paths, .. } = &t.virtual_data {
+            return idx.iter().filter_map(|&i| paths.get(i).cloned()).collect();
+        }
         let Some(dir) = t
             .path
             .as_ref()
@@ -2626,10 +2954,6 @@ pub(crate) fn selected_paths(pi: usize) -> Vec<PathBuf> {
         else {
             return Vec::new();
         };
-        let mut idx = t.selection.selected_indices();
-        if idx.is_empty() {
-            idx.extend(t.selection.focus());
-        }
         idx.iter()
             .filter_map(|&i| t.entries.get(i))
             .map(|e| dir.join(&e.name))
@@ -2670,6 +2994,7 @@ pub(crate) fn inspect_target() -> Option<InspectTarget> {
                 let path = match &t.virtual_data {
                     VirtualData::Targets(m) | VirtualData::Library(_, m) => m.get(&e.name).cloned(),
                     VirtualData::Trash(_) => None,
+                    VirtualData::Search { paths, .. } => paths.get(i).cloned(),
                     VirtualData::None => dir.as_ref().map(|d| d.join(&e.name)),
                 };
                 Some((path, e.clone(), row.name.to_string(), row.kind.to_string()))
@@ -2710,7 +3035,12 @@ pub(crate) fn palette_places() -> Vec<(String, String)> {
         }
         for p in &app.panes {
             for t in &p.tabs {
-                for h in t.path.iter().chain(t.history.recent()) {
+                for h in t
+                    .path
+                    .iter()
+                    .chain(t.history.recent())
+                    .filter(|h| explorer_core::places::search_of(h).is_none())
+                {
                     let label = VirtualPlace::from_path(h)
                         .map(|v| v.label().to_string())
                         .or_else(|| h.file_name().map(|n| n.to_string_lossy().into_owned()))
@@ -2737,6 +3067,9 @@ pub(crate) fn entry_at(pi: usize, index: usize) -> Option<(PathBuf, String, bool
     let id = active_tab_id(pi)?;
     with_tab(id, |t, _, _| {
         let e = t.entries.get(index)?;
+        if let VirtualData::Search { paths, .. } = &t.virtual_data {
+            return Some((paths.get(index)?.clone(), e.name.clone(), e.is_dir()));
+        }
         let dir = t
             .path
             .as_ref()
@@ -2819,6 +3152,18 @@ pub(crate) fn refresh_dirs(
         for p in &mut app.panes {
             for t in &mut p.tabs {
                 let Some(path) = t.path.clone() else { continue };
+                // results found by walking (no index) get no index updates:
+                // search again when something below their folder changed
+                let walked_search =
+                    matches!(t.virtual_data, VirtualData::Search { walked: true, .. })
+                        && explorer_core::places::search_of(&path)
+                            .and_then(|(scope, _)| scope)
+                            .is_some_and(|s| dirs.iter().any(|d| d.starts_with(&s)));
+                if walked_search {
+                    t.stale = true;
+                    ids.push(t.id);
+                    continue;
+                }
                 if !dirs.contains(&path) {
                     continue;
                 }
@@ -2847,6 +3192,21 @@ pub(crate) fn refresh_dirs(
 mod tests {
     use super::*;
     use explorer_core::EntryKind;
+
+    #[test]
+    fn search_status_lines() {
+        assert_eq!(search_status(0, 0, false), "Keine Treffer");
+        assert_eq!(search_status(1, 1, false), "1 Treffer");
+        assert_eq!(search_status(1234, 1234, false), "1.234 Treffer");
+        assert_eq!(
+            search_status(20_000, 123_456, false),
+            "20.000 von 123.456 Treffern – Suche verfeinern"
+        );
+        assert_eq!(
+            search_status(3, 3, true),
+            "3 Treffer (Ordner durchsucht, ohne Index)"
+        );
+    }
 
     fn e(name: &str, dir: bool, hidden: bool) -> Entry {
         Entry {

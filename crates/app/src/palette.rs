@@ -227,6 +227,7 @@ fn execute(win: &MainWindow, pi: usize, id: &str) {
             nav::set_option(win, "single_instance", on);
             win.set_settings_open(true);
         }
+        "search" => act(KeyAction::FocusSearch),
         "search-rescan" => {
             crate::search::rescan(win);
             win.set_settings_open(true);

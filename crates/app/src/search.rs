@@ -97,6 +97,8 @@ fn off_text() -> &'static str {
 
 fn start(win: &MainWindow) {
     let epoch = EPOCH.fetch_add(1, Ordering::SeqCst) + 1;
+    // a new service: its phases are traced from the start again
+    LAST.with_borrow_mut(|m| m.clear());
     let settings = crate::config::load();
     let Some(dir) = crate::config::config_dir().map(|d| d.join("index")) else {
         win.set_search_status("Suchindex: kein Ordner für die Indexdateien.".into());
@@ -285,6 +287,149 @@ fn update_ui(win: &MainWindow) {
         let text: Vec<String> = lines.iter().map(|(r, s)| status_line(r, s)).collect();
         win.set_search_status(text.join("\n").into());
     }
+    // shown results follow the index (new, renamed, deleted files)
+    crate::nav::search_index_changed(win);
+}
+
+/// At most this many results are listed (sorted first, so the best ones):
+/// more is never useful in a list and costs time + memory.
+pub const MAX_HITS: usize = 20_000;
+
+/// Results of one search.
+pub struct Found {
+    /// (entry, full path), sorted as asked, at most [`MAX_HITS`].
+    pub items: Vec<(explorer_core::Entry, PathBuf)>,
+    /// All matches (may exceed `items`).
+    pub total: usize,
+    /// The folder was walked (no index for it yet, or the index is off).
+    pub walked: bool,
+}
+
+fn sort_by(key: explorer_core::SortKey) -> explorer_index::SortBy {
+    use explorer_core::SortKey as K;
+    use explorer_index::SortBy as B;
+    match key {
+        K::Size => B::Size,
+        K::Modified => B::Modified,
+        // "Typ" is the folder column in results: sorted afterwards
+        K::Name | K::Type => B::Name,
+    }
+}
+
+fn entry_of(ix: &explorer_index::Index, id: u32) -> (explorer_core::Entry, PathBuf) {
+    let m = ix.meta(id);
+    let e = explorer_core::Entry {
+        name: ix.name(id).to_string(),
+        kind: if m.is_dir {
+            explorer_core::EntryKind::Dir
+        } else {
+            explorer_core::EntryKind::File
+        },
+        size: m.size,
+        modified: (m.mtime != 0).then_some(m.mtime),
+        hidden: false,
+        system: false,
+        readonly: false,
+        is_link: false,
+    };
+    (e, PathBuf::from(ix.path(id)))
+}
+
+/// Searches `text` below `scope` (None: everything indexed). Uses the index
+/// where it covers the scope; a folder without a ready index is walked (the
+/// same query language, just slower). Blocking: call off the UI thread.
+pub fn find(
+    scope: Option<&std::path::Path>,
+    text: &str,
+    sort: explorer_core::SortSpec,
+    cancel: &AtomicBool,
+) -> Result<Found, String> {
+    let now = std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .map_or(0, |d| d.as_secs() as i64);
+    // dates in the list are shown in UTC as well (same "today")
+    let q = explorer_index::Query::parse(
+        text,
+        explorer_index::Now {
+            unix: now,
+            utc_offset: 0,
+        },
+    )
+    .map_err(|e| format!("Suche: {e}"))?;
+    let by = sort_by(sort.key);
+    let vols: Vec<Arc<Volume>> = with_volumes(|v| v.to_vec());
+    let vols: Vec<Arc<Volume>> = vols
+        .into_iter()
+        .filter(|v| v.covers(scope) && v.searchable())
+        .collect();
+    // `vols` = ready indexes that contain the scope or lie inside it ("/",
+    // "everything"). None (index off, still building, a folder on a drive
+    // that is not indexed): the folder is walked instead
+    let in_index = scope.is_none() || !vols.is_empty();
+    let mut items = Vec::new();
+    let mut total = 0;
+    let mut walked = false;
+    if in_index {
+        for v in &vols {
+            v.search_with(&q, scope, by, sort.descending, |ix, ids| {
+                total += ids.len();
+                items.extend(ids.iter().take(MAX_HITS).map(|&id| entry_of(ix, id)));
+            });
+        }
+    } else if let Some(s) = scope {
+        // no index here (off, still building, not an indexed drive): walk it
+        let settings = crate::config::load();
+        let ex = explorer_index::Exclusions::with_defaults(&settings.index_exclude, cfg!(windows));
+        let mut w = explorer_search::walk::Walker::new(&ex);
+        w.cancel = Some(cancel);
+        let (ix, rep) = explorer_search::walk::build(s, &w);
+        if rep.cancelled {
+            return Err("abgebrochen".into());
+        }
+        walked = true;
+        let mut ids = ix.search(&q, None, by, sort.descending);
+        ids.retain(|&id| ix.parent(id) != explorer_index::NONE);
+        total = ids.len();
+        items.extend(ids.iter().take(MAX_HITS).map(|&id| entry_of(&ix, id)));
+    }
+    // several drives, or the folder column: one order for all
+    if vols.len() > 1 || sort.key == explorer_core::SortKey::Type {
+        sort_found(&mut items, sort);
+    }
+    items.truncate(MAX_HITS);
+    Ok(Found {
+        items,
+        total,
+        walked,
+    })
+}
+
+/// Sorts results like the list sorts a folder; "Typ" = the folder column.
+pub(crate) fn sort_found(
+    items: &mut [(explorer_core::Entry, PathBuf)],
+    sort: explorer_core::SortSpec,
+) {
+    use explorer_core::SortKey as K;
+    let folder = |p: &PathBuf| {
+        p.parent()
+            .map(|d| d.to_string_lossy().to_lowercase())
+            .unwrap_or_default()
+    };
+    items.sort_by(|a, b| {
+        let o = match sort.key {
+            K::Name => explorer_index::natural(&a.0.name, &b.0.name),
+            K::Size => a.0.size.cmp(&b.0.size),
+            K::Modified => a.0.modified.cmp(&b.0.modified),
+            K::Type => folder(&a.1)
+                .cmp(&folder(&b.1))
+                .then_with(|| explorer_index::natural(&a.0.name, &b.0.name)),
+        };
+        if sort.descending {
+            o.reverse()
+        } else {
+            o
+        }
+    });
 }
 
 /// One line of the index status (settings panel).
@@ -336,6 +481,51 @@ mod tests {
             live: true,
             ..Status::default()
         }
+    }
+
+    #[test]
+    fn results_sort_like_a_folder_and_by_folder() {
+        use explorer_core::{Entry, EntryKind, SortKey, SortSpec};
+        let it = |name: &str, dir: &str, size: u64, m: i64| {
+            (
+                Entry {
+                    name: name.into(),
+                    kind: EntryKind::File,
+                    size,
+                    modified: Some(m),
+                    hidden: false,
+                    system: false,
+                    readonly: false,
+                    is_link: false,
+                },
+                PathBuf::from(dir).join(name),
+            )
+        };
+        let mut v = vec![
+            it("b10.txt", "/z", 5, 3),
+            it("b2.txt", "/a", 9, 1),
+            it("a.txt", "/m", 1, 2),
+        ];
+        let spec = |key, descending| SortSpec {
+            key,
+            descending,
+            dirs_first: true,
+        };
+        let names = |v: &[(explorer_core::Entry, PathBuf)]| -> Vec<String> {
+            v.iter().map(|x| x.0.name.clone()).collect()
+        };
+        sort_found(&mut v, spec(SortKey::Name, false));
+        assert_eq!(names(&v), ["a.txt", "b2.txt", "b10.txt"], "natural order");
+        sort_found(&mut v, spec(SortKey::Size, true));
+        assert_eq!(names(&v), ["b2.txt", "b10.txt", "a.txt"]);
+        sort_found(&mut v, spec(SortKey::Type, false));
+        assert_eq!(
+            names(&v),
+            ["b2.txt", "a.txt", "b10.txt"],
+            "by folder /a /m /z"
+        );
+        sort_found(&mut v, spec(SortKey::Modified, false));
+        assert_eq!(names(&v), ["b2.txt", "a.txt", "b10.txt"]);
     }
 
     #[test]
