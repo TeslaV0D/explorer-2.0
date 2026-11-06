@@ -36,47 +36,96 @@ impl RefreshReport {
 /// Folders modified at or after `since - 2` are read again even if their
 /// time looks unchanged (a change in the same second as the scan).
 pub fn refresh(ix: &mut Index, root_id: u32, w: &Walker, since: i64) -> RefreshReport {
-    let t0 = Instant::now();
+    let mut r = Refresh::new(root_id, since);
+    r.step(ix, w, None);
+    r.report()
+}
+
+/// [`refresh`] in slices: the caller holds the write lock only for one
+/// [`Refresh::step`], so searches keep running while a big drive is checked.
+/// Ids stay valid between steps (the index never reuses one).
+pub struct Refresh {
+    stack: Vec<u32>,
+    since: i64,
+    rep: RefreshReport,
+    t0: Instant,
+}
+
+impl Refresh {
+    pub fn new(root_id: u32, since: i64) -> Refresh {
+        Refresh {
+            stack: vec![root_id],
+            since,
+            rep: RefreshReport::default(),
+            t0: Instant::now(),
+        }
+    }
+
+    /// Works until done (true) or `deadline` (false: call again).
+    pub fn step(&mut self, ix: &mut Index, w: &Walker, deadline: Option<Instant>) -> bool {
+        let rep = &mut self.rep;
+        while let Some(dir) = self.stack.pop() {
+            if w.cancel
+                .is_some_and(|c| c.load(std::sync::atomic::Ordering::Relaxed))
+            {
+                rep.cancelled = true;
+                self.stack.clear();
+                break;
+            }
+            if !ix.exists(dir) {
+                continue;
+            }
+            rep.dirs_checked += 1;
+            let path = ix.path(dir);
+            let is_root = ix.parent(dir) == explorer_index::NONE;
+            let (meta, link) = match disk_meta(Path::new(&path)) {
+                Ok(m) => m,
+                Err(e) if e.kind() == std::io::ErrorKind::NotFound && !is_root => {
+                    rep.removed += 1;
+                    ix.remove(dir);
+                    continue;
+                }
+                Err(_) => {
+                    rep.errors += 1;
+                    continue;
+                }
+            };
+            if !meta.is_dir || link && !is_root {
+                // turned into a file or a link: the parent's pass fixed it already
+                continue;
+            }
+            let stored = ix.meta(dir).mtime;
+            if meta.mtime != stored || meta.mtime >= self.since - 2 {
+                read_again(ix, dir, Path::new(&path), w, rep);
+                ix.set_meta(dir, meta);
+            }
+            // deeper folders may have changed even if this one did not (links
+            // among them are skipped by their own `disk_meta` above)
+            self.stack
+                .extend(ix.children(dir).filter(|&c| ix.is_dir(c)));
+            if deadline.is_some_and(|d| Instant::now() >= d) {
+                break;
+            }
+        }
+        rep.ms = self.t0.elapsed().as_millis() as u64;
+        self.stack.is_empty()
+    }
+
+    pub fn report(&self) -> RefreshReport {
+        self.rep
+    }
+}
+
+/// Compare one folder's children with the disk (a burst of changes in
+/// one folder: one read instead of a lookup per event).
+pub(crate) fn sync_dir(ix: &mut Index, dir: u32, path: &Path, w: &Walker) -> RefreshReport {
     let mut rep = RefreshReport::default();
-    let mut stack = vec![root_id];
-    while let Some(dir) = stack.pop() {
-        if w.cancel
-            .is_some_and(|c| c.load(std::sync::atomic::Ordering::Relaxed))
-        {
-            rep.cancelled = true;
-            break;
-        }
-        if !ix.exists(dir) {
-            continue;
-        }
-        rep.dirs_checked += 1;
-        let path = ix.path(dir);
-        let (meta, link) = match disk_meta(Path::new(&path)) {
-            Ok(m) => m,
-            Err(e) if e.kind() == std::io::ErrorKind::NotFound && dir != root_id => {
-                rep.removed += 1;
-                ix.remove(dir);
-                continue;
-            }
-            Err(_) => {
-                rep.errors += 1;
-                continue;
-            }
-        };
-        if !meta.is_dir || link && dir != root_id {
-            // turned into a file or a link: the parent's pass fixed it already
-            continue;
-        }
-        let stored = ix.meta(dir).mtime;
-        if meta.mtime != stored || meta.mtime >= since - 2 {
-            read_again(ix, dir, Path::new(&path), w, &mut rep);
+    if let Ok((meta, _)) = disk_meta(path) {
+        read_again(ix, dir, path, w, &mut rep);
+        if meta.is_dir {
             ix.set_meta(dir, meta);
         }
-        // deeper folders may have changed even if this one did not (links
-        // among them are skipped by their own `disk_meta` above)
-        stack.extend(ix.children(dir).filter(|&c| ix.is_dir(c)));
     }
-    rep.ms = t0.elapsed().as_millis() as u64;
     rep
 }
 

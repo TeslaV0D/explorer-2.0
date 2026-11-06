@@ -1,6 +1,6 @@
 # Zwischenstand
 
-**Stand:** 2026-11-05 · **Phase:** 1 · M0–M7 ✅ (M7.3 verschoben) · R-001 ✅ · **M8.1/M8.2 Installer ✅ (Run #69)** · **M8.3 Härtung ✅ (Run #70–#73)** · **Phase 2 Suche: S1.1 ✅ (Run #78), S1.2 ✅ (Run #80), S1.3 läuft** (Plan `docs/PLAN-SEARCH.md`) · **Branch:** `claude/relaxed-pasteur-ufhh1p`
+**Stand:** 2026-11-06 · **Phase:** 1 · M0–M7 ✅ (M7.3 verschoben) · R-001 ✅ · **M8.1/M8.2 Installer ✅ (Run #69)** · **M8.3 Härtung ✅ (Run #70–#73)** · **Phase 2 Suche: S1.1 ✅ (Run #78), S1.2 ✅ (Run #80), S1.3 fertig, CI ausstehend** (Plan `docs/PLAN-SEARCH.md`) · **Branch:** `claude/relaxed-pasteur-ufhh1p`
 
 ## M5 – Shell-Integration (läuft, Freigabe Boss 2026-11-04)
 ### CI-Run #37 – alles grün ✅ (M5.0–M5.5)
@@ -39,6 +39,31 @@
 
 - **Bug (CI #32/#33, UI-Matrix)**: OLE-Drop-Target wurde nie registriert („Invalid window handle“) – der Timer lief, bevor Slint das native Fenster erzeugt hatte → Ablegen aus anderen Apps wäre tot gewesen. Fix: Registrierung wiederholt bis HWND existiert (50 ms, max. 5 s), sonst Rückfall auf In-App-DnD.
 - Neu: **Windows-E2E mit echter Tastatur/Maus** (`scripts/e2e-windows.ps1`, CI-Schritt im Release-Job, Screenshots bei Fehler).
+
+### Phase 2 – S1.3 Aufbau + Abgleich + Live-Updates (CI ausstehend)
+- Neue Crate `explorer-search`:
+  - `walk`: paralleler Erstaufbau. Lese-Threads lesen Ordner, ein Sammler schreibt in den Index. Links werden gelistet, nie betreten.
+  - `refresh`: Abgleich nach dem Laden. Ein Ordner wird nur neu gelesen, wenn seine Änderungszeit anders ist oder ≥ Speicherzeit − 2 s; sonst kostet er ein `stat`. Läuft in Scheiben, damit Suchen weiterlaufen.
+  - `live`: ein geänderter Pfad → Index. Die Platte entscheidet, nie die Ereignisart. Ab 32 Ereignissen in einem Ordner wird er einmal gelesen statt jeder Name einzeln gesucht.
+  - `watch`: rekursiver Watcher → Menge geänderter Pfade (Doppelte zählen einmal), Entprellung 200 ms / max. 600 ms. Bei Überlauf oder Watcher-Fehler folgt ein Abgleich des ganzen Laufwerks. Mehr als 200 000 Pfade zählen als Überlauf.
+  - `service`: ein Pflege-Thread pro Laufwerk, Windows mit Priorität „unter normal“ (auch die Lese-Threads). Ablauf:
+    - gespeicherten Index laden: sofort durchsuchbar, dann Watcher, dann Abgleich
+    - sonst: Watcher, dann Erstaufbau
+    - danach Änderungen im Takt anwenden, ab 5 % unsortiertem Teil neu ordnen, alle 5 min und beim Beenden speichern
+- Sperren: Nur der Pflege-Thread schreibt, und zwar in Scheiben von max. 15 ms. Neu ordnen und speichern laufen unter der Lese-Sperre (`Index::reordered` baut eine Kopie, dann wird getauscht). Ids ändern sich nur mit neuer **Generation**; `path_of(gen, id)` liefert bei alter Generation None, dann neu suchen.
+- **Gespeichert wird nur ein exakter Stand.** Wird eine Änderung beim Beenden abgeschnitten (großer Ordner halb eingefügt), wird nicht gespeichert. Die alte Datei bleibt, der nächste Start findet den Unterschied. Speicherzeit = letzter exakter Moment − 10 s.
+- Laufwerks-Kennung `fs::places::volume_tag`: Windows Wurzel + Dateisystem + Seriennummer, Unix Gerätenummer. Ein neu formatiertes Laufwerk bekommt nie einen fremden Index.
+- Echtes Rennen gefunden (Test unter Last, 1 von 20): notify/inotify meldet einen neuen Ordner **bevor** es ihn überwacht (`handle_inotify`: erst Ereignisse, dann `add_watch`). Dateien aus diesem Moment kommen nie als Ereignis. Fix: Unter Linux wird ein Ordner, in dem etwas neu ist, 1 s später noch einmal abgeglichen (`RECHECK_NEW`, Teilbaum-`Refresh`). Windows überwacht den Baum mit einem Handle und braucht das nicht. Danach 72/72 Läufe mit 6 Prozessen parallel grün.
+- Bug gefunden und behoben: `Index::find` panikte bei einem Pfad, der kürzer als die Wurzel ist. Neuer Zufallstest `random_paths`.
+- Tests:
+  - Service: bauen, speichern, beim nächsten Start laden und abgleichen = frischer Aufbau
+  - Live (neu, umbenannt, gelöscht, ausgeschlossen, 96 Dateien auf einmal, Ordner mit Inhalt von außen hereingeschoben, Größe geändert) = frischer Aufbau
+  - beschädigt / fremdes Laufwerk / fremder Ordner → neu bauen
+  - Neu ordnen → neue Generation, `rescan`
+  - sofort beenden; Wurzel, die es nicht gibt
+  - 25 Läufe am Stück stabil
+- CI-Beispiel `examples/drive.rs`: Windows indexiert ganz `C:\` (Gate: 1 Mio < 2 min hochgerechnet, Live-Änderung < 1 s, Laden < 1 s). Linux `$HOME` nur mit Zahlen. Lokal (`/home/user`, 30k): Live 202 ms, Laden 3 ms, Abgleich 102 ms.
+- Linux: Der rekursive inotify-Watcher braucht eine Überwachung pro Ordner; das Aufsetzen dauerte in der Sandbox 5 s für 4 230 Ordner. Deshalb startet er erst nach dem Laden.
 
 ### Phase 2 – S1.2 Gespeicherter Index + Ausschlüsse ✅ (CI-Run #80: Laden 1 Mio Linux 88 ms / Windows 69 ms, Speichern 461 / 862 ms)
 - `persist.rs`: eine Datei pro Laufwerk (`file_name_for(root, case_insensitive)`), Format `EXPL2IDX` + Version + Laufwerks-Kennung (`tag`, z. B. Wurzel + Seriennummer) + Speicherzeit (für den späteren Abgleich „was hat sich seitdem geändert“) + alle Spalten roh (Little-Endian) + 64-Bit-Prüfsumme. Schreiben atomar (Temp-Datei, `sync_all`, Umbenennen).

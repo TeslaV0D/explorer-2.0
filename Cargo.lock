@@ -1031,7 +1031,9 @@ dependencies = [
  "explorer-core",
  "explorer-fs",
  "explorer-index",
+ "notify",
  "tempfile",
+ "windows-sys 0.60.2",
 ]
 
 [[package]]

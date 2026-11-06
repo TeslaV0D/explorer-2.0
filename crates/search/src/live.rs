@@ -5,7 +5,8 @@
 use crate::walk::{add_subtree, Walker};
 use crate::{disk_meta, key};
 use explorer_index::Index;
-use std::path::Path;
+use std::collections::HashMap;
+use std::path::{Path, PathBuf};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Applied {
@@ -95,8 +96,97 @@ pub fn apply(ix: &mut Index, root_id: u32, path: &Path, w: &Walker) -> Applied {
     }
 }
 
+/// One unit of a batch of changed paths.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum Work {
+    /// Look at this path.
+    Path(PathBuf),
+    /// Many changes in this folder: compare its children once.
+    Folder(PathBuf),
+}
+
+/// From this many changes in one folder on, it is read once instead of
+/// looking up every name (a lookup walks the folder's children).
+pub const BULK: usize = 32;
+
+/// Orders a batch of changed paths into work: paths grouped by folder,
+/// big groups as one [`Work::Folder`].
+pub fn plan(paths: impl IntoIterator<Item = PathBuf>) -> Vec<Work> {
+    let mut by_dir: HashMap<PathBuf, Vec<PathBuf>> = HashMap::new();
+    for p in paths {
+        let dir = p.parent().map(Path::to_path_buf).unwrap_or_default();
+        by_dir.entry(dir).or_default().push(p);
+    }
+    let mut dirs: Vec<_> = by_dir.into_iter().collect();
+    // parents first: a new folder is then added with its content in one go
+    dirs.sort_by_key(|(d, _)| d.components().count());
+    let mut out = Vec::new();
+    for (dir, mut paths) in dirs {
+        if paths.len() >= BULK {
+            out.push(Work::Folder(dir));
+        } else {
+            paths.sort();
+            paths.dedup();
+            out.extend(paths.into_iter().map(Work::Path));
+        }
+    }
+    out
+}
+
+/// What one unit of work did.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Ran {
+    Unchanged,
+    Changed,
+    /// Something new appeared (in the folder [`recheck_target`] names).
+    Added,
+}
+
+/// Does one unit.
+pub fn run(ix: &mut Index, root_id: u32, work: &Work, w: &Walker) -> Ran {
+    let from = |a: Applied| match a {
+        Applied::Unchanged | Applied::Ignored => Ran::Unchanged,
+        Applied::Added { .. } => Ran::Added,
+        Applied::Updated | Applied::Removed => Ran::Changed,
+    };
+    match work {
+        Work::Path(p) => from(apply(ix, root_id, p, w)),
+        Work::Folder(dir) => {
+            let p = dir.to_string_lossy();
+            match ix.find(&p) {
+                Some(id) if ix.is_dir(id) => {
+                    let r = crate::refresh::sync_dir(ix, id, dir, w);
+                    if r.added > 0 {
+                        Ran::Added
+                    } else if r.changed() {
+                        Ran::Changed
+                    } else {
+                        Ran::Unchanged
+                    }
+                }
+                // the folder itself is new (or gone): it decides for its content
+                _ => from(apply(ix, root_id, dir, w)),
+            }
+        }
+    }
+}
+
+/// inotify (Linux) reports a new folder before it watches it: files made in
+/// that moment never come as events. A folder that got something new is
+/// therefore compared with the disk once more a moment later. Windows and
+/// macOS watch the whole tree at once and do not need this.
+pub const RECHECK_NEW: bool = cfg!(target_os = "linux");
+
+/// The folder to compare again after `work` added something.
+pub fn recheck_target(work: &Work) -> Option<PathBuf> {
+    match work {
+        Work::Path(p) => p.parent().map(Path::to_path_buf),
+        Work::Folder(d) => Some(d.clone()),
+    }
+}
+
 /// `path` lies below `root` (same rules as the index: case only on Unix).
-fn inside(path: &str, root: &str) -> bool {
+pub(crate) fn inside(path: &str, root: &str) -> bool {
     let (p, r) = if crate::CASE_INSENSITIVE {
         (path.to_lowercase(), root.to_lowercase())
     } else {
@@ -175,6 +265,38 @@ mod tests {
             ix.search(&q, None, explorer_index::SortBy::Name, false)
                 .len(),
             1
+        );
+    }
+
+    #[test]
+    fn a_new_folder_compared_again_finds_files_without_events() {
+        let d = tempfile::tempdir().unwrap();
+        let r = d.path();
+        tree(r);
+        let ex = Exclusions::default();
+        let w = Walker::new(&ex);
+        let (mut ix, _) = build(r, &w);
+        let root = ix.roots()[0];
+        let applied_at = std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .unwrap()
+            .as_secs() as i64;
+        std::fs::create_dir_all(r.join("a/neu/tiefer")).unwrap();
+        let work = Work::Path(r.join("a/neu"));
+        assert_eq!(run(&mut ix, root, &work, &w), Ran::Added);
+        // made after the folder was read, before inotify watched it: no event
+        std::fs::write(r.join("a/neu/spaet.txt"), b"s").unwrap();
+        std::fs::write(r.join("a/neu/tiefer/noch.txt"), b"n").unwrap();
+        let target = recheck_target(&work).unwrap();
+        assert_eq!(target, r.join("a"));
+        let start = ix.find(&target.to_string_lossy()).unwrap();
+        let mut again = crate::refresh::Refresh::new(start, applied_at);
+        assert!(again.step(&mut ix, &w, None));
+        assert_eq!(snapshot(&ix, r), snapshot(&build(r, &w).0, r));
+        // a burst in one folder also names that folder
+        assert_eq!(
+            recheck_target(&Work::Folder(r.join("x"))),
+            Some(r.join("x"))
         );
     }
 

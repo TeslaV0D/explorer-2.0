@@ -438,10 +438,12 @@ impl Index {
             } else {
                 path.starts_with(rn)
             };
-            let boundary = path.len() == rn.len()
-                || rn.ends_with(['/', '\\'])
-                || path[rn.len()..].starts_with(['/', '\\']);
-            if hit && boundary && best.is_none_or(|(_, l)| rn.len() > l) {
+            // (only after `hit`: a shorter path must not be sliced)
+            let boundary = hit
+                && (path.len() == rn.len()
+                    || rn.ends_with(['/', '\\'])
+                    || path[rn.len()..].starts_with(['/', '\\']));
+            if boundary && best.is_none_or(|(_, l)| rn.len() > l) {
                 best = Some((r, rn.len()));
             }
         }
@@ -553,6 +555,14 @@ impl Index {
     /// on load, or when the unsorted part grows) and drops removed ones.
     /// Ids change: returns `old id → new id` (NONE = gone).
     pub fn rebuild_order(&mut self) -> Vec<u32> {
+        let (out, map) = self.reordered();
+        *self = out;
+        map
+    }
+
+    /// [`Index::rebuild_order`] into a new index, leaving this one readable
+    /// (searches go on while the copy is made; swap it in afterwards).
+    pub fn reordered(&self) -> (Index, Vec<u32>) {
         let mut ids: Vec<u32> = (0..self.slots() as u32)
             .filter(|&i| self.flags[i as usize] & GONE == 0)
             .collect();
@@ -588,8 +598,7 @@ impl Index {
         out.ordered = out.slots();
         out.ord_off = out.lower_off.clone();
         out.ord_end = out.lowers.len();
-        *self = out;
-        map
+        (out, map)
     }
 
     /// Changes since the last [`Index::rebuild_order`] (cheap to merge while small).

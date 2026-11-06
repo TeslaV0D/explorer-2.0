@@ -11,6 +11,7 @@ use std::sync::{Condvar, Mutex};
 use std::time::Instant;
 
 /// How to walk.
+#[derive(Clone, Copy)]
 pub struct Walker<'a> {
     pub exclusions: &'a Exclusions,
     /// Reader threads (folders are read in parallel; the disk decides).
@@ -109,23 +110,26 @@ pub fn add_subtree(ix: &mut Index, dir_id: u32, dir: &Path, w: &Walker) -> Repor
         for _ in 0..w.threads.max(1) {
             let tx = tx.clone();
             let shared = &shared;
-            s.spawn(move || loop {
-                let job = {
-                    let (lock, cv) = shared;
-                    let mut q = lock.lock().unwrap_or_else(|e| e.into_inner());
-                    loop {
-                        if q.done {
-                            return;
+            s.spawn(move || {
+                crate::background_priority();
+                loop {
+                    let job = {
+                        let (lock, cv) = shared;
+                        let mut q = lock.lock().unwrap_or_else(|e| e.into_inner());
+                        loop {
+                            if q.done {
+                                return;
+                            }
+                            if let Some(j) = q.jobs.pop_front() {
+                                break j;
+                            }
+                            q = cv.wait(q).unwrap_or_else(|e| e.into_inner());
                         }
-                        if let Some(j) = q.jobs.pop_front() {
-                            break j;
-                        }
-                        q = cv.wait(q).unwrap_or_else(|e| e.into_inner());
+                    };
+                    let res = explorer_fs::read_dir(&job.0);
+                    if tx.send((job.1, job.0, res)).is_err() {
+                        return;
                     }
-                };
-                let res = explorer_fs::read_dir(&job.0);
-                if tx.send((job.1, job.0, res)).is_err() {
-                    return;
                 }
             });
         }

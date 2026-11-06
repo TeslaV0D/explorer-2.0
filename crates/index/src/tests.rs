@@ -77,6 +77,12 @@ fn paths_and_lookup() {
         None,
         "root prefix must end at a separator"
     );
+    // shorter than the root, a root's parent, or not even a path: no panic
+    assert_eq!(unix.find("/nirgends"), None);
+    assert_eq!(unix.find("/home"), None);
+    assert_eq!(unix.find(""), None);
+    assert_eq!(ix.find("C"), None);
+    assert_eq!(ix.find("ü"), None);
 }
 
 #[test]

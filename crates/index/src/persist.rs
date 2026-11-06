@@ -54,6 +54,21 @@ impl std::fmt::Display for LoadError {
     }
 }
 
+/// Bytes from [`Index::to_bytes`] to `path`: a crash leaves either the old
+/// or the new file (the bytes can be made under a read lock, written without).
+pub fn write_atomic(path: &Path, bytes: &[u8]) -> std::io::Result<()> {
+    if let Some(dir) = path.parent() {
+        std::fs::create_dir_all(dir)?;
+    }
+    let tmp = path.with_extension("idx.tmp");
+    {
+        let mut f = std::fs::File::create(&tmp)?;
+        f.write_all(bytes)?;
+        f.sync_all()?;
+    }
+    std::fs::rename(&tmp, path)
+}
+
 fn damaged(why: impl Into<String>) -> LoadError {
     LoadError::Damaged(why.into())
 }
@@ -240,16 +255,7 @@ impl Index {
 
     /// Writes atomically: a crash leaves either the old or the new file.
     pub fn save(&self, path: &Path, tag: &str, saved_at: i64) -> std::io::Result<()> {
-        if let Some(dir) = path.parent() {
-            std::fs::create_dir_all(dir)?;
-        }
-        let tmp = path.with_extension("idx.tmp");
-        {
-            let mut f = std::fs::File::create(&tmp)?;
-            f.write_all(&self.to_bytes(tag, saved_at))?;
-            f.sync_all()?;
-        }
-        std::fs::rename(&tmp, path)
+        write_atomic(path, &self.to_bytes(tag, saved_at))
     }
 
     /// Reads a saved index; `expect_tag`: the volume it must belong to.

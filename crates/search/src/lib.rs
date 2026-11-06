@@ -6,13 +6,20 @@
 //!   modification time and read again only the ones that changed.
 //! - [`live`]: apply one changed path (from the file system watcher) by
 //!   looking at the disk, never trusting the event's kind.
+//! - [`watch`]: recursive watcher → set of changed paths + overflow flag.
+//! - [`service`]: one maintainer thread per drive (load or build, refresh,
+//!   live batches, reorder, save); searches read in parallel.
 //!
 //! Links (symlinks, junctions) are indexed but never followed: no loops,
 //! no double counting (`C:\Documents and Settings`).
 
 pub mod live;
 pub mod refresh;
+pub mod service;
 pub mod walk;
+pub mod watch;
+
+pub use service::{Config, Hits, Origin, Phase, Search, Status, Volume};
 
 use explorer_core::Entry;
 use explorer_index::Meta;
@@ -54,6 +61,19 @@ pub(crate) fn disk_meta(path: &Path) -> std::io::Result<(Meta, bool)> {
         },
         link,
     ))
+}
+
+/// Indexing must not slow down the user's work (Windows: below normal;
+/// the disk I/O follows the thread priority).
+pub(crate) fn background_priority() {
+    #[cfg(windows)]
+    {
+        use windows_sys::Win32::System::Threading::{
+            GetCurrentThread, SetThreadPriority, THREAD_PRIORITY_BELOW_NORMAL,
+        };
+        // SAFETY: pseudo handle of the calling thread.
+        unsafe { SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_BELOW_NORMAL) };
+    }
 }
 
 /// Name key for comparing a folder's children with the disk.

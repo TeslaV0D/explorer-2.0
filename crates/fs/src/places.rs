@@ -126,6 +126,13 @@ pub fn drives() -> Vec<Drive> {
     platform::drives()
 }
 
+/// Identity of the volume holding `root` (search index files): a
+/// reformatted or swapped drive gets a new one, so it never gets a stale index.
+/// Windows: serial number + file system; elsewhere: the device number.
+pub fn volume_tag(root: &Path) -> String {
+    platform::volume_tag(root)
+}
+
 #[cfg(windows)]
 mod platform {
     use super::*;
@@ -282,11 +289,60 @@ mod platform {
         unsafe { SetThreadErrorMode(old, std::ptr::null_mut()) };
         out
     }
+
+    pub fn volume_tag(root: &Path) -> String {
+        // the volume root ("C:\") of any path on it
+        let mut s = root.to_string_lossy().to_string();
+        if let Some(stripped) = s.strip_prefix(r"\\?\") {
+            s = stripped.to_string();
+        }
+        // a folder on a drive: ask about the drive ("C:\\Users" → "C:\\")
+        let b = s.as_bytes();
+        if b.len() >= 2 && b[1] == b':' && b[0].is_ascii_alphabetic() {
+            s.truncate(2);
+        }
+        if !s.ends_with('\\') {
+            s.push('\\');
+        }
+        let wide: Vec<u16> = std::ffi::OsStr::new(&s).encode_wide().chain([0]).collect();
+        let (mut serial, mut fs) = (0u32, [0u16; 64]);
+        let mut old = 0u32;
+        // SAFETY: no "insert disk" dialog for empty drives while asking.
+        unsafe { SetThreadErrorMode(SEM_FAILCRITICALERRORS, &mut old) };
+        // SAFETY: NUL-terminated root; buffers sized; unused outputs null.
+        let ok = unsafe {
+            GetVolumeInformationW(
+                wide.as_ptr(),
+                std::ptr::null_mut(),
+                0,
+                &mut serial,
+                std::ptr::null_mut(),
+                std::ptr::null_mut(),
+                fs.as_mut_ptr(),
+                fs.len() as u32,
+            )
+        };
+        // SAFETY: restore previous mode.
+        unsafe { SetThreadErrorMode(old, std::ptr::null_mut()) };
+        let fs_name = String::from_utf16_lossy(&fs[..fs.iter().position(|&c| c == 0).unwrap_or(0)]);
+        if ok == 0 {
+            return format!("{} unknown", s.to_lowercase());
+        }
+        format!("{} {fs_name} {serial:08x}", s.to_lowercase())
+    }
 }
 
 #[cfg(not(windows))]
 mod platform {
     use super::*;
+
+    pub fn volume_tag(root: &Path) -> String {
+        use std::os::unix::fs::MetadataExt;
+        match std::fs::metadata(root) {
+            Ok(m) => format!("{} dev={:x}", root.display(), m.dev()),
+            Err(_) => format!("{} unknown", root.display()),
+        }
+    }
 
     /// The folders that have a freedesktop counterpart; the rest is Windows-only.
     pub fn known_folder_path(f: explorer_core::address::KnownFolder) -> Option<PathBuf> {

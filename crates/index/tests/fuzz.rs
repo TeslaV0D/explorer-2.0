@@ -168,3 +168,49 @@ fn random_queries() {
     }
     assert!(parsed > rounds / 3, "too few queries parsed: {parsed}");
 }
+
+/// Random path text (also shorter than the root, other drives, broken
+/// separators): `find` never panics, and a found entry has that path.
+#[test]
+fn random_paths() {
+    let ix = small_tree();
+    let rounds: usize = std::env::var("FUZZ_ROUNDS")
+        .ok()
+        .and_then(|v| v.parse().ok())
+        .unwrap_or(3000);
+    let mut r = Rng(0xbeef | 1);
+    let mut found = 0;
+    for _ in 0..rounds {
+        let text = match r.below(3) {
+            0 => random_query(&mut r),
+            1 => format!("C:\\{}", random_query(&mut r)),
+            // a real path, cut or altered at a random place
+            _ => {
+                let id = r.below(ix.slots()) as u32;
+                let mut p = ix.path(id);
+                let cut = r.below(p.len() + 1);
+                while !p.is_char_boundary(cut.min(p.len())) {
+                    p.pop();
+                }
+                p.truncate(cut.min(p.len()));
+                if r.below(2) == 0 {
+                    p.push_str(PIECES[r.below(PIECES.len())]);
+                }
+                p
+            }
+        };
+        if let Some(id) = ix.find(&text) {
+            found += 1;
+            let back = ix.path(id).to_lowercase();
+            let want = text.to_lowercase().replace('/', "\\");
+            let norm = |s: &str| {
+                s.split('\\')
+                    .filter(|p| !p.is_empty())
+                    .collect::<Vec<_>>()
+                    .join("\\")
+            };
+            assert_eq!(norm(&back), norm(&want), "{text:?}");
+        }
+    }
+    assert!(found > 0);
+}
