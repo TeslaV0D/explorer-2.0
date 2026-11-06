@@ -1025,6 +1025,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "explorer-search"
+version = "0.0.1"
+dependencies = [
+ "explorer-core",
+ "explorer-fs",
+ "explorer-index",
+ "tempfile",
+]
+
+[[package]]
 name = "explorer-shell"
 version = "0.0.1"
 dependencies = [

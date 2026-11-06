@@ -1,0 +1,14 @@
+[package]
+name = "explorer-search"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "Builds, refreshes and live-updates the search index (Phase 2 S1.3)"
+
+[dependencies]
+explorer-core = { path = "../core" }
+explorer-fs = { path = "../fs" }
+explorer-index = { path = "../index" }
+
+[dev-dependencies]
+tempfile = "3"

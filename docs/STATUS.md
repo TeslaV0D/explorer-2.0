@@ -1,6 +1,6 @@
 # Zwischenstand
 
-**Stand:** 2026-11-05 · **Phase:** 1 · M0–M7 ✅ (M7.3 verschoben) · R-001 ✅ · **M8.1/M8.2 Installer ✅ (Run #69)** · **M8.3 Härtung ✅ (Run #70–#73)** · **Phase 2 Suche: S1.1 ✅ (Run #78), S1.2 läuft** (Plan `docs/PLAN-SEARCH.md`) · **Branch:** `claude/relaxed-pasteur-ufhh1p`
+**Stand:** 2026-11-05 · **Phase:** 1 · M0–M7 ✅ (M7.3 verschoben) · R-001 ✅ · **M8.1/M8.2 Installer ✅ (Run #69)** · **M8.3 Härtung ✅ (Run #70–#73)** · **Phase 2 Suche: S1.1 ✅ (Run #78), S1.2 ✅ (Run #80), S1.3 läuft** (Plan `docs/PLAN-SEARCH.md`) · **Branch:** `claude/relaxed-pasteur-ufhh1p`
 
 ## M5 – Shell-Integration (läuft, Freigabe Boss 2026-11-04)
 ### CI-Run #37 – alles grün ✅ (M5.0–M5.5)
@@ -40,7 +40,7 @@
 - **Bug (CI #32/#33, UI-Matrix)**: OLE-Drop-Target wurde nie registriert („Invalid window handle“) – der Timer lief, bevor Slint das native Fenster erzeugt hatte → Ablegen aus anderen Apps wäre tot gewesen. Fix: Registrierung wiederholt bis HWND existiert (50 ms, max. 5 s), sonst Rückfall auf In-App-DnD.
 - Neu: **Windows-E2E mit echter Tastatur/Maus** (`scripts/e2e-windows.ps1`, CI-Schritt im Release-Job, Screenshots bei Fehler).
 
-### Phase 2 – S1.2 Gespeicherter Index + Ausschlüsse (CI ausstehend)
+### Phase 2 – S1.2 Gespeicherter Index + Ausschlüsse ✅ (CI-Run #80: Laden 1 Mio Linux 88 ms / Windows 69 ms, Speichern 461 / 862 ms)
 - `persist.rs`: eine Datei pro Laufwerk (`file_name_for(root, case_insensitive)`), Format `EXPL2IDX` + Version + Laufwerks-Kennung (`tag`, z. B. Wurzel + Seriennummer) + Speicherzeit (für den späteren Abgleich „was hat sich seitdem geändert“) + alle Spalten roh (Little-Endian) + 64-Bit-Prüfsumme. Schreiben atomar (Temp-Datei, `sync_all`, Umbenennen).
 - **Laden prüft alles** und sagt warum (`LoadError::Missing/Outdated/OtherVolume/Damaged/Io`): Prüfsumme, jede Grenze und Länge vor dem Anlegen von Speicher, jeder Name zwischen zwei Trennern, Eltern im Bereich + lebend, **keine Kreise** in den Ordnern (sonst hingen `path()`/`is_under()`), sortierter Teil streng steigend und deckungsgleich mit den sauberen Einträgen (darauf verlässt sich die Puffersuche), Endungs-Ids, Flags, Wurzeln. Kinderlisten werden beim Laden aus den Eltern neu gebaut.
 - Tests: Rundreise (inkl. Änderungen nach dem Sortieren: Schwanz, umbenannt, gelöscht; Speichern des Geladenen = dieselben Bytes), Datei + Kennung, **jeder Schnitt und jedes umgekippte Bit wird abgelehnt**, und „beschädigt, aber Prüfsumme stimmt“ (Prüfsumme umgangen) → entweder abgelehnt oder ohne Panic/Endlosschleife benutzbar (lokal 200 000 Runden).

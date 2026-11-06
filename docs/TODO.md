@@ -127,7 +127,7 @@ Legende: `[ ]` offen · `[~]` in Arbeit · `[x]` erledigt · Prio P0/P1/P2
 ## Phase 2 – Systemweite Suche (Everything-Stil) – **läuft** (Boss 2026-11-05, Plan: `docs/PLAN-SEARCH.md`)
 - [~] S1 ohne Admin (D-024)
   - [x] S1.1 Index-Kern `explorer-index` (82 MB / 1 Mio, Namensabfragen ≤ 5,1 ms Windows-CI, ≤ 3,2 ms Linux-CI; CI-Run #78): kompakte Struktur (Namens-Arena, Elternkette), Einfügen/Löschen/Umbenennen, Abfragesprache (UND/ODER/NICHT, Phrase, `*?`, `ext:` `size:` `dm:` `file:` `folder:` `path:` `regex:`), parallele Suche, Sortierung; Benchmark 1 Mio Einträge < 10 ms, < 100 MB
-  - [~] S1.2 Persistenz pro Laufwerk (Version, Volume-Kennung, Prüfsumme, atomar, jede Beschädigung erkannt = neu bauen, nie Absturz; 1 Mio: Datei 69 MB, Laden 116 ms, Speichern 179 ms; CI-Gate Laden < 1 s) + Ausschlusslisten (`Exclusions`: Pfade + Namensmuster, Standard-Ausschlüsse, Einstellung `index_exclude`) – lokal fertig, CI ausstehend
+  - [x] S1.2 Persistenz pro Laufwerk (Version, Volume-Kennung, Prüfsumme, atomar, jede Beschädigung erkannt = neu bauen, nie Absturz; 1 Mio: Datei 69 MB, Laden 116 ms, Speichern 179 ms; CI-Gate Laden < 1 s) + Ausschlusslisten (`Exclusions`: Pfade + Namensmuster, Standard-Ausschlüsse, Einstellung `index_exclude`) – CI-Run #80 (Laden Linux 88 ms, Windows 69 ms)
   - [ ] S1.3 Aufbau (paralleler Durchlauf) + Live-Updates (rekursives ReadDirectoryChangesW, Überlauf → Teil-Rescan) + Abgleich beim Start über Ordner-Änderungszeiten
   - [ ] S1.4 UI: Suchfeld pro Tab (Strg+F/F3, ab aktuellem Ordner, Treffer mit allen Dateifunktionen) + globale Schnellsuche (Strg+Umschalt+F, Overlay), Index-Status
   - [ ] S1.5 Hervorhebung, Sortierung, Suchverlauf, E2E Linux + Windows-CI
