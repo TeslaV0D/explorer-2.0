@@ -421,6 +421,8 @@ check "[71d] the button asks first" "last 'confirm integration reset' >/dev/null
 xdotool key Return; sleep 1
 check "[71e] confirmed: reset ran, damaged journal removed" "last 'integration reset restored' | grep -q 'errors=0 journal=Damaged' && [ ! -e '$ICFG/integration-journal.txt' ]"
 check "[71f] status afterwards: nothing active" "last 'integration status' | grep -q 'entries=0 active_points=0 journal=None'"
+# CI #86/#88: red only on the runner – show what happened after the click
+grep -q 'integration reset restored' $LOG || { echo "----- trace-71 (tail)"; tail -30 $LOG; command -v import >/dev/null && import -window root "$W/71e-fail.png"; }
 xdotool mousemove $SETTINGS_CLOSE click 1; sleep 0.4
 # the same from the palette: the dialog must get the keyboard (Enter went nowhere, CI #60)
 printf 'v1\nvalue\tHKCU\tzz\n' > "$ICFG/integration-journal.txt"

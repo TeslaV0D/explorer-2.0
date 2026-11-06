@@ -121,7 +121,11 @@ jobs:
       - name: Upload screenshots on failure
         if: failure()
         uses: actions/upload-artifact@v4
-        with: { name: e2e-screenshots, path: "${{ runner.temp }}/e2e/*.png" }
+        with:
+          name: e2e-screenshots
+          path: |
+            ${{ runner.temp }}/e2e/*.png
+            ${{ runner.temp }}/e2e/trace-*.log
   build-windows-release:
     runs-on: windows-latest
     needs: test
