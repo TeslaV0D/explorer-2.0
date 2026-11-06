@@ -68,10 +68,28 @@ jobs:
         run: cargo run --release -p explorer-fs --example bench -- --files 100000 --runs 9 --assert
       - name: "Search benchmark: 1 M entries, name queries < 10 ms, index < 100 MB (PLAN-SEARCH)"
         run: cargo run --release -p explorer-index --example bench -- 1000000 --gate
-      # Windows: all of C:\ (gate); Linux: $HOME, numbers only (inotify watch
-      # limits of the runner are not ours to judge)
+      # CI #82: the cold system drive of the Windows VM gave ~1 100 entries/s
+      # (C:\ did not finish in 15 min). Measured here, numbers only: cold vs
+      # warm (disk) and below-normal vs normal priority + more threads.
+      - name: "Search: index speed on the cold system drive (numbers only)"
+        if: runner.os == 'Windows'
+        run: |
+          cargo build --release -q -p explorer-search --example drive
+          $d = "target\release\examples\drive.exe"
+          & $d --probe C:\Windows --secs 40
+          & $d --probe C:\Windows --secs 40
+          $env:EXPLORER2_INDEX_PRIORITY = 'normal'
+          & $d --probe "C:\Program Files" --secs 40 --threads 32
+          & $d --probe "C:\Program Files (x86)" --secs 40
+      # gate on the drive of the checkout (Windows: local SSD of the VM)
       - name: "Search service on a real drive: first build, live change < 1 s, load < 1 s (PLAN-SEARCH S1.3)"
-        run: cargo run --release -p explorer-search --example drive -- ${{ runner.os == 'Windows' && '--gate' || '' }}
+        if: runner.os == 'Windows'
+        run: |
+          $root = (Split-Path -Qualifier $env:RUNNER_TEMP) + '\'
+          cargo run --release -p explorer-search --example drive -- $root --live $env:RUNNER_TEMP --gate
+      - name: "Search service on $HOME (numbers only: inotify limits of the runner are not ours)"
+        if: runner.os != 'Windows'
+        run: cargo run --release -p explorer-search --example drive
   e2e-linux:
     runs-on: ubuntu-latest
     needs: test

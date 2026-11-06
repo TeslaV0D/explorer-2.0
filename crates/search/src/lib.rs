@@ -65,9 +65,10 @@ pub(crate) fn disk_meta(path: &Path) -> std::io::Result<(Meta, bool)> {
 
 /// Indexing must not slow down the user's work (Windows: below normal;
 /// the disk I/O follows the thread priority).
+/// `EXPLORER2_INDEX_PRIORITY=normal`: measuring knob (CI comparison).
 pub(crate) fn background_priority() {
     #[cfg(windows)]
-    {
+    if std::env::var("EXPLORER2_INDEX_PRIORITY").as_deref() != Ok("normal") {
         use windows_sys::Win32::System::Threading::{
             GetCurrentThread, SetThreadPriority, THREAD_PRIORITY_BELOW_NORMAL,
         };

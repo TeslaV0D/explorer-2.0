@@ -12,7 +12,7 @@ explorer-index = { path = "../index" }
 notify = { version = "8", default-features = false }
 
 [target.'cfg(windows)'.dependencies]
-windows-sys = { version = "0.60", features = ["Win32_System_Threading"] }
+windows-sys = { version = "0.60", features = ["Win32_Foundation", "Win32_System_Threading"] }
 
 [dev-dependencies]
 tempfile = "3"

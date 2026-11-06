@@ -62,7 +62,8 @@
   - Neu ordnen → neue Generation, `rescan`
   - sofort beenden; Wurzel, die es nicht gibt
   - 25 Läufe am Stück stabil
-- CI-Beispiel `examples/drive.rs`: Windows indexiert ganz `C:\` (Gate: 1 Mio < 2 min hochgerechnet, Live-Änderung < 1 s, Laden < 1 s). Linux `$HOME` nur mit Zahlen. Lokal (`/home/user`, 30k): Live 202 ms, Laden 3 ms, Abgleich 102 ms.
+- **CI #82 rot:** Die kalte Systemplatte der Windows-VM schaffte beim Erstaufbau von `C:\` nur ~1 100 Einträge/s (nach 15 min 1,01 Mio, nicht fertig). Linux-CI: 540 000/s. `read_dir` ist ein reines `FindFirstFileExW`. Verdacht: IOPS-Grenze der VM-Platte (zufällige Lesezugriffe pro kaltem Ordner) oder Verdrängung durch „unter normal“. Jetzt gemessen statt geraten: Messläufe auf `C:\` (kalt / warm / normale Priorität + 32 Threads, je 40 s, Wanduhr gegen Prozess-CPU); das Gate läuft auf dem Laufwerk der Arbeitskopie (`D:\`, lokale SSD).
+- CI-Beispiel `examples/drive.rs` (ursprünglich: Windows indexiert ganz `C:\`) (Gate: 1 Mio < 2 min hochgerechnet, Live-Änderung < 1 s, Laden < 1 s). Linux `$HOME` nur mit Zahlen. Lokal (`/home/user`, 30k): Live 202 ms, Laden 3 ms, Abgleich 102 ms.
 - Linux: Der rekursive inotify-Watcher braucht eine Überwachung pro Ordner; das Aufsetzen dauerte in der Sandbox 5 s für 4 230 Ordner. Deshalb startet er erst nach dem Laden.
 
 ### Phase 2 – S1.2 Gespeicherter Index + Ausschlüsse ✅ (CI-Run #80: Laden 1 Mio Linux 88 ms / Windows 69 ms, Speichern 461 / 862 ms)

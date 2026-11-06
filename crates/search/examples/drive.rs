@@ -9,6 +9,10 @@
 //! Defaults: Windows `C:\` (live folder %TEMP%), elsewhere $HOME.
 //! `--gate`: exit 1 if loading takes ≥ 1 s, a live change ≥ 1 s (best of 3),
 //! or the first build would need more than 2 min for 1 M entries.
+//!
+//! `--probe <dir> --secs N [--threads N]`: only walk `dir` for at most N
+//! seconds and print entries/s next to the process CPU time (cold disk vs
+//! CPU vs priority; `EXPLORER2_INDEX_PRIORITY=normal` for the comparison).
 
 use explorer_index::{Exclusions, Now, Query, SortBy};
 use explorer_search::{Config, Origin, Phase, Search, Volume};
@@ -61,8 +65,98 @@ fn wait_hits(v: &Volume, text: &str, want: usize) -> Option<f64> {
     Some(t0.elapsed().as_secs_f64() * 1000.0)
 }
 
+/// User + kernel CPU time of this process in ms.
+fn cpu_ms() -> Option<u64> {
+    #[cfg(windows)]
+    {
+        use windows_sys::Win32::Foundation::FILETIME;
+        use windows_sys::Win32::System::Threading::{GetCurrentProcess, GetProcessTimes};
+        let z = || FILETIME {
+            dwLowDateTime: 0,
+            dwHighDateTime: 0,
+        };
+        let (mut a, mut b, mut k, mut u) = (z(), z(), z(), z());
+        // SAFETY: pseudo handle, four valid out pointers.
+        let ok = unsafe { GetProcessTimes(GetCurrentProcess(), &mut a, &mut b, &mut k, &mut u) };
+        let t = |f: &FILETIME| (u64::from(f.dwHighDateTime) << 32) | u64::from(f.dwLowDateTime);
+        (ok != 0).then(|| (t(&k) + t(&u)) / 10_000)
+    }
+    #[cfg(not(windows))]
+    {
+        // fields 14 + 15 of /proc/self/stat, in clock ticks (100 Hz)
+        let s = std::fs::read_to_string("/proc/self/stat").ok()?;
+        let rest = &s[s.rfind(')')? + 2..];
+        let f: Vec<&str> = rest.split(' ').collect();
+        let ticks: u64 = f.get(11)?.parse::<u64>().ok()? + f.get(12)?.parse::<u64>().ok()?;
+        Some(ticks * 10)
+    }
+}
+
+fn probe(dir: &std::path::Path, secs: u64, threads: Option<usize>) {
+    use explorer_search::walk::{build, Walker};
+    use std::sync::atomic::{AtomicBool, Ordering};
+    let ex = Exclusions::with_defaults("", cfg!(windows));
+    let stop = AtomicBool::new(false);
+    let mut w = Walker::new(&ex);
+    if let Some(t) = threads {
+        w.threads = t;
+    }
+    w.cancel = Some(&stop);
+    let cpu0 = cpu_ms();
+    let t0 = Instant::now();
+    let (_, rep) = std::thread::scope(|s| {
+        s.spawn(|| {
+            let end = t0 + Duration::from_secs(secs);
+            while Instant::now() < end && !stop.load(Ordering::Relaxed) {
+                std::thread::sleep(Duration::from_millis(50));
+            }
+            stop.store(true, Ordering::Relaxed);
+        });
+        let r = build(dir, &w);
+        stop.store(true, Ordering::Relaxed);
+        r
+    });
+    let wall = t0.elapsed().as_millis().max(1) as u64;
+    let cpu = match (cpu0, cpu_ms()) {
+        (Some(a), Some(b)) => format!(
+            "{} ms ({:.0} % of one core)",
+            b - a,
+            (b - a) as f64 * 100.0 / wall as f64
+        ),
+        _ => "n/a".into(),
+    };
+    println!(
+        "probe {}: {} threads, priority {}, {} entries in {} folders ({} unreadable) in {wall} ms{} → {:.0} entries/s, {:.0} folders/s; CPU {cpu}",
+        dir.display(),
+        w.threads,
+        if cfg!(windows) {
+            std::env::var("EXPLORER2_INDEX_PRIORITY").unwrap_or_else(|_| "below normal".into())
+        } else {
+            "unchanged".into()
+        },
+        rep.entries,
+        rep.dirs,
+        rep.errors,
+        if rep.cancelled { " (time limit)" } else { " (complete)" },
+        rep.entries as f64 * 1000.0 / wall as f64,
+        rep.dirs as f64 * 1000.0 / wall as f64,
+    );
+}
+
 fn main() {
     let args: Vec<String> = std::env::args().skip(1).collect();
+    let value = |name: &str| {
+        args.iter()
+            .position(|a| a == name)
+            .and_then(|i| args.get(i + 1))
+            .cloned()
+    };
+    if let Some(dir) = value("--probe") {
+        let secs = value("--secs").and_then(|s| s.parse().ok()).unwrap_or(40);
+        let threads = value("--threads").and_then(|s| s.parse().ok());
+        probe(std::path::Path::new(&dir), secs, threads);
+        return;
+    }
     let gate = args.iter().any(|a| a == "--gate");
     let flag = |name: &str| {
         args.iter()
@@ -105,7 +199,7 @@ fn main() {
     // 1. first build
     let s = Search::start(std::slice::from_ref(&root), cfg(), |_| {});
     let v = &s.volumes()[0];
-    let ready = wait_ready(v, Duration::from_secs(900));
+    let ready = wait_ready(v, Duration::from_secs(600));
     let st = v.status();
     let rep = st.build.unwrap_or_default();
     let mem = v.read(|ix| ix.memory_bytes()).unwrap_or(0) as f64 / 1048576.0;
@@ -202,7 +296,7 @@ fn main() {
     // 3. next start: load + compare
     let s = Search::start(std::slice::from_ref(&root), cfg(), |_| {});
     let v = &s.volumes()[0];
-    let ready = wait_ready(v, Duration::from_secs(900));
+    let ready = wait_ready(v, Duration::from_secs(600));
     let st = v.status();
     let load_ms = match st.origin {
         Some(Origin::Loaded { ms }) => ms,
