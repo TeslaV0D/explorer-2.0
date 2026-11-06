@@ -8,6 +8,7 @@ pub mod display;
 pub mod guard;
 pub mod highlight;
 pub mod history;
+pub mod index_roots;
 pub mod inspect;
 pub mod instance;
 pub mod places;

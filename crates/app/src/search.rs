@@ -32,6 +32,9 @@ static UI_PENDING: AtomicBool = AtomicBool::new(false);
 thread_local! {
     /// Recently used searches, newest first (`search-history.txt`).
     static HISTORY: RefCell<Vec<String>> = const { RefCell::new(Vec::new()) };
+    /// Drives last listed in the settings (switching one on/off uses them).
+    static CANDIDATES: RefCell<Vec<explorer_core::index_roots::Candidate>> =
+        const { RefCell::new(Vec::new()) };
     /// Up/Down browsing position per pane (0 = not browsing).
     static CURSOR: RefCell<HashMap<usize, usize>> = RefCell::new(HashMap::new());
     /// Last traced phase per root (trace only on changes).
@@ -47,26 +50,147 @@ fn env_off() -> bool {
     std::env::var("EXPLORER2_INDEX").is_ok_and(|v| v.eq_ignore_ascii_case("off"))
 }
 
-/// What gets indexed: the local fixed drives (Windows), the home folder
-/// elsewhere. Blocking (drive lookup): call off the UI thread.
-fn roots() -> Vec<PathBuf> {
+/// Drives (folders) that can be indexed. Blocking (drive lookup): off the
+/// UI thread. `EXPLORER2_INDEX_CANDIDATES` (paths as in `PATH`, all
+/// automatic) replaces the lookup in tests.
+fn candidates() -> Vec<explorer_core::index_roots::Candidate> {
+    use explorer_core::index_roots::Candidate;
+    use explorer_fs::places::DriveKind;
+    if let Some(v) = std::env::var_os("EXPLORER2_INDEX_CANDIDATES") {
+        return std::env::split_paths(&v)
+            .filter(|p| !p.as_os_str().is_empty())
+            .map(|p| Candidate {
+                label: p.to_string_lossy().into_owned(),
+                path: p.to_string_lossy().into_owned(),
+                auto: true,
+            })
+            .collect();
+    }
+    let mut out = Vec::new();
+    if !cfg!(windows) {
+        if let Some(h) = std::env::var_os("HOME") {
+            out.push(Candidate {
+                label: format!("Persönlicher Ordner ({})", PathBuf::from(&h).display()),
+                path: PathBuf::from(h).to_string_lossy().into_owned(),
+                auto: true,
+            });
+        }
+    }
+    for d in explorer_fs::places::drives() {
+        let extra = match d.kind {
+            DriveKind::Fixed => "",
+            DriveKind::Removable => " – Wechseldatenträger",
+            DriveKind::Network => " – Netzlaufwerk",
+            // a disc changes with every insert; not worth an index
+            DriveKind::Optical => continue,
+            DriveKind::Other => " – sonstiges Laufwerk",
+        };
+        let path = d.root.to_string_lossy().into_owned();
+        if out.iter().any(|c: &Candidate| c.path == path) {
+            continue;
+        }
+        out.push(Candidate {
+            label: format!("{}{extra}", explorer_fs::places::drive_display_name(&d)),
+            path,
+            // local fixed drives on Windows; elsewhere the home folder is enough
+            auto: cfg!(windows) && d.kind == DriveKind::Fixed,
+        });
+    }
+    out
+}
+
+/// What gets indexed (`EXPLORER2_INDEX_ROOTS` wins). Blocking: off the UI thread.
+fn roots(setting: &str) -> Vec<PathBuf> {
     if let Some(v) = std::env::var_os("EXPLORER2_INDEX_ROOTS") {
         return std::env::split_paths(&v)
             .filter(|p| !p.as_os_str().is_empty())
             .collect();
     }
-    if cfg!(windows) {
-        explorer_fs::places::drives()
-            .into_iter()
-            .filter(|d| d.kind == explorer_fs::places::DriveKind::Fixed)
-            .map(|d| d.root)
-            .collect()
-    } else {
-        std::env::var_os("HOME")
-            .map(PathBuf::from)
-            .into_iter()
-            .collect()
+    explorer_core::index_roots::chosen(setting, &candidates(), cfg!(windows))
+        .into_iter()
+        .map(PathBuf::from)
+        .collect()
+}
+
+/// Settings opened: the drive list with what is indexed (looked up in the
+/// background – a sleeping network drive can take seconds).
+pub fn refresh_drives(win: &MainWindow) {
+    let weak = win.as_weak();
+    let setting = crate::config::load().index_roots;
+    let _ = std::thread::Builder::new()
+        .name("index-drives".into())
+        .spawn(move || {
+            let cands = candidates();
+            let on = explorer_core::index_roots::chosen(&setting, &cands, cfg!(windows));
+            let _ = slint::invoke_from_event_loop(move || {
+                let rows: Vec<crate::IndexDrive> = cands
+                    .iter()
+                    .map(|c| crate::IndexDrive {
+                        label: c.label.as_str().into(),
+                        path: c.path.as_str().into(),
+                        on: on.contains(&c.path),
+                    })
+                    .collect();
+                crate::nav::trace_line(&format!(
+                    "search drives {:?}",
+                    cands
+                        .iter()
+                        .map(|c| format!("{}={}", c.path, on.contains(&c.path)))
+                        .collect::<Vec<_>>()
+                ));
+                CANDIDATES.with_borrow_mut(|k| *k = cands);
+                if let Some(w) = weak.upgrade() {
+                    w.set_index_drives(slint::ModelRc::new(slint::VecModel::from(rows)));
+                }
+            });
+        });
+}
+
+/// A drive switched on/off in the settings: saved, the index restarts.
+pub fn set_drive(win: &MainWindow, path: &str, on: bool) {
+    let cands = CANDIDATES.with_borrow(|k| k.clone());
+    let res = crate::config::update(|s| {
+        s.index_roots =
+            explorer_core::index_roots::toggle(&s.index_roots, &cands, path, on, cfg!(windows));
+    });
+    match res {
+        Ok(s) => crate::nav::trace_line(&format!(
+            "option index_roots={:?} ({path} {})",
+            s.index_roots,
+            if on { "an" } else { "aus" }
+        )),
+        Err(e) => {
+            win.set_error(e.into());
+            return;
+        }
     }
+    refresh_drives(win);
+    restart(win);
+}
+
+/// Stop (and save) the running service, then start with the new choice.
+fn restart(win: &MainWindow) {
+    if env_off() || !win.get_opt_index_enabled() {
+        return;
+    }
+    EPOCH.fetch_add(1, Ordering::SeqCst);
+    let old = lock().take();
+    win.set_search_status("Suchindex startet neu …".into());
+    let weak = win.as_weak();
+    let _ = std::thread::Builder::new()
+        .name("index-restart".into())
+        .spawn(move || {
+            if let Some(s) = old {
+                let _gate = STOP_GATE.lock().unwrap_or_else(|e| e.into_inner());
+                s.shutdown();
+                release_lock();
+            }
+            let _ = slint::invoke_from_event_loop(move || {
+                if let Some(w) = weak.upgrade() {
+                    start(&w);
+                }
+            });
+        });
 }
 
 fn history_path() -> Option<PathBuf> {
@@ -159,6 +283,7 @@ fn start(win: &MainWindow) {
     };
     let exclusions =
         explorer_index::Exclusions::with_defaults(&settings.index_exclude, cfg!(windows));
+    let root_setting = settings.index_roots.clone();
     let weak = win.as_weak();
     let spawned = std::thread::Builder::new()
         .name("index-start".into())
@@ -176,7 +301,7 @@ fn start(win: &MainWindow) {
                 });
                 return;
             }
-            let roots = roots();
+            let roots = roots(&root_setting);
             crate::nav::trace_line(&format!("search: start roots={roots:?}"));
             let cfg = explorer_search::Config::new(dir, exclusions);
             let w = weak.clone();

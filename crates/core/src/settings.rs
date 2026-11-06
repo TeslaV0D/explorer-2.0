@@ -42,6 +42,8 @@ pub struct Settings {
     pub index_exclude: String,
     /// Index the local drives for the search (Phase 2, S1.4).
     pub index_enabled: bool,
+    /// Which drives (see `index_roots`): "" = automatic, ";"-list otherwise.
+    pub index_roots: String,
 }
 
 impl Default for Settings {
@@ -64,6 +66,7 @@ impl Default for Settings {
             single_instance: true,
             index_exclude: String::new(),
             index_enabled: true,
+            index_roots: String::new(),
         }
     }
 }
@@ -140,6 +143,7 @@ impl Settings {
                         .collect();
                 }
                 "index_exclude" => s.index_exclude = v.to_string(),
+                "index_roots" => s.index_roots = v.to_string(),
                 "theme" => {
                     if let Some(t) = crate::theme::ThemeChoice::parse(v) {
                         s.theme = t;
@@ -180,7 +184,8 @@ impl Settings {
              system_accent = {}\n\
              single_instance = {}\n\
              index_exclude = {}\n\
-             index_enabled = {}\n",
+             index_enabled = {}\n\
+             index_roots = {}\n",
             self.hardware_acceleration,
             self.show_hidden,
             self.gpu_probe_version,
@@ -196,7 +201,8 @@ impl Settings {
             self.system_accent,
             self.single_instance,
             self.index_exclude,
-            self.index_enabled
+            self.index_enabled,
+            self.index_roots
         )
     }
 
@@ -246,6 +252,7 @@ mod tests {
             single_instance: false,
             index_exclude: r"C:\Windows\WinSxS;node_modules;*.tmp".into(),
             index_enabled: false,
+            index_roots: r"C:\;Z:\".into(),
         };
         assert_eq!(Settings::parse(&s.serialize()), s);
     }

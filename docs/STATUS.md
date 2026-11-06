@@ -40,6 +40,12 @@
 - **Bug (CI #32/#33, UI-Matrix)**: OLE-Drop-Target wurde nie registriert („Invalid window handle“) – der Timer lief, bevor Slint das native Fenster erzeugt hatte → Ablegen aus anderen Apps wäre tot gewesen. Fix: Registrierung wiederholt bis HWND existiert (50 ms, max. 5 s), sonst Rückfall auf In-App-DnD.
 - Neu: **Windows-E2E mit echter Tastatur/Maus** (`scripts/e2e-windows.ps1`, CI-Schritt im Release-Job, Screenshots bei Fehler).
 
+### Phase 2 – S1.5c Laufwerksauswahl (CI ausstehend)
+- `core::index_roots` (`Candidate`, `chosen`, `toggle`): Einstellung `index_roots` leer = **automatisch** (Windows: feste lokale Laufwerke; Linux: persönlicher Ordner), sonst `;`-Liste; `;` allein = ausdrücklich keins. Wird die Wahl wieder gleich der automatischen, steht die Einstellung wieder auf leer (später hinzukommende Platten werden mitgenommen). Gelistete, gerade fehlende Laufwerke (USB abgezogen) bleiben in der Liste, werden aber nicht indexiert.
+- Einstellungen „Suche“: alle Laufwerke mit Haken (Laufwerkssuche im Hintergrund), Netzlaufwerke/Wechseldatenträger/sonstige zuschaltbar, DVD/BD nie; **über** der Statuszeile (Klickziele stabil). Haken ändern = speichern + Dienst neu starten (alter stoppt und speichert, dann Start mit neuer Wahl). `EXPLORER2_INDEX_ROOTS` gewinnt weiterhin, `EXPLORER2_INDEX_CANDIDATES` ersetzt die Laufwerkssuche in Tests.
+- Test fand einen echten Fehler: `;` (ausdrücklich keins) wurde wie „automatisch“ behandelt.
+- Tests: Unit (automatisch, an/aus, zurück zu automatisch, fehlende Laufwerke, Unix-Groß/Klein), Fuzz, E2E [80]–[80f] (beide automatisch, Liste in den Einstellungen, abwählen → Neustart ohne, dessen Dateien nicht mehr gefunden, Wahl bleibt nach Neustart, wieder an = automatisch).
+
 ### Phase 2 – S1.5a/b Ortszeit, Watcher-Status, Hervorhebung, Suchverlauf (CI ausstehend)
 - **Ortszeit**: `core::local_offset_at(t)` (Versatz *dieses* Datums → Sommer-/Winterzeit richtig, über `chrono`, das ohnehin via Slint im Build ist) + `format_local` für Liste, Inspector, Dialoge; `dm:`-Abfragen rechnen „heute“ in Ortszeit. Test mit `TZ=Europe/Berlin`: Januar +1 h, Juli +2 h.
 - **Watcher-Status**: `Pending::lost(grund)` zählt verpasste Ereignisse (Puffer-Überlauf, Watcher-Fehler) → Status „Änderungen 2-mal verpasst, danach abgeglichen (zu viele Änderungen auf einmal)“; `watch::describe` macht aus notify-Fehlern Text (inotify-Grenze: „fs.inotify.max_user_watches erhöhen“).

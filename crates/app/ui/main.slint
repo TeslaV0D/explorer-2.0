@@ -74,6 +74,9 @@ export struct Crumb { label: string, path: string }
 export struct InfoRow { key: string, value: string }
 
 // One entry of the command palette: label, shortcut or path, runnable here.
+// a drive in the settings ("Suche"): indexed or not
+export struct IndexDrive { label: string, path: string, on: bool }
+
 export struct PaletteItem { label: string, detail: string, enabled: bool }
 
 export struct TabInfo { title: string, path: string }
@@ -1124,7 +1127,9 @@ export component MainWindow inherits Window {
     in-out property <bool> opt-single-instance: true;
     in-out property <bool> opt-index-enabled: true;
     in property <string> search-status;
+    in property <[IndexDrive]> index-drives;
     callback search-rescan();
+    callback index-drive(string, bool);
     callback set-option(string, bool);
     // colour scheme: "system" | "light" | "dark"
     in property <string> theme-choice: "system";
@@ -1756,6 +1761,15 @@ export component MainWindow inherits Window {
                 text: "Laufwerke für die Suche indexieren";
                 checked <=> root.opt-index-enabled;
                 toggled => { root.set-option("index_enabled", self.checked); }
+            }
+            // above the status text: its length varies, the boxes keep their place
+            if root.opt-index-enabled : VerticalLayout {
+                padding-left: 22px; spacing: 2px;
+                for d in root.index-drives : CheckBox {
+                    text: d.label;
+                    checked: d.on;
+                    toggled => { root.index-drive(d.path, self.checked); }
+                }
             }
             Text { text: root.search-status; font-size: 11px; color: Theme.c.muted; wrap: word-wrap; }
             if root.opt-index-enabled : HorizontalLayout {

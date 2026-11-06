@@ -257,6 +257,29 @@ fn text_helpers_never_panic() {
             let _ = display::rename_result(&text, hidden);
         }
         let _ = theme::parse_hex(&text);
+        // drive choice: any setting text, any path – never panics; switching
+        // a drive on means it is chosen afterwards
+        {
+            use explorer_core::index_roots::{chosen, toggle, Candidate};
+            let c = vec![
+                Candidate {
+                    path: r"C:\".into(),
+                    label: String::new(),
+                    auto: true,
+                },
+                Candidate {
+                    path: text.clone(),
+                    label: String::new(),
+                    auto: false,
+                },
+            ];
+            for ci in [true, false] {
+                let _ = chosen(&text, &c, ci);
+                let on = toggle(&text, &c, r"C:\", true, ci);
+                assert!(chosen(&on, &c, ci).iter().any(|p| p == r"C:\"), "{text:?}");
+                let _ = toggle(&on, &c, &text, r.below(2) == 0, ci);
+            }
+        }
         // search history file: tolerant, stable after one round trip
         let h = explorer_core::searches::parse(&text);
         assert!(h.len() <= explorer_core::searches::KEEP);

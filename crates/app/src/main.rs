@@ -123,7 +123,10 @@ fn main() -> Result<(), slint::PlatformError> {
     nav::trace_line(&format!("window created at={:.1}ms", nav::since_start_ms()));
     theme::init(&win, settings.theme, settings.system_accent);
     on!(win, on_set_theme, |w, t| theme::set_choice(&w, t.as_str()));
-    on!(win, on_settings_opened, |w| integration::refresh(&w));
+    on!(win, on_settings_opened, |w| {
+        integration::refresh(&w);
+        search::refresh_drives(&w)
+    });
     on!(win, on_integration_reset, |w| integration::ask_reset(&w));
     on!(win, on_install_now, |w| integration::ask_install(&w));
     on!(win, on_integration_feature, |w, id, on| {
@@ -373,6 +376,11 @@ fn main() -> Result<(), slint::PlatformError> {
     on!(win, on_qs_run_alt, |w, i| quick::run(&w, i, true));
     on!(win, on_qs_close, |w| quick::close(&w));
     on!(win, on_search_rescan, |w| search::rescan(&w));
+    on!(win, on_index_drive, |w, p, on| search::set_drive(
+        &w,
+        p.as_str(),
+        on
+    ));
     nav::trace_line(&format!("init done at={:.1}ms", nav::since_start_ms()));
 
     // Drives come and go (USB sticks, network shares): refresh the sidebar periodically.

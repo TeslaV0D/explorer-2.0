@@ -126,4 +126,28 @@ check "[79f] Enter takes a recent search over and searches it" "last 'quick sear
 xdotool key Escape; sleep 0.4
 kill $PID; wait $PID 2>/dev/null
 check "[77k] a search tab is saved as its folder (session)" "! grep -q '::suche' $IC/session.ini"
+
+echo "== [80] S1.5c: which drives are indexed (settings)"
+SR2=$W/search-root2-$$; IC2=$W/config-drives; mkdir -p "$SR2/x" "$IC2"; echo y > "$SR2/x/zweit.txt"
+DRIVE2="858 616"   # second drive box in the settings ("Suche" lies below "Windows-Integration")
+start80() { env -u EXPLORER2_INDEX_ROOTS EXPLORER2_CONFIG_DIR=$IC2 EXPLORER2_INDEX_CANDIDATES=$SR:$SR2 $EXE "$SR" > $LOG 2>&1 & PID=$!; }
+LOG=$W/trace-80.log; start80
+check "[80] automatic: both candidates are indexed" "wait_for \"[ \\\$(grep -c 'phase=Ready' $LOG) -ge 2 ]\" && last 'search: start roots' | grep -qF '$SR2'"
+palette "einstellungen"; sleep 0.8
+check "[80b] the settings list the drives (both on)" "last 'search drives' | grep -qF '$SR2=true'"
+xdotool mousemove $DRIVE2 click 1; sleep 0.5
+check "[80c] one switched off: saved, the index restarts without it" "grep -qF 'index_roots = $SR' $IC2/settings.ini && ! grep -qF 'index_roots = $SR;' $IC2/settings.ini && wait_for \"[ \\\$(grep -c 'search: start roots' $LOG) -ge 2 ] && ! last 'search: start roots' | grep -qF '$SR2'\""
+xdotool mousemove 1130 63 click 1; sleep 0.4
+wait_for "[ \$(grep -c 'phase=Ready' $LOG) -ge 3 ]" >/dev/null
+focus; xdotool key ctrl+shift+f; sleep 0.4; xdotool type --delay 40 "zweit"; sleep 1
+check "[80d] its files are no longer found" "wait_for \"last 'quick search query' | grep -q 'query=.zweit. total=0'\" 3"
+xdotool key Escape; sleep 0.3
+kill $PID; wait $PID 2>/dev/null
+LOG=$W/trace-80e.log; start80
+check "[80e] next start keeps the choice" "wait_for \"grep -q 'search: start roots' $LOG\" && ! last 'search: start roots' | grep -qF '$SR2'"
+sleep 1; palette "einstellungen"; sleep 0.8
+xdotool mousemove $DRIVE2 click 1; sleep 0.5
+check "[80f] on again = automatic again (empty setting)" "grep -qx 'index_roots = ' $IC2/settings.ini && wait_for \"last 'search: start roots' | grep -qF '$SR2'\""
+kill $PID; wait $PID 2>/dev/null
+
 exit $FAIL
