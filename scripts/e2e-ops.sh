@@ -335,7 +335,7 @@ PL=$R/pal; mkdir -p "$PL"; echo x > "$PL/x.txt"
 goto "$PL"
 xdotool key ctrl+shift+6; sleep 0.5   # [67d] made large icons the default
 xdotool key ctrl+shift+p; sleep 0.5
-check "[69] Ctrl+Shift+P opens the palette" "last 'palette open' >/dev/null && grep -q 'palette open' $LOG"
+check "[69] Ctrl+Shift+P opens the palette" "grep -q 'palette open' $LOG && grep -q 'palette open' $LOG"
 xdotool type --delay 40 "neord"; sleep 0.5
 check "[69b] fuzzy: 'neord' finds 'Neuer Ordner' first" "last 'palette query' | grep -qF 'first=Some(\"Neuer Ordner\")'"
 xdotool key Return; sleep 1.2
@@ -346,7 +346,7 @@ check "[69d] 'Ansicht: Große Symbole' from the palette" "last 'palette run' | g
 xdotool key ctrl+shift+p; sleep 0.5
 check "[69e] recently used commands come first" "last 'palette query' | grep -qF 'first=Some(\"Ansicht: Große Symbole\")' && grep -q 'recent_commands = view-large,new-folder' $W/config-ops/settings.ini"
 xdotool key Escape; sleep 0.4
-check "[69f] Esc closes without running anything" "last 'palette close' >/dev/null && last 'palette run' | grep -q 'view-large'"
+check "[69f] Esc closes without running anything" "grep -q 'palette close' $LOG && last 'palette run' | grep -q 'view-large'"
 xdotool key ctrl+shift+6; sleep 0.6
 xdotool key ctrl+shift+p; sleep 0.4; xdotool type --delay 40 ">papier"; sleep 0.5; xdotool key Return; sleep 1.2
 check "[69g] '>' jumps to places" "last 'palette go' | grep -q '::papierkorb' && last 'navigate tab' | grep -q '::papierkorb'"
@@ -402,7 +402,7 @@ kill $PID; wait $PID 2>/dev/null
 
 echo "== [71] R-001: Windows integration status + one-button reset (settings, palette)"
 ICFG=$W/config-integration; mkdir -p "$ICFG"
-T_RESET="956 625"   # settings panel (below "Suche", S1.4a): "Alle Windows-Integrationen zurücksetzen"
+T_RESET="956 502"   # settings panel: "Alle Windows-Integrationen zurücksetzen" ("Suche" lies below it)
 LOG=$W/trace-71.log
 EXPLORER2_CONFIG_DIR=$ICFG $EXE "$TW" > $LOG 2>&1 & PID=$!
 sleep 2.5; focus
@@ -410,14 +410,14 @@ xdotool mousemove $SETTINGS_BTN click 1; sleep 0.8
 check "[71] opening the settings reads the integration status" "last 'integration status' | grep -q 'entries=0 active_points=0 journal=None'"
 xdotool mousemove $SETTINGS_CLOSE click 1; sleep 0.4
 xdotool key ctrl+shift+p; sleep 0.4; xdotool type --delay 40 "integrationen zur"; sleep 0.5; xdotool key Return; sleep 0.8
-check "[71b] palette: nothing active -> no dialog, settings show the state" "last 'palette run' | grep -q 'integration-reset' && last 'integration reset: nothing active' >/dev/null && ! grep -q 'confirm integration reset' $LOG"
+check "[71b] palette: nothing active -> no dialog, settings show the state" "last 'palette run' | grep -q 'integration-reset' && grep -q 'integration reset: nothing active' $LOG && ! grep -q 'confirm integration reset' $LOG"
 xdotool mousemove $SETTINGS_CLOSE click 1; sleep 0.4
 # a damaged journal (e.g. after a crash): the reset must still work
 printf 'v1\nvalue\tHKCU\tzz\n' > "$ICFG/integration-journal.txt"
 xdotool mousemove $SETTINGS_BTN click 1; sleep 0.8
 check "[71c] damaged journal is reported" "last 'integration status' | grep -q 'journal=Damaged'"
 xdotool mousemove $T_RESET click 1; sleep 0.8
-check "[71d] the button asks first" "last 'confirm integration reset' >/dev/null"
+check "[71d] the button asks first" "grep -q 'confirm integration reset' $LOG"
 xdotool key Return; sleep 1
 check "[71e] confirmed: reset ran, damaged journal removed" "last 'integration reset restored' | grep -q 'errors=0 journal=Damaged' && [ ! -e '$ICFG/integration-journal.txt' ]"
 check "[71f] status afterwards: nothing active" "last 'integration status' | grep -q 'entries=0 active_points=0 journal=None'"
@@ -441,7 +441,7 @@ EXPLORER2_CONFIG_DIR=$W/config-install EXPLORER2_INSTALL_DIR=$IDIR EXPLORER2_STA
   $EXE "$TW" > $LOG 2>&1 & PID=$!
 sleep 2.5; focus
 xdotool key ctrl+shift+p; sleep 0.4; xdotool type --delay 40 "installieren"; sleep 0.5; xdotool key Return; sleep 0.8
-check "[72] palette 'installieren' asks first" "last 'confirm install' >/dev/null"
+check "[72] palette 'installieren' asks first" "grep -q 'confirm install' $LOG"
 xdotool key Return; sleep 2.5
 check "[72b] installed: program files + Start menu entries" "[ -x '$IDIR/explorer2' ] && [ -x '$IDIR/explorer2-recover' ] && [ -f '$SDIR/Explorer 2.0.lnk' ] && last 'install ok' | grep -q 'shortcuts=2'"
 check "[72c] the old window closed, the installed copy runs" "! kill -0 $PID 2>/dev/null && pgrep -f '$IDIR/explorer2' >/dev/null"

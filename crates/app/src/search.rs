@@ -69,9 +69,7 @@ fn roots() -> Vec<PathBuf> {
 pub fn init(win: &MainWindow, enabled: bool) {
     win.set_opt_index_enabled(enabled);
     if env_off() {
-        win.set_search_status(
-            "Suchindex für diesen Start abgeschaltet (EXPLORER2_INDEX=off).".into(),
-        );
+        win.set_search_status("Suchindex aus (EXPLORER2_INDEX=off).".into());
         return;
     }
     if !enabled {

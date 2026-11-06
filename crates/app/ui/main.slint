@@ -1616,6 +1616,8 @@ export component MainWindow inherits Window {
         border-radius: 6px;
         drop-shadow-blur: 12px;
         drop-shadow-color: Theme.c.shadow;
+        // clicks on empty panel space must not reach the list below
+        TouchArea { }
         settings-scroll := ScrollView {
           x: 1px; y: 1px; width: parent.width - 2px; height: parent.height - 2px;
           viewport-width: self.visible-width;
@@ -1682,18 +1684,6 @@ export component MainWindow inherits Window {
                 toggled => { root.set-option("system_accent", self.checked); }
             }
             Rectangle { height: 1px; background: Theme.c.line; }
-            Text { text: "Suche"; font-size: 13px; font-weight: 600; }
-            CheckBox {
-                text: "Laufwerke für die Suche indexieren";
-                checked <=> root.opt-index-enabled;
-                toggled => { root.set-option("index_enabled", self.checked); }
-            }
-            Text { text: root.search-status; font-size: 11px; color: Theme.c.muted; wrap: word-wrap; }
-            if root.opt-index-enabled : HorizontalLayout {
-                alignment: start;
-                Button { text: "Neu mit der Platte abgleichen"; clicked => { root.search-rescan(); } }
-            }
-            Rectangle { height: 1px; background: Theme.c.line; }
             Text { text: "Windows-Integration"; font-size: 13px; font-weight: 600; }
             if root.integration-available : CheckBox {
                 text: "Ordner mit Explorer 2.0 öffnen (Doppelklick, „Ordner öffnen“)";
@@ -1723,6 +1713,18 @@ export component MainWindow inherits Window {
                     enabled: root.integration-active;
                     clicked => { root.integration-reset(); }
                 }
+            }
+            Rectangle { height: 1px; background: Theme.c.line; }
+            Text { text: "Suche"; font-size: 13px; font-weight: 600; }
+            CheckBox {
+                text: "Laufwerke für die Suche indexieren";
+                checked <=> root.opt-index-enabled;
+                toggled => { root.set-option("index_enabled", self.checked); }
+            }
+            Text { text: root.search-status; font-size: 11px; color: Theme.c.muted; wrap: word-wrap; }
+            if root.opt-index-enabled : HorizontalLayout {
+                alignment: start;
+                Button { text: "Neu mit der Platte abgleichen"; clicked => { root.search-rescan(); } }
             }
             if root.install-available : Rectangle { height: 1px; background: Theme.c.line; }
             if root.install-available : Text { text: "Installation"; font-size: 13px; font-weight: 600; }

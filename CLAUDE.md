@@ -171,7 +171,9 @@
 - E2E-Klickziele im Einstellungs-Panel sind feste Koordinaten (`T_RESET`, `T_DARK`, `PANEL_HW_*`) → ein neuer Abschnitt verschiebt alles darunter; nach Panel-Änderungen Screenshot + Koordinaten prüfen (S1.4a: Reset 502 → 625).
 - Slint: Größe eines Layout-Kinds nie aus `parent.width` rechnen (`width: min(240px, parent.width * 0.3)` im HorizontalLayout = Binding-Schleife → Panic „Recursion detected“ beim Start) → `preferred-width` + `min-width` + `horizontal-stretch`.
 - Platzhalter-Pfade (`::…`) in `navigate_tab` **vor** `std::path::absolute` erkennen, sonst wird `::suche:x` zu `<cwd>/::suche:x`.
-- Modale Dialoge halten den Fokus (`changed has-focus` → wieder `focus()`, solange offen): Öffnet ein Klick in einem Panel den Dialog und schließt das Panel dabei, kann sonst der Fokusverlust des zerstörten Knopfs gewinnen (CI #86 [71e], nur auf langsamer VM).
+- Slint: Ein `Rectangle` blockt keine Klicks – Overlays/Panels brauchen eine leere `TouchArea {}` als erstes Kind, sonst landen Klicks auf leere Flächen in der Liste darunter (CI #89 [71e]).
+- E2E-Shell: `last 'x' >/dev/null` ist **immer wahr** (Exit-Code von `tail`) → Vorkommen immer mit `grep -q 'x' $LOG` prüfen. Feste Klick-Koordinaten nie unter Text mit variabler Länge legen (Schriften/Umbrüche unterscheiden sich zwischen Sandbox und Runner); bei rotem Klick-Test zuerst das Trace-Ende ansehen (e2e-ops gibt es bei [71e] aus, CI lädt `trace-*.log` hoch).
+- Modale Dialoge halten den Fokus (`changed has-focus` → wieder `focus()`, solange offen).
 - Zufallsnamen in Tests: Temp-Ordner heißen `.tmpXXXXXX` (zufällige Buchstaben) → Abfragen in Tests nie auf einzelne Buchstaben, die Wurzel steht im Index.
 - Registry-Theme direkt geschrieben (Test) sendet **kein** WM_SETTINGCHANGE → winit merkt nichts, unser Watcher schon; winit setzt die Titelleiste bei echten Systemwechseln selbst → wir setzen sie 400 ms danach erneut.
 
