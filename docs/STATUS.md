@@ -40,6 +40,13 @@
 - **Bug (CI #32/#33, UI-Matrix)**: OLE-Drop-Target wurde nie registriert („Invalid window handle“) – der Timer lief, bevor Slint das native Fenster erzeugt hatte → Ablegen aus anderen Apps wäre tot gewesen. Fix: Registrierung wiederholt bis HWND existiert (50 ms, max. 5 s), sonst Rückfall auf In-App-DnD.
 - Neu: **Windows-E2E mit echter Tastatur/Maus** (`scripts/e2e-windows.ps1`, CI-Schritt im Release-Job, Screenshots bei Fehler).
 
+### Phase 2 – S1.4c Globale Schnellsuche (CI ausstehend)
+- Strg+Umschalt+F (oder Palette „Alle Laufwerke durchsuchen“): Overlay wie die Befehlspalette (`CommandPalette` mit eigenem Hinweis, Fußzeile, Leertext und zweiter Aktion Strg/Umschalt+Enter). Sucht über **alle** indexierten Laufwerke nach 120 ms Pause, ältere Abfragen werden verworfen.
+- Ranking der besten **50**: Name = Text (auch ohne Endung) → beginnt damit → kürzerer Name; bei Abfragesprache (`ext:`, `*`, `|` …) bleibt die Index-Reihenfolge. Ordner links gekürzt („…/Dokumente/Bericht“), weil das Ende den Unterschied macht.
+- Enter: Ordner im aktiven Tab öffnen, Datei mit ihrem Programm. Strg+Enter: im Ordner zeigen und markieren (`nav::show_in_folder` über `pending_select`). Fußzeile: „2 Laufwerke, 1.234.567 Einträge“ bzw. „Suchindex ist aus“.
+- **CI #86**: [71e] rot – der Bestätigungsdialog verlor auf der langsameren VM den Fokus an den zerstörten Knopf im gerade geschlossenen Einstellungs-Panel (Enter ging ins Leere). Fix: der modale Dialog hält den Fokus, solange er offen ist. Lokal 151/151 (e2e-ops), unter Last 6× grün. [W44] auf Windows dort bereits 7/7 grün.
+- Tests: E2E [78]–[78f] (öffnen, `tief` → tief.pdf, Enter öffnet, `datei2` → datei2.txt vor datei20–29, Strg+Enter zeigt markiert, Esc), Windows [W45]/[W45b], Unit: Ranking, linksseitiges Kürzen.
+
 ### Phase 2 – S1.4b Suchfeld pro Tab (CI ausstehend)
 - Feld rechts neben der Adresszeile („Suchen in <Ordner>“), Strg+F / Strg+E / F3 (auch Palette „Suchen“). Tippen sucht nach 250 ms Pause; Enter sofort; ↓ in die Liste; Esc oder leeres Feld führt zurück zum Ordner.
 - Eine Suche ist eine Navigation zum Platzhalter `::suche:<Ordner>\u{1f}<Abfrage>` (`core::places::search_path`/`search_of`). Damit gibt es Verlauf, Tab-Titel „Suche: …“ und Brotkrume „Suche „…““ gratis. Erste Suche aus einem Ordner = ein Verlaufsschritt; Weitertippen ersetzt ihn; Verlassen nimmt den Ordner wieder vom Stapel (`History::return_to`), also keine Spur. Sitzung speichert den Ordner, nicht die Suche.

@@ -183,11 +183,13 @@ fn show(win: &MainWindow, text: &str, res: Result<crate::search::Found, String>,
         .iter()
         .map(|(e, p)| PaletteItem {
             label: e.name.as_str().into(),
-            detail: p
-                .parent()
-                .map(|d| d.to_string_lossy().into_owned())
-                .unwrap_or_default()
-                .into(),
+            detail: left_elided(
+                &p.parent()
+                    .map(|d| d.to_string_lossy().into_owned())
+                    .unwrap_or_default(),
+                DETAIL_CHARS,
+            )
+            .into(),
             enabled: true,
         })
         .collect();
@@ -216,6 +218,19 @@ fn show(win: &MainWindow, text: &str, res: Result<crate::search::Found, String>,
         }
         .into(),
     );
+}
+
+/// Folder column of the overlay: the end of a path is what tells it apart.
+const DETAIL_CHARS: usize = 44;
+
+/// `…` + the last `max` characters (the UI only elides at the end).
+pub(crate) fn left_elided(s: &str, max: usize) -> String {
+    let n = s.chars().count();
+    if n <= max {
+        return s.to_string();
+    }
+    let tail: String = s.chars().skip(n - max + 1).collect();
+    format!("…{tail}")
 }
 
 /// The best first: the name is the text, then names starting with it, then
@@ -278,6 +293,22 @@ mod tests {
             },
             PathBuf::from("/x").join(name),
         )
+    }
+
+    #[test]
+    fn paths_keep_their_end() {
+        assert_eq!(left_elided("/a/b", 10), "/a/b");
+        assert_eq!(
+            left_elided("/home/boss/Dokumente/Bericht", 12),
+            "…nte/Bericht"
+        );
+        assert_eq!(
+            left_elided("/home/boss/Dokumente/Bericht", 12)
+                .chars()
+                .count(),
+            12
+        );
+        assert_eq!(left_elided("C:\\Übergröße\\ä", 5), "…ße\\ä");
     }
 
     #[test]

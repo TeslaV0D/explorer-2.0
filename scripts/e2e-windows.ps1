@@ -639,6 +639,11 @@ try {
     Check "[W44e] the results follow the index (0 hits)" { WaitFor 'search found query="ext:pdf" total=0 ' 8000 }
     Keys '^f'; Keys '{ESC}'
     Check "[W44f] Esc: back to the folder" { WaitFor 'search pane=0 closed' 3000 }
+    # S1.4c quick search: Ctrl+Shift+F, exact name first, Ctrl+Enter shows it in its folder
+    Keys '^+f'; Keys 'datei1'; Start-Sleep -Milliseconds 1000
+    Check "[W45] quick search: datei1.txt first of 4" { WaitFor 'quick search query="datei1" total=4 shown=4 first=Some\("datei1.txt"\)' 4000 }
+    Keys '^{ENTER}'; Start-Sleep -Milliseconds 1500
+    Check "[W45b] Ctrl+Enter shows it selected in its folder" { (WaitFor 'show in folder .*datei1\.txt' 3000) -and (WaitFor 'selection pane=0 .*focus=datei1\.txt' 3000) }
     $p.Refresh()
     Check "[W44g] app still running, no panic" { -not $p.HasExited -and (Log) -notmatch '(?i)panic' }
   } else { Fail "[W44] search start did not load" }
