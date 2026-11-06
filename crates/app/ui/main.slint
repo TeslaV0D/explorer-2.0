@@ -920,8 +920,14 @@ component SortItem inherits Rectangle {
 component CommandPalette inherits Rectangle {
     in property <[PaletteItem]> items;
     in-out property <int> sel;
+    // the quick search (S1.4c) uses the same box: own hint, status line, empty text
+    in property <string> hint: "Befehl suchen …   (> springt zu Orten)";
+    in property <string> footer;
+    in property <string> empty-text: "Nichts gefunden";
     callback query(string);
     callback run(int);
+    // Ctrl+Enter / Shift+Enter (quick search: show in its folder)
+    callback run-alt(int);
     callback close();
     init => { pal-input.focus(); }
     function move(d: int) {
@@ -957,6 +963,7 @@ component CommandPalette inherits Rectangle {
                         accepted => { root.run(root.sel); }
                         key-pressed(e) => {
                             if (e.text == Key.Escape) { root.close(); return accept; }
+                            if (e.text == Key.Return && (e.modifiers.control || e.modifiers.shift)) { root.run-alt(root.sel); return accept; }
                             if (e.text == Key.DownArrow) { root.move(1); return accept; }
                             if (e.text == Key.UpArrow) { root.move(-1); return accept; }
                             if (e.text == Key.PageDown) { root.move(10); return accept; }
@@ -966,7 +973,7 @@ component CommandPalette inherits Rectangle {
                     }
                     if pal-input.text == "" : Text {
                         x: 8px; vertical-alignment: center; color: Theme.c.faint; font-size: 14px;
-                        text: "Befehl suchen …   (> springt zu Orten)";
+                        text: root.hint;
                     }
                 }
                 pal-list := ListView {
@@ -983,7 +990,8 @@ component CommandPalette inherits Rectangle {
                         }
                     }
                 }
-                if root.items.length == 0 : Text { text: "Nichts gefunden"; color: Theme.c.faint; height: 24px; vertical-alignment: center; x: 10px; }
+                if root.items.length == 0 : Text { text: root.empty-text; color: Theme.c.faint; height: 24px; vertical-alignment: center; x: 10px; }
+                if root.footer != "" : Text { text: root.footer; color: Theme.c.muted; font-size: 11px; height: 18px; vertical-alignment: center; x: 10px; overflow: elide; }
             }
         }
     }
@@ -1148,6 +1156,16 @@ export component MainWindow inherits Window {
     callback pal-query(string);
     callback pal-run(int);
     callback pal-close();
+    // global quick search (Ctrl+Shift+F, S1.4c)
+    in property <bool> qs-open;
+    in property <[PaletteItem]> qs-items;
+    in-out property <int> qs-sel;
+    in property <string> qs-footer;
+    in property <string> qs-empty;
+    callback qs-query(string);
+    callback qs-run(int);
+    callback qs-run-alt(int);
+    callback qs-close();
     callback zoom(bool);
     callback set-view(string);
     // sort menu: column (direction kept) / direction
@@ -1516,6 +1534,10 @@ export component MainWindow inherits Window {
             drop-shadow-blur: 16px;
             drop-shadow-color: Theme.c.shadow;
             confirm-focus := FocusScope {
+                // modal: the keyboard stays here while open (opening it can close
+                // the settings panel, whose focused button then disappears – that
+                // focus loss could otherwise win and Enter went nowhere, CI #86)
+                changed has-focus => { if (!self.has-focus && root.confirm-open) { self.focus(); } }
                 key-pressed(e) => {
                     if (e.text == Key.Escape) { root.confirm-answer(false); return accept; }
                     if (e.text == Key.Return) { root.confirm-answer(true); return accept; }
@@ -1567,7 +1589,19 @@ export component MainWindow inherits Window {
         sel <=> root.pal-sel;
         query(t) => { root.pal-query(t); }
         run(i) => { root.pal-run(i); }
+        run-alt(i) => { root.pal-run(i); }
         close => { root.pal-close(); }
+    }
+    if root.qs-open : CommandPalette {
+        items: root.qs-items;
+        sel <=> root.qs-sel;
+        hint: "Alle Laufwerke durchsuchen …";
+        footer: root.qs-footer;
+        empty-text: root.qs-empty;
+        query(t) => { root.qs-query(t); }
+        run(i) => { root.qs-run(i); }
+        run-alt(i) => { root.qs-run-alt(i); }
+        close => { root.qs-close(); }
     }
 
     if root.settings-open : Rectangle {

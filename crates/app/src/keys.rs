@@ -60,6 +60,8 @@ pub enum KeyAction {
     ToggleInspector,
     /// Ctrl+Shift+P: command palette.
     Palette,
+    /// Ctrl+Shift+F: search every indexed drive (S1.4c).
+    QuickSearch,
     /// Ctrl+Shift+1/2/3/6: icon sizes / details (Explorer).
     View(explorer_core::view::ViewMode),
     TypeChar(char),
@@ -176,6 +178,7 @@ pub fn map_key_grid(
         'd' | 'D' if alt && !ctrl => Some(KeyAction::EditPath),
         'p' | 'P' if alt && !ctrl => Some(KeyAction::ToggleInspector),
         'p' | 'P' if ctrl && shift && !alt => Some(KeyAction::Palette),
+        'f' | 'F' if ctrl && shift && !alt => Some(KeyAction::QuickSearch),
         // printable text → type-to-select (no private-use specials, no control chars)
         c if !ctrl && !alt && !c.is_control() && !('\u{E000}'..='\u{F8FF}').contains(&c) => {
             Some(KeyAction::TypeChar(c))

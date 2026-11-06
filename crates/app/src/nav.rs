@@ -1929,6 +1929,19 @@ fn search_scope_label(t: &Tab) -> String {
     }
 }
 
+/// Shows `path` selected in its folder (quick search: Ctrl+Enter).
+pub fn show_in_folder(win: &MainWindow, pi: usize, path: &Path) {
+    let (Some(dir), Some(name)) = (path.parent(), path.file_name()) else {
+        return;
+    };
+    let Some(id) = active_tab_id(pi) else { return };
+    with_tab(id, |t, _, _| {
+        t.pending_select = vec![name.to_string_lossy().into_owned()]
+    });
+    trace(&format!("show in folder {}", path.display()));
+    navigate_tab(win, id, dir.to_path_buf(), Reason::User, Hist::Push);
+}
+
 /// Typing in the search field of pane `pi`: searches once typing pauses.
 pub fn search_input(win: &MainWindow, pi: usize, text: &str) {
     let weak = win.as_weak();
@@ -2751,6 +2764,7 @@ pub fn run_action(win: &MainWindow, pi: usize, action: KeyAction) {
         KeyAction::View(m) => set_view(win, m),
         KeyAction::ToggleInspector => crate::inspector::toggle(win),
         KeyAction::Palette => crate::palette::open(win),
+        KeyAction::QuickSearch => crate::quick::open(win),
         KeyAction::ToggleFocused => change_selection(win, pi, |sel, _| {
             if let Some(f) = sel.focus() {
                 sel.ctrl_click(f);

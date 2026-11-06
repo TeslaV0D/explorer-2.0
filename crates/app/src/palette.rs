@@ -228,6 +228,7 @@ fn execute(win: &MainWindow, pi: usize, id: &str) {
             win.set_settings_open(true);
         }
         "search" => act(KeyAction::FocusSearch),
+        "quick-search" => crate::quick::open(win),
         "search-rescan" => {
             crate::search::rescan(win);
             win.set_settings_open(true);

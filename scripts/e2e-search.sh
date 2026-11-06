@@ -89,6 +89,20 @@ xdotool key Escape; sleep 1
 check "[77i] Esc: back to the folder" "last 'search pane=0 closed' | grep -qF '$SR' && last 'address=' | grep -qx '.*address=$SR'"
 xdotool key alt+Left; sleep 1
 check "[77j] the search left no trace: Back does not return into it" "! last 'address=' | grep -q '::suche'"
+echo "== [78] S1.4c: quick search over every indexed drive (Ctrl+Shift+F)"
+focus; xdotool key ctrl+shift+f; sleep 0.5
+check "[78] Ctrl+Shift+F opens the quick search" "last 'quick search open' >/dev/null"
+xdotool type --delay 40 "tief"; sleep 1
+check "[78b] typing finds tief.pdf (index, best first)" "wait_for \"last 'quick search query' | grep -q 'query=.tief. total=1 shown=1 first=Some(.tief.pdf.)'\" 4"
+command -v import >/dev/null && import -window root "$W/78-quick.png"
+xdotool key Return; sleep 1
+check "[78c] Enter opens the file, the overlay closes" "wait_for \"grep -qx '$SR/a/b/tief.pdf' $OPENED\" 3 && last 'quick search close' >/dev/null"
+xdotool key ctrl+shift+f; sleep 0.5; xdotool type --delay 40 "datei2"; sleep 1
+check "[78d] datei2: exact name first (datei2.txt before datei20-29)" "wait_for \"last 'quick search query' | grep -q 'query=.datei2. total=11 shown=11 first=Some(.datei2.txt.)'\" 4"
+xdotool key ctrl+Return; sleep 1.5
+check "[78e] Ctrl+Enter shows it selected in its folder" "last 'show in folder' | grep -qF '$SR/a/datei2.txt' && wait_for \"last 'selection pane=0' | grep -q 'focus=datei2.txt'\" 3"
+xdotool key ctrl+shift+f; sleep 0.5; xdotool key Escape; sleep 0.4
+check "[78f] Esc closes it" "last 'quick search' | grep -q 'close'"
 kill $PID; wait $PID 2>/dev/null
 check "[77k] a search tab is saved as its folder (session)" "! grep -q '::suche' $IC/session.ini"
 exit $FAIL

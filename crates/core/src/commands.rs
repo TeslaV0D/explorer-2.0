@@ -195,6 +195,12 @@ pub const ALL: &[Command] = &[
         Need::Always,
     ),
     c(
+        "quick-search",
+        "Alle Laufwerke durchsuchen",
+        "Strg+Umschalt+F",
+        Need::Always,
+    ),
+    c(
         "search-rescan",
         "Suchindex neu mit der Platte abgleichen",
         "",

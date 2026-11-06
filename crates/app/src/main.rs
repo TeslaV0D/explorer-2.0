@@ -14,6 +14,7 @@ mod keys;
 mod nav;
 mod open;
 mod palette;
+mod quick;
 mod search;
 mod theme;
 mod thumbs;
@@ -360,6 +361,11 @@ fn main() -> Result<(), slint::PlatformError> {
     on!(win, on_pal_run, |w, i| palette::run(&w, i));
     on!(win, on_pal_close, |w| palette::close(&w));
     search::init(&win, settings.index_enabled);
+    quick::init(&win);
+    on!(win, on_qs_query, |w, t| quick::query(&w, t.as_str()));
+    on!(win, on_qs_run, |w, i| quick::run(&w, i, false));
+    on!(win, on_qs_run_alt, |w, i| quick::run(&w, i, true));
+    on!(win, on_qs_close, |w| quick::close(&w));
     on!(win, on_search_rescan, |w| search::rescan(&w));
     nav::trace_line(&format!("init done at={:.1}ms", nav::since_start_ms()));
 
