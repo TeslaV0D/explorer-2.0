@@ -1,6 +1,6 @@
 # Zwischenstand
 
-**Stand:** 2026-11-05 · **Phase:** 1 · M0–M7 ✅ (M7.3 verschoben) · R-001 ✅ · **M8.1/M8.2 Installer ✅ (Run #69)** · **M8.3 Härtung ✅ (Run #70–#73)** · **Phase 2 Suche: S1.1 läuft** (Plan `docs/PLAN-SEARCH.md`) · **Branch:** `claude/relaxed-pasteur-ufhh1p`
+**Stand:** 2026-11-05 · **Phase:** 1 · M0–M7 ✅ (M7.3 verschoben) · R-001 ✅ · **M8.1/M8.2 Installer ✅ (Run #69)** · **M8.3 Härtung ✅ (Run #70–#73)** · **Phase 2 Suche: S1.1 ✅ (Run #78), S1.2 läuft** (Plan `docs/PLAN-SEARCH.md`) · **Branch:** `claude/relaxed-pasteur-ufhh1p`
 
 ## M5 – Shell-Integration (läuft, Freigabe Boss 2026-11-04)
 ### CI-Run #37 – alles grün ✅ (M5.0–M5.5)
@@ -39,6 +39,13 @@
 
 - **Bug (CI #32/#33, UI-Matrix)**: OLE-Drop-Target wurde nie registriert („Invalid window handle“) – der Timer lief, bevor Slint das native Fenster erzeugt hatte → Ablegen aus anderen Apps wäre tot gewesen. Fix: Registrierung wiederholt bis HWND existiert (50 ms, max. 5 s), sonst Rückfall auf In-App-DnD.
 - Neu: **Windows-E2E mit echter Tastatur/Maus** (`scripts/e2e-windows.ps1`, CI-Schritt im Release-Job, Screenshots bei Fehler).
+
+### Phase 2 – S1.2 Gespeicherter Index + Ausschlüsse (CI ausstehend)
+- `persist.rs`: eine Datei pro Laufwerk (`file_name_for(root, case_insensitive)`), Format `EXPL2IDX` + Version + Laufwerks-Kennung (`tag`, z. B. Wurzel + Seriennummer) + Speicherzeit (für den späteren Abgleich „was hat sich seitdem geändert“) + alle Spalten roh (Little-Endian) + 64-Bit-Prüfsumme. Schreiben atomar (Temp-Datei, `sync_all`, Umbenennen).
+- **Laden prüft alles** und sagt warum (`LoadError::Missing/Outdated/OtherVolume/Damaged/Io`): Prüfsumme, jede Grenze und Länge vor dem Anlegen von Speicher, jeder Name zwischen zwei Trennern, Eltern im Bereich + lebend, **keine Kreise** in den Ordnern (sonst hingen `path()`/`is_under()`), sortierter Teil streng steigend und deckungsgleich mit den sauberen Einträgen (darauf verlässt sich die Puffersuche), Endungs-Ids, Flags, Wurzeln. Kinderlisten werden beim Laden aus den Eltern neu gebaut.
+- Tests: Rundreise (inkl. Änderungen nach dem Sortieren: Schwanz, umbenannt, gelöscht; Speichern des Geladenen = dieselben Bytes), Datei + Kennung, **jeder Schnitt und jedes umgekippte Bit wird abgelehnt**, und „beschädigt, aber Prüfsumme stimmt“ (Prüfsumme umgangen) → entweder abgelehnt oder ohne Panic/Endlosschleife benutzbar (lokal 200 000 Runden).
+- `exclude.rs`: Einträge mit Trenner = Pfad (Ordner + alles darunter, Präfix nur an Trennern), ohne = Namensmuster (`node_modules`, `*.tmp`, `~$*`), Windows ohne Groß/Klein, `/` = `\`; Standard immer dabei (Windows `$Recycle.Bin`, `System Volume Information`, `$WinREAgent`; Linux `/proc` `/sys` `/dev` `/run` `/snap`); Einstellung `index_exclude`.
+- Benchmark (1 Mio): Datei **69 MB**, Speichern **179 ms**, Laden **116 ms** (CI-Gate < 1 s).
 
 ### Phase 2 – S1.1 Index-Kern ✅ (CI-Run #78)
 - Neue Crate **`explorer-index`** (plattformneutral): Einträge als Spalten-Arrays (Elternindex, Name, Größe, Datum, Flags, Kinderliste), Kleinbuchstaben-Namen **lückenlos in einem Puffer** (`\0` dazwischen), Originalnamen nur wo abweichend. Einfügen/Ändern/Umbenennen/Verschieben/Löschen für Live-Updates; `find(path)` (Windows ohne Groß/Klein).

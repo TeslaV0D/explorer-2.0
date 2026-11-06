@@ -204,6 +204,30 @@ fn main() {
         }
     }
     println!("worst name query (best of 9): {worst:.2} ms (budget 10 ms)");
+
+    // S1.2: save + load (start with a stored index: budget 1 s)
+    let dir = std::env::temp_dir().join(format!("e2idx-bench-{}", std::process::id()));
+    let file = dir.join(explorer_index::file_name_for(r"C:\", true));
+    let t = Instant::now();
+    ix.save(&file, "bench", 1).expect("save");
+    let save_ms = t.elapsed().as_secs_f64() * 1000.0;
+    let file_mb = std::fs::metadata(&file).map_or(0.0, |m| m.len() as f64 / (1024.0 * 1024.0));
+    let mut loads = Vec::new();
+    for _ in 0..3 {
+        let t = Instant::now();
+        let (back, _) = Index::load(&file, Some("bench")).expect("load");
+        loads.push(t.elapsed().as_secs_f64() * 1000.0);
+        assert_eq!(back.len(), ix.len());
+    }
+    loads.sort_by(f64::total_cmp);
+    let _ = std::fs::remove_dir_all(&dir);
+    println!(
+        "persist: file {file_mb:.1} MB, save {save_ms:.0} ms, load best {:.0} ms (budget 1000 ms)",
+        loads[0]
+    );
+    if loads[0] > 1000.0 {
+        failed.push(format!("load {:.0} ms > 1000 ms", loads[0]));
+    }
     if gate {
         let per_million = mb * 1_000_000.0 / ix.len() as f64;
         if per_million > 100.0 {

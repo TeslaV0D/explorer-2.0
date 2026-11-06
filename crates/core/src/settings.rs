@@ -37,6 +37,9 @@ pub struct Settings {
     /// A second start (folder double click, Win+E) opens a tab in the
     /// running window instead of a new window (M8.3b).
     pub single_instance: bool,
+    /// Search index: what to skip besides the defaults (`;`-separated paths
+    /// and name patterns, see `explorer_index::Exclusions`).
+    pub index_exclude: String,
 }
 
 impl Default for Settings {
@@ -57,6 +60,7 @@ impl Default for Settings {
             theme: crate::theme::ThemeChoice::System,
             system_accent: true,
             single_instance: true,
+            index_exclude: String::new(),
         }
     }
 }
@@ -131,6 +135,7 @@ impl Settings {
                         .map(String::from)
                         .collect();
                 }
+                "index_exclude" => s.index_exclude = v.to_string(),
                 "theme" => {
                     if let Some(t) = crate::theme::ThemeChoice::parse(v) {
                         s.theme = t;
@@ -169,7 +174,8 @@ impl Settings {
              recent_commands = {}\n\
              theme = {}\n\
              system_accent = {}\n\
-             single_instance = {}\n",
+             single_instance = {}\n\
+             index_exclude = {}\n",
             self.hardware_acceleration,
             self.show_hidden,
             self.gpu_probe_version,
@@ -183,7 +189,8 @@ impl Settings {
             self.recent_commands.join(","),
             self.theme.as_str(),
             self.system_accent,
-            self.single_instance
+            self.single_instance,
+            self.index_exclude
         )
     }
 
@@ -231,6 +238,7 @@ mod tests {
             theme: crate::theme::ThemeChoice::Dark,
             system_accent: false,
             single_instance: false,
+            index_exclude: r"C:\Windows\WinSxS;node_modules;*.tmp".into(),
         };
         assert_eq!(Settings::parse(&s.serialize()), s);
     }

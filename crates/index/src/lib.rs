@@ -10,8 +10,12 @@
 //!
 //! Ids are stable until [`Index::compact`]; removed entries are only marked.
 
+pub mod exclude;
+pub mod persist;
 pub mod query;
 
+pub use exclude::Exclusions;
+pub use persist::{file_name_for, LoadError, Saved};
 pub use query::{Now, ParseError, Query};
 
 use std::cmp::Ordering;
