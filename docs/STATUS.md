@@ -1,6 +1,6 @@
 # Zwischenstand
 
-**Stand:** 2026-11-07 · **Phase:** 1 · M0–M7 ✅ (M7.3 verschoben) · R-001 ✅ · **M8.1/M8.2 Installer ✅ (Run #69)** · **M8.3 Härtung ✅ (Run #70–#73)** · **Phase 2 Suche: S1.1 ✅ (Run #78), S1.2 ✅ (Run #80), S1.3 ✅ (Run #83), S1.4 ✅ (Run #90), S1.5 ✅ (Run #91/#93) → **S1 komplett**, Praxistest ✅ (Boss: „es funktioniert“) · **Redesign läuft: R0 ✅ (Run #101), R1 ✅ (Run #104), R2 ✅ (Run #110), R3 ✅ (Run #115), R4 ✅ (Run #120), R5 ✅ (Run #123), als Nächstes R6 Dateiliste** (`docs/PLAN-REDESIGN.md`)** (Plan `docs/PLAN-SEARCH.md`) · **Branch:** `claude/relaxed-pasteur-ufhh1p`
+**Stand:** 2026-11-07 · **Phase:** 1 · M0–M7 ✅ (M7.3 verschoben) · R-001 ✅ · **M8.1/M8.2 Installer ✅ (Run #69)** · **M8.3 Härtung ✅ (Run #70–#73)** · **Phase 2 Suche: S1.1 ✅ (Run #78), S1.2 ✅ (Run #80), S1.3 ✅ (Run #83), S1.4 ✅ (Run #90), S1.5 ✅ (Run #91/#93) → **S1 komplett**, Praxistest ✅ (Boss: „es funktioniert“) · **Redesign läuft: R0 ✅ (Run #101), R1 ✅ (Run #104), R2 ✅ (Run #110), R3 ✅ (Run #115), R4 ✅ (Run #120), R5 ✅ (Run #123), R6 lokal fertig (CI läuft)** (`docs/PLAN-REDESIGN.md`)** (Plan `docs/PLAN-SEARCH.md`) · **Branch:** `claude/relaxed-pasteur-ufhh1p`
 
 ## M5 – Shell-Integration (läuft, Freigabe Boss 2026-11-04)
 ### CI-Run #37 – alles grün ✅ (M5.0–M5.5)
@@ -39,6 +39,12 @@
 
 - **Bug (CI #32/#33, UI-Matrix)**: OLE-Drop-Target wurde nie registriert („Invalid window handle“) – der Timer lief, bevor Slint das native Fenster erzeugt hatte → Ablegen aus anderen Apps wäre tot gewesen. Fix: Registrierung wiederholt bis HWND existiert (50 ms, max. 5 s), sonst Rückfall auf In-App-DnD.
 - Neu: **Windows-E2E mit echter Tastatur/Maus** (`scripts/e2e-windows.ps1`, CI-Schritt im Release-Job, Screenshots bei Fehler).
+
+### Redesign R6 – Dateiliste (lokal, CI läuft)
+- **Spaltenkopf** 24 px (vorher 26) auf der Listenfläche, Beschriftung klein/gedämpft, sortierte Spalte heller + **gezeichneter Chevron** in Akzent statt „▲/▼“-Zeichen (Schrift-Glyphen sind die bekannte Erststart-Falle), Hover/Pressed-Flächen, Spaltentrenner werden beim Ziehen/Hover akzentfarben; Beschriftung fluchtet mit den Namen.
+- **Zeilen** 24 px als eingerückte, gerundete Plättchen (Trefferfläche bleibt volle Breite): Hover `hover`, Auswahl `selected` (Akzent-Lasur) + **2-px-Akzentbalken** links, ohne Fokus `selected-idle`, Fokusrahmen 1 px Akzent, **Drop-Ziel** = kräftigere Akzent-Lasur + Rahmen; Namen 13 px, Spalten 12 px gedämpft; Treffer-Hervorhebung bleibt fett. Übergänge 120 ms.
+- **Kacheln** im selben Stil (Radius 6, gleiche Zustände), Namen 12 px; Rahmenauswahl als Akzent-Lasur mit Akzentrand; Inline-Umbenennen auf `raised` mit Akzentrand; Liste auf `surface`.
+- Tests auf die neuen Werte gezogen (per Pixel gemessen): Auswahl dunkel #2a3750 ([19], [70d]), Liste #1f1f1f/#ffffff ([70b/d], W37c/W38b), Spaltenkopf 24 px ([65]).
 
 ### Redesign R5 – Tabs ✅ (CI-Run #123)
 - Tabs im IDE-Stil: Leiste auf der Fensterfläche (`app`), Tabs 30 px mit oben gerundeten Ecken; der **aktuelle Tab** trägt die Fläche der Navigationszeile (beide lesen sich als eine Fläche) und – nur in der **aktiven Ansicht** – einen 2-px-Akzentstrich oben (ersetzt die alte Akzentlinie über der ganzen Ansicht); Titel gedämpft außer aktuell/Hover; **× nur bei Hover oder am aktuellen Tab** (Linien-Icon, Platz bleibt reserviert → kein Springen), Mittelklick schließt wie bisher; „+“ als Icon-Knopf mit Tooltip „Neuer Tab · Strg+T“.

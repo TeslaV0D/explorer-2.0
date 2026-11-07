@@ -399,12 +399,12 @@ try {
     Check "[W37] start: light system, accent from AccentPalette" { (Last 'theme why=init') -match 'choice=system dark=false .*system_dark=false system_accent=#0078d4' }
     Check "[W37b] title bar set" { (Log) -match 'theme title bar dark=false' }
     $bg = Pixel $LISTX (RowY 6); Write-Host "list background: $bg"
-    Check "[W37c] list background light" { Near $bg 250 250 250 }
+    Check "[W37c] list background light (R6 surface #ffffff)" { Near $bg 255 255 255 }
     Set-ItemProperty $pers -Name AppsUseLightTheme -Value 0 -Type DWord
     Check "[W38] Windows switched to dark -> the app follows live" { WaitFor 'theme why=system choice=system dark=true' 5000 }
     Start-Sleep -Milliseconds 800
     $bg = Pixel $LISTX (RowY 6); Write-Host "list background: $bg"; Shot "w38-dark"
-    Check "[W38b] list background dark (#191919)" { Near $bg 25 25 25 }
+    Check "[W38b] list background dark (R6 surface #1f1f1f)" { Near $bg 31 31 31 }
     Check "[W38c] title bar dark" { WaitFor 'theme title bar dark=true' 3000 }
     Set-ItemProperty $acc -Name AccentPalette -Value (Palette @(16, 124, 16)) -Type Binary
     Check "[W39] accent changed in Windows -> selection follows live" { WaitFor 'system_accent=#107c10' 5000 }

@@ -274,7 +274,7 @@ echo "-- M6.1b: sort menu + rubber band"
 GY0=$(last 'geometry pane=0' | sed -E 's/.* y=([0-9]+).*/\1/')
 xdotool key ctrl+shift+2; sleep 1
 GY1=$(last 'geometry pane=0' | sed -E 's/.* y=([0-9]+).*/\1/')
-check "[65] icon view hides the column header (list starts 26 px higher: $GY0 -> $GY1)" "[ -n '$GY0' ] && [ -n '$GY1' ] && [ \$(( $GY0 - $GY1 )) -eq 26 ]"
+check "[65] icon view hides the column header (list starts 24 px higher: $GY0 -> $GY1)" "[ -n '$GY0' ] && [ -n '$GY1' ] && [ \$(( $GY0 - $GY1 )) -eq 24 ]"
 ui_click "Sortieren"; sleep 0.5; ui_click "Größe" last; sleep 0.8
 check "[65b] sort menu: by size" "last 'sort key' | grep -q 'key=size desc=false'"
 ui_click "Sortieren"; sleep 0.5; ui_click "Absteigend"; sleep 0.8
@@ -382,13 +382,13 @@ SIDE=$(ui_box "Schnellzugriff" | awk '{print $1+20, 600}')
 ui_click "Einstellungen"; sleep 0.6; xdotool mousemove 900 680; sleep 0.3; shot t70-panel-light
 BTN=$(ui_box "Schließen" last | awk '{print $1+4, $2+4}')
 P=$(px t70-light $LIST_X $(row_y 5)); B=$(px t70-panel-light $BTN)
-check "[70b] light: list background #fafafa ($P), button light ($B)" "[ '$P' = 'srgb(250,250,250)' ] && [ \$(red '$B') -gt 200 ]"
+check "[70b] light: list background #ffffff (R6 surface: $P), button light ($B)" "[ '$P' = 'srgb(255,255,255)' ] && [ \$(red '$B') -gt 200 ]"
 ui_click "Dunkel"; sleep 0.8; xdotool mousemove 900 680; sleep 0.3; shot t70-panel-dark
 check "[70c] 'Dunkel' in the settings switches live and is saved" "last 'theme why=choice' | grep -q 'choice=dark dark=true' && grep -qx 'theme = dark' $TCFG/settings.ini"
 ui_click "Schließen" last; sleep 0.4
 xdotool mousemove $LIST_X $(row_y 0) click 1; sleep 0.4; xdotool mousemove 900 680; sleep 0.3; shot t70-dark
 P=$(px t70-dark $LIST_X $(row_y 5)); S=$(px t70-dark $((LIST_X + 200)) $(row_y 0)); B=$(px t70-panel-dark $BTN); C=$(px t70-dark $SIDE)
-check "[70d] dark: list #191919 ($P), selection #1c3f63 ($S), sidebar #141414 ($C)" "[ '$P' = 'srgb(25,25,25)' ] && [ '$S' = 'srgb(28,63,99)' ] && [ '$C' = 'srgb(20,20,20)' ]"
+check "[70d] dark: list #1f1f1f ($P), selection #2a3750 ($S), sidebar #141414 ($C)" "[ '$P' = 'srgb(31,31,31)' ] && [ '$S' = 'srgb(42,55,80)' ] && [ '$C' = 'srgb(20,20,20)' ]"
 check "[70e] the std widgets follow (dark button: $B)" "[ \$(red '$B') -lt 90 ]"
 kill $PID; wait $PID 2>/dev/null
 theme_run $W/trace-70f.log

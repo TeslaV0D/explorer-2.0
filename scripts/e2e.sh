@@ -133,7 +133,7 @@ xdotool key ctrl+a; sleep 0.5
 check "[18] Ctrl+A selects all" "last 'selection pane' | grep -q 'count=7 '"
 xdotool mousemove 900 680; sleep 0.3; import -window root $W/sel.png 2>/dev/null
 PX=$(convert $W/sel.png -format "%[pixel:p{$LIST_X,$(row_y 2)}]" info: 2>/dev/null)
-check "[19] selected rows are drawn in selection color (dark = default, pixel $PX)" "[ '$PX' = 'srgb(28,63,99)' ]"
+check "[19] selected rows are drawn in selection color (dark = default, redesign R6 #2a3750, pixel $PX)" "[ '$PX' = 'srgb(42,55,80)' ]"
 xdotool key Home; sleep 0.3; xdotool type --delay 60 "fo"; sleep 0.5
 check "[20] type-to-select jumps to 'fo…'" "last 'selection pane' | grep -q 'count=1 focus=foto2.png'"
 xdotool key Return; sleep 1

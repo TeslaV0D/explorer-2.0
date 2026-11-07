@@ -110,23 +110,30 @@ component HeaderCell inherits Rectangle {
     in property <bool> sort-desc;
     in property <TextHorizontalAlignment> align: left;
     callback sort(string);
-    background: ta.has-hover ? Theme.c.hover : transparent;
+    property <bool> sorted: root.sort-key == root.key;
+    background: ta.pressed ? Theme.d.pressed : (ta.has-hover ? Theme.d.hover : transparent);
+    animate background { duration: Ui.fast; }
     ta := TouchArea { clicked => { root.sort(root.key); } }
     HorizontalLayout {
-        padding-left: 8px; padding-right: 8px; spacing: 4px;
+        padding-left: 8px; padding-right: 6px; spacing: 4px;
         Text {
             text: root.label;
             horizontal-alignment: root.align;
             horizontal-stretch: 1;
             vertical-alignment: center;
-            color: Theme.c.text3;
+            font-size: Ui.font;
+            color: root.sorted || ta.has-hover ? Theme.d.text2 : Theme.d.muted;
             overflow: elide;
         }
-        Text {
-            text: root.sort-key == root.key ? (root.sort-desc ? "▼" : "▲") : "";
-            font-size: 9px;
-            vertical-alignment: center;
-            color: Theme.c.muted;
+        // sort direction: a drawn chevron (R6), no font glyph
+        Rectangle {
+            width: 12px;
+            if root.sorted : Icon {
+                y: (parent.height - self.height) / 2;
+                d: root.sort-desc ? IconData.chevron-down : IconData.chevron-up;
+                size: 12px;
+                tint: Theme.d.accent;
+            }
         }
     }
 }
@@ -136,7 +143,7 @@ component ResizeHandle inherits Rectangle {
     in-out property <length> target-width;
     in property <length> min-col: 50px;
     width: 6px;
-    Rectangle { x: 2px; width: 1px; background: Theme.c.line-strong; }
+    Rectangle { x: 2px; y: 5px; width: 1px; height: parent.height - 10px; background: ta.has-hover || ta.pressed ? Theme.d.accent : Theme.d.border-strong; }
     property <length> start-width;
     ta := TouchArea {
         mouse-cursor: col-resize;
@@ -241,10 +248,13 @@ component Tile inherits Rectangle {
         return DragAction.none;
     }
 
-    border-radius: 4px;
-    background: tile-drop.has-drag ? Theme.c.drop : root.item.selected ? (root.list-focused ? Theme.c.selection : Theme.c.selection-idle) : (ta.has-hover ? Theme.c.row-hover : transparent);
-    border-width: root.item.focused && root.list-focused ? 1px : 0px;
-    border-color: Theme.c.accent;
+    border-radius: Ui.r;
+    background: tile-drop.has-drag ? Theme.d.accent.with-alpha(0.28)
+        : root.item.selected ? (root.list-focused ? Theme.d.selected : Theme.d.selected-idle)
+        : (ta.has-hover ? Theme.d.hover : transparent);
+    animate background { duration: Ui.fast; easing: ease-out; }
+    border-width: (root.item.focused && root.list-focused) || tile-drop.has-drag ? 1px : 0px;
+    border-color: Theme.d.accent;
     opacity: root.item.cut ? 0.5 : 1;
     tile-drop := DropArea {
         enabled: root.item.is-dir;
@@ -324,7 +334,7 @@ component Tile inherits Rectangle {
                 if root.thumb.width == 0 && root.icon.width == 0 : Rectangle {
                     x: (parent.width - self.width) / 2; y: (parent.height - self.height) / 2;
                     width: root.img-size * 0.75; height: root.img-size * 0.6; border-radius: 4px;
-                    background: root.item.is-dir ? Theme.c.folder : Theme.c.file;
+                    background: root.item.is-dir ? Theme.d.folder : Theme.d.file;
                     opacity: root.item.dim ? 0.45 : 1;
                 }
             }
@@ -333,6 +343,8 @@ component Tile inherits Rectangle {
                 height: 32px;
                 wrap: word-wrap; overflow: elide;
                 horizontal-alignment: center; vertical-alignment: top;
+                font-size: Ui.font;
+                color: Theme.d.text;
                 opacity: root.item.dim ? 0.55 : 1;
             }
         }
@@ -495,7 +507,7 @@ component FilePane inherits Rectangle {
         return DragAction.none;
     }
 
-    background: Theme.c.content;
+    background: Theme.d.surface;
     property <bool> renaming;
 
     function ensure-visible(i: int) {
@@ -773,12 +785,13 @@ component FilePane inherits Rectangle {
         }
         // ---------- column header (details only; icons sort via the status bar menu) ----------
         Rectangle {
-            height: root.grid ? 0px : 26px;
+            height: root.grid ? 0px : Ui.header-h;
             visible: !root.grid;
-            background: Theme.c.header;
-            Rectangle { y: parent.height - 1px; height: 1px; background: Theme.c.line; }
+            background: Theme.d.surface;
+            Rectangle { y: parent.height - 1px; height: 1px; background: Theme.d.border; }
             HorizontalLayout {
-                padding-left: 26px;
+                // the label starts where the names start (row inset 4 + padding 6 + icon 20)
+                padding-left: 22px;
                 HeaderCell { label: "Name"; key: "name"; sort-key: root.sort-key; sort-desc: root.sort-desc; horizontal-stretch: 1; sort(k) => { root.activate(); root.sort-by(k); } }
                 ResizeHandle { target-width <=> root.w-date; }
                 HeaderCell { label: root.data.date-label; key: "modified"; sort-key: root.sort-key; sort-desc: root.sort-desc; width: root.w-date; sort(k) => { root.activate(); root.sort-by(k); } }
@@ -805,7 +818,7 @@ component FilePane inherits Rectangle {
             }
             Rectangle {
                 border-width: pane-drop.has-drag ? 2px : 0px;
-                border-color: Theme.c.accent;
+                border-color: Theme.d.accent;
                 // click on empty space clears the selection; dragging there draws a
                 // selection rectangle (coordinates in list content space, y incl. scroll)
                 bg-ta := TouchArea {
@@ -860,10 +873,24 @@ component FilePane inherits Rectangle {
                     visible: !root.grid;
                     for row[i] in root.data.rows : Rectangle {
                         height: root.row-height;
-                        background: row-drop.has-drag ? Theme.c.drop : row.selected ? (list-focus.has-focus ? Theme.c.selection : Theme.c.selection-idle) : (ta.has-hover ? Theme.c.row-hover : transparent);
-                        border-width: row.focused && list-focus.has-focus ? 1px : 0px;
                         opacity: row.cut ? 0.5 : 1;
-                        border-color: Theme.c.accent;
+                        // R6: the row's look is an inset, rounded plate; the hit area stays full width
+                        Rectangle {
+                            x: 4px; y: 1px; width: parent.width - 8px; height: parent.height - 2px;
+                            border-radius: Ui.r-small;
+                            background: row-drop.has-drag ? Theme.d.accent.with-alpha(0.28)
+                                : row.selected ? (list-focus.has-focus ? Theme.d.selected : Theme.d.selected-idle)
+                                : (ta.has-hover ? Theme.d.hover : transparent);
+                            animate background { duration: Ui.fast; easing: ease-out; }
+                            border-width: (row.focused && list-focus.has-focus) || row-drop.has-drag ? 1px : 0px;
+                            border-color: Theme.d.accent;
+                            // accent bar of a selected row (focused list only)
+                            if row.selected && list-focus.has-focus : Rectangle {
+                                x: 0; y: 4px; width: 2px; height: parent.height - 8px;
+                                border-radius: 1px;
+                                background: Theme.d.accent;
+                            }
+                        }
                         // folders accept drops (into the folder)
                         row-drop := DropArea {
                             enabled: row.is-dir;
@@ -931,7 +958,7 @@ component FilePane inherits Rectangle {
                                 }
                             }
                             HorizontalLayout {
-                                padding-left: 6px; spacing: 0px;
+                                padding-left: 10px; spacing: 0px;
                                 Rectangle {
                                     width: 20px;
                                     property <image> img: row.icon > 0 ? root.icons[row.icon] : @image-url("");
@@ -943,25 +970,25 @@ component FilePane inherits Rectangle {
                                     // fallback until the shell icon arrives (and on non-Windows)
                                     if img.width == 0 : Rectangle {
                                         width: 14px; height: 14px; border-radius: 3px;
-                                        background: row.is-dir ? Theme.c.folder : Theme.c.file;
+                                        background: row.is-dir ? Theme.d.folder : Theme.d.file;
                                         opacity: row.dim ? 0.45 : 1;
                                     }
                                 }
-                                if row.hl-hit == "" : Text { text: row.name; horizontal-stretch: 1; vertical-alignment: center; overflow: elide; opacity: row.dim ? 0.55 : 1; }
+                                if row.hl-hit == "" : Text { text: row.name; horizontal-stretch: 1; vertical-alignment: center; overflow: elide; font-size: Ui.font-body; color: Theme.d.text; opacity: row.dim ? 0.55 : 1; }
                                 // search hit: the matched letters bold (Slint has no partial styling)
                                 if row.hl-hit != "" : HorizontalLayout {
                                     horizontal-stretch: 1;
                                     spacing: 0px;
-                                    Text { text: row.hl-pre; vertical-alignment: center; }
-                                    Text { text: row.hl-hit; vertical-alignment: center; font-weight: 700; }
-                                    Text { text: row.hl-post; vertical-alignment: center; overflow: elide; horizontal-stretch: 1; }
+                                    Text { text: row.hl-pre; vertical-alignment: center; font-size: Ui.font-body; color: Theme.d.text; }
+                                    Text { text: row.hl-hit; vertical-alignment: center; font-size: Ui.font-body; font-weight: 700; color: Theme.d.text; }
+                                    Text { text: row.hl-post; vertical-alignment: center; font-size: Ui.font-body; color: Theme.d.text; overflow: elide; horizontal-stretch: 1; }
                                 }
                                 Rectangle { width: 6px; }
-                                Text { text: row.modified; width: root.w-date; vertical-alignment: center; color: Theme.c.text4; overflow: elide; }
+                                Text { text: row.modified; width: root.w-date; vertical-alignment: center; font-size: Ui.font; color: Theme.d.text2; overflow: elide; }
                                 Rectangle { width: 6px; }
-                                Text { text: row.kind; width: root.w-type; vertical-alignment: center; color: Theme.c.text4; overflow: elide; }
+                                Text { text: row.kind; width: root.w-type; vertical-alignment: center; font-size: Ui.font; color: Theme.d.text2; overflow: elide; }
                                 Rectangle { width: 6px; }
-                                Text { text: row.size; width: root.w-size - 8px; horizontal-alignment: right; vertical-alignment: center; color: Theme.c.text4; }
+                                Text { text: row.size; width: root.w-size - 8px; horizontal-alignment: right; vertical-alignment: center; font-size: Ui.font; color: Theme.d.text2; }
                                 Rectangle { width: 22px; }
                             }
                         }
@@ -1007,9 +1034,10 @@ component FilePane inherits Rectangle {
                     y: min(root.band-y0, root.band-y1) + root.scroll-y;
                     width: abs(root.band-x1 - root.band-x0);
                     height: abs(root.band-y1 - root.band-y0);
-                    background: Theme.c.band;
+                    background: Theme.d.accent.with-alpha(0.14);
                     border-width: 1px;
-                    border-color: Theme.c.accent;
+                    border-color: Theme.d.accent;
+                    border-radius: 2px;
                 }
             }
         }
@@ -1025,9 +1053,10 @@ component FilePane inherits Rectangle {
         y: root.rn-y;
         width: root.rn-w;
         height: root.row-height - 2px;
-        background: Theme.c.card;
+        background: Theme.d.raised;
         border-width: 1px;
-        border-color: Theme.c.accent;
+        border-color: Theme.d.accent;
+        border-radius: Ui.r-small;
     }
     rename-edit := TextInput {
         x: root.rn-x + 4px;
@@ -1038,6 +1067,10 @@ component FilePane inherits Rectangle {
         enabled: root.renaming;
         single-line: true;
         vertical-alignment: center;
+        font-size: Ui.font-body;
+        color: Theme.d.text;
+        selection-background-color: Theme.d.selected;
+        selection-foreground-color: Theme.d.text;
         accepted => { root.finish-rename(true); list-focus.focus(); }
         key-pressed(e) => {
             if (e.text == Key.Escape) { root.finish-rename(false); list-focus.focus(); return accept; }
