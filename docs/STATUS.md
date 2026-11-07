@@ -1,6 +1,6 @@
 # Zwischenstand
 
-**Stand:** 2026-11-07 · **Phase:** 1 · M0–M7 ✅ (M7.3 verschoben) · R-001 ✅ · **M8.1/M8.2 Installer ✅ (Run #69)** · **M8.3 Härtung ✅ (Run #70–#73)** · **Phase 2 Suche: S1.1 ✅ (Run #78), S1.2 ✅ (Run #80), S1.3 ✅ (Run #83), S1.4 ✅ (Run #90), S1.5 ✅ (Run #91/#93) → **S1 komplett**, Praxistest ✅ (Boss: „es funktioniert“) · **Redesign läuft: R0 ✅ (Run #101), R1 ✅ (Run #104), R2 ✅ (Run #110), R3 ✅ (Run #115), R4 ✅ (Run #120), als Nächstes R5 Tabs** (`docs/PLAN-REDESIGN.md`)** (Plan `docs/PLAN-SEARCH.md`) · **Branch:** `claude/relaxed-pasteur-ufhh1p`
+**Stand:** 2026-11-07 · **Phase:** 1 · M0–M7 ✅ (M7.3 verschoben) · R-001 ✅ · **M8.1/M8.2 Installer ✅ (Run #69)** · **M8.3 Härtung ✅ (Run #70–#73)** · **Phase 2 Suche: S1.1 ✅ (Run #78), S1.2 ✅ (Run #80), S1.3 ✅ (Run #83), S1.4 ✅ (Run #90), S1.5 ✅ (Run #91/#93) → **S1 komplett**, Praxistest ✅ (Boss: „es funktioniert“) · **Redesign läuft: R0 ✅ (Run #101), R1 ✅ (Run #104), R2 ✅ (Run #110), R3 ✅ (Run #115), R4 ✅ (Run #120), R5 lokal fertig (CI läuft)** (`docs/PLAN-REDESIGN.md`)** (Plan `docs/PLAN-SEARCH.md`) · **Branch:** `claude/relaxed-pasteur-ufhh1p`
 
 ## M5 – Shell-Integration (läuft, Freigabe Boss 2026-11-04)
 ### CI-Run #37 – alles grün ✅ (M5.0–M5.5)
@@ -39,6 +39,11 @@
 
 - **Bug (CI #32/#33, UI-Matrix)**: OLE-Drop-Target wurde nie registriert („Invalid window handle“) – der Timer lief, bevor Slint das native Fenster erzeugt hatte → Ablegen aus anderen Apps wäre tot gewesen. Fix: Registrierung wiederholt bis HWND existiert (50 ms, max. 5 s), sonst Rückfall auf In-App-DnD.
 - Neu: **Windows-E2E mit echter Tastatur/Maus** (`scripts/e2e-windows.ps1`, CI-Schritt im Release-Job, Screenshots bei Fehler).
+
+### Redesign R5 – Tabs (lokal, CI läuft)
+- Tabs im IDE-Stil: Leiste auf der Fensterfläche (`app`), Tabs 30 px mit oben gerundeten Ecken; der **aktuelle Tab** trägt die Fläche der Navigationszeile (beide lesen sich als eine Fläche) und – nur in der **aktiven Ansicht** – einen 2-px-Akzentstrich oben (ersetzt die alte Akzentlinie über der ganzen Ansicht); Titel gedämpft außer aktuell/Hover; **× nur bei Hover oder am aktuellen Tab** (Linien-Icon, Platz bleibt reserviert → kein Springen), Mittelklick schließt wie bisher; „+“ als Icon-Knopf mit Tooltip „Neuer Tab · Strg+T“.
+- Tabs sind jetzt für Screenreader `tab`-Rollen mit Titel als Namen. Alte `NavButton`-Komponente entfernt (nicht mehr benutzt).
+- Test: E2E [7e] misst den Akzentstrich am aktuellen Tab per Pixel.
 
 ### Redesign R4 – Navigation ✅ (CI-Run #120)
 - Navigationszeile 34 px (vorher 40) auf `panel` mit Trennlinie: Zurück/Vorwärts/Nach oben als Linien-Icon-Knöpfe mit Tooltip + Kürzel, **Adresszeile** als ruhige Segmente (Weg dorthin gedämpft, aktueller Ordner hell, Chevron-Icon statt „›“, Hover-Fläche pro Segment, Rahmen hebt sich bei Hover, Akzent beim Bearbeiten), Klick in die freie Fläche = Bearbeiten wie bisher; **Suchfeld mit Lupe** (Akzent bei Fokus), gleiche Tasten (Esc, ↑/↓-Verlauf, Enter).

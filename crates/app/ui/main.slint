@@ -151,34 +151,25 @@ component ResizeHandle inherits Rectangle {
     }
 }
 
-component NavButton inherits Rectangle {
-    in property <string> text;
-    // spoken name (screen readers, test targets) – stays when the glyph becomes an icon
-    in property <string> label;
-    in property <bool> enabled: true;
-    callback clicked();
-    accessible-role: button;
-    accessible-label: root.label;
-    accessible-enabled: root.enabled;
-    accessible-action-default => { if (root.enabled) { root.clicked(); } }
-    width: 30px;
-    border-radius: 4px;
-    background: ta.has-hover && root.enabled ? Theme.c.hover : transparent;
-    Text { text: root.text; color: root.enabled ? Theme.c.text2 : Theme.c.disabled; horizontal-alignment: center; vertical-alignment: center; font-size: 15px; }
-    ta := TouchArea { enabled: root.enabled; clicked => { root.clicked(); } }
-}
-
+// One tab (R5, IDE style): the current tab takes the navigation row's layer
+// (they read as one surface) and, in the active pane, an accent line on top;
+// × only on hover or on the current tab; middle click closes.
 component TabItem inherits Rectangle {
     in property <string> title;
     in property <bool> current;
     in property <bool> closable;
+    // the pane is the active one (accent line, bright title)
+    in property <bool> pane-active;
     callback select();
     callback close();
-    width: min(180px, max(90px, label.preferred-width + 40px));
-    border-radius: 6px;
-    background: root.current ? Theme.c.card : (ta.has-hover ? Theme.c.hover : transparent);
-    drop-shadow-blur: root.current ? 3px : 0px;
-    drop-shadow-color: Theme.c.shadow-soft;
+    width: min(200px, max(96px, label.preferred-width + 48px));
+    border-top-left-radius: Ui.r;
+    border-top-right-radius: Ui.r;
+    background: root.current ? Theme.d.panel : (ta.has-hover ? Theme.d.hover : transparent);
+    animate background { duration: Ui.fast; easing: ease-out; }
+    accessible-role: tab;
+    accessible-label: root.title;
+    accessible-action-default => { root.select(); }
     ta := TouchArea {
         pointer-event(e) => {
             if (e.kind == PointerEventKind.down && e.button == PointerEventButton.left) { root.select(); }
@@ -186,18 +177,35 @@ component TabItem inherits Rectangle {
             if (e.kind == PointerEventKind.up && e.button == PointerEventButton.middle && root.closable) { root.close(); }
         }
     }
+    if root.current && root.pane-active : Rectangle {
+        x: 6px; y: 0; width: parent.width - 12px; height: 2px;
+        border-radius: 1px;
+        background: Theme.d.accent;
+    }
     HorizontalLayout {
-        padding-left: 10px; padding-right: 4px; spacing: 4px;
-        label := Text { text: root.title; vertical-alignment: center; overflow: elide; horizontal-stretch: 1; color: Theme.c.text; }
-        if root.closable : Rectangle {
+        padding-left: 12px; padding-right: 5px; spacing: 4px;
+        label := Text {
+            text: root.title;
+            vertical-alignment: center;
+            overflow: elide;
+            horizontal-stretch: 1;
+            font-size: Ui.font-body;
+            color: (root.current && root.pane-active) || ta.has-hover ? Theme.d.text : Theme.d.text2;
+        }
+        Rectangle {
             width: 20px;
-            accessible-role: button;
-            accessible-label: "Tab schließen";
-            accessible-action-default => { root.close(); }
-            border-radius: 4px;
-            background: close-ta.has-hover ? Theme.c.hover-strong : transparent;
-            Text { text: "×"; horizontal-alignment: center; vertical-alignment: center; color: Theme.c.text4; }
-            close-ta := TouchArea { clicked => { root.close(); } }
+            if root.closable && (root.current || ta.has-hover || close-ta.has-hover) : Rectangle {
+                y: (parent.height - 20px) / 2;
+                height: 20px;
+                accessible-role: button;
+                accessible-label: "Tab schließen";
+                accessible-action-default => { root.close(); }
+                border-radius: Ui.r-small;
+                background: close-ta.pressed ? Theme.d.pressed : (close-ta.has-hover ? Theme.d.hover : transparent);
+                Icon { d: IconData.close; size: 12px; tint: close-ta.has-hover ? Theme.d.text : Theme.d.icon-muted; }
+            }
+            // stays hit-testable while the × is hidden, so it keeps its hover
+            close-ta := TouchArea { enabled: root.closable; clicked => { root.close(); } }
         }
     }
 }
@@ -558,7 +566,7 @@ component FilePane inherits Rectangle {
     // ⋮ menu: everything that was on the global bar (+ the actions when narrow)
     more-menu := PopupWindow {
         x: root.width - self.width - 6px;
-        y: 34px + Ui.nav-h - 2px;
+        y: Ui.tab-h + 4px + Ui.nav-h - 2px;
         width: 260px;
         Rectangle {
             background: Theme.d.overlay;
@@ -593,20 +601,28 @@ component FilePane inherits Rectangle {
     }
 
     VerticalLayout {
-        // ---------- tabs ----------
+        // ---------- tabs (R5) ----------
         Rectangle {
-            height: 34px;
-            background: root.active ? Theme.c.tabs-active : Theme.c.tabs-idle;
+            height: Ui.tab-h + 4px;
+            background: Theme.d.app;
             HorizontalLayout {
-                padding: 4px; padding-bottom: 2px; spacing: 2px;
+                padding-left: 6px; padding-right: 6px; padding-top: 4px; spacing: 2px;
                 for t[ti] in root.data.tabs : TabItem {
                     title: t.title;
                     current: ti == root.data.active-tab;
                     closable: root.closable-tabs;
+                    pane-active: root.active;
                     select => { root.activate(); root.tab-select(ti); }
                     close => { root.activate(); root.tab-close(ti); }
                 }
-                NavButton { text: "+"; label: "Neuer Tab"; width: 28px; clicked => { root.activate(); root.tab-new(); } }
+                IconButton {
+                    y: (parent.height - self.height) / 2 + 2px;
+                    size: 24px;
+                    icon: IconData.plus;
+                    label: "Neuer Tab";
+                    shortcut: "Strg+T";
+                    clicked => { root.activate(); root.tab-new(); }
+                }
                 Rectangle { horizontal-stretch: 1; }
             }
         }
@@ -1029,8 +1045,7 @@ component FilePane inherits Rectangle {
         }
         changed has-focus => { if (!self.has-focus) { root.finish-rename(true); } }
     }
-    // active-pane marker (thin accent line on top)
-    if root.active : Rectangle { y: 0; height: 2px; background: Theme.c.accent; }
+    // the active pane is marked by its current tab's accent line (R5)
 }
 
 // One entry of the sort menu (dot = current choice).

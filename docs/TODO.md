@@ -152,6 +152,7 @@ Legende: `[ ]` offen · `[~]` in Arbeit · `[x]` erledigt · Prio P0/P1/P2
 - [x] R2 Hauptlayout (CI-Run #110): globale Leiste aufgelöst (Aktionen in der Navigationszeile der aktiven Ansicht, ⋮-Menü, Statusleiste), Tooltips, Breakpoints, Dunkel als Standard
 - [x] R3 Seitenleiste (CI-Run #115): Linien-Icons, Akzentmarke, dezente Laufwerksbalken
 - [x] R4 Navigation (CI-Run #120): Icon-Knöpfe, Brotkrumen-Segmente, Suchfeld mit Lupe, 34 px
+- [ ] R5 Tabs: IDE-Stil, Akzentstrich am aktuellen Tab der aktiven Ansicht, × bei Hover – lokal fertig, CI ausstehend
 - [ ] E2E-Wackler beobachten: [49] erster Drag nach Gesamtlauf, [72c] installierte Kopie ohne X-Verbindung (CI #107)
 - [ ] R2 Hauptlayout (globale Leiste auflösen, Statusleiste, Breakpoints)
 - [ ] R3 Seitenleiste · R4 Navigation · R5 Tabs
