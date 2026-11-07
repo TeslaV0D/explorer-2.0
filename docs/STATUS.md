@@ -1,6 +1,6 @@
 # Zwischenstand
 
-**Stand:** 2026-11-07 · **Phase:** 1 · M0–M7 ✅ (M7.3 verschoben) · R-001 ✅ · **M8.1/M8.2 Installer ✅ (Run #69)** · **M8.3 Härtung ✅ (Run #70–#73)** · **Phase 2 Suche: S1.1 ✅ (Run #78), S1.2 ✅ (Run #80), S1.3 ✅ (Run #83), S1.4 ✅ (Run #90), S1.5 ✅ (Run #91/#93) → **S1 komplett**, Praxistest ✅ (Boss: „es funktioniert“) · **Redesign läuft: R0 ✅ (Run #101), R1 ✅ (Run #104), R2 ✅ (Run #110), R3 ✅ (Run #115), R4 ✅ (Run #120), R5 ✅ (Run #123), R6 ✅ (Run #124), R7 lokal fertig (CI läuft)** (`docs/PLAN-REDESIGN.md`)** (Plan `docs/PLAN-SEARCH.md`) · **Branch:** `claude/relaxed-pasteur-ufhh1p`
+**Stand:** 2026-11-07 · **Phase:** 1 · M0–M7 ✅ (M7.3 verschoben) · R-001 ✅ · **M8.1/M8.2 Installer ✅ (Run #69)** · **M8.3 Härtung ✅ (Run #70–#73)** · **Phase 2 Suche: S1.1 ✅ (Run #78), S1.2 ✅ (Run #80), S1.3 ✅ (Run #83), S1.4 ✅ (Run #90), S1.5 ✅ (Run #91/#93) → **S1 komplett**, Praxistest ✅ (Boss: „es funktioniert“) · **Redesign läuft: R0 ✅ (Run #101), R1 ✅ (Run #104), R2 ✅ (Run #110), R3 ✅ (Run #115), R4 ✅ (Run #120), R5 ✅ (Run #123), R6 ✅ (Run #124), R7 ✅ (Run #125), als Nächstes R8 Menüs + Dialoge** (`docs/PLAN-REDESIGN.md`)** (Plan `docs/PLAN-SEARCH.md`) · **Branch:** `claude/relaxed-pasteur-ufhh1p`
 
 ## M5 – Shell-Integration (läuft, Freigabe Boss 2026-11-04)
 ### CI-Run #37 – alles grün ✅ (M5.0–M5.5)
@@ -40,10 +40,10 @@
 - **Bug (CI #32/#33, UI-Matrix)**: OLE-Drop-Target wurde nie registriert („Invalid window handle“) – der Timer lief, bevor Slint das native Fenster erzeugt hatte → Ablegen aus anderen Apps wäre tot gewesen. Fix: Registrierung wiederholt bis HWND existiert (50 ms, max. 5 s), sonst Rückfall auf In-App-DnD.
 - Neu: **Windows-E2E mit echter Tastatur/Maus** (`scripts/e2e-windows.ps1`, CI-Schritt im Release-Job, Screenshots bei Fehler).
 
-### Redesign R7 – Inspector (lokal, CI läuft)
+### Redesign R7 – Inspector ✅ (CI-Run #125)
 - „Property Inspector“ auf `panel`: Vorschau als Karte (Radius 8, Rand), Titel 14 px halbfett + Typ gedämpft, Fakten in **Gruppen ALLGEMEIN / DATUM / ORT** mit kleinen Köpfen statt Linie pro Zeile; Schlüssel links gedämpft (96 px), Wert rechts (markier- und kopierbar); der **Pfad** volle Breite mit Knopf **„Pfad kopieren“** (`TextInput.copy()`); Inhalt blendet beim Öffnen in 180 ms ein (die Fläche selbst ist sofort da – die Liste wartet nie auf eine Animation).
 - Rust: `InfoRow` bekommt `group`/`first`; `inspector::arrange` sortiert stabil nach Gruppe und markiert den ersten Eintrag (auch für nachgereichte Fakten wie Erstellt/Abmessungen), Unit-Test.
-- Tests: E2E [68h] Gruppenköpfe, [68i] „Pfad kopieren“ → Einfügen ins Suchfeld landet als Suchtext.
+- Tests: E2E [68h] Gruppenköpfe, [68i] „Pfad kopieren“ → Einfügen ins Suchfeld landet als Suchtext. Lokal 265/265, CI #125 komplett grün.
 
 ### Redesign R6 – Dateiliste ✅ (CI-Run #124)
 - **Spaltenkopf** 24 px (vorher 26) auf der Listenfläche, Beschriftung klein/gedämpft, sortierte Spalte heller + **gezeichneter Chevron** in Akzent statt „▲/▼“-Zeichen (Schrift-Glyphen sind die bekannte Erststart-Falle), Hover/Pressed-Flächen, Spaltentrenner werden beim Ziehen/Hover akzentfarben; Beschriftung fluchtet mit den Namen.
