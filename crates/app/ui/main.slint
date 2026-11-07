@@ -558,7 +558,7 @@ component FilePane inherits Rectangle {
     // ⋮ menu: everything that was on the global bar (+ the actions when narrow)
     more-menu := PopupWindow {
         x: root.width - self.width - 6px;
-        y: 34px + 40px - 2px;
+        y: 34px + Ui.nav-h - 2px;
         width: 260px;
         Rectangle {
             background: Theme.d.overlay;
@@ -610,45 +610,68 @@ component FilePane inherits Rectangle {
                 Rectangle { horizontal-stretch: 1; }
             }
         }
-        // ---------- nav toolbar ----------
-        HorizontalLayout {
-            padding: 5px; spacing: 4px; height: 40px;
-            NavButton { text: "←"; label: "Zurück"; enabled: root.data.can-back; clicked => { root.activate(); root.back(); } }
-            NavButton { text: "→"; label: "Vorwärts"; enabled: root.data.can-forward; clicked => { root.activate(); root.forward(); } }
-            NavButton { text: "↑"; label: "Nach oben"; clicked => { root.activate(); root.go-up(); } }
+        // ---------- nav toolbar (R4: icon buttons, quiet breadcrumb segments, search with magnifier) ----------
+        Rectangle {
+          height: Ui.nav-h;
+          background: Theme.d.panel;
+          Rectangle { y: parent.height - 1px; height: 1px; background: Theme.d.border; }
+          HorizontalLayout {
+            padding-left: 6px; padding-right: 6px; padding-top: 4px; padding-bottom: 4px;
+            spacing: 2px;
+            IconButton { icon: IconData.back; label: "Zurück"; shortcut: "Alt+Links"; enabled: root.data.can-back; clicked => { root.activate(); root.back(); } }
+            IconButton { icon: IconData.forward; label: "Vorwärts"; shortcut: "Alt+Rechts"; enabled: root.data.can-forward; clicked => { root.activate(); root.forward(); } }
+            IconButton { icon: IconData.up; label: "Nach oben"; shortcut: "Alt+Oben"; clicked => { root.activate(); root.go-up(); } }
+            Rectangle { width: 4px; }
             address := Rectangle {
                 accessible-role: groupbox;
                 accessible-label: "Adresszeile";
                 border-width: 1px;
-                border-color: root.editing-path ? Theme.c.accent : Theme.c.outline;
-                border-radius: 4px;
-                background: Theme.c.card;
+                border-color: root.editing-path ? Theme.d.accent : (addr-ta.has-hover ? Theme.d.border-strong : Theme.d.border);
+                animate border-color { duration: Ui.fast; }
+                border-radius: Ui.r;
+                background: Theme.d.raised;
                 horizontal-stretch: 1;
                 clip: true;
+                // empty space right of the crumbs → edit mode (under the crumbs, which take their clicks)
+                addr-ta := TouchArea {
+                    mouse-cursor: MouseCursor.text;
+                    enabled: !root.editing-path;
+                    clicked => { root.activate(); root.start-edit(); }
+                }
                 if !root.editing-path : HorizontalLayout {
-                    padding-left: 4px; spacing: 0px;
+                    padding-left: 3px; padding-top: 2px; padding-bottom: 2px; spacing: 0px;
+                    alignment: start;
                     for c[i] in root.data.crumbs : HorizontalLayout {
                         spacing: 0px;
-                        if i > 0 : Text { text: "›"; color: Theme.c.faint; vertical-alignment: center; width: 14px; horizontal-alignment: center; }
+                        if i > 0 : Rectangle {
+                            width: 14px;
+                            Icon { d: IconData.chevron-right; size: 12px; tint: Theme.d.faint; }
+                        }
                         Rectangle {
-                            width: crumb-text.preferred-width + 10px;
-                            border-radius: 3px;
-                            background: crumb-ta.has-hover ? Theme.c.accent-hover : transparent;
-                            crumb-text := Text { text: c.label; vertical-alignment: center; color: Theme.c.text; }
+                            width: crumb-text.preferred-width + 12px;
+                            border-radius: Ui.r-small;
+                            background: crumb-ta.pressed ? Theme.d.pressed : (crumb-ta.has-hover ? Theme.d.hover : transparent);
+                            animate background { duration: Ui.fast; }
+                            crumb-text := Text {
+                                text: c.label;
+                                vertical-alignment: center;
+                                font-size: Ui.font-body;
+                                // the current folder (last segment) stands out, the way there is quiet
+                                color: i == root.data.crumbs.length - 1 || crumb-ta.has-hover ? Theme.d.text : Theme.d.text2;
+                            }
                             crumb-ta := TouchArea { clicked => { root.activate(); root.navigate(c.path); } }
                         }
                     }
-                    // empty space right of the crumbs → edit mode
-                    Rectangle {
-                        horizontal-stretch: 1;
-                        TouchArea { mouse-cursor: text; clicked => { root.activate(); root.start-edit(); } }
-                    }
                 }
                 path-edit := TextInput {
-                    x: 8px; width: parent.width - 16px;
+                    x: 9px; width: parent.width - 18px;
                     visible: root.editing-path;
                     single-line: true;
                     vertical-alignment: center;
+                    font-size: Ui.font-body;
+                    color: Theme.d.text;
+                    selection-background-color: Theme.d.selected;
+                    selection-foreground-color: Theme.d.text;
                     accepted => { root.editing-path = false; root.navigate(self.text); list-focus.focus(); }
                     key-pressed(e) => {
                         if (e.text == Key.Escape) { root.editing-path = false; root.cancel-edit(); list-focus.focus(); return accept; }
@@ -657,6 +680,7 @@ component FilePane inherits Rectangle {
                     changed has-focus => { if (!self.has-focus && root.editing-path) { root.editing-path = false; root.cancel-edit(); } }
                 }
             }
+            Rectangle { width: 4px; }
             // ---------- search field (S1.4b) ----------
             Rectangle {
                 // the address bar stretches, the field keeps its width (shrinks when narrow)
@@ -664,15 +688,26 @@ component FilePane inherits Rectangle {
                 min-width: 120px;
                 horizontal-stretch: 0;
                 border-width: 1px;
-                border-color: search-edit.has-focus ? Theme.c.accent : Theme.c.outline;
-                border-radius: 4px;
-                background: Theme.c.card;
+                border-color: search-edit.has-focus ? Theme.d.accent : (search-ta.has-hover ? Theme.d.border-strong : Theme.d.border);
+                animate border-color { duration: Ui.fast; }
+                border-radius: Ui.r;
+                background: Theme.d.raised;
                 clip: true;
+                search-ta := TouchArea { mouse-cursor: MouseCursor.text; clicked => { search-edit.focus(); } }
+                Icon {
+                    x: 8px; y: (parent.height - self.height) / 2;
+                    d: IconData.search;
+                    size: Ui.icon-small;
+                    tint: search-edit.has-focus ? Theme.d.accent : Theme.d.icon-muted;
+                }
                 search-edit := TextInput {
-                    x: 8px; width: parent.width - 16px;
+                    x: 28px; width: parent.width - 36px;
                     single-line: true;
                     vertical-alignment: center;
-                    color: Theme.c.text;
+                    font-size: Ui.font-body;
+                    color: Theme.d.text;
+                    selection-background-color: Theme.d.selected;
+                    selection-foreground-color: Theme.d.text;
                     edited => { root.activate(); root.search-input(self.text); }
                     accepted => { root.activate(); root.search-accept(self.text); }
                     key-pressed(e) => {
@@ -692,9 +727,10 @@ component FilePane inherits Rectangle {
                 }
                 // hint while empty (Text takes no input: clicks reach the field)
                 if search-edit.text == "" : Text {
-                    x: 8px; width: parent.width - 16px;
+                    x: 28px; width: parent.width - 36px;
                     text: root.data.search-scope;
-                    color: Theme.c.faint;
+                    color: Theme.d.faint;
+                    font-size: Ui.font-body;
                     vertical-alignment: center;
                     overflow: elide;
                 }
@@ -717,6 +753,7 @@ component FilePane inherits Rectangle {
                 label: "Mehr";
                 clicked => { more-menu.show(); }
             }
+          }
         }
         // ---------- column header (details only; icons sort via the status bar menu) ----------
         Rectangle {
