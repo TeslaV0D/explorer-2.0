@@ -1,6 +1,6 @@
 # Zwischenstand
 
-**Stand:** 2026-11-06 · **Phase:** 1 · M0–M7 ✅ (M7.3 verschoben) · R-001 ✅ · **M8.1/M8.2 Installer ✅ (Run #69)** · **M8.3 Härtung ✅ (Run #70–#73)** · **Phase 2 Suche: S1.1 ✅ (Run #78), S1.2 ✅ (Run #80), S1.3 ✅ (Run #83), S1.4 ✅ (Run #90), S1.5 ✅ (Run #91/#93) → **S1 komplett**, Praxistest offen** (Plan `docs/PLAN-SEARCH.md`) · **Branch:** `claude/relaxed-pasteur-ufhh1p`
+**Stand:** 2026-11-07 · **Phase:** 1 · M0–M7 ✅ (M7.3 verschoben) · R-001 ✅ · **M8.1/M8.2 Installer ✅ (Run #69)** · **M8.3 Härtung ✅ (Run #70–#73)** · **Phase 2 Suche: S1.1 ✅ (Run #78), S1.2 ✅ (Run #80), S1.3 ✅ (Run #83), S1.4 ✅ (Run #90), S1.5 ✅ (Run #91/#93) → **S1 komplett**, Praxistest ✅ (Boss: „es funktioniert“) · **Redesign geplant** (`docs/PLAN-REDESIGN.md`)** (Plan `docs/PLAN-SEARCH.md`) · **Branch:** `claude/relaxed-pasteur-ufhh1p`
 
 ## M5 – Shell-Integration (läuft, Freigabe Boss 2026-11-04)
 ### CI-Run #37 – alles grün ✅ (M5.0–M5.5)
@@ -39,6 +39,11 @@
 
 - **Bug (CI #32/#33, UI-Matrix)**: OLE-Drop-Target wurde nie registriert („Invalid window handle“) – der Timer lief, bevor Slint das native Fenster erzeugt hatte → Ablegen aus anderen Apps wäre tot gewesen. Fix: Registrierung wiederholt bis HWND existiert (50 ms, max. 5 s), sonst Rückfall auf In-App-DnD.
 - Neu: **Windows-E2E mit echter Tastatur/Maus** (`scripts/e2e-windows.ps1`, CI-Schritt im Release-Job, Screenshots bei Fehler).
+
+### Redesign – Plan erstellt (2026-11-07)
+- Boss: Praxistest der Suche auf echtem Windows bestanden („es funktioniert“) → S2 vorerst nicht nötig.
+- Nächstes Vorhaben: UI/UX-Redesign im File-Pilot-Stil, **nur Design/Bediengefühl**. Plan mit Ist-Analyse, Design-System, Ziel-Layout, Stufen R0–R10 und 5 offenen Entscheidungen: `docs/PLAN-REDESIGN.md`.
+- Wichtigster Befund: 140 px Chrome bis zur ersten Zeile (Ziel ~90 px), ~100 feste Klick-Koordinaten in den E2E-Tests → R0 macht Klickziele zuerst benennbar.
 
 ### Phase 2 – S1.5c Laufwerksauswahl ✅ (CI-Run #93) → **S1.5 komplett, S1 komplett**
 - CI #92 rot nur im Clipboard-Interop-Test (Windows): .NET `GetFileDropList` sah die gerade gesetzte Zwischenablage kurz leer, unser Lesen und `Get-Clipboard` sahen die Dateien → Test liest jetzt mit bis zu 5 Versuchen (wie eine App). #93 grün, lokal Linux-E2E 254/254.

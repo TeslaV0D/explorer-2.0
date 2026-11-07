@@ -141,9 +141,18 @@ Legende: `[ ]` offen · `[~]` in Arbeit · `[x]` erledigt · Prio P0/P1/P2
     - [x] S1.5a Ortszeit (Anzeige + `dm:`), verpasste Watcher-Ereignisse im Status – CI #91
     - [x] S1.5b Treffer fett markiert, Sortieren per Spaltenkopf in Treffern (getestet), Suchverlauf (↑/↓ im Suchfeld, Liste in der Schnellsuche), E2E [79] – CI #91
     - [~] S1.5c Laufwerksauswahl in den Einstellungen (automatisch = feste lokale; Netz/USB/Linux-`/` zuschaltbar; DVD nie), Neustart des Dienstes, E2E [80] – CI #93
-- [ ] **Praxistest S1 auf echtem Windows (Boss)** – Anleitung `docs/PRAXISTEST-SUCHE.md`, Artefakt aus CI-Run #93
+- [x] **Praxistest S1 auf echtem Windows (Boss, 2026-11-07): „es funktioniert“** – S2 vorerst nicht nötig
 - [ ] S2 optional mit Admin: MFT/USN-Dienst – erst nach Praxistest S1 + R-001-Erweiterung für Dienste
 - [ ] Später: Inhaltssuche, systemweiter Hotkey (Integration → R-001)
+
+## Redesign (Boss 2026-11-07) – Plan `docs/PLAN-REDESIGN.md`, nur Design/UX, keine Logik
+- [ ] Entscheidungen 1–5 aus dem Plan (Boss)
+- [ ] R0 Absicherung: Klickziele per Name (Spike Slint-Testing-API / sonst Koordinaten-Tabelle), Screenshot-Galerie „vorher“, `accessible-label`
+- [ ] R1 Design-System (Farbrollen + Kontrast-Tests, `Ui`-Maße, Symbol-Set, Bausteine)
+- [ ] R2 Hauptlayout (globale Leiste auflösen, Statusleiste, Breakpoints)
+- [ ] R3 Seitenleiste · R4 Navigation · R5 Tabs
+- [ ] R6 Dateiliste · R7 Inspector · R8 Menüs + Dialoge
+- [ ] R9 Zustände + Bewegung · R10 Konsistenz + QA (Galerie vorher/nachher, Gates, Abnahme)
 
 ## Phase 3 – Datei-Aktions-Shortcuts (Sweetch-Stil)  *(später, nur beschrieben)*
 - [ ] Tray-Helper mit Kreismenü: Drag von Dateien auf Sektor oder Hotkey (Sweetch: Ctrl+Alt+Space) 
