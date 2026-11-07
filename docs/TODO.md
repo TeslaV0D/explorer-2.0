@@ -149,7 +149,8 @@ Legende: `[ ]` offen · `[~]` in Arbeit · `[x]` erledigt · Prio P0/P1/P2
 - [x] Entscheidungen 1–5 aus dem Plan (Boss 2026-11-07: „passt so“ = alle Empfehlungen)
 - [x] R0 Absicherung (CI-Run #101): UI-Dump `EXPLORER2_UI_DUMP` (Item-Baum über `i-slint-core`), Test-Hilfen `scripts/ui-lib.sh` + `UiBox`/`UiClick`/`ListTop` in `e2e-windows.ps1`, alle Panel-/Leisten-Klicks per Name, Zeilen relativ zum Spaltenkopf, sprechende Namen für Symbol-Knöpfe, Galerie `scripts/gallery.sh` (22 Screens Linux) + Windows-Galerie (10 Screens) als CI-Artefakte (`ui-gallery-linux` 22, `ui-gallery-windows` 10)
 - [x] R1 Design-System (CI-Run #104): Farbrollen `core::theme::Design` + Kontrast-Test (12 Akzente × hell/dunkel), Global `Ui`, 50 Lucide-Icons (`scripts/make-ui-icons.py`), Bausteine `ui/kit.slint`, UI-Kit `EXPLORER2_UI_KIT=1` (Galerie + E2E [81])
-- [ ] R2 Hauptlayout: globale Leiste aufgelöst (Aktionen in der Navigationszeile der aktiven Ansicht, ⋮-Menü, Statusleiste), Tooltips, Breakpoints, Dunkel als Standard – lokal fertig, CI ausstehend
+- [x] R2 Hauptlayout (CI-Run #110): globale Leiste aufgelöst (Aktionen in der Navigationszeile der aktiven Ansicht, ⋮-Menü, Statusleiste), Tooltips, Breakpoints, Dunkel als Standard
+- [ ] E2E-Wackler beobachten: [49] erster Drag nach Gesamtlauf, [72c] installierte Kopie ohne X-Verbindung (CI #107)
 - [ ] R2 Hauptlayout (globale Leiste auflösen, Statusleiste, Breakpoints)
 - [ ] R3 Seitenleiste · R4 Navigation · R5 Tabs
 - [ ] R6 Dateiliste · R7 Inspector · R8 Menüs + Dialoge
