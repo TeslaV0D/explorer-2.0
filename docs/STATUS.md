@@ -1,6 +1,6 @@
 # Zwischenstand
 
-**Stand:** 2026-11-07 · **Phase:** 1 · M0–M7 ✅ (M7.3 verschoben) · R-001 ✅ · **M8.1/M8.2 Installer ✅ (Run #69)** · **M8.3 Härtung ✅ (Run #70–#73)** · **Phase 2 Suche: S1.1 ✅ (Run #78), S1.2 ✅ (Run #80), S1.3 ✅ (Run #83), S1.4 ✅ (Run #90), S1.5 ✅ (Run #91/#93) → **S1 komplett**, Praxistest ✅ (Boss: „es funktioniert“) · **Redesign läuft: R0 ✅ (Run #101), als Nächstes R1** (`docs/PLAN-REDESIGN.md`)** (Plan `docs/PLAN-SEARCH.md`) · **Branch:** `claude/relaxed-pasteur-ufhh1p`
+**Stand:** 2026-11-07 · **Phase:** 1 · M0–M7 ✅ (M7.3 verschoben) · R-001 ✅ · **M8.1/M8.2 Installer ✅ (Run #69)** · **M8.3 Härtung ✅ (Run #70–#73)** · **Phase 2 Suche: S1.1 ✅ (Run #78), S1.2 ✅ (Run #80), S1.3 ✅ (Run #83), S1.4 ✅ (Run #90), S1.5 ✅ (Run #91/#93) → **S1 komplett**, Praxistest ✅ (Boss: „es funktioniert“) · **Redesign läuft: R0 ✅ (Run #101), R1 lokal fertig (CI läuft)** (`docs/PLAN-REDESIGN.md`)** (Plan `docs/PLAN-SEARCH.md`) · **Branch:** `claude/relaxed-pasteur-ufhh1p`
 
 ## M5 – Shell-Integration (läuft, Freigabe Boss 2026-11-04)
 ### CI-Run #37 – alles grün ✅ (M5.0–M5.5)
@@ -39,6 +39,13 @@
 
 - **Bug (CI #32/#33, UI-Matrix)**: OLE-Drop-Target wurde nie registriert („Invalid window handle“) – der Timer lief, bevor Slint das native Fenster erzeugt hatte → Ablegen aus anderen Apps wäre tot gewesen. Fix: Registrierung wiederholt bis HWND existiert (50 ms, max. 5 s), sonst Rückfall auf In-App-DnD.
 - Neu: **Windows-E2E mit echter Tastatur/Maus** (`scripts/e2e-windows.ps1`, CI-Schritt im Release-Job, Screenshots bei Fehler).
+
+### Redesign R1 – Design-System (lokal fertig, CI läuft)
+- **Farbrollen** `core::theme::Design` (Feld `ds` an `Tokens`, 26 Rollen: Ebenen app/panel/surface/raised/overlay, Zustände hover/pressed/selected/selected-idle, Linien, Text-Hierarchie text/text2/muted/faint, Icons, Akzent + Text darauf, Signale, Ordner/Datei, Scrim/Schatten). Dunkel = geschichtete Graustufen statt Schwarz, Akzent ruhiges Blau `#4f8cff` (hell `#2f6feb`). Windows-Akzent wird übernommen und auf Lesbarkeit geschoben; die Auswahl ist eine dünne Akzent-Lasur, die bei grellen Akzenten (Gelb auf Dunkel) so weit ausgedünnt wird, dass sie so hell bleibt wie mit dem Standard-Blau.
+- **Kontrast-Test** für Standard + 12 Akzente × hell/dunkel: Text ≥ 7 auf jeder Ebene, Text 2 ≥ 4,5, gedämpft ≥ 4,5 (in ausgewählten Zeilen ≥ 3), Icons ≥ 4,5, Akzent ≥ 3, Text auf Akzent ≥ 4,5, Signale ≥ 4,5, Ebenen unterscheidbar. Mehrere Startwerte sind daran gescheitert und wurden nachgezogen (z. B. gedämpft auf „gedrückt“ 4,35 → heller).
+- **Slint**: `ui/theme.slint` (`ThemeColors` alt, `DesignColors` neu, `Theme.d`, Global `Ui` mit Maßen/Radien/Schriftgrößen/Dauern), `ui/icons.slint` (50 Lucide-Icons als Pfaddaten, erzeugt von `scripts/make-ui-icons.py`; Fehler gefunden: ein kleines `m` am Anfang eines Teilpfads wird nach dem Zusammenfügen relativ → wird zu `M x y l …`), `ui/kit.slint` (`Icon`, `IconButton`, `ToolbarButton`, `MenuItem`, `MenuSeparator`, `SectionLabel`, `Field`, alle mit sprechendem Namen).
+- **UI-Kit** `EXPLORER2_UI_KIT=1`: Übersicht aller Farbrollen, Schriftstufen, Zeilen-/Menü-Muster, Bedienelemente in ihren Zuständen und aller Icons → Galerie-Bild `12-ui-kit` (Linux) bzw. `06-ui-kit` (Windows), E2E [75]/[75b].
+- Sichtbares Aussehen der App unverändert (alte `Theme.c`-Werte unangetastet); Lizenz der Icons in `THIRD-PARTY.md`.
 
 ### Redesign R0 – Absicherung ✅ (CI-Run #101)
 - Lokal: Linux-E2E komplett grün (nach Popup-Fix: Sortier-Menü liegt in einem eigenen Popup-Baum, der Dump geht ihn jetzt mit Versatz durch). CI #101: alles grün, Galerie-Artefakte `ui-gallery-linux` (22) und `ui-gallery-windows` (10, inkl. natives Kontextmenü) = „Vorher“-Stand.

@@ -1,51 +1,9 @@
 import { Button, ListView, CheckBox, ScrollView, Palette } from "std-widgets.slint";
 
-// Every colour of the UI (filled from Rust: core::theme::tokens).
-export struct ThemeColors {
-    content: color,
-    card: color,
-    chrome: color,
-    panel: color,
-    header: color,
-    tabs-active: color,
-    tabs-idle: color,
-    line: color,
-    line-strong: color,
-    outline: color,
-    hover: color,
-    hover-strong: color,
-    row-hover: color,
-    accent-hover: color,
-    current: color,
-    selection: color,
-    selection-idle: color,
-    drop: color,
-    accent: color,
-    band: color,
-    text: color,
-    text2: color,
-    text3: color,
-    text4: color,
-    muted: color,
-    faint: color,
-    disabled: color,
-    danger: color,
-    warning: color,
-    track: color,
-    folder: color,
-    file: color,
-    drive: color,
-    scrim: color,
-    scrim-soft: color,
-    shadow: color,
-    shadow-soft: color,
-}
-
-export global Theme {
-    in property <bool> dark;
-    in property <ThemeColors> c;
-}
-
+import { Theme, ThemeColors, DesignColors, Ui } from "theme.slint";
+import { IconData } from "icons.slint";
+import { UiKit } from "kit.slint";
+export { Theme, ThemeColors, DesignColors, Ui }
 
 export struct Row {
     name: string,
@@ -1233,6 +1191,8 @@ export component MainWindow inherits Window {
     in property <bool> conflict-dirs;
     in-out property <bool> conflict-all;
     in property <bool> confirm-open;
+    // design system overview (EXPLORER2_UI_KIT=1, gallery)
+    in-out property <bool> ui-kit-open;
     in property <string> confirm-text;
     in property <string> confirm-ok;
     callback command(string);
@@ -1802,5 +1762,10 @@ export component MainWindow inherits Window {
             text: "Schließen";
             clicked => { root.settings-open = false; }
         }
+    }
+    if root.ui-kit-open : UiKit {
+        width: root.width;
+        height: root.height;
+        close => { root.ui-kit-open = false; }
     }
 }

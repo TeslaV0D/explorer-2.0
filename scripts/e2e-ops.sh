@@ -519,4 +519,15 @@ check "[74h] switched off: a second start opens its own window" "kill -0 $P2 2>/
 kill $P2; wait $P2 2>/dev/null
 kill $PID; wait $PID 2>/dev/null
 check "[74i] after kill the socket is gone (next start does not wait)" "[ ! -e '$SOCK' ]"
+
+echo "== [75] redesign R1: UI kit (design system overview, EXPLORER2_UI_KIT=1)"
+KC=$W/cfg-kit; mkdir -p $KC; printf 'theme = dark\nsystem_accent = false\n' > $KC/settings.ini
+MAIN_DUMP=$UI_DUMP; UI_DUMP=$W/ui-dump-kit.txt
+EXPLORER2_UI_DUMP=$UI_DUMP EXPLORER2_UI_KIT=1 EXPLORER2_CONFIG_DIR=$KC $EXE --new-instance "$TW" > $W/trace-75.log 2>&1 & P2=$!
+ui_wait "UI-Kit schließen" 8; sleep 0.5; shot s75_kit
+check "[75] kit shows colour roles, controls (spoken names) and all 50 icons" "ui_has 'FARBROLLEN' && ui_has 'Kit Suchfeld' && ui_has 'Kit Inspector' && ui_has 'warning' && [ \$(awk -F'\t' 'NR>1 && \$1==\"external\"' $UI_DUMP | wc -l) -eq 1 ]"
+ui_click "UI-Kit schließen"; sleep 0.8
+check "[75b] closing it shows the normal window" "! ui_has 'UI-Kit schließen' && ui_has 'Einstellungen'"
+kill $P2; wait $P2 2>/dev/null
+UI_DUMP=$MAIN_DUMP
 exit $FAIL

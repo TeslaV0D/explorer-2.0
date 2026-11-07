@@ -699,6 +699,17 @@ foreach ($theme in @('light', 'dark')) {
   } finally {
     if (-not $p.HasExited) { Stop-Process -Id $p.Id -Force }
   }
+  # the design system (R1): colour roles, controls, icons with the real fonts
+  $env:EXPLORER2_UI_KIT = '1'
+  $p = Start-Process -FilePath $Exe -ArgumentList "--new-instance `"$sr`"" -PassThru -RedirectStandardError "$Work\win-gallery-kit-$theme.log"
+  try {
+    Start-Sleep -Seconds 4
+    $p.Refresh(); $script:hwnd = $p.MainWindowHandle
+    if ($script:hwnd -ne 0) { [void][W]::ShowWindow($script:hwnd, 3); Start-Sleep -Milliseconds 800; Focus; Shot "gallery\$theme-06-ui-kit" }
+  } finally {
+    Remove-Item Env:EXPLORER2_UI_KIT -ErrorAction SilentlyContinue
+    if (-not $p.HasExited) { Stop-Process -Id $p.Id -Force }
+  }
 }
 Write-Host "gallery: $(@(Get-ChildItem "$gal\*.png").Count) screenshots"
 $script:log = $mainLog

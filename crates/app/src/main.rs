@@ -383,6 +383,9 @@ fn main() -> Result<(), slint::PlatformError> {
         on
     ));
     uidump::init(&win);
+    if std::env::var_os("EXPLORER2_UI_KIT").is_some_and(|v| v == "1") {
+        win.set_ui_kit_open(true);
+    }
     nav::trace_line(&format!("init done at={:.1}ms", nav::since_start_ms()));
 
     // Drives come and go (USB sticks, network shares): refresh the sidebar periodically.

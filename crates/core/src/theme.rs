@@ -82,6 +82,11 @@ pub const DEFAULT_ACCENT: Rgb = [0x00, 0x67, 0xc0];
 /// Default blue on dark backgrounds (Windows 11 "Light 2").
 pub const DEFAULT_ACCENT_ON_DARK: Rgb = [0x4c, 0xc2, 0xff];
 
+/// Redesign (D-026): the calm default blue of the new look, on dark …
+pub const DESIGN_ACCENT_DARK: Rgb = [0x4f, 0x8c, 0xff];
+/// … and on light surfaces (darker: readable on white).
+pub const DESIGN_ACCENT_LIGHT: Rgb = [0x2f, 0x6f, 0xeb];
+
 /// `HKCU\…\Explorer\Accent\AccentPalette`: 8 colours × RGBA, from light to
 /// dark: Light 3, Light 2, Light 1, Accent, Dark 1, Dark 2, Dark 3, (unused).
 pub fn accent_from_palette(bytes: &[u8]) -> Option<Accent> {
@@ -227,6 +232,38 @@ pub fn readable(c: Rgb, bg: Rgb, min: f64) -> Rgb {
     out
 }
 
+/// The accent laid thinly over `surface`; bright accents (yellow on dark,
+/// dark ones on light) are thinned until the selection is about as light as
+/// with the default blue, so text and icons on it stay readable.
+fn selection(acc: Rgb, default: Rgb, surface: Rgb, t: f64) -> Rgb {
+    let want = luminance(mix(default, surface, t));
+    let mut t = t;
+    loop {
+        let c = mix(acc, surface, t);
+        let ratio = (luminance(c) + 0.05) / (want + 0.05);
+        if (0.93..=1.08).contains(&ratio) || t <= 0.06 {
+            return c;
+        }
+        t -= 0.01;
+    }
+}
+
+/// Black-ish or white text on `bg`, whichever reads better.
+fn on_colour(bg: Rgb) -> Rgb {
+    let (dark, light) = (rgb(0x111111), rgb(0xffffff));
+    if contrast(dark, bg) >= contrast(light, bg) {
+        dark
+    } else {
+        light
+    }
+}
+
+/// `a` laid over `b` at `t` (0 = b, 1 = a): a tint that stays opaque.
+pub fn mix(a: Rgb, b: Rgb, t: f64) -> Rgb {
+    let m = |x: u8, y: u8| (f64::from(x) * t + f64::from(y) * (1.0 - t)).round() as u8;
+    [m(a[0], b[0]), m(a[1], b[1]), m(a[2], b[2])]
+}
+
 fn op(c: Rgb) -> Rgba {
     [c[0], c[1], c[2], 255]
 }
@@ -287,6 +324,131 @@ pub struct Tokens {
     pub scrim_soft: Rgba,
     pub shadow: Rgba,
     pub shadow_soft: Rgba,
+    /// The redesign's colour roles (layers instead of black; `Theme.d` in
+    /// Slint). The fields above are the old look until R10 retires them.
+    pub ds: Design,
+}
+
+/// Colour roles of the redesign (PLAN-REDESIGN.md §3): layers from the
+/// window background up to the selection, one text hierarchy, one accent.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct Design {
+    /// Window background: sidebar, tool bar, status bar.
+    pub app: Rgba,
+    /// Pane background, tab strip.
+    pub panel: Rgba,
+    /// File list, inspector, cards.
+    pub surface: Rgba,
+    /// Inputs, the current tab, dialogs.
+    pub raised: Rgba,
+    /// Menus and popups (slightly translucent).
+    pub overlay: Rgba,
+    pub hover: Rgba,
+    pub pressed: Rgba,
+    /// Selection (the accent laid thinly over the surface).
+    pub selected: Rgba,
+    /// Selection while the pane has no focus.
+    pub selected_idle: Rgba,
+    pub border: Rgba,
+    pub border_strong: Rgba,
+    pub text: Rgba,
+    /// Secondary text: dates, sizes, folder column.
+    pub text2: Rgba,
+    /// Labels of groups and hints that still must be readable.
+    pub muted: Rgba,
+    /// Placeholders, decoration (not for information).
+    pub faint: Rgba,
+    pub icon: Rgba,
+    pub icon_muted: Rgba,
+    /// Focus ring, selection bar, active tab line, links.
+    pub accent: Rgba,
+    /// Text/icons on an accent background.
+    pub on_accent: Rgba,
+    pub danger: Rgba,
+    pub warning: Rgba,
+    pub success: Rgba,
+    pub folder: Rgba,
+    pub file: Rgba,
+    pub scrim: Rgba,
+    pub shadow: Rgba,
+}
+
+/// The redesign's roles for `dark` and an optional accent (`None` = calm blue).
+pub fn design(dark: bool, accent: Option<&Accent>) -> Design {
+    let solid = |c: u32| op(rgb(c));
+    let alpha = |c: u32, a: u8| {
+        let [r, g, b] = rgb(c);
+        [r, g, b, a]
+    };
+    if dark {
+        let surface = rgb(0x1f1f1f);
+        let acc = match accent {
+            None => DESIGN_ACCENT_DARK,
+            Some(a) => readable(a.on_dark.unwrap_or(a.base), rgb(0x262626), 4.5),
+        };
+        Design {
+            app: solid(0x141414),
+            panel: solid(0x1a1a1a),
+            surface: op(surface),
+            raised: solid(0x262626),
+            overlay: alpha(0x242424, 0xf5),
+            hover: solid(0x2a2a2a),
+            pressed: solid(0x313131),
+            selected: op(selection(acc, DESIGN_ACCENT_DARK, surface, 0.22)),
+            selected_idle: solid(0x2c2c2c),
+            border: solid(0x2e2e2e),
+            border_strong: solid(0x3a3a3a),
+            text: solid(0xededed),
+            text2: solid(0xb3b3b3),
+            muted: solid(0x9c9c9c),
+            faint: solid(0x6f6f6f),
+            icon: solid(0xb8b8b8),
+            icon_muted: solid(0x8a8a8a),
+            accent: op(acc),
+            on_accent: op(on_colour(acc)),
+            danger: solid(0xff8a8a),
+            warning: solid(0xe5b94a),
+            success: solid(0x6ccb8a),
+            folder: solid(0xe8b730),
+            file: solid(0x8a95a1),
+            scrim: alpha(0, 0x80),
+            shadow: alpha(0, 0x99),
+        }
+    } else {
+        let surface = rgb(0xffffff);
+        let acc = match accent {
+            None => DESIGN_ACCENT_LIGHT,
+            Some(a) => readable(a.on_light.unwrap_or(a.base), surface, 4.5),
+        };
+        Design {
+            app: solid(0xf0f0f0),
+            panel: solid(0xf6f6f6),
+            surface: op(surface),
+            raised: solid(0xffffff),
+            overlay: alpha(0xffffff, 0xf7),
+            hover: solid(0xf2f2f2),
+            pressed: solid(0xe6e6e6),
+            selected: op(selection(acc, DESIGN_ACCENT_LIGHT, surface, 0.14)),
+            selected_idle: solid(0xe6e6e6),
+            border: solid(0xe0e0e0),
+            border_strong: solid(0xcccccc),
+            text: solid(0x1b1b1b),
+            text2: solid(0x555555),
+            muted: solid(0x5e5e5e),
+            faint: solid(0x858585),
+            icon: solid(0x505050),
+            icon_muted: solid(0x7a7a7a),
+            accent: op(acc),
+            on_accent: op(on_colour(acc)),
+            danger: solid(0xc42b1c),
+            warning: solid(0x9d6a00),
+            success: solid(0x2e7d4f),
+            folder: solid(0xe0a92a),
+            file: solid(0x8a95a1),
+            scrim: alpha(0, 0x40),
+            shadow: alpha(0, 0x33),
+        }
+    }
 }
 
 /// The colour set for `dark` and an optional accent (`None` = default blue).
@@ -333,7 +495,7 @@ pub fn tokens(dark: bool, accent: Option<&Accent>) -> Tokens {
             text2: solid(0x333333),
             text3: solid(0x444444),
             text4: solid(0x555555),
-            muted: solid(0x666666),
+            muted: solid(0x5e5e5e),
             faint: solid(0x888888),
             disabled: solid(0x999999),
             danger: solid(0xc0262d),
@@ -346,6 +508,7 @@ pub fn tokens(dark: bool, accent: Option<&Accent>) -> Tokens {
             scrim_soft: alpha(0, 0x18),
             shadow: alpha(0, 0x40),
             shadow_soft: alpha(0, 0x22),
+            ds: design(false, accent),
         }
     } else {
         let card = rgb(0x2b2b2b);
@@ -380,7 +543,7 @@ pub fn tokens(dark: bool, accent: Option<&Accent>) -> Tokens {
             text3: solid(0xd0d0d0),
             text4: solid(0xc2c2c2),
             muted: solid(0xa8a8a8),
-            faint: solid(0x8c8c8c),
+            faint: solid(0x858585),
             disabled: solid(0x6e6e6e),
             danger: solid(0xff99a4),
             warning: solid(0xe0b84a),
@@ -392,6 +555,7 @@ pub fn tokens(dark: bool, accent: Option<&Accent>) -> Tokens {
             scrim_soft: alpha(0, 0x50),
             shadow: alpha(0, 0xa0),
             shadow_soft: alpha(0, 0x60),
+            ds: design(true, accent),
         }
     }
 }
@@ -531,6 +695,94 @@ mod tests {
                 );
             }
         }
+    }
+
+    fn check_design(d: &Design, what: &str) {
+        let layers = [
+            ("app", d.app),
+            ("panel", d.panel),
+            ("surface", d.surface),
+            ("raised", d.raised),
+            ("overlay", d.overlay),
+            ("hover", d.hover),
+            ("pressed", d.pressed),
+            ("selected", d.selected),
+            ("selected_idle", d.selected_idle),
+        ];
+        for (name, bg) in layers {
+            // group labels and hints never sit in a selected row
+            let in_row = name.starts_with("selected") || name == "pressed";
+            let bg = c(bg);
+            for (tn, fg, min) in [
+                ("text", d.text, 7.0),
+                ("text2", d.text2, 4.5),
+                ("muted", d.muted, if in_row { 3.0 } else { 4.5 }),
+                ("faint", d.faint, if in_row { 1.8 } else { 2.5 }),
+                // icons are UI components: WCAG 1.4.11 asks for 3:1
+                ("icon", d.icon, 4.5),
+                ("icon_muted", d.icon_muted, 3.0),
+            ] {
+                let r = contrast(c(fg), bg);
+                assert!(r >= min, "{what}: {tn} on {name} = {r:.2} < {min}");
+            }
+        }
+        // the accent marks focus, the selection bar, the active tab
+        for (name, bg) in [
+            ("app", d.app),
+            ("surface", d.surface),
+            ("raised", d.raised),
+            ("selected", d.selected),
+        ] {
+            let r = contrast(c(d.accent), c(bg));
+            assert!(r >= 3.0, "{what}: accent on {name} = {r:.2}");
+        }
+        let r = contrast(c(d.on_accent), c(d.accent));
+        assert!(r >= 4.5, "{what}: text on the accent = {r:.2}");
+        for (name, fg) in [
+            ("danger", d.danger),
+            ("warning", d.warning),
+            ("success", d.success),
+        ] {
+            let r = contrast(c(fg), c(d.surface));
+            assert!(r >= 4.5, "{what}: {name} text = {r:.2}");
+        }
+        // layers must be told apart: hover, selection
+        for (name, a, b, min) in [
+            ("selected/surface", d.selected, d.surface, 1.15),
+            ("hover/surface", d.hover, d.surface, 1.05),
+            ("selected/hover", d.selected, d.hover, 1.02),
+        ] {
+            let r = contrast(c(a), c(b));
+            assert!(r >= min, "{what}: {name} = {r:.2} < {min}");
+        }
+        // layers go one way: app darkest (dark) / app greyest (light), surface the base
+        assert_ne!(d.app, d.surface, "{what}");
+    }
+
+    #[test]
+    fn design_roles_are_readable_for_every_accent() {
+        for dark in [false, true] {
+            check_design(&design(dark, None), &format!("design dark={dark} default"));
+            for v in ACCENTS {
+                let a = Accent::plain(rgb(*v));
+                check_design(
+                    &design(dark, Some(&a)),
+                    &format!("design dark={dark} accent={}", hex(a.base)),
+                );
+            }
+        }
+        // the calm blue stays the blue we designed
+        assert_eq!(c(design(true, None).accent), DESIGN_ACCENT_DARK);
+        assert_eq!(c(design(false, None).accent), DESIGN_ACCENT_LIGHT);
+        // tokens carry the same roles
+        assert_eq!(tokens(true, None).ds, design(true, None));
+    }
+
+    #[test]
+    fn mix_lays_one_colour_over_the_other() {
+        assert_eq!(mix(rgb(0xffffff), rgb(0x000000), 0.0), rgb(0x000000));
+        assert_eq!(mix(rgb(0xffffff), rgb(0x000000), 1.0), rgb(0xffffff));
+        assert_eq!(mix(rgb(0xff0000), rgb(0x0000ff), 0.5), [128, 0, 128]);
     }
 
     #[test]

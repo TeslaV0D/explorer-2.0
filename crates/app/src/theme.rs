@@ -3,8 +3,8 @@
 //! into the Slint global `Theme`; the std widgets follow via
 //! `Palette.color-scheme` (main.slint), the title bar via DWM.
 
-use crate::{nav, MainWindow, Theme, ThemeColors};
-use explorer_core::theme::{hex, tokens, Rgba, SystemTheme, ThemeChoice, Tokens};
+use crate::{nav, DesignColors, MainWindow, Theme, ThemeColors};
+use explorer_core::theme::{hex, tokens, Design, Rgba, SystemTheme, ThemeChoice, Tokens};
 use slint::{Color, ComponentHandle};
 use std::cell::RefCell;
 use std::time::Duration;
@@ -103,6 +103,7 @@ fn apply(win: &MainWindow, why: &str) {
     let g = win.global::<Theme>();
     g.set_dark(t.dark);
     g.set_c(colors(&t));
+    g.set_d(design_colors(&t.ds));
     let sys = ST.with_borrow(|s| s.system);
     nav::trace_line(&format!(
         "theme why={why} choice={} dark={} accent={} selection={} system_dark={} system_accent={}",
@@ -180,5 +181,36 @@ fn colors(t: &Tokens) -> ThemeColors {
         scrim_soft: col(t.scrim_soft),
         shadow: col(t.shadow),
         shadow_soft: col(t.shadow_soft),
+    }
+}
+
+fn design_colors(d: &Design) -> DesignColors {
+    DesignColors {
+        app: col(d.app),
+        panel: col(d.panel),
+        surface: col(d.surface),
+        raised: col(d.raised),
+        overlay: col(d.overlay),
+        hover: col(d.hover),
+        pressed: col(d.pressed),
+        selected: col(d.selected),
+        selected_idle: col(d.selected_idle),
+        border: col(d.border),
+        border_strong: col(d.border_strong),
+        text: col(d.text),
+        text2: col(d.text2),
+        muted: col(d.muted),
+        faint: col(d.faint),
+        icon: col(d.icon),
+        icon_muted: col(d.icon_muted),
+        accent: col(d.accent),
+        on_accent: col(d.on_accent),
+        danger: col(d.danger),
+        warning: col(d.warning),
+        success: col(d.success),
+        folder: col(d.folder),
+        file: col(d.file),
+        scrim: col(d.scrim),
+        shadow: col(d.shadow),
     }
 }

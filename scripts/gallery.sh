@@ -59,6 +59,12 @@ run_theme() {
   WID=$(xdotool search --name 'Explorer 2.0' | head -1)
   xdotool windowsize "$WID" 820 560; sleep 1.2; shot 11-schmal
   kill $PID; wait $PID 2>/dev/null
+  # the design system (R1): colour roles, controls, icons
+  EXPLORER2_CONFIG_DIR=$cfg EXPLORER2_UI_KIT=1 SLINT_BACKEND=winit-software HOME=$W/home EXPLORER2_INDEX=off \
+    $EXE --new-instance "$D" > "$W/trace-kit-$THEME.log" 2>&1 & PID=$!
+  ui_wait "UI-Kit schließen" 10 || echo "WARN UI kit not shown"
+  sleep 0.5; shot 12-ui-kit
+  kill $PID; wait $PID 2>/dev/null
 }
 
 : > "$OUT/index.txt"
