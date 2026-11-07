@@ -39,7 +39,7 @@ pub fn init(win: &MainWindow) {
             let text = dump(&w);
             ticks += 1;
             // also every ~1 s: a second test window may have overwritten the file
-            if text != last || ticks % 7 == 0 {
+            if text != last || ticks.is_multiple_of(7) {
                 let tmp = path.with_extension("tmp");
                 if std::fs::write(&tmp, &text).is_ok() {
                     let _ = std::fs::rename(&tmp, &path);
