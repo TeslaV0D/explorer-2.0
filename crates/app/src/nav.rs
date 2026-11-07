@@ -1134,6 +1134,7 @@ pub fn refresh_places(win: &MainWindow) {
             has_bar: false,
             // the folder's own icon (Downloads, Bilder … carry one via desktop.ini)
             icon: crate::icons::eager(IconKey::File(p.path.clone())),
+            glyph: place_glyph(p.kind).into(),
         })
         .chain(std::iter::once(PlaceItem {
             label: VirtualPlace::Trash.label().into(),
@@ -1143,10 +1144,34 @@ pub fn refresh_places(win: &MainWindow) {
             used: 0.0,
             has_bar: false,
             icon: crate::icons::eager(IconKey::Shell(explorer_shell::RECYCLE_BIN.into())),
+            glyph: "trash".into(),
         }))
         .collect();
     APP.with_borrow(|app| app.place_model.set_vec(places));
     refresh_drives(win);
+}
+
+/// Line icon of a sidebar entry (redesign R3, `Glyphs` in main.slint).
+fn place_glyph(kind: explorer_fs::places::PlaceKind) -> &'static str {
+    use explorer_fs::places::PlaceKind as K;
+    match kind {
+        K::Home => "home",
+        K::Desktop => "desktop",
+        K::Downloads => "downloads",
+        K::Documents => "documents",
+        K::Pictures => "pictures",
+        K::Music => "music",
+        K::Videos => "videos",
+    }
+}
+
+fn drive_glyph(kind: explorer_fs::places::DriveKind) -> &'static str {
+    use explorer_fs::places::DriveKind as K;
+    match kind {
+        K::Removable => "usb",
+        K::Network => "network",
+        _ => "drive",
+    }
 }
 
 /// Drive info can block (network/optical drives) → background thread.
@@ -1161,7 +1186,7 @@ pub fn refresh_drives(win: &MainWindow) {
             let t0 = Instant::now();
             let drives = explorer_fs::places::drives();
             let took = t0.elapsed();
-            let items: Vec<(String, String, String, f32, bool)> = drives
+            let items: Vec<(String, String, String, f32, bool, &'static str)> = drives
                 .iter()
                 .map(|d| {
                     (
@@ -1170,6 +1195,7 @@ pub fn refresh_drives(win: &MainWindow) {
                         d.space.map(|(f, t)| format_usage(f, t)).unwrap_or_default(),
                         used_fraction(d.space),
                         d.space.is_some(),
+                        drive_glyph(d.kind),
                     )
                 })
                 .collect();
@@ -1179,7 +1205,7 @@ pub fn refresh_drives(win: &MainWindow) {
                     app.drive_model.set_vec(
                         items
                             .into_iter()
-                            .map(|(label, path, detail, used, has_bar)| PlaceItem {
+                            .map(|(label, path, detail, used, has_bar, glyph)| PlaceItem {
                                 icon: crate::icons::eager(IconKey::File(PathBuf::from(&path))),
                                 label: label.into(),
                                 path: path.into(),
@@ -1187,6 +1213,7 @@ pub fn refresh_drives(win: &MainWindow) {
                                 detail: detail.into(),
                                 used,
                                 has_bar,
+                                glyph: glyph.into(),
                             })
                             .collect::<Vec<_>>(),
                     );

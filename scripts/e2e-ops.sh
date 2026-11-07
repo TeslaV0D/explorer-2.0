@@ -183,6 +183,10 @@ goto "$T"
 xdotool mousemove $LIST_X $(row_y 1) click 1; sleep 0.3; xdotool key Delete; sleep 1.2   # y.txt
 ui_click "Papierkorb"; sleep 1.2   # sidebar
 check "[57] sidebar 'Papierkorb' opens it" "[ \$(grep -c 'User ::papierkorb' $LOG) -ge 2 ]"
+xdotool mousemove 900 680; sleep 0.4; shot o57_side
+MK=$(ui_box "Papierkorb" | awk '{print $1+1, $2+13}')
+MKP=$(convert "$W/o57_side.png" -format "%[pixel:p{${MK% *},${MK#* }}]" info: 2>/dev/null)
+check "[57a] the current place carries the accent mark (redesign R3: $MKP)" "[ '$MKP' = 'srgb(79,140,255)' ]"
 xdotool type --delay 40 "y.txt"; sleep 0.4; xdotool key Delete; sleep 0.6
 xdotool key Return; sleep 1.5
 check "[57b] Del in the trash = delete for good (after confirmation)" "last 'trash Purge done' | grep -q 'ok=true' && ! ls $TRASH | grep -qx y.txt && [ ! -e '$T/y.txt' ]"
@@ -384,7 +388,7 @@ check "[70c] 'Dunkel' in the settings switches live and is saved" "last 'theme w
 ui_click "Schließen" last; sleep 0.4
 xdotool mousemove $LIST_X $(row_y 0) click 1; sleep 0.4; xdotool mousemove 900 680; sleep 0.3; shot t70-dark
 P=$(px t70-dark $LIST_X $(row_y 5)); S=$(px t70-dark $((LIST_X + 200)) $(row_y 0)); B=$(px t70-panel-dark $BTN); C=$(px t70-dark $SIDE)
-check "[70d] dark: list #191919 ($P), selection #1c3f63 ($S), sidebar #202020 ($C)" "[ '$P' = 'srgb(25,25,25)' ] && [ '$S' = 'srgb(28,63,99)' ] && [ '$C' = 'srgb(32,32,32)' ]"
+check "[70d] dark: list #191919 ($P), selection #1c3f63 ($S), sidebar #141414 ($C)" "[ '$P' = 'srgb(25,25,25)' ] && [ '$S' = 'srgb(28,63,99)' ] && [ '$C' = 'srgb(20,20,20)' ]"
 check "[70e] the std widgets follow (dark button: $B)" "[ \$(red '$B') -lt 90 ]"
 kill $PID; wait $PID 2>/dev/null
 theme_run $W/trace-70f.log

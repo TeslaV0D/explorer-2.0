@@ -249,6 +249,25 @@ fn selection(acc: Rgb, default: Rgb, surface: Rgb, t: f64) -> Rgb {
     }
 }
 
+/// Sum of the channel differences (how visibly two flat colours differ).
+fn channel_distance(a: Rgb, b: Rgb) -> i32 {
+    (0..3)
+        .map(|i| (i32::from(a[i]) - i32::from(b[i])).abs())
+        .sum()
+}
+
+/// A selection that a hovered row cannot be mistaken for: grey or faint
+/// accents get more of the accent until the two differ visibly.
+fn apart_from(sel: Rgb, hover: Rgb, acc: Rgb, surface: Rgb) -> Rgb {
+    let mut sel = sel;
+    let mut t = 0.2;
+    while channel_distance(sel, hover) < 24 && t < 0.6 {
+        sel = mix(acc, surface, t);
+        t += 0.03;
+    }
+    sel
+}
+
 /// Black-ish or white text on `bg`, whichever reads better.
 fn on_colour(bg: Rgb) -> Rgb {
     let (dark, light) = (rgb(0x111111), rgb(0xffffff));
@@ -383,6 +402,7 @@ pub fn design(dark: bool, accent: Option<&Accent>) -> Design {
     };
     if dark {
         let surface = rgb(0x1f1f1f);
+        let hover = rgb(0x2a2a2a);
         let acc = match accent {
             None => DESIGN_ACCENT_DARK,
             Some(a) => readable(a.on_dark.unwrap_or(a.base), rgb(0x262626), 4.5),
@@ -393,9 +413,14 @@ pub fn design(dark: bool, accent: Option<&Accent>) -> Design {
             surface: op(surface),
             raised: solid(0x262626),
             overlay: alpha(0x242424, 0xfa),
-            hover: solid(0x2a2a2a),
+            hover: op(hover),
             pressed: solid(0x313131),
-            selected: op(selection(acc, DESIGN_ACCENT_DARK, surface, 0.22)),
+            selected: op(apart_from(
+                selection(acc, DESIGN_ACCENT_DARK, surface, 0.22),
+                hover,
+                acc,
+                surface,
+            )),
             selected_idle: solid(0x2c2c2c),
             border: solid(0x2e2e2e),
             border_strong: solid(0x3a3a3a),
@@ -417,6 +442,7 @@ pub fn design(dark: bool, accent: Option<&Accent>) -> Design {
         }
     } else {
         let surface = rgb(0xffffff);
+        let hover = rgb(0xe9e9e9);
         let acc = match accent {
             None => DESIGN_ACCENT_LIGHT,
             Some(a) => readable(a.on_light.unwrap_or(a.base), surface, 4.5),
@@ -427,9 +453,14 @@ pub fn design(dark: bool, accent: Option<&Accent>) -> Design {
             surface: op(surface),
             raised: solid(0xffffff),
             overlay: alpha(0xffffff, 0xfc),
-            hover: solid(0xf2f2f2),
-            pressed: solid(0xe6e6e6),
-            selected: op(selection(acc, DESIGN_ACCENT_LIGHT, surface, 0.14)),
+            hover: op(hover),
+            pressed: solid(0xdedede),
+            selected: op(apart_from(
+                selection(acc, DESIGN_ACCENT_LIGHT, surface, 0.17),
+                hover,
+                acc,
+                surface,
+            )),
             selected_idle: solid(0xe6e6e6),
             border: solid(0xe0e0e0),
             border_strong: solid(0xcccccc),
@@ -751,11 +782,17 @@ mod tests {
         for (name, a, b, min) in [
             ("selected/surface", d.selected, d.surface, 1.15),
             ("hover/surface", d.hover, d.surface, 1.05),
-            ("selected/hover", d.selected, d.hover, 1.02),
         ] {
             let r = contrast(c(a), c(b));
             assert!(r >= min, "{what}: {name} = {r:.2} < {min}");
         }
+        // selection and hover may be equally light, but must differ visibly
+        // (the selection carries the accent's hue)
+        let dist = channel_distance(c(d.selected), c(d.hover));
+        assert!(
+            dist >= 15,
+            "{what}: selection vs hover too similar ({dist})"
+        );
         // layers go one way: app darkest (dark) / app greyest (light), surface the base
         assert_ne!(d.app, d.surface, "{what}");
     }

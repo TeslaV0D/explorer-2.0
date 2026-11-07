@@ -1,6 +1,6 @@
 # Zwischenstand
 
-**Stand:** 2026-11-07 · **Phase:** 1 · M0–M7 ✅ (M7.3 verschoben) · R-001 ✅ · **M8.1/M8.2 Installer ✅ (Run #69)** · **M8.3 Härtung ✅ (Run #70–#73)** · **Phase 2 Suche: S1.1 ✅ (Run #78), S1.2 ✅ (Run #80), S1.3 ✅ (Run #83), S1.4 ✅ (Run #90), S1.5 ✅ (Run #91/#93) → **S1 komplett**, Praxistest ✅ (Boss: „es funktioniert“) · **Redesign läuft: R0 ✅ (Run #101), R1 ✅ (Run #104), R2 ✅ (Run #110), als Nächstes R3 Seitenleiste** (`docs/PLAN-REDESIGN.md`)** (Plan `docs/PLAN-SEARCH.md`) · **Branch:** `claude/relaxed-pasteur-ufhh1p`
+**Stand:** 2026-11-07 · **Phase:** 1 · M0–M7 ✅ (M7.3 verschoben) · R-001 ✅ · **M8.1/M8.2 Installer ✅ (Run #69)** · **M8.3 Härtung ✅ (Run #70–#73)** · **Phase 2 Suche: S1.1 ✅ (Run #78), S1.2 ✅ (Run #80), S1.3 ✅ (Run #83), S1.4 ✅ (Run #90), S1.5 ✅ (Run #91/#93) → **S1 komplett**, Praxistest ✅ (Boss: „es funktioniert“) · **Redesign läuft: R0 ✅ (Run #101), R1 ✅ (Run #104), R2 ✅ (Run #110), R3 lokal fertig (CI läuft)** (`docs/PLAN-REDESIGN.md`)** (Plan `docs/PLAN-SEARCH.md`) · **Branch:** `claude/relaxed-pasteur-ufhh1p`
 
 ## M5 – Shell-Integration (läuft, Freigabe Boss 2026-11-04)
 ### CI-Run #37 – alles grün ✅ (M5.0–M5.5)
@@ -39,6 +39,11 @@
 
 - **Bug (CI #32/#33, UI-Matrix)**: OLE-Drop-Target wurde nie registriert („Invalid window handle“) – der Timer lief, bevor Slint das native Fenster erzeugt hatte → Ablegen aus anderen Apps wäre tot gewesen. Fix: Registrierung wiederholt bis HWND existiert (50 ms, max. 5 s), sonst Rückfall auf In-App-DnD.
 - Neu: **Windows-E2E mit echter Tastatur/Maus** (`scripts/e2e-windows.ps1`, CI-Schritt im Release-Job, Screenshots bei Fehler).
+
+### Redesign R3 – Seitenleiste (lokal, CI läuft)
+- Neue `Sidebar` nur aus `Theme.d` + `Ui`: Gruppenköpfe klein/halbfett (`SectionLabel`, „Dieser PC“ bleibt klickbar = Laufwerksübersicht), Einträge 26 px mit **Linien-Icon** (Rust liefert `PlaceItem.glyph`: home/desktop/downloads/…/trash, Laufwerke drive/usb/network), aktiver Ort mit **3-px-Akzentmarke** + ruhiger Fläche (`selected-idle`), Hover 120 ms, Text gedämpft bis Hover/aktiv; Laufwerke mit **2-px-Füllbalken** (über 90 % rot) und Freiplatz klein darunter. Jeder Eintrag hat seinen Namen als `accessible-label` (Tests klicken wie bisher per Name).
+- Farben nachgeschärft: heller Hover auf der Fensterfläche war unsichtbar (#f2f2f2 auf #f0f0f0) → #e9e9e9; damit Auswahl und Hover nie verwechselbar sind, bekommt eine graue/blasse Akzent-Auswahl mehr Akzent (`apart_from`, Test: Kanalabstand ≥ 15 für alle 12 Akzente; grauer Akzent war vorher identisch mit Hover).
+- Tests: E2E [57a] misst die Akzentmarke per Pixel, [70d] Seitenleiste dunkel = #141414.
 
 ### Redesign R2 – Hauptlayout ✅ (CI-Run #110)
 - **Globale Leiste entfernt** (−40 px Höhe für Dateien). Ihre Aktionen machen exakt dasselbe wie vorher (`command(...)`), sitzen jetzt aber dort, wo man arbeitet:

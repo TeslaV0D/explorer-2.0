@@ -2,7 +2,7 @@ import { Button, ListView, CheckBox, ScrollView, Palette } from "std-widgets.sli
 
 import { Theme, ThemeColors, DesignColors, Ui } from "theme.slint";
 import { IconData } from "icons.slint";
-import { UiKit, IconButton, MenuItem, MenuSeparator } from "kit.slint";
+import { UiKit, Icon, IconButton, MenuItem, MenuSeparator, SectionLabel } from "kit.slint";
 export { Theme, ThemeColors, DesignColors, Ui }
 
 export struct Row {
@@ -48,6 +48,8 @@ export struct PlaceItem {
     has-bar: bool,
     // index into `icons` (0 = fallback square)
     icon: int,
+    // line icon of the redesign (R3): "home", "downloads", "trash", "drive", "usb", …
+    glyph: string,
 }
 
 // Everything one pane shows. Rust replaces it as a whole; the *-seq counters are
@@ -1098,69 +1100,120 @@ component CommandPalette inherits Rectangle {
         }
     }
 
+// Line icon of a sidebar entry (R3): Rust names it (PlaceItem.glyph).
+global Glyphs {
+    pure public function path(name: string) -> string {
+        if (name == "home") { return IconData.home; }
+        if (name == "desktop") { return IconData.desktop; }
+        if (name == "downloads") { return IconData.downloads; }
+        if (name == "documents") { return IconData.documents; }
+        if (name == "pictures") { return IconData.pictures; }
+        if (name == "music") { return IconData.music; }
+        if (name == "videos") { return IconData.videos; }
+        if (name == "trash") { return IconData.trash; }
+        if (name == "usb") { return IconData.usb; }
+        if (name == "network") { return IconData.network; }
+        if (name == "this-pc") { return IconData.this-pc; }
+        if (name == "drive") { return IconData.drive; }
+        return IconData.folder;
+    }
+}
+
+// One sidebar entry (R3): 26 px, line icon, accent mark when it is the current
+// place; drives get a thin fill bar and the free space below.
 component SidebarItem inherits Rectangle {
     in property <PlaceItem> item;
-    in property <[image]> icons;
     in property <bool> current;
     callback open(string);
-    height: root.item.is-drive ? 48px : 28px;
-    border-radius: 4px;
-    background: root.current ? Theme.c.current : (ta.has-hover ? Theme.c.hover : transparent);
+    height: root.item.is-drive ? 42px : 26px;
+    border-radius: Ui.r;
+    background: root.current ? Theme.d.selected-idle : (ta.has-hover ? Theme.d.hover : transparent);
+    animate background { duration: Ui.fast; easing: ease-out; }
+    accessible-role: button;
+    accessible-label: root.item.label;
+    accessible-action-default => { root.open(root.item.path); }
     ta := TouchArea { clicked => { root.open(root.item.path); } }
+    // accent mark of the current place
+    Rectangle {
+        x: 0; y: (Ui.control-h - 14px) / 2;
+        width: 3px; height: 14px;
+        border-radius: 1.5px;
+        background: Theme.d.accent;
+        opacity: root.current ? 1 : 0;
+        animate opacity { duration: Ui.fast; }
+    }
     VerticalLayout {
-        padding-left: 10px; padding-right: 10px; padding-top: 4px; padding-bottom: 4px; spacing: 3px;
+        padding-left: 10px; padding-right: 8px;
+        alignment: start;
         HorizontalLayout {
+            height: Ui.control-h;
             spacing: 8px;
-            Rectangle {
-                width: 16px; height: 16px; y: (parent.height - 16px) / 2;
-                property <image> img: root.item.icon > 0 ? root.icons[root.item.icon] : @image-url("");
-                if img.width > 0 : Image { width: 16px; height: 16px; source: img; }
-                // fallback until the shell icon arrives (and on non-Windows)
-                if img.width == 0 : Rectangle {
-                    x: 1px; y: 1px; width: 14px; height: 14px;
-                    border-radius: root.item.is-drive ? 2px : 3px;
-                    background: root.item.is-drive ? Theme.c.drive : Theme.c.folder;
+            Icon {
+                y: (parent.height - self.height) / 2;
+                d: Glyphs.path(root.item.glyph);
+                tint: root.current ? Theme.d.accent : (ta.has-hover ? Theme.d.text : Theme.d.icon);
+            }
+            Text {
+                text: root.item.label;
+                vertical-alignment: center;
+                overflow: elide;
+                horizontal-stretch: 1;
+                font-size: Ui.font-body;
+                color: root.current || ta.has-hover ? Theme.d.text : Theme.d.text2;
+            }
+        }
+        if root.item.is-drive : VerticalLayout {
+            padding-left: 24px;
+            spacing: 3px;
+            if root.item.has-bar : Rectangle {
+                height: 2px;
+                border-radius: 1px;
+                background: Theme.d.border-strong;
+                Rectangle {
+                    x: 0; width: parent.width * clamp(root.item.used, 0, 1); height: parent.height; border-radius: 1px;
+                    background: root.item.used > 0.9 ? Theme.d.danger : Theme.d.icon-muted;
                 }
             }
-            Text { text: root.item.label; vertical-alignment: center; overflow: elide; horizontal-stretch: 1; color: Theme.c.text; }
+            if root.item.detail != "" : Text { text: root.item.detail; font-size: Ui.font-small; color: Theme.d.muted; overflow: elide; }
         }
-        if root.item.has-bar : Rectangle {
-            height: 5px;
-            border-radius: 2px;
-            background: Theme.c.track;
-            Rectangle {
-                x: 0; width: parent.width * root.item.used; height: parent.height; border-radius: 2px;
-                background: root.item.used > 0.9 ? Theme.c.danger : Theme.c.accent;
-            }
-        }
-        if root.item.detail != "" : Text { text: root.item.detail; font-size: 10px; color: Theme.c.muted; overflow: elide; }
     }
+}
+
+// Group heading of the sidebar; "Dieser PC" is clickable (drive overview, like Explorer).
+component SidebarHeading inherits Rectangle {
+    in property <string> text;
+    in property <bool> clickable;
+    in property <bool> current;
+    callback clicked();
+    height: 28px;
+    border-radius: Ui.r;
+    background: root.clickable && (ta.has-hover || root.current) ? Theme.d.hover : transparent;
+    SectionLabel { x: 10px; y: 4px; height: parent.height - 4px; text: root.text; color: root.current ? Theme.d.text2 : Theme.d.muted; }
+    ta := TouchArea { enabled: root.clickable; clicked => { root.clicked(); } }
 }
 
 component Sidebar inherits Rectangle {
     in property <[PlaceItem]> places;
     in property <[PlaceItem]> drives;
-    in property <[image]> icons;
     in property <string> current-path;
     callback open(string);
-    background: Theme.c.chrome;
-    Rectangle { x: parent.width - 1px; width: 1px; background: Theme.c.line; }
+    background: Theme.d.app;
+    Rectangle { x: parent.width - 1px; width: 1px; background: Theme.d.border; }
     ScrollView {
+        width: parent.width - 1px;
         VerticalLayout {
-            padding: 6px; spacing: 1px;
+            padding: 6px; padding-top: 4px; spacing: 1px;
             alignment: start;
-            Text { text: "Schnellzugriff"; font-size: 11px; color: Theme.c.muted; font-weight: 600; height: 24px; vertical-alignment: center; x: 6px; }
-            for p in root.places : SidebarItem { item: p; icons: root.icons; current: p.path == root.current-path; open(path) => { root.open(path); } }
-            Rectangle { height: 8px; }
-            // the "Dieser PC" heading opens the drive overview (like Explorer)
-            Rectangle {
-                height: 24px;
-                border-radius: 4px;
-                background: pc-ta.has-hover ? Theme.c.hover : (root.current-path == "::dieser-pc" ? Theme.c.current : transparent);
-                Text { text: "Dieser PC"; font-size: 11px; color: Theme.c.muted; font-weight: 600; vertical-alignment: center; x: 6px; }
-                pc-ta := TouchArea { clicked => { root.open("::dieser-pc"); } }
+            SidebarHeading { text: "Schnellzugriff"; }
+            for p in root.places : SidebarItem { item: p; current: p.path == root.current-path; open(path) => { root.open(path); } }
+            Rectangle { height: 10px; }
+            SidebarHeading {
+                text: "Dieser PC";
+                clickable: true;
+                current: root.current-path == "::dieser-pc";
+                clicked => { root.open("::dieser-pc"); }
             }
-            for d in root.drives : SidebarItem { item: d; icons: root.icons; current: d.path == root.current-path; open(path) => { root.open(path); } }
+            for d in root.drives : SidebarItem { item: d; current: d.path == root.current-path; open(path) => { root.open(path); } }
         }
     }
 }
@@ -1372,7 +1425,6 @@ export component MainWindow inherits Window {
                     width: root.sidebar-w;
                     places: root.places;
                     drives: root.drives;
-                    icons: root.icons;
                     current-path: root.active-path;
                     open(path) => { root.open-place(path); }
                 }
