@@ -177,7 +177,7 @@ component TabItem inherits Rectangle {
     width: min(200px, max(96px, label.preferred-width + 48px));
     border-top-left-radius: Ui.r;
     border-top-right-radius: Ui.r;
-    background: root.current ? Theme.d.panel : (ta.has-hover ? Theme.d.hover : transparent);
+    background: root.current ? Theme.d.panel : (ta.pressed ? Theme.d.pressed : ta.has-hover ? Theme.d.hover : transparent);
     animate background { duration: Ui.fast; easing: ease-out; }
     accessible-role: tab;
     accessible-label: root.title;
@@ -586,6 +586,10 @@ component FilePane inherits Rectangle {
         y: Ui.tab-h + 4px + Ui.nav-h - 2px;
         width: 260px;
         Rectangle {
+            property <bool> shown;
+            init => { self.shown = true; }
+            opacity: self.shown ? 1 : 0;
+            animate opacity { duration: Ui.fast; easing: ease-out; }
             background: Theme.d.overlay;
             border-radius: Ui.r-large;
             border-width: 1px;
@@ -1171,6 +1175,7 @@ component CommandPalette inherits Rectangle {
                             x: 6px; width: parent.width - 12px; y: 1px; height: parent.height - 2px;
                             border-radius: Ui.r-small;
                             background: i == root.sel ? Theme.d.selected : (item-ta.has-hover ? Theme.d.hover : transparent);
+                            animate background { duration: Ui.fast; easing: ease-out; }
                             if i == root.sel : Rectangle {
                                 x: 0; y: 6px; width: 2px; height: parent.height - 12px; border-radius: 1px;
                                 background: Theme.d.accent;
@@ -1234,7 +1239,7 @@ component SidebarItem inherits Rectangle {
     callback open(string);
     height: root.item.is-drive ? 42px : 26px;
     border-radius: Ui.r;
-    background: root.current ? Theme.d.selected-idle : (ta.has-hover ? Theme.d.hover : transparent);
+    background: root.current ? Theme.d.selected-idle : (ta.pressed ? Theme.d.pressed : ta.has-hover ? Theme.d.hover : transparent);
     animate background { duration: Ui.fast; easing: ease-out; }
     accessible-role: button;
     accessible-label: root.item.label;
@@ -1744,6 +1749,10 @@ export component MainWindow inherits Window {
                             x: 0; y: -self.height - 4px;
                             width: 200px;
                             Rectangle {
+                                property <bool> shown;
+                                init => { self.shown = true; }
+                                opacity: self.shown ? 1 : 0;
+                                animate opacity { duration: Ui.fast; easing: ease-out; }
                                 background: Theme.d.overlay;
                                 border-width: 1px; border-color: Theme.d.border; border-radius: Ui.r-large;
                                 drop-shadow-blur: 16px; drop-shadow-offset-y: 4px; drop-shadow-color: Theme.d.shadow;
@@ -1777,7 +1786,9 @@ export component MainWindow inherits Window {
 
     // ---------- conflict dialog (modal) ----------
     Rectangle {
-        visible: root.conflict-open;
+        visible: root.conflict-open || self.opacity > 0.02;
+        opacity: root.conflict-open ? 1 : 0;
+        animate opacity { duration: Ui.fast; easing: ease-out; }
         background: Theme.d.scrim;
         TouchArea { }
         Rectangle {
@@ -1824,7 +1835,9 @@ export component MainWindow inherits Window {
 
     // ---------- confirmation dialog (modal) ----------
     Rectangle {
-        visible: root.confirm-open;
+        visible: root.confirm-open || self.opacity > 0.02;
+        opacity: root.confirm-open ? 1 : 0;
+        animate opacity { duration: Ui.fast; easing: ease-out; }
         background: Theme.d.scrim;
         TouchArea { }
         Rectangle {
@@ -1913,6 +1926,10 @@ export component MainWindow inherits Window {
     }
 
     if root.settings-open : Rectangle {
+        property <bool> shown;
+        init => { self.shown = true; }
+        opacity: self.shown ? 1 : 0;
+        animate opacity { duration: Ui.normal; easing: ease-out; }
         x: root.width - self.width - 8px;
         y: 40px;
         width: 380px;

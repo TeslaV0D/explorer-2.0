@@ -156,6 +156,7 @@ Legende: `[ ]` offen · `[~]` in Arbeit · `[x]` erledigt · Prio P0/P1/P2
 - [x] R6 Dateiliste (CI-Run #124): Kopf 24 px mit Chevron, Zeilen-Plättchen mit Akzentbalken, Fokus/Drop, Kacheln, Rahmenauswahl
 - [x] R7 Inspector (CI-Run #125): Gruppen, Pfad kopieren, Einblenden
 - [x] R8 Menüs + Dialoge (CI-Run #128): eigenes Kontextmenü + „Weitere Optionen“ (natives Menü dunkel), Dialoge/Palette/Schnellsuche/Einstellungen/Jobs/Hinweis/Statusleiste; Installer schließt erst nach erfolgreichem Start der installierten Kopie
+- [ ] R9 Zustände + Bewegung: Gedrückt/Hover/Erscheinen einheitlich, Pixel-Checks der Zustände – lokal fertig, CI ausstehend
 - [ ] E2E-Wackler beobachten: [49] erster Drag nach Gesamtlauf ([72c] behoben: Installer wartet auf die laufende Kopie, CI #128)
 - [ ] R2 Hauptlayout (globale Leiste auflösen, Statusleiste, Breakpoints)
 - [ ] R3 Seitenleiste · R4 Navigation · R5 Tabs

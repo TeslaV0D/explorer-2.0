@@ -146,7 +146,10 @@ export component MenuItem inherits Rectangle {
     accessible-action-default => { if (root.enabled) { root.clicked(); } }
     height: Ui.control-h;
     border-radius: Ui.r-small;
-    background: root.enabled && (ta.has-hover || root.highlighted) ? Theme.d.hover : transparent;
+    background: !root.enabled ? transparent
+        : ta.pressed ? Theme.d.pressed
+        : (ta.has-hover || root.highlighted) ? Theme.d.hover : transparent;
+    animate background { duration: Ui.fast; easing: ease-out; }
     property <color> fg: !root.enabled ? Theme.d.faint : root.danger ? Theme.d.danger : Theme.d.text;
     HorizontalLayout {
         padding-left: 8px;

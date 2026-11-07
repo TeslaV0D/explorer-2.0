@@ -136,6 +136,16 @@ PX=$(convert $W/sel.png -format "%[pixel:p{$LIST_X,$(row_y 2)}]" info: 2>/dev/nu
 check "[19] selected rows are drawn in selection color (dark = default, redesign R6 #2a3750, pixel $PX)" "[ '$PX' = 'srgb(42,55,80)' ]"
 xdotool key Home; sleep 0.3; xdotool type --delay 60 "fo"; sleep 0.5
 check "[20] type-to-select jumps to 'fo…'" "last 'selection pane' | grep -q 'count=1 focus=foto2.png'"
+echo "== [20b] redesign R9: states by pixel (dark default)"
+# hover on an unselected row, selection with and without list focus (address bar takes the focus)
+HY=$(ui_xy "a.png" | cut -d' ' -f2); SY=$(ui_xy "foto2.png" | cut -d' ' -f2)
+xdotool mousemove $LIST_X $HY; sleep 0.5; import -window root $W/s20b.png 2>/dev/null
+HV=$(convert $W/s20b.png -format "%[pixel:p{$LIST_X,$HY}]" info: 2>/dev/null); SV=$(convert $W/s20b.png -format "%[pixel:p{$LIST_X,$SY}]" info: 2>/dev/null)
+check "[20b] hover = #2a2a2a ($HV), selection with focus = #2a3750 ($SV)" "[ '$HV' = 'srgb(42,42,42)' ] && [ '$SV' = 'srgb(42,55,80)' ]"
+xdotool key ctrl+l; sleep 0.5; xdotool mousemove 900 680; sleep 0.4; import -window root $W/s20c.png 2>/dev/null
+IV=$(convert $W/s20c.png -format "%[pixel:p{$LIST_X,$SY}]" info: 2>/dev/null)
+xdotool key Escape; sleep 0.4
+check "[20c] selection without list focus = #2c2c2c ($IV), Esc gives the focus back" "[ '$IV' = 'srgb(44,44,44)' ] && last 'selection pane' | grep -q 'count=1 focus=foto2.png'"
 xdotool key Return; sleep 1
 check "[21] Enter opens a file with its default app" "grep -qxF '$M/foto2.png' $OPENLOG"
 xdotool key Home Return; sleep 1.2
