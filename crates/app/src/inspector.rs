@@ -42,6 +42,35 @@ fn row(key: &str, value: impl Into<String>) -> InfoRow {
     InfoRow {
         key: key.into(),
         value: value.into().into(),
+        group: group_of(key).into(),
+        first: false,
+    }
+}
+
+/// Group heading of a fact in the inspector (redesign R7).
+fn group_of(key: &str) -> &'static str {
+    match key {
+        "Geändert" | "Erstellt" => "DATUM",
+        "Pfad" => "ORT",
+        _ => "ALLGEMEIN",
+    }
+}
+
+fn group_rank(group: &str) -> u8 {
+    match group {
+        "ALLGEMEIN" => 0,
+        "DATUM" => 1,
+        _ => 2,
+    }
+}
+
+/// Facts grouped (stable within a group); the first of each group carries the heading.
+fn arrange(rows: &mut [InfoRow]) {
+    rows.sort_by_key(|r| group_rank(r.group.as_str()));
+    let mut last = String::new();
+    for r in rows.iter_mut() {
+        r.first = r.group.as_str() != last;
+        last = r.group.to_string();
     }
 }
 
@@ -205,6 +234,7 @@ fn update(win: &MainWindow) {
             }
         }
     }
+    arrange(&mut rows);
     let summary: Vec<String> = rows
         .iter()
         .map(|r| format!("{}={}", r.key, r.value))
@@ -377,6 +407,7 @@ fn apply(win: &MainWindow, gen: u64, extra: Extra) {
                 }
             }
         }
+        arrange(&mut v);
         s.rows.set_vec(v);
     });
     if let Some(buf) = extra.image {
@@ -417,6 +448,33 @@ fn group(n: u64) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn facts_are_grouped_with_one_heading_each() {
+        let mut v = vec![
+            row("Größe", "1 KB"),
+            row("Geändert", "heute"),
+            row("Attribute", "-"),
+            row("Erstellt", "gestern"),
+            row("Abmessungen", "2 × 2 Pixel"),
+            row("Pfad", "/x"),
+        ];
+        arrange(&mut v);
+        let keys: Vec<&str> = v.iter().map(|r| r.key.as_str()).collect();
+        assert_eq!(
+            keys,
+            [
+                "Größe",
+                "Attribute",
+                "Abmessungen",
+                "Geändert",
+                "Erstellt",
+                "Pfad"
+            ]
+        );
+        let firsts: Vec<bool> = v.iter().map(|r| r.first).collect();
+        assert_eq!(firsts, [true, false, false, true, false, true]);
+    }
 
     #[test]
     fn grouping_and_folder_rows() {

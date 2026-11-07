@@ -328,6 +328,11 @@ xdotool mousemove $LIST_X $(row_y 2) click 1; sleep 1
 check "[68b] text file: preview + size" "last 'inspector done' | grep -q 'text=true' && last 'inspector done' | grep -q 'Größe=22 B'"
 xdotool mousemove $LIST_X $(row_y 1) click 1; sleep 1
 check "[68c] picture: dimensions from the file header" "last 'inspector done' | grep -q 'Abmessungen=640 × 480 Pixel'"
+check "[68h] facts grouped under small headings (R7)" "ui_has 'ALLGEMEIN' && ui_has 'DATUM' && ui_has 'ORT'"
+ui_click "Pfad kopieren"; sleep 0.4
+xdotool key ctrl+f; sleep 0.3; xdotool key ctrl+v; sleep 1.2
+check "[68i] 'Pfad kopieren' puts the path on the clipboard (pasted into the search field)" "grep -qF 'query=\"$I/bild.png\"' $LOG"
+xdotool key Escape; sleep 1; focus
 xdotool mousemove $LIST_X $(row_y 0) click 1; sleep 1.2
 check "[68d] folder: files, subfolders and total size" "last 'inspector done' | grep -q 'Inhalt=2 Dateien, 1 Ordner' && last 'inspector done' | grep -q 'Gesamtgröße=9.8 KB'"
 xdotool key ctrl+a; sleep 1.2

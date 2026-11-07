@@ -154,6 +154,7 @@ Legende: `[ ]` offen · `[~]` in Arbeit · `[x]` erledigt · Prio P0/P1/P2
 - [x] R4 Navigation (CI-Run #120): Icon-Knöpfe, Brotkrumen-Segmente, Suchfeld mit Lupe, 34 px
 - [x] R5 Tabs (CI-Run #123): IDE-Stil, Akzentstrich am aktuellen Tab der aktiven Ansicht, × bei Hover
 - [x] R6 Dateiliste (CI-Run #124): Kopf 24 px mit Chevron, Zeilen-Plättchen mit Akzentbalken, Fokus/Drop, Kacheln, Rahmenauswahl
+- [ ] R7 Inspector: Gruppen, Pfad kopieren, Einblenden – lokal fertig, CI ausstehend
 - [ ] E2E-Wackler beobachten: [49] erster Drag nach Gesamtlauf, [72c] installierte Kopie ohne X-Verbindung (CI #107)
 - [ ] R2 Hauptlayout (globale Leiste auflösen, Statusleiste, Breakpoints)
 - [ ] R3 Seitenleiste · R4 Navigation · R5 Tabs

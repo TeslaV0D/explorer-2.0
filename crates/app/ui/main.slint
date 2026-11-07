@@ -29,7 +29,8 @@ export struct Row {
 export struct Crumb { label: string, path: string }
 
 // One fact in the inspector ("Größe" → "12,3 KB").
-export struct InfoRow { key: string, value: string }
+// group: heading of its section ("ALLGEMEIN", "DATUM", "ORT"); first: shows the heading
+export struct InfoRow { key: string, value: string, group: string, first: bool }
 
 // One entry of the command palette: label, shortcut or path, runnable here.
 // a drive in the settings ("Suche"): indexed or not
@@ -1583,41 +1584,79 @@ export component MainWindow inherits Window {
                         open-settings => { root.settings-open = true; }
                     }
                 }
-                // ---------- inspector ----------
+                // ---------- inspector (R7: property inspector) ----------
                 if root.insp-open : Rectangle {
                     width: root.insp-w;
-                    background: Theme.c.panel;
-                    Rectangle { x: 0; width: 1px; background: Theme.c.line; }
+                    background: Theme.d.panel;
+                    Rectangle { x: 0; width: 1px; background: Theme.d.border; }
+                    // fades and slides in when opened (the panel itself takes its place at once:
+                    // the file list must not wait for an animation)
+                    property <bool> shown;
+                    init => { self.shown = true; }
                     ScrollView {
                         x: 1px; width: parent.width - 1px;
+                        opacity: parent.shown ? 1 : 0;
+                        animate opacity { duration: Ui.slow; easing: ease-out; }
                         VerticalLayout {
-                            padding: 12px; spacing: 8px;
+                            padding: 12px; padding-top: 10px; spacing: 6px;
                             alignment: start;
                             if root.insp-has-image : Rectangle {
-                                height: 200px;
-                                background: Theme.c.card;
-                                border-radius: 4px;
+                                height: 180px;
+                                background: Theme.d.surface;
+                                border-radius: Ui.r-large;
+                                border-width: 1px;
+                                border-color: Theme.d.border;
                                 Image { width: parent.width - 16px; height: parent.height - 16px; source: root.insp-image; image-fit: contain; }
                             }
                             if root.insp-text != "" : Rectangle {
-                                height: min(220px, insp-pre.preferred-height + 16px);
-                                background: Theme.c.card;
-                                border-radius: 4px;
+                                height: min(200px, insp-pre.preferred-height + 16px);
+                                background: Theme.d.surface;
+                                border-radius: Ui.r-large;
+                                border-width: 1px;
+                                border-color: Theme.d.border;
                                 clip: true;
                                 insp-pre := Text {
-                                    x: 8px; y: 8px; width: parent.width - 16px;
-                                    text: root.insp-text; font-size: 11px; color: Theme.c.text2;
+                                    x: 10px; y: 8px; width: parent.width - 20px;
+                                    text: root.insp-text; font-size: Ui.font-small; color: Theme.d.text2;
                                     wrap: no-wrap; overflow: elide; vertical-alignment: top;
                                 }
                             }
-                            Text { text: root.insp-title; font-size: 14px; font-weight: 700; color: Theme.c.text; wrap: word-wrap; }
-                            Text { text: root.insp-subtitle; font-size: 11px; color: Theme.c.muted; wrap: word-wrap; }
-                            Rectangle { height: 1px; background: Theme.c.line; }
+                            Rectangle { height: 2px; }
+                            Text { text: root.insp-title; font-size: Ui.font-title; font-weight: 600; color: Theme.d.text; wrap: word-wrap; }
+                            Text { text: root.insp-subtitle; font-size: Ui.font; color: Theme.d.muted; wrap: word-wrap; }
                             for r in root.insp-rows : VerticalLayout {
-                                spacing: 1px;
-                                Text { text: r.key; font-size: 11px; color: Theme.c.muted; }
-                                // read-only input: the value can be selected and copied (paths)
-                                TextInput { text: r.value; read-only: true; font-size: 12px; color: Theme.c.text; wrap: word-wrap; single-line: false; }
+                                spacing: 2px;
+                                // group heading before the first fact of each group (no lines per row)
+                                if r.first : SectionLabel { height: 26px; vertical-alignment: bottom; text: r.group; }
+                                if r.group != "ORT" : HorizontalLayout {
+                                    spacing: 8px;
+                                    Text { width: 96px; text: r.key; font-size: Ui.font; color: Theme.d.muted; wrap: word-wrap; }
+                                    // read-only input: the value can be selected and copied
+                                    TextInput {
+                                        horizontal-stretch: 1;
+                                        text: r.value; read-only: true; font-size: Ui.font; color: Theme.d.text;
+                                        wrap: word-wrap; single-line: false;
+                                        selection-background-color: Theme.d.selected;
+                                        selection-foreground-color: Theme.d.text;
+                                    }
+                                }
+                                // the path: full width, with a copy button
+                                if r.group == "ORT" : HorizontalLayout {
+                                    spacing: 4px;
+                                    path-value := TextInput {
+                                        horizontal-stretch: 1;
+                                        text: r.value; read-only: true; font-size: Ui.font; color: Theme.d.text2;
+                                        wrap: word-wrap; single-line: false;
+                                        selection-background-color: Theme.d.selected;
+                                        selection-foreground-color: Theme.d.text;
+                                    }
+                                    IconButton {
+                                        size: 22px;
+                                        icon: IconData.copy;
+                                        label: "Pfad kopieren";
+                                        clicked => { path-value.select-all(); path-value.copy(); path-value.clear-selection(); }
+                                    }
+                                }
                             }
                         }
                     }
