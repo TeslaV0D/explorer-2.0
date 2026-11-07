@@ -79,6 +79,12 @@ function UiClick([string]$label, $which = 1, [string]$button = 'left') {
   if ($null -eq $b) { Write-Host "UI   target not found: '$label'"; return $false }
   Click ($b.X + [int]($b.W / 2)) ($b.Y + [int]($b.H / 2)) $button; return $true
 }
+# a file action of the active pane: its button, or (narrow pane) the ⋮ menu (R2)
+function UiAction([string]$label) {
+  if ($null -ne (UiBox $label)) { return (UiClick $label) }
+  if (-not (UiClick 'Mehr')) { return $false }
+  Start-Sleep -Milliseconds 500; return (UiClick $label 'last')
+}
 # first row = below the "Name" column header (falls back to the old layout)
 function ListTop { $b = UiBox 'Name'; if ($null -eq $b) { 140 } else { $b.Y + $b.H } }
 function Pt([int]$x, [int]$y) {
@@ -198,7 +204,7 @@ Keys '^l'; Keys 'Papierkorb'; Keys '{ENTER}'; Start-Sleep -Milliseconds 2000
 Check "[W15] address 'Papierkorb' opens the recycle bin view" { (Last 'navigate tab') -match ' ::papierkorb ' }
 Check "[W15b] the deleted file is listed with its folder" { (Last 'kinds') -match [regex]::Escape("$src".Replace('\', '\\')) -or (Last 'kinds') -match 'win-e2e' }
 Keys 'a.txt'; Start-Sleep -Milliseconds 500
-Click 195 20   # command bar "Wiederherstellen"
+[void](UiAction 'Wiederherstellen')
 Start-Sleep -Milliseconds 2500
 Check "[W16] restore puts it back (real name with extension)" { (Test-Path "$src\a.txt") -and (Last 'trash Restore done') -match 'ok=true' }
 Keys '^l'; Keys 'Dieser PC'; Keys '{ENTER}'; Start-Sleep -Milliseconds 1500
@@ -378,6 +384,8 @@ Set-ItemProperty $acc -Name AccentPalette -Value (Palette @(0, 120, 212)) -Type 
 $th = New-Item -ItemType Directory -Force "$R\farben"
 Set-Content "$th\a.txt" "a"; Set-Content "$th\b.txt" "b"
 $cfg3 = "$Work\cfg-theme"; New-Item -ItemType Directory -Force $cfg3 | Out-Null
+# new installations start dark (D-026); this block tests "Wie Windows"
+Set-Content "$cfg3\settings.ini" "theme = system"
 $script:log = "$Work\win-e2e-theme.log"; $env:EXPLORER2_CONFIG_DIR = $cfg3
 $p = Start-Process -FilePath $Exe -ArgumentList "`"$th`"" -PassThru -RedirectStandardError $script:log
 try {
@@ -690,6 +698,7 @@ foreach ($theme in @('light', 'dark')) {
       Focus
       Click $LISTX (RowY 0); Keys '{RIGHT}'
       Shot "gallery\$theme-01-ordner"
+      if (UiClick 'Mehr') { Start-Sleep -Milliseconds 600; Shot "gallery\$theme-01b-menue-mehr"; Keys '{ESC}'; Start-Sleep -Milliseconds 300 }
       Keys '^f'; Keys 'datei'; Start-Sleep -Milliseconds 1200; Shot "gallery\$theme-02-suche"
       Keys '{ESC}'; Start-Sleep -Milliseconds 600
       Keys '^+p'; Start-Sleep -Milliseconds 500; Shot "gallery\$theme-03-befehlspalette"; Keys '{ESC}'

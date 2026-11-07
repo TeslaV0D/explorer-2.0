@@ -1,6 +1,6 @@
 # Zwischenstand
 
-**Stand:** 2026-11-07 · **Phase:** 1 · M0–M7 ✅ (M7.3 verschoben) · R-001 ✅ · **M8.1/M8.2 Installer ✅ (Run #69)** · **M8.3 Härtung ✅ (Run #70–#73)** · **Phase 2 Suche: S1.1 ✅ (Run #78), S1.2 ✅ (Run #80), S1.3 ✅ (Run #83), S1.4 ✅ (Run #90), S1.5 ✅ (Run #91/#93) → **S1 komplett**, Praxistest ✅ (Boss: „es funktioniert“) · **Redesign läuft: R0 ✅ (Run #101), R1 ✅ (Run #104), als Nächstes R2 Hauptlayout** (`docs/PLAN-REDESIGN.md`)** (Plan `docs/PLAN-SEARCH.md`) · **Branch:** `claude/relaxed-pasteur-ufhh1p`
+**Stand:** 2026-11-07 · **Phase:** 1 · M0–M7 ✅ (M7.3 verschoben) · R-001 ✅ · **M8.1/M8.2 Installer ✅ (Run #69)** · **M8.3 Härtung ✅ (Run #70–#73)** · **Phase 2 Suche: S1.1 ✅ (Run #78), S1.2 ✅ (Run #80), S1.3 ✅ (Run #83), S1.4 ✅ (Run #90), S1.5 ✅ (Run #91/#93) → **S1 komplett**, Praxistest ✅ (Boss: „es funktioniert“) · **Redesign läuft: R0 ✅ (Run #101), R1 ✅ (Run #104), R2 lokal fertig (CI läuft)** (`docs/PLAN-REDESIGN.md`)** (Plan `docs/PLAN-SEARCH.md`) · **Branch:** `claude/relaxed-pasteur-ufhh1p`
 
 ## M5 – Shell-Integration (läuft, Freigabe Boss 2026-11-04)
 ### CI-Run #37 – alles grün ✅ (M5.0–M5.5)
@@ -39,6 +39,17 @@
 
 - **Bug (CI #32/#33, UI-Matrix)**: OLE-Drop-Target wurde nie registriert („Invalid window handle“) – der Timer lief, bevor Slint das native Fenster erzeugt hatte → Ablegen aus anderen Apps wäre tot gewesen. Fix: Registrierung wiederholt bis HWND existiert (50 ms, max. 5 s), sonst Rückfall auf In-App-DnD.
 - Neu: **Windows-E2E mit echter Tastatur/Maus** (`scripts/e2e-windows.ps1`, CI-Schritt im Release-Job, Screenshots bei Fehler).
+
+### Redesign R2 – Hauptlayout (lokal, CI läuft)
+- **Globale Leiste entfernt** (−40 px Höhe für Dateien). Ihre Aktionen machen exakt dasselbe wie vorher (`command(...)`), sitzen jetzt aber dort, wo man arbeitet:
+  - **Datei-Aktionen als Symbol-Knöpfe rechts in der Navigationszeile der aktiven Ansicht**, je Ort wie bisher (Ordner: Neuer Ordner, Ausschneiden, Kopieren, Einfügen, Umbenennen, Löschen; Suche ohne Neuer Ordner/Einfügen; Papierkorb: Wiederherstellen, Endgültig löschen, Papierkorb leeren) + Rückgängig/Wiederholen. In der inaktiven Ansicht unsichtbar (Platz bleibt → Adresszeile springt nicht).
+  - **⋮-Menü („Mehr“)**: Zwei Ansichten/Eine Ansicht, Ausgeblendete Elemente anzeigen, Inspector, Befehlspalette, Einstellungen – mit Tastenkürzeln.
+  - **Statusleiste rechts**: Sortieren, Details/Symbole, Inspector, Einstellungen (Symbol-Knöpfe).
+- **Tooltips** mit Name + Kürzel an allen Symbol-Knöpfen (Slint 1.18 `Tooltip`, eigener Look `TooltipBox`).
+- **Breakpoints**: Fenster < 900 px → Seitenleiste 160 px, Inspector 240 px; Ansicht < 800 px breit → Datei-Aktionen wandern ins ⋮-Menü (z. B. bei zwei Ansichten). Werte in `changed`-Handlern statt Bindungen (eine Bindung an die Fensterbreite war eine Layout-Schleife, Slint warnt „binding loop … may panic“).
+- **Dunkel = Standard für neue Installationen** (`ThemeChoice::default()`), gespeicherte Wahl bleibt; E2E [1d] prüft das, die Farbtests für „Wie Windows“ setzen `theme = system` selbst.
+- Tests: `ui_action`/`UiAction` (Knopf oder ⋮-Menü), „Ausgeblendete“ über das ⋮-Menü, Std-Widget-Pixeltest jetzt am „Schließen“-Knopf der Einstellungen, Windows W16 per Name statt Koordinate (letzte feste Klick-Koordinate auf die alte Leiste). E2E [1e] prüft das neue Layout. Galerie: ⋮-Menü + Tooltip.
+- Abweichung vom Plan: Inspector schließt sich bei schmalem Fenster **nicht** selbst (würde einen gespeicherten Zustand ändern = Verhalten), er wird nur schmaler.
 
 ### Redesign R1 – Design-System ✅ (CI-Run #104)
 - **Farbrollen** `core::theme::Design` (Feld `ds` an `Tokens`, 26 Rollen: Ebenen app/panel/surface/raised/overlay, Zustände hover/pressed/selected/selected-idle, Linien, Text-Hierarchie text/text2/muted/faint, Icons, Akzent + Text darauf, Signale, Ordner/Datei, Scrim/Schatten). Dunkel = geschichtete Graustufen statt Schwarz, Akzent ruhiges Blau `#4f8cff` (hell `#2f6feb`). Windows-Akzent wird übernommen und auf Lesbarkeit geschoben; die Auswahl ist eine dünne Akzent-Lasur, die bei grellen Akzenten (Gelb auf Dunkel) so weit ausgedünnt wird, dass sie so hell bleibt wie mit dem Standard-Blau.

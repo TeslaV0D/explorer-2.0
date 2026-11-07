@@ -12,6 +12,7 @@
 #   ui_box "Neuer Ordner"          -> "x y w h" (e.g. for pixel checks inside an element)
 #   ui_click_after "Adresszeile"   -> clicks the first element inside/after it (first breadcrumb)
 #   ui_list_top                    -> y of the first row of the (first) file list
+#   ui_action "Neuer Ordner"       -> file action of the active pane (button, or ⋮ menu when narrow)
 #
 # Linux/Xvfb without a window manager: the window sits at the screen origin.
 UI_DUMP=${UI_DUMP:-${W:-/tmp}/ui-dump.txt}
@@ -61,6 +62,12 @@ ui_click_after() { # label -> clicks the element drawn right after it (e.g. the 
     $1==L { hit=1 }' "$UI_DUMP" 2>/dev/null)
   if [ -z "$xy" ]; then echo "UI   nothing after: '$1'"; return 1; fi
   xdotool mousemove $xy click 1
+}
+
+ui_action() { # label -> a file action of the active pane: its button, or (narrow pane) the ⋮ menu
+  if ui_has "$1"; then ui_click "$1"; return; fi
+  ui_click "Mehr" || return 1
+  sleep 0.5; ui_click "$1" last
 }
 
 ui_list_top() { # top of the file list = bottom of the "Name" column header (first pane)

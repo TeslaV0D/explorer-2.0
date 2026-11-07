@@ -27,6 +27,25 @@ export component Icon inherits Rectangle {
     }
 }
 
+// The tooltip's look (Slint shows it after a short hover, near the pointer).
+export component TooltipBox inherits Rectangle {
+    in property <string> text;
+    background: Theme.d.overlay;
+    border-radius: Ui.r;
+    border-width: 1px;
+    border-color: Theme.d.border-strong;
+    drop-shadow-blur: 8px;
+    drop-shadow-offset-y: 2px;
+    drop-shadow-color: Theme.d.shadow;
+    HorizontalLayout {
+        padding-left: 8px;
+        padding-right: 8px;
+        padding-top: 4px;
+        padding-bottom: 4px;
+        Text { text: root.text; color: Theme.d.text; font-size: Ui.font; }
+    }
+}
+
 // Square button with one icon (tool bar, tab strip, inspector).
 export component IconButton inherits Rectangle {
     in property <string> icon;
@@ -34,6 +53,8 @@ export component IconButton inherits Rectangle {
     in property <bool> enabled: true;
     in property <bool> checked;
     in property <length> size: Ui.control-h;
+    // shown in the tooltip next to the name ("Strg+C")
+    in property <string> shortcut;
     callback clicked();
     accessible-role: button;
     accessible-label: root.label;
@@ -56,6 +77,9 @@ export component IconButton inherits Rectangle {
         enabled: root.enabled;
         mouse-cursor: MouseCursor.pointer;
         clicked => { root.clicked(); }
+    }
+    Tooltip {
+        TooltipBox { text: root.shortcut == "" ? root.label : root.label + "  ·  " + root.shortcut; }
     }
 }
 

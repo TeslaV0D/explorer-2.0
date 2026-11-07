@@ -15,9 +15,10 @@ pub type Rgba = [u8; 4];
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
 pub enum ThemeChoice {
     /// Follow Windows ("Standard-App-Modus"), live.
-    #[default]
     System,
     Light,
+    /// Default for new installations (redesign D-026); saved choices stay.
+    #[default]
     Dark,
 }
 
@@ -391,7 +392,7 @@ pub fn design(dark: bool, accent: Option<&Accent>) -> Design {
             panel: solid(0x1a1a1a),
             surface: op(surface),
             raised: solid(0x262626),
-            overlay: alpha(0x242424, 0xf5),
+            overlay: alpha(0x242424, 0xfa),
             hover: solid(0x2a2a2a),
             pressed: solid(0x313131),
             selected: op(selection(acc, DESIGN_ACCENT_DARK, surface, 0.22)),
@@ -425,7 +426,7 @@ pub fn design(dark: bool, accent: Option<&Accent>) -> Design {
             panel: solid(0xf6f6f6),
             surface: op(surface),
             raised: solid(0xffffff),
-            overlay: alpha(0xffffff, 0xf7),
+            overlay: alpha(0xffffff, 0xfc),
             hover: solid(0xf2f2f2),
             pressed: solid(0xe6e6e6),
             selected: op(selection(acc, DESIGN_ACCENT_LIGHT, surface, 0.14)),
@@ -581,7 +582,7 @@ mod tests {
         }
         assert_eq!(ThemeChoice::parse(" Dunkel "), Some(ThemeChoice::Dark));
         assert_eq!(ThemeChoice::parse("lila"), None);
-        assert_eq!(ThemeChoice::default(), ThemeChoice::System);
+        assert_eq!(ThemeChoice::default(), ThemeChoice::Dark);
         assert!(ThemeChoice::System.is_dark(true));
         assert!(!ThemeChoice::System.is_dark(false));
         assert!(!ThemeChoice::Light.is_dark(true));

@@ -104,7 +104,7 @@ check "[47] Del moves to the trash" "[ ! -e '$DST/b.txt' ] && grep -lx alt $TRAS
 xdotool key ctrl+z; sleep 1.5
 check "[47b] Ctrl+Z restores it from the trash" "[ \"\$(cat '$DST/b.txt')\" = alt ]"
 
-ui_click "Neuer Ordner"; sleep 1.2
+ui_action "Neuer Ordner"; sleep 1.2
 check "[48] toolbar 'Neuer Ordner' works too" "[ -d '$DST/Neuer Ordner' ] && last 'rename start' | grep -q 'name=Neuer Ordner'"
 xdotool key Return; sleep 0.8
 check "[48b] Enter keeps the default name" "[ -d '$DST/Neuer Ordner' ] && grep -q 'rename unchanged' $LOG"
@@ -174,7 +174,7 @@ check "[55] address alias 'Papierkorb' opens the recycle bin view" "last 'naviga
 check "[55b] trashed file listed with its original folder" "last 'kinds' | grep -qF '$T'"
 xdotool type --delay 40 "x.txt"; sleep 0.5
 check "[55c] type-ahead works in the trash" "sel_is 'focus=x.txt'"
-ui_click "Wiederherstellen"; sleep 1.5
+ui_action "Wiederherstellen"; sleep 1.5
 check "[56] restore puts the file back" "[ \"\$(cat '$T/x.txt')\" = x ] && last 'trash Restore done' | grep -q 'ok=true'"
 check "[56b] trash view refreshed (x.txt gone)" "! last 'kinds' | grep -q 'nothing' && ! ls $TRASH | grep -qx x.txt"
 xdotool key ctrl+v; sleep 0.5
@@ -186,7 +186,7 @@ check "[57] sidebar 'Papierkorb' opens it" "[ \$(grep -c 'User ::papierkorb' $LO
 xdotool type --delay 40 "y.txt"; sleep 0.4; xdotool key Delete; sleep 0.6
 xdotool key Return; sleep 1.5
 check "[57b] Del in the trash = delete for good (after confirmation)" "last 'trash Purge done' | grep -q 'ok=true' && ! ls $TRASH | grep -qx y.txt && [ ! -e '$T/y.txt' ]"
-ui_click "Papierkorb leeren"; sleep 0.6; xdotool key Return; sleep 2
+ui_action "Papierkorb leeren"; sleep 0.6; xdotool key Return; sleep 2
 check "[57c] empty the trash" "[ -z \"\$(ls -A $TRASH 2>/dev/null)\" ]"
 ui_click "Dieser PC"; sleep 1.5   # sidebar heading
 check "[58] 'Dieser PC' lists the drives" "last 'navigate tab' | grep -q ' ::dieser-pc ' && last 'done tab' | grep -qE 'total=[1-9]'"
@@ -356,6 +356,8 @@ echo "== [70] M6.4: colour schemes (light / dark / follow the system, accent col
 # measured by pixel (CLAUDE.md): list background, selection, a std-widget button
 TW=$R/theme; mkdir -p "$TW"; echo a > "$TW/a.txt"; echo b > "$TW/b.txt"; echo c > "$TW/c.txt"
 TCFG=$W/config-theme; mkdir -p "$TCFG"
+# new installations start dark (D-026, e2e.sh [1d]); this block tests "Wie Windows" from light
+printf 'theme = system\n' > "$TCFG/settings.ini"
 px() { convert "$W/$1.png" -format "%[pixel:p{$2,$3}]" info: 2>/dev/null; }
 red() { echo "$1" | sed -E 's/srgba?\(([0-9]+),.*/\1/'; }
 green_wins() { echo "$1" | awk -F'[(),]' '{ exit !($3 > $2 + 20 && $3 > $4 + 20) }'; }
@@ -367,15 +369,17 @@ theme_run() { # <log> [env...]
 theme_run $W/trace-70.log
 check "[70] first start follows the system (light here) with the original colours" "last 'theme why=init' | grep -q 'choice=system dark=false accent=#0067c0 selection=#cce8ff'"
 xdotool mousemove 900 680; sleep 0.3; shot t70-light
-# button: inside "Neuer Ordner" near its corner; sidebar: empty space low in it
-BTN=$(ui_box "Neuer Ordner" | awk '{print $1+4, $2+4}'); SIDE=$(ui_box "Schnellzugriff" | awk '{print $1+20, 600}')
-P=$(px t70-light $LIST_X $(row_y 5)); B=$(px t70-light $BTN)
+# std widget: the settings panel's "Schließen" button, near its corner; sidebar: empty space low in it
+SIDE=$(ui_box "Schnellzugriff" | awk '{print $1+20, 600}')
+ui_click "Einstellungen"; sleep 0.6; xdotool mousemove 900 680; sleep 0.3; shot t70-panel-light
+BTN=$(ui_box "Schließen" last | awk '{print $1+4, $2+4}')
+P=$(px t70-light $LIST_X $(row_y 5)); B=$(px t70-panel-light $BTN)
 check "[70b] light: list background #fafafa ($P), button light ($B)" "[ '$P' = 'srgb(250,250,250)' ] && [ \$(red '$B') -gt 200 ]"
-ui_click "Einstellungen"; sleep 0.6; ui_click "Dunkel"; sleep 0.8
+ui_click "Dunkel"; sleep 0.8; xdotool mousemove 900 680; sleep 0.3; shot t70-panel-dark
 check "[70c] 'Dunkel' in the settings switches live and is saved" "last 'theme why=choice' | grep -q 'choice=dark dark=true' && grep -qx 'theme = dark' $TCFG/settings.ini"
 ui_click "Schließen" last; sleep 0.4
 xdotool mousemove $LIST_X $(row_y 0) click 1; sleep 0.4; xdotool mousemove 900 680; sleep 0.3; shot t70-dark
-P=$(px t70-dark $LIST_X $(row_y 5)); S=$(px t70-dark $((LIST_X + 200)) $(row_y 0)); B=$(px t70-dark $BTN); C=$(px t70-dark $SIDE)
+P=$(px t70-dark $LIST_X $(row_y 5)); S=$(px t70-dark $((LIST_X + 200)) $(row_y 0)); B=$(px t70-panel-dark $BTN); C=$(px t70-dark $SIDE)
 check "[70d] dark: list #191919 ($P), selection #1c3f63 ($S), sidebar #202020 ($C)" "[ '$P' = 'srgb(25,25,25)' ] && [ '$S' = 'srgb(28,63,99)' ] && [ '$C' = 'srgb(32,32,32)' ]"
 check "[70e] the std widgets follow (dark button: $B)" "[ \$(red '$B') -lt 90 ]"
 kill $PID; wait $PID 2>/dev/null

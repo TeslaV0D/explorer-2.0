@@ -45,6 +45,8 @@ echo "first paint ${FP} ms, done ${DN} ms"
 check "first paint < 100 ms" "[ -n '$FP' ] && [ $FP -lt 100 ]"
 check "full load < 1000 ms" "[ -n '$DN' ] && [ $DN -lt 1000 ]"
 check "100.000 shown" "grep -q 'total=100000 shown=100000' $LOG"
+check "[1d] a new installation starts dark (redesign D-026)" "grep -q 'theme why=init choice=dark dark=true' $LOG"
+check "[1e] no global bar any more: file actions + ⋮ sit in the pane, settings in the status bar (R2)" "ui_has 'Neuer Ordner' && ui_has 'Mehr' && ui_has 'Einstellungen' && ! ui_has 'Zwei Ansichten'"
 kill $PID; wait $PID 2>/dev/null
 
 LOG=$W/trace-2.log
@@ -61,7 +63,7 @@ check "[4] invalid path -> NotFound error" "grep -qE 'failed tab=1 gen=[0-9]+ No
 ADDR=$(grep '^\[trace\] address=' $LOG | tail -1)
 check "[4b] address bar restored to current folder" '[ "$ADDR" = "[trace] address=$W/watch" ]'
 BEFORE=$(grep -c "navigate" $LOG)
-ui_click "Ausgeblendete"; sleep 1.5; shot s5_hidden
+ui_click "Mehr"; sleep 0.5; ui_click "Ausgeblendete Elemente anzeigen" last; sleep 1.5; shot s5_hidden
 check "[5] hidden toggle reloads" "[ \$(grep -c navigate $LOG) -gt $BEFORE ] && grep -q 'total=2 shown=2' $LOG"
 ui_click "Nach oben"; sleep 1; shot s6_up
 check "[6] go up to e2e" "navigated_to '$W'"
@@ -125,7 +127,7 @@ xdotool key ctrl+a; sleep 0.5
 check "[18] Ctrl+A selects all" "last 'selection pane' | grep -q 'count=7 '"
 xdotool mousemove 900 680; sleep 0.3; import -window root $W/sel.png 2>/dev/null
 PX=$(convert $W/sel.png -format "%[pixel:p{$LIST_X,$(row_y 2)}]" info: 2>/dev/null)
-check "[19] selected rows are drawn in selection color (pixel $PX)" "[ '$PX' = 'srgb(204,232,255)' ]"
+check "[19] selected rows are drawn in selection color (dark = default, pixel $PX)" "[ '$PX' = 'srgb(28,63,99)' ]"
 xdotool key Home; sleep 0.3; xdotool type --delay 60 "fo"; sleep 0.5
 check "[20] type-to-select jumps to 'fo…'" "last 'selection pane' | grep -q 'count=1 focus=foto2.png'"
 xdotool key Return; sleep 1

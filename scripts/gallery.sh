@@ -37,6 +37,8 @@ run_theme() {
   ui_wait "README.md" 10 || echo "WARN app did not show the folder"
   sleep 1; focus
   shot 01-ordner
+  ui_click "Mehr"; sleep 0.6; shot 01b-menue-mehr; xdotool key Escape; sleep 0.3
+  xdotool mousemove $(ui_xy "Kopieren"); sleep 1.4; import -window root -crop 1200x720+0+0 "$OUT/$THEME-01c-tooltip.png"; echo "$THEME-01c-tooltip" >> "$OUT/index.txt"
   xdotool mousemove $(ui_xy "Titelbild.png") click 1; sleep 0.3
   xdotool key alt+p; sleep 1.2; shot 02-inspector-bild
   xdotool key alt+p; sleep 0.4

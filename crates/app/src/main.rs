@@ -224,6 +224,7 @@ fn main() -> Result<(), slint::PlatformError> {
         px
     ));
     on!(win, on_toggle_split, |w| nav::toggle_split(&w));
+    on!(win, on_open_palette, |w| palette::open(&w));
     on!(win, on_search_input, |w, pi, t| nav::search_input(
         &w,
         pi as usize,

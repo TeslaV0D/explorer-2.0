@@ -61,7 +61,7 @@ impl Default for Settings {
             single_click: false,
             inspector: false,
             recent_commands: Vec::new(),
-            theme: crate::theme::ThemeChoice::System,
+            theme: crate::theme::ThemeChoice::default(),
             system_accent: true,
             single_instance: true,
             index_exclude: String::new(),
