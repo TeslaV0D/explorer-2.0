@@ -267,8 +267,10 @@ ui_click "Schließen" last; sleep 0.4
 check "[64e] single-click off again" "grep -q 'single_click = false' $W/config-ops/settings.ini"
 echo "-- M6.1b: sort menu + rubber band"
 # still in $F: rows 0 Ordner, 1 y.txt
+GY0=$(last 'geometry pane=0' | sed -E 's/.* y=([0-9]+).*/\1/')
 xdotool key ctrl+shift+2; sleep 1
-check "[65] icon view hides the column header (list starts higher)" "last 'geometry pane=0' | grep -q ' y=114 '"
+GY1=$(last 'geometry pane=0' | sed -E 's/.* y=([0-9]+).*/\1/')
+check "[65] icon view hides the column header (list starts 26 px higher: $GY0 -> $GY1)" "[ -n '$GY0' ] && [ -n '$GY1' ] && [ \$(( $GY0 - $GY1 )) -eq 26 ]"
 ui_click "Sortieren"; sleep 0.5; ui_click "Größe" last; sleep 0.8
 check "[65b] sort menu: by size" "last 'sort key' | grep -q 'key=size desc=false'"
 ui_click "Sortieren"; sleep 0.5; ui_click "Absteigend"; sleep 0.8
@@ -283,13 +285,15 @@ check "[66] rubber band in the icon view selects both tiles" "last 'band done' |
 xdotool mousemove 1150 600 click 1; sleep 0.4
 check "[66b] click on empty space clears it" "sel_is 'count=0 '"
 xdotool key ctrl+shift+6; sleep 0.8
+# from empty space below the rows up into the first row (rows: 0 Ordner, 1 y.txt)
+BT=$(( $(ui_list_top) + 6 ))
 xdotool mousemove 600 420 mousedown 1; sleep 0.2
-for s in 1 2 3 4 5; do xdotool mousemove 600 $((420 - s * 55)); sleep 0.08; done
+for s in 1 2 3 4 5; do xdotool mousemove 600 $((420 - s * (420 - BT) / 5)); sleep 0.08; done
 xdotool mouseup 1; sleep 0.6
 check "[66c] rubber band from below the rows in details" "last 'band done' | grep -q 'hits=2' && sel_is 'count=2 '"
 xdotool mousemove $LIST_X $(row_y 0) click 1; sleep 0.3
 xdotool mousemove 600 420 keydown ctrl mousedown 1; sleep 0.2
-for s in 1 2 3 4 5; do xdotool mousemove 600 $((420 - s * 50)); sleep 0.08; done
+for s in 1 2 3 4 5; do xdotool mousemove 600 $((420 - s * (420 - BT) / 5)); sleep 0.08; done
 xdotool mouseup 1 keyup ctrl; sleep 0.6
 check "[66d] Ctrl + band adds to the selection" "sel_is 'count=2 '"
 echo "-- M6.1c: view per folder"

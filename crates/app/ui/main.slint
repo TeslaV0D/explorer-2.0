@@ -1341,6 +1341,9 @@ export component MainWindow inherits Window {
     property <length> sidebar-w: root.narrow ? 160px : Ui.sidebar-w;
     property <length> insp-w: root.narrow ? 240px : 280px;
     function relayout() {
+        // before the window has its size (width 0) nothing is narrow: no first frame
+        // with the small sidebar
+        if (root.width <= 0px) { return; }
         root.narrow = root.width < 900px;
         root.pane-compact = (root.width - (root.narrow ? 160px : Ui.sidebar-w) - (root.insp-open ? (root.narrow ? 240px : 280px) : 0px)) / max(1, root.panes.length) < 800px;
     }
