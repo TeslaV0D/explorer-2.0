@@ -79,7 +79,8 @@ check "[7b] dump lists buttons, icon buttons (spoken names), list rows" "ui_has 
 check "[7c] positions are inside the window" "awk -F'\t' 'NR>1 && (\$2<0 || \$3<0 || \$2>1200 || \$3>720){bad=1} END{exit bad}' $UI_DUMP"
 check "[7d] navigation row (R4): address bar and icon buttons 26 px high, list header right below the 34 px row" "[ \$(ui_box 'Adresszeile' | cut -d' ' -f4) -eq 26 ] && [ \$(ui_box 'Zurück' | cut -d' ' -f4) -eq 26 ] && [ \$(( \$(ui_box 'Name' | cut -d' ' -f2) - \$(ui_box 'Adresszeile' | cut -d' ' -f2) )) -le 32 ]"
 xdotool mousemove 900 680; sleep 0.4; import -window root "$W/s7e_tabs.png" 2>/dev/null
-TB=$(ui_box 'watch' | awk '{print $1 + int($3 / 2), $2 + 1}')
+# the tab is named after the current folder ($W since [6]); tabs come before the crumbs in the dump
+TB=$(ui_box "$(basename "$W")" | awk '{print $1 + int($3 / 2), $2 + 1}')
 TBP=$(convert "$W/s7e_tabs.png" -format "%[pixel:p{${TB% *},${TB#* }}]" info: 2>/dev/null)
 check "[7e] the current tab of the active pane carries the accent line (R5: $TBP)" "[ '$TBP' = 'srgb(79,140,255)' ]"
 echo "== [8] settings panel: disable hardware acceleration"
