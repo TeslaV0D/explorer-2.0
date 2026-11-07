@@ -1,6 +1,6 @@
 # Zwischenstand
 
-**Stand:** 2026-11-07 · **Phase:** 1 · M0–M7 ✅ (M7.3 verschoben) · R-001 ✅ · **M8.1/M8.2 Installer ✅ (Run #69)** · **M8.3 Härtung ✅ (Run #70–#73)** · **Phase 2 Suche: S1.1 ✅ (Run #78), S1.2 ✅ (Run #80), S1.3 ✅ (Run #83), S1.4 ✅ (Run #90), S1.5 ✅ (Run #91/#93) → **S1 komplett**, Praxistest ✅ (Boss: „es funktioniert“) · **Redesign läuft: R0 ✅ (Run #101), R1 ✅ (Run #104), R2 ✅ (Run #110), R3 ✅ (Run #115), R4 lokal fertig (CI läuft)** (`docs/PLAN-REDESIGN.md`)** (Plan `docs/PLAN-SEARCH.md`) · **Branch:** `claude/relaxed-pasteur-ufhh1p`
+**Stand:** 2026-11-07 · **Phase:** 1 · M0–M7 ✅ (M7.3 verschoben) · R-001 ✅ · **M8.1/M8.2 Installer ✅ (Run #69)** · **M8.3 Härtung ✅ (Run #70–#73)** · **Phase 2 Suche: S1.1 ✅ (Run #78), S1.2 ✅ (Run #80), S1.3 ✅ (Run #83), S1.4 ✅ (Run #90), S1.5 ✅ (Run #91/#93) → **S1 komplett**, Praxistest ✅ (Boss: „es funktioniert“) · **Redesign läuft: R0 ✅ (Run #101), R1 ✅ (Run #104), R2 ✅ (Run #110), R3 ✅ (Run #115), R4 ✅ (Run #120), als Nächstes R5 Tabs** (`docs/PLAN-REDESIGN.md`)** (Plan `docs/PLAN-SEARCH.md`) · **Branch:** `claude/relaxed-pasteur-ufhh1p`
 
 ## M5 – Shell-Integration (läuft, Freigabe Boss 2026-11-04)
 ### CI-Run #37 – alles grün ✅ (M5.0–M5.5)
@@ -40,9 +40,9 @@
 - **Bug (CI #32/#33, UI-Matrix)**: OLE-Drop-Target wurde nie registriert („Invalid window handle“) – der Timer lief, bevor Slint das native Fenster erzeugt hatte → Ablegen aus anderen Apps wäre tot gewesen. Fix: Registrierung wiederholt bis HWND existiert (50 ms, max. 5 s), sonst Rückfall auf In-App-DnD.
 - Neu: **Windows-E2E mit echter Tastatur/Maus** (`scripts/e2e-windows.ps1`, CI-Schritt im Release-Job, Screenshots bei Fehler).
 
-### Redesign R4 – Navigation (lokal, CI läuft)
+### Redesign R4 – Navigation ✅ (CI-Run #120)
 - Navigationszeile 34 px (vorher 40) auf `panel` mit Trennlinie: Zurück/Vorwärts/Nach oben als Linien-Icon-Knöpfe mit Tooltip + Kürzel, **Adresszeile** als ruhige Segmente (Weg dorthin gedämpft, aktueller Ordner hell, Chevron-Icon statt „›“, Hover-Fläche pro Segment, Rahmen hebt sich bei Hover, Akzent beim Bearbeiten), Klick in die freie Fläche = Bearbeiten wie bisher; **Suchfeld mit Lupe** (Akzent bei Fokus), gleiche Tasten (Esc, ↑/↓-Verlauf, Enter).
-- Logik unverändert (`navigate`, `start-edit`, `search-*`); Namen für Tests unverändert („Zurück“, „Adresszeile“ …).
+- Logik unverändert (`navigate`, `start-edit`, `search-*`); Namen für Tests unverändert („Zurück“, „Adresszeile“ …). E2E [7d] prüft die Maße; lokal 261/261, CI #120 komplett grün.
 
 ### Redesign R3 – Seitenleiste ✅ (CI-Run #115)
 - Neue `Sidebar` nur aus `Theme.d` + `Ui`: Gruppenköpfe klein/halbfett (`SectionLabel`, „Dieser PC“ bleibt klickbar = Laufwerksübersicht), Einträge 26 px mit **Linien-Icon** (Rust liefert `PlaceItem.glyph`: home/desktop/downloads/…/trash, Laufwerke drive/usb/network), aktiver Ort mit **3-px-Akzentmarke** + ruhiger Fläche (`selected-idle`), Hover 120 ms, Text gedämpft bis Hover/aktiv; Laufwerke mit **2-px-Füllbalken** (über 90 % rot) und Freiplatz klein darunter. Jeder Eintrag hat seinen Namen als `accessible-label` (Tests klicken wie bisher per Name).

@@ -151,7 +151,7 @@ Legende: `[ ]` offen · `[~]` in Arbeit · `[x]` erledigt · Prio P0/P1/P2
 - [x] R1 Design-System (CI-Run #104): Farbrollen `core::theme::Design` + Kontrast-Test (12 Akzente × hell/dunkel), Global `Ui`, 50 Lucide-Icons (`scripts/make-ui-icons.py`), Bausteine `ui/kit.slint`, UI-Kit `EXPLORER2_UI_KIT=1` (Galerie + E2E [81])
 - [x] R2 Hauptlayout (CI-Run #110): globale Leiste aufgelöst (Aktionen in der Navigationszeile der aktiven Ansicht, ⋮-Menü, Statusleiste), Tooltips, Breakpoints, Dunkel als Standard
 - [x] R3 Seitenleiste (CI-Run #115): Linien-Icons, Akzentmarke, dezente Laufwerksbalken
-- [ ] R4 Navigation: Icon-Knöpfe, Brotkrumen-Segmente, Suchfeld mit Lupe, 34 px – lokal fertig, CI ausstehend
+- [x] R4 Navigation (CI-Run #120): Icon-Knöpfe, Brotkrumen-Segmente, Suchfeld mit Lupe, 34 px
 - [ ] E2E-Wackler beobachten: [49] erster Drag nach Gesamtlauf, [72c] installierte Kopie ohne X-Verbindung (CI #107)
 - [ ] R2 Hauptlayout (globale Leiste auflösen, Statusleiste, Breakpoints)
 - [ ] R3 Seitenleiste · R4 Navigation · R5 Tabs
