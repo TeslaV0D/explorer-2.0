@@ -466,7 +466,9 @@ xdotool key ctrl+shift+p; sleep 0.4; xdotool type --delay 40 "installieren"; sle
 check "[72] palette 'installieren' asks first" "grep -q 'confirm install' $LOG"
 xdotool key Return; sleep 2.5
 check "[72b] installed: program files + Start menu entries" "[ -x '$IDIR/explorer2' ] && [ -x '$IDIR/explorer2-recover' ] && [ -f '$SDIR/Explorer 2.0.lnk' ] && last 'install ok' | grep -q 'shortcuts=2'"
-check "[72c] the old window closed, the installed copy runs" "! kill -0 $PID 2>/dev/null && pgrep -f '$IDIR/explorer2' >/dev/null"
+# the old window closes once the installed copy is running (up to 2 starts of 0.9 s)
+for i in $(seq 1 30); do kill -0 $PID 2>/dev/null || break; sleep 0.1; done
+check "[72c] the old window closed, the installed copy runs ($(grep -c 'starting the installed copy' $LOG) start(s))" "! kill -0 $PID 2>/dev/null && pgrep -f '$IDIR/explorer2' >/dev/null && grep -q 'continuing in the installed copy' $LOG"
 pkill -f "$IDIR/explorer2" ; sleep 0.5
 EXPLORER2_CONFIG_DIR=$W/config-install EXPLORER2_INSTALL_DIR=$IDIR EXPLORER2_STARTMENU_DIR="$SDIR" \
   "$IDIR/explorer2-recover" --uninstall --quiet > $W/uninstall-72.log 2>&1; sleep 2

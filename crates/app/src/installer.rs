@@ -120,6 +120,50 @@ pub fn describe() -> Option<(String, String)> {
     })
 }
 
+/// Starts the installed copy and closes this window only once that copy is
+/// running (still alive after `ALIVE`): if it dies at once (e.g. no display
+/// connection) it is started once more, and if that fails too this window stays
+/// open with an error instead of leaving the user with no window at all.
+fn continue_in(win: &crate::MainWindow, app: std::path::PathBuf, attempt: u32) {
+    const ALIVE: std::time::Duration = std::time::Duration::from_millis(900);
+    let mut child = match std::process::Command::new(&app)
+        .arg("--new-instance")
+        .spawn()
+    {
+        Ok(c) => c,
+        Err(e) => {
+            win.set_error(format!("Installiert, Start fehlgeschlagen: {e}").into());
+            return;
+        }
+    };
+    crate::nav::trace_line(&format!(
+        "install: starting the installed copy (attempt {attempt})"
+    ));
+    let weak = slint::ComponentHandle::as_weak(win);
+    slint::Timer::single_shot(ALIVE, move || {
+        let Some(w) = weak.upgrade() else { return };
+        match child.try_wait() {
+            Ok(None) => {
+                crate::nav::trace_line("install: continuing in the installed copy");
+                let _ = slint::quit_event_loop();
+            }
+            Ok(Some(status)) if attempt < 2 => {
+                crate::nav::trace_line(&format!(
+                    "install: the installed copy ended at once ({status}), again"
+                ));
+                continue_in(&w, app, attempt + 1);
+            }
+            Ok(Some(status)) => {
+                crate::nav::trace_line(&format!(
+                    "install: the installed copy ended at once ({status})"
+                ));
+                w.set_error("Installiert, aber die installierte Kopie startete nicht – dieses Fenster bleibt offen.".into());
+            }
+            Err(e) => w.set_error(format!("Installiert, Start nicht prüfbar: {e}").into()),
+        }
+    });
+}
+
 /// After "Installieren" in the confirmation: install, then continue in the
 /// installed copy (this window closes).
 pub fn install_and_restart(win: &crate::MainWindow) {
@@ -136,16 +180,7 @@ pub fn install_and_restart(win: &crate::MainWindow) {
                 return;
             }
             crate::nav::save_session_now();
-            match std::process::Command::new(ip.app())
-                .arg("--new-instance")
-                .spawn()
-            {
-                Ok(_) => {
-                    crate::nav::trace_line("install: continuing in the installed copy");
-                    let _ = slint::quit_event_loop();
-                }
-                Err(e) => win.set_error(format!("Installiert, Start fehlgeschlagen: {e}").into()),
-            }
+            continue_in(win, ip.app(), 1);
         }
         Err(e) => {
             crate::nav::trace_line(&format!("install failed: {e}"));
