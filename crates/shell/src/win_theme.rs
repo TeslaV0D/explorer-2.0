@@ -161,3 +161,32 @@ pub fn title_bar(hwnd: isize, dark: bool) -> Result<(), String> {
         Err(format!("DwmSetWindowAttribute failed: 0x{hr:08x}"))
     }
 }
+
+/// uxtheme ordinal 135 = SetPreferredAppMode (1809+: 0 default, 1 allow dark,
+/// 2 force dark, 3 force light), 136 = FlushMenuThemes. Undocumented but stable
+/// since Windows 10 1903; looked up at run time, so a missing export is harmless.
+pub fn dark_menus(dark: bool) -> bool {
+    use windows_sys::Win32::System::LibraryLoader::{GetProcAddress, LoadLibraryW};
+    type SetMode = unsafe extern "system" fn(i32) -> i32;
+    type Flush = unsafe extern "system" fn();
+    let name: Vec<u16> = "uxtheme.dll\0".encode_utf16().collect();
+    // SAFETY: plain Win32 calls; the procedures are only called when found, with
+    // the signatures they have had since Windows 10 1903.
+    unsafe {
+        let lib = LoadLibraryW(name.as_ptr());
+        if lib.is_null() {
+            return false;
+        }
+        let (Some(set), Some(flush)) = (
+            GetProcAddress(lib, 135usize as *const u8),
+            GetProcAddress(lib, 136usize as *const u8),
+        ) else {
+            return false;
+        };
+        let set: SetMode = std::mem::transmute(set);
+        let flush: Flush = std::mem::transmute(flush);
+        set(if dark { 2 } else { 3 });
+        flush();
+        true
+    }
+}

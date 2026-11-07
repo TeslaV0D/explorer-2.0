@@ -167,7 +167,7 @@ pub fn run(win: &MainWindow, index: i32) {
     });
 }
 
-fn execute(win: &MainWindow, pi: usize, id: &str) {
+pub(crate) fn execute(win: &MainWindow, pi: usize, id: &str) {
     let act = |a: KeyAction| nav::run_action(win, pi, a);
     match id {
         "open" => act(KeyAction::Open),

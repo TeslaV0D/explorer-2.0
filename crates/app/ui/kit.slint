@@ -137,6 +137,8 @@ export component MenuItem inherits Rectangle {
     in property <bool> enabled: true;
     in property <bool> danger;
     in property <bool> checked;
+    // keyboard selection (context menu: ↑/↓)
+    in property <bool> highlighted;
     callback clicked();
     accessible-role: button;
     accessible-label: root.text;
@@ -144,7 +146,7 @@ export component MenuItem inherits Rectangle {
     accessible-action-default => { if (root.enabled) { root.clicked(); } }
     height: Ui.control-h;
     border-radius: Ui.r-small;
-    background: root.enabled && ta.has-hover ? Theme.d.hover : transparent;
+    background: root.enabled && (ta.has-hover || root.highlighted) ? Theme.d.hover : transparent;
     property <color> fg: !root.enabled ? Theme.d.faint : root.danger ? Theme.d.danger : Theme.d.text;
     HorizontalLayout {
         padding-left: 8px;

@@ -29,6 +29,10 @@ export struct Row {
 export struct Crumb { label: string, path: string }
 
 // One fact in the inspector ("Größe" → "12,3 KB").
+// One entry of our context menu (R8): id = command (palette ids, "more" = the
+// shell's full menu), icon = Glyphs name, sep = a separator line instead.
+export struct CtxItem { id: string, label: string, shortcut: string, icon: string, enabled: bool, danger: bool, sep: bool }
+
 // group: heading of its section ("ALLGEMEIN", "DATUM", "ORT"); first: shows the heading
 export struct InfoRow { key: string, value: string, group: string, first: bool }
 
@@ -1201,6 +1205,18 @@ global Glyphs {
         if (name == "network") { return IconData.network; }
         if (name == "this-pc") { return IconData.this-pc; }
         if (name == "drive") { return IconData.drive; }
+        // context menu (R8)
+        if (name == "") { return ""; }
+        if (name == "cut") { return IconData.cut; }
+        if (name == "copy") { return IconData.copy; }
+        if (name == "paste") { return IconData.paste; }
+        if (name == "rename") { return IconData.rename; }
+        if (name == "delete") { return IconData.delete; }
+        if (name == "new-folder") { return IconData.new-folder; }
+        if (name == "refresh") { return IconData.refresh; }
+        if (name == "info") { return IconData.info; }
+        if (name == "open") { return IconData.external; }
+        if (name == "more") { return IconData.more; }
         return IconData.folder;
     }
 }
@@ -1434,6 +1450,16 @@ export component MainWindow inherits Window {
     in property <bool> confirm-open;
     // design system overview (EXPLORER2_UI_KIT=1, gallery)
     in-out property <bool> ui-kit-open;
+    // our context menu (R8): entries from Rust, position in window px
+    in property <bool> ctx-open;
+    in property <[CtxItem]> ctx-items;
+    in property <length> ctx-x;
+    in property <length> ctx-y;
+    in-out property <int> ctx-sel: -1;
+    callback ctx-run(string);
+    callback ctx-close();
+    // ↑/↓: next usable entry (skips separators and disabled ones)
+    callback ctx-step(int);
     in property <string> confirm-text;
     in property <string> confirm-ok;
     callback command(string);
@@ -2018,6 +2044,63 @@ export component MainWindow inherits Window {
             x: parent.width - self.width - 22px; y: 8px;
             text: "Schließen";
             clicked => { root.settings-open = false; }
+        }
+    }
+    // ---------- context menu (R8): ours, in the new look; "Weitere Optionen" = the shell's ----------
+    if root.ctx-open : Rectangle {
+        // a click anywhere else closes it (like every menu)
+        TouchArea {
+            pointer-event(e) => { if (e.kind == PointerEventKind.down) { root.ctx-close(); } }
+            scroll-event(e) => { root.ctx-close(); return accept; }
+        }
+        ctx-focus := FocusScope {
+            init => { self.focus(); }
+            key-pressed(e) => {
+                if (e.text == Key.Escape) { root.ctx-close(); return accept; }
+                if (e.text == Key.DownArrow) { root.ctx-step(1); return accept; }
+                if (e.text == Key.UpArrow) { root.ctx-step(-1); return accept; }
+                if (e.text == Key.Return && root.ctx-sel >= 0) { root.ctx-run(root.ctx-items[root.ctx-sel].id); return accept; }
+                accept
+            }
+        }
+        ctx-menu := Rectangle {
+            property <bool> shown;
+            init => { self.shown = true; }
+            width: 252px;
+            height: ctx-lay.preferred-height;
+            // stays inside the window
+            x: max(4px, min(root.ctx-x, parent.width - self.width - 4px));
+            y: (root.ctx-y + self.height + 4px > parent.height ? max(4px, root.ctx-y - self.height) : root.ctx-y) + (self.shown ? 0px : -4px);
+            animate y { duration: Ui.fast; easing: ease-out; }
+            opacity: self.shown ? 1 : 0;
+            animate opacity { duration: Ui.fast; easing: ease-out; }
+            background: Theme.d.overlay;
+            border-radius: Ui.r-large;
+            border-width: 1px;
+            border-color: Theme.d.border;
+            drop-shadow-blur: 16px;
+            drop-shadow-offset-y: 4px;
+            drop-shadow-color: Theme.d.shadow;
+            accessible-role: list;
+            accessible-label: "Kontextmenü";
+            TouchArea {}
+            ctx-lay := VerticalLayout {
+                padding: 4px;
+                for it[i] in root.ctx-items : Rectangle {
+                    height: it.sep ? 9px : Ui.control-h;
+                    if it.sep : MenuSeparator { width: parent.width; }
+                    if !it.sep : MenuItem {
+                        width: parent.width;
+                        icon: Glyphs.path(it.icon);
+                        text: it.label;
+                        shortcut: it.shortcut;
+                        enabled: it.enabled;
+                        danger: it.danger;
+                        highlighted: i == root.ctx-sel;
+                        clicked => { root.ctx-run(it.id); }
+                    }
+                }
+            }
         }
     }
     if root.ui-kit-open : UiKit {

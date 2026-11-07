@@ -104,6 +104,11 @@ fn apply(win: &MainWindow, why: &str) {
     g.set_dark(t.dark);
     g.set_c(colors(&t));
     g.set_d(design_colors(&t.ds));
+    // the shell's own menus ("Weitere Optionen") follow the scheme where Windows allows it
+    if cfg!(windows) {
+        let ok = explorer_shell::set_dark_menus(t.dark);
+        nav::trace_line(&format!("theme native menus dark={} ok={ok}", t.dark));
+    }
     let sys = ST.with_borrow(|s| s.system);
     nav::trace_line(&format!(
         "theme why={why} choice={} dark={} accent={} selection={} system_dark={} system_accent={}",

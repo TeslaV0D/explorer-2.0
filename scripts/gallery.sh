@@ -44,6 +44,7 @@ run_theme() {
   xdotool key alt+p; sleep 0.4
   xdotool mousemove $(ui_xy "README.md") click 1; xdotool key shift+Down shift+Down; sleep 0.3
   shot 03-mehrfachauswahl
+  xdotool mousemove $(ui_xy "Titelbild.png") click 3; sleep 0.6; shot 03b-kontextmenue; xdotool key Escape; sleep 0.3
   xdotool key ctrl+backslash; sleep 1.2; shot 04-zwei-ansichten
   xdotool key ctrl+backslash; sleep 0.8; focus
   xdotool key ctrl+shift+2; sleep 1.5; shot 05-kacheln

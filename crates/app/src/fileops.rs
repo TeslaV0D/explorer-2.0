@@ -6,7 +6,7 @@
 //! `slint::invoke_from_event_loop`.
 
 use crate::nav::{self, trace_line as trace};
-use crate::{JobRow, MainWindow};
+use crate::{CtxItem, JobRow, MainWindow};
 use explorer_core::places::VirtualPlace;
 use explorer_core::{format_local, format_size};
 use explorer_ops::clipboard::{self, ClipFiles};
@@ -519,16 +519,162 @@ pub fn context_menu(win: &MainWindow, pi: usize, row: i32, x: f32, y: f32) {
         "context menu pane={pi} row={row} items={}",
         items.len()
     ));
-    if !explorer_shell::SHELL_SUPPORTED {
-        return; // no shell menu on this platform (own fallback menu: later)
+    // R8: our own menu in the app's look; "Weitere Optionen" opens the shell's
+    // full menu (with third-party entries) at the same place
+    let entries = menu_entries(!items.is_empty(), items.len(), win.get_can_paste());
+    trace(&format!(
+        "context menu own: {}",
+        entries
+            .iter()
+            .filter(|e| !e.sep)
+            .map(|e| e.id.as_str())
+            .collect::<Vec<_>>()
+            .join(",")
+    ));
+    CTX.with_borrow_mut(|c| {
+        *c = Some(CtxMenu {
+            pi,
+            dir,
+            items,
+            x,
+            y,
+        })
+    });
+    win.set_ctx_items(Rc::new(VecModel::from(entries)).into());
+    win.set_ctx_x(x);
+    win.set_ctx_y(y);
+    win.set_ctx_sel(-1);
+    win.set_ctx_open(true);
+}
+
+/// Where the context menu was opened (for running its entries / the shell menu).
+struct CtxMenu {
+    pi: usize,
+    dir: PathBuf,
+    items: Vec<PathBuf>,
+    x: f32,
+    y: f32,
+}
+
+thread_local! {
+    static CTX: RefCell<Option<CtxMenu>> = const { RefCell::new(None) };
+}
+
+fn entry(id: &str, label: &str, shortcut: &str, icon: &str, enabled: bool) -> CtxItem {
+    CtxItem {
+        id: id.into(),
+        label: label.into(),
+        shortcut: shortcut.into(),
+        icon: icon.into(),
+        enabled,
+        danger: id == "delete",
+        sep: false,
     }
-    // The menu runs a modal message loop → start it after this Slint callback returned.
+}
+
+fn separator() -> CtxItem {
+    CtxItem {
+        sep: true,
+        ..entry("", "", "", "", false)
+    }
+}
+
+/// Entries of our context menu: on items (`on_items`, `n` selected) or on the
+/// folder background. Same commands as the toolbar/palette.
+fn menu_entries(on_items: bool, n: usize, can_paste: bool) -> Vec<CtxItem> {
+    let mut v = if on_items {
+        vec![
+            entry("open", "Öffnen", "Eingabe", "open", true),
+            separator(),
+            entry("cut", "Ausschneiden", "Strg+X", "cut", true),
+            entry("copy", "Kopieren", "Strg+C", "copy", true),
+            entry("paste", "Einfügen", "Strg+V", "paste", can_paste),
+            entry("rename", "Umbenennen", "F2", "rename", n == 1),
+            entry("delete", "Löschen", "Entf", "delete", true),
+            separator(),
+            entry("properties", "Eigenschaften", "Alt+Eingabe", "info", true),
+        ]
+    } else {
+        vec![
+            entry(
+                "new-folder",
+                "Neuer Ordner",
+                "Strg+Umschalt+N",
+                "new-folder",
+                true,
+            ),
+            entry("paste", "Einfügen", "Strg+V", "paste", can_paste),
+            entry("refresh", "Aktualisieren", "F5", "refresh", true),
+            separator(),
+            entry("folder-properties", "Eigenschaften", "", "info", true),
+        ]
+    };
+    if explorer_shell::SHELL_SUPPORTED {
+        v.push(separator());
+        v.push(entry("more", "Weitere Optionen", "", "more", true));
+    }
+    v
+}
+
+/// An entry of our context menu was chosen.
+pub fn ctx_run(win: &MainWindow, id: &str) {
+    win.set_ctx_open(false);
+    let Some(c) = CTX.with_borrow_mut(|c| c.take()) else {
+        return;
+    };
+    trace(&format!("context menu run {id}"));
+    let id = id.to_string();
     let weak = win.as_weak();
-    slint::Timer::single_shot(std::time::Duration::ZERO, move || {
-        if let Some(w) = weak.upgrade() {
-            show_menu_now(&w, pi, dir, items, x, y);
+    // after this callback: the menu is gone, focus/dialogs behave as from the keyboard;
+    // the shell menu runs a modal loop and must not start inside a Slint callback
+    slint::Timer::single_shot(Duration::ZERO, move || {
+        let Some(w) = weak.upgrade() else { return };
+        match id.as_str() {
+            "more" => show_menu_now(&w, c.pi, c.dir, c.items, c.x, c.y),
+            "folder-properties" => {
+                if let Err(e) = explorer_shell::show_properties(window_handle(&w), &[c.dir]) {
+                    w.set_error(e.into());
+                }
+            }
+            other => {
+                nav::focus_pane(c.pi);
+                crate::palette::execute(&w, c.pi, other);
+            }
         }
     });
+}
+
+/// ↑/↓ in the menu: the next entry that can be chosen (wraps around).
+pub fn ctx_step(win: &MainWindow, dir: i32) {
+    use slint::Model;
+    let items = win.get_ctx_items();
+    let n = items.row_count() as i32;
+    if n == 0 {
+        return;
+    }
+    // nothing chosen yet: ↓ starts at the top, ↑ at the bottom
+    let mut i = match win.get_ctx_sel() {
+        c if c < 0 && dir < 0 => n,
+        c => c,
+    };
+    for _ in 0..n {
+        i = (i + dir).rem_euclid(n);
+        if let Some(e) = items.row_data(i as usize) {
+            if !e.sep && e.enabled {
+                win.set_ctx_sel(i);
+                return;
+            }
+        }
+    }
+}
+
+/// The menu was closed without a choice (Esc, click elsewhere).
+pub fn ctx_close(win: &MainWindow) {
+    win.set_ctx_open(false);
+    if let Some(c) = CTX.with_borrow_mut(|c| c.take()) {
+        trace("context menu closed");
+        nav::focus_pane(c.pi);
+    }
 }
 
 fn show_menu_now(win: &MainWindow, pi: usize, dir: PathBuf, items: Vec<PathBuf>, x: f32, y: f32) {

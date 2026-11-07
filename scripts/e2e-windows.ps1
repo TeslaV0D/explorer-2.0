@@ -169,11 +169,14 @@ Check "[W8] Del moves to the recycle bin" { -not (Test-Path "$dst\a.txt") -and (
 Keys '^z'; Start-Sleep -Milliseconds 2000
 Check "[W9] Ctrl+Z restores it (with extension)" { Test-Path "$dst\a.txt" }
 
-# real shell context menu: open on the row, close with Esc
-Click $LISTX (RowY 0) 'right'; Start-Sleep -Milliseconds 1200; Shot "w10-menu"
+# R8: right-click = our menu; "Weitere Optionen" = the real shell context menu (dark), closed with Esc
+Click $LISTX (RowY 0) 'right'; Start-Sleep -Milliseconds 800; Shot "w10-own-menu"
+Check "[W10a] right-click shows our menu with 'Weitere Optionen'" { (Last 'context menu own') -match 'more' -and $null -ne (UiBox 'Weitere Optionen') }
+[void](UiClick 'Weitere Optionen'); Start-Sleep -Milliseconds 1500; Shot "w10-menu"
 Keys '{ESC}'; Start-Sleep -Milliseconds 600
 # the result is written after the shell's modal menu loop ended - poll (CI #113: later than 600 ms)
-Check "[W10] right-click shows the shell menu (closed with Esc)" { WaitFor 'context menu result Dismissed' 3000 }
+Check "[W10] 'Weitere Optionen' shows the shell menu (closed with Esc)" { WaitFor 'context menu result Dismissed' 3000 }
+Check "[W10b] native menus follow the dark scheme (uxtheme found)" { (Log) -match 'theme native menus dark=\w+ ok=true' }
 
 # properties dialog (shell window in our process)
 Keys '%{ENTER}'
@@ -704,7 +707,9 @@ foreach ($theme in @('light', 'dark')) {
       Keys '{ESC}'; Start-Sleep -Milliseconds 600
       Keys '^+p'; Start-Sleep -Milliseconds 500; Shot "gallery\$theme-03-befehlspalette"; Keys '{ESC}'
       if (UiClick 'Einstellungen') { Start-Sleep -Milliseconds 800; Shot "gallery\$theme-04-einstellungen" }
-      Click $LISTX (RowY 1) 'right'; Start-Sleep -Milliseconds 1200; Shot "gallery\$theme-05-kontextmenue"; Keys '{ESC}'
+      Click $LISTX (RowY 1) 'right'; Start-Sleep -Milliseconds 800; Shot "gallery\$theme-05-kontextmenue"
+      if (UiClick 'Weitere Optionen') { Start-Sleep -Milliseconds 1500; Shot "gallery\$theme-05b-weitere-optionen" }
+      Keys '{ESC}'
     }
   } finally {
     if (-not $p.HasExited) { Stop-Process -Id $p.Id -Force }

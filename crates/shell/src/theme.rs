@@ -44,6 +44,20 @@ pub fn watch_system_theme(changed: impl Fn() + Send + 'static) {
     let _ = changed;
 }
 
+/// Dark or light native popup menus (the shell's context menu under
+/// "Weitere Optionen"). Uses uxtheme's undocumented SetPreferredAppMode
+/// (ordinal 135) + FlushMenuThemes (136), like many apps do; if they are
+/// missing the menu simply stays light. Elsewhere a no-op.
+pub fn set_dark_menus(dark: bool) -> bool {
+    #[cfg(windows)]
+    return crate::win_theme::dark_menus(dark);
+    #[cfg(not(windows))]
+    {
+        let _ = dark;
+        false
+    }
+}
+
 /// Dark or light title bar (Windows 10 20H1+ / 11); elsewhere a no-op.
 pub fn set_dark_title_bar(hwnd: isize, dark: bool) -> Result<(), String> {
     #[cfg(windows)]

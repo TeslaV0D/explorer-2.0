@@ -129,17 +129,25 @@ for dy in 8 16; do xdotool mousemove $LIST_X $(( $(row_y 2) + dy )); sleep 0.05;
 xdotool mousemove $LIST_X 500; sleep 0.3; xdotool mouseup 1; sleep 1
 check "[49c] drop in the same folder does nothing" "[ -f '$SRC/b.txt' ] && ! grep -q 'drop pane=0 row=-1 n=1 action=2' $LOG"
 
-echo "-- context menu (Linux: no shell menu, the UI path is checked)"
+echo "-- context menu (R8: our own menu; the shell's full menu sits behind 'Weitere Optionen' on Windows)"
 # rows: 0 Ordner, 1 Projekt, 2 b.txt
 xdotool mousemove $LIST_X $(row_y 0) click 1; sleep 0.3
-xdotool mousemove $LIST_X $(row_y 2) click 3; sleep 0.6
-check "[53] right-click on an unselected row selects it and opens the menu" "last 'context menu pane' | grep -q 'row=2 items=1' && sel_is 'count=1 focus=b.txt'"
+xdotool mousemove $LIST_X $(row_y 2) click 3; sleep 0.6; shot o53_menu
+check "[53] right-click on an unselected row selects it and opens our menu" "last 'context menu pane' | grep -q 'row=2 items=1' && sel_is 'count=1 focus=b.txt' && ui_has 'Kontextmenü' && ui_has 'Eigenschaften' && last 'context menu own' | grep -q 'open,cut,copy,paste,rename,delete,properties'"
+xdotool key Escape; sleep 0.4
+check "[53a] Esc closes it" "grep -q 'context menu closed' $LOG && ! ui_has 'Kontextmenü'"
 xdotool mousemove $LIST_X 500 click 3; sleep 0.5
-check "[53b] right-click on empty space = folder background menu" "last 'context menu pane' | grep -q 'row=-1 items=0'"
+check "[53b] right-click on empty space = folder background menu" "last 'context menu pane' | grep -q 'row=-1 items=0' && last 'context menu own' | grep -q 'new-folder,paste,refresh,folder-properties'"
+N0=$(grep -c 'Refresh' $LOG)
+ui_click "Aktualisieren" last; sleep 0.8
+check "[53e] a click on an entry runs it (Aktualisieren)" "last 'context menu run' | grep -q 'refresh' && [ \$(grep -c 'Refresh' $LOG) -gt $N0 ] && ! ui_has 'Kontextmenü'"
 xdotool key shift+F10; sleep 0.5
 check "[53c] Shift+F10 opens the menu at the focused row" "last 'context menu pane' | grep -q 'row=2 items=1'"
+xdotool key Down Down Down; sleep 0.2; xdotool key Return; sleep 0.6
+check "[53f] keyboard: ↓ skips separators, Enter runs (Kopieren)" "last 'context menu run' | grep -q 'copy' && ! ui_has 'Kontextmenü'"
 xdotool key ctrl+a; sleep 0.3; xdotool mousemove $LIST_X $(row_y 1) click 3; sleep 0.5
-check "[53d] right-click inside a multi-selection keeps it" "last 'context menu pane' | grep -q 'row=1 items=3' && sel_is 'count=3 '"
+check "[53d] right-click inside a multi-selection keeps it (Umbenennen off for 3)" "last 'context menu pane' | grep -q 'row=1 items=3' && sel_is 'count=3 '"
+xdotool key Escape; sleep 0.3
 xdotool mousemove $LIST_X $(row_y 2) click 1; sleep 0.3
 
 echo "-- long job: operations panel, pause, cancel, undo"

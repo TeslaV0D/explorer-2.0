@@ -258,6 +258,9 @@ fn main() -> Result<(), slint::PlatformError> {
         first,
         count
     ));
+    on!(win, on_ctx_run, |w, id| fileops::ctx_run(&w, &id));
+    on!(win, on_ctx_close, |w| fileops::ctx_close(&w));
+    on!(win, on_ctx_step, |w, d| fileops::ctx_step(&w, d));
     on!(win, on_context_menu, |w, pi, row, x, y| {
         fileops::context_menu(&w, pi as usize, row, x, y)
     });
