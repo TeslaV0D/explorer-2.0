@@ -147,7 +147,7 @@ Legende: `[ ]` offen · `[~]` in Arbeit · `[x]` erledigt · Prio P0/P1/P2
 
 ## Redesign (Boss 2026-11-07) – Plan `docs/PLAN-REDESIGN.md`, nur Design/UX, keine Logik
 - [x] Entscheidungen 1–5 aus dem Plan (Boss 2026-11-07: „passt so“ = alle Empfehlungen)
-- [~] R0 Absicherung: UI-Dump `EXPLORER2_UI_DUMP` (Item-Baum über `i-slint-core`), Test-Hilfen `scripts/ui-lib.sh` + `UiBox`/`UiClick`/`ListTop` in `e2e-windows.ps1`, alle Panel-/Leisten-Klicks per Name, Zeilen relativ zum Spaltenkopf, sprechende Namen für Symbol-Knöpfe, Galerie `scripts/gallery.sh` (22 Screens Linux) + Windows-Galerie (10 Screens) als CI-Artefakte – **CI ausstehend**
+- [x] R0 Absicherung (CI-Run #101): UI-Dump `EXPLORER2_UI_DUMP` (Item-Baum über `i-slint-core`), Test-Hilfen `scripts/ui-lib.sh` + `UiBox`/`UiClick`/`ListTop` in `e2e-windows.ps1`, alle Panel-/Leisten-Klicks per Name, Zeilen relativ zum Spaltenkopf, sprechende Namen für Symbol-Knöpfe, Galerie `scripts/gallery.sh` (22 Screens Linux) + Windows-Galerie (10 Screens) als CI-Artefakte (`ui-gallery-linux` 22, `ui-gallery-windows` 10)
 - [ ] R1 Design-System (Farbrollen + Kontrast-Tests, `Ui`-Maße, Symbol-Set, Bausteine)
 - [ ] R2 Hauptlayout (globale Leiste auflösen, Statusleiste, Breakpoints)
 - [ ] R3 Seitenleiste · R4 Navigation · R5 Tabs

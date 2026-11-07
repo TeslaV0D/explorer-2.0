@@ -1,6 +1,6 @@
 # Zwischenstand
 
-**Stand:** 2026-11-07 · **Phase:** 1 · M0–M7 ✅ (M7.3 verschoben) · R-001 ✅ · **M8.1/M8.2 Installer ✅ (Run #69)** · **M8.3 Härtung ✅ (Run #70–#73)** · **Phase 2 Suche: S1.1 ✅ (Run #78), S1.2 ✅ (Run #80), S1.3 ✅ (Run #83), S1.4 ✅ (Run #90), S1.5 ✅ (Run #91/#93) → **S1 komplett**, Praxistest ✅ (Boss: „es funktioniert“) · **Redesign läuft: R0** (`docs/PLAN-REDESIGN.md`)** (Plan `docs/PLAN-SEARCH.md`) · **Branch:** `claude/relaxed-pasteur-ufhh1p`
+**Stand:** 2026-11-07 · **Phase:** 1 · M0–M7 ✅ (M7.3 verschoben) · R-001 ✅ · **M8.1/M8.2 Installer ✅ (Run #69)** · **M8.3 Härtung ✅ (Run #70–#73)** · **Phase 2 Suche: S1.1 ✅ (Run #78), S1.2 ✅ (Run #80), S1.3 ✅ (Run #83), S1.4 ✅ (Run #90), S1.5 ✅ (Run #91/#93) → **S1 komplett**, Praxistest ✅ (Boss: „es funktioniert“) · **Redesign läuft: R0 ✅ (Run #101), als Nächstes R1** (`docs/PLAN-REDESIGN.md`)** (Plan `docs/PLAN-SEARCH.md`) · **Branch:** `claude/relaxed-pasteur-ufhh1p`
 
 ## M5 – Shell-Integration (läuft, Freigabe Boss 2026-11-04)
 ### CI-Run #37 – alles grün ✅ (M5.0–M5.5)
@@ -40,7 +40,8 @@
 - **Bug (CI #32/#33, UI-Matrix)**: OLE-Drop-Target wurde nie registriert („Invalid window handle“) – der Timer lief, bevor Slint das native Fenster erzeugt hatte → Ablegen aus anderen Apps wäre tot gewesen. Fix: Registrierung wiederholt bis HWND existiert (50 ms, max. 5 s), sonst Rückfall auf In-App-DnD.
 - Neu: **Windows-E2E mit echter Tastatur/Maus** (`scripts/e2e-windows.ps1`, CI-Schritt im Release-Job, Screenshots bei Fehler).
 
-### Redesign R0 – Absicherung (CI ausstehend)
+### Redesign R0 – Absicherung ✅ (CI-Run #101)
+- Lokal: Linux-E2E komplett grün (nach Popup-Fix: Sortier-Menü liegt in einem eigenen Popup-Baum, der Dump geht ihn jetzt mit Versatz durch). CI #101: alles grün, Galerie-Artefakte `ui-gallery-linux` (22) und `ui-gallery-windows` (10, inkl. natives Kontextmenü) = „Vorher“-Stand.
 - Boss: alle 5 Empfehlungen angenommen (Dunkel als Standard, eigenes Kontextmenü + „Weitere Optionen“, globale Leiste auflösen, Systemschrift, ruhiges Blau).
 - **UI-Dump** (`app/src/uidump.rs`): Test-Modus `EXPLORER2_UI_DUMP=<datei>` schreibt alle benannten Elemente (`accessible-label`; Slint gibt jedem `Text` seinen Inhalt als Label → auch Dateizeilen, Spaltenköpfe, Seitenleiste) mit Fensterposition, bei Änderung und jede Sekunde. Spike: die öffentliche Slint-Test-API (`ElementHandle`) findet ohne einkompilierte Debug-Infos **nichts** (`element_count()` = 0) → direkter Gang durch den Item-Baum über `i-slint-core` (exakte Version wie Slint, keine Debug-Infos, kein Größenzuwachs).
 - **Tests klicken per Name**: `scripts/ui-lib.sh` (`ui_click "Einstellungen"`, `ui_click "Größe" last`, `ui_click_after "Adresszeile"`, `ui_box`, `ui_list_top`); alle Leisten-, Panel-, Menü-, Seitenleisten- und Jobs-Klicks umgestellt; Zeilen weiter per Index, aber relativ zum Spaltenkopf aus dem Dump. Windows: `UiBox`/`UiClick`/`ListTop`, `RowY` relativ.
