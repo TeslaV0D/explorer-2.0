@@ -8,20 +8,11 @@ pass() { echo "PASS  $1"; }
 fail() { echo "FAIL  $1"; FAIL=1; }
 check() { if eval "$2"; then pass "$1"; else fail "$1"; fi; }
 
-# ---- layout of the default 1200x720 window at (0,0), single pane (see main.slint) ----
-TOP_Y=20            # global bar (40 px): split button left, "Ausgeblendete" + "Einstellungen" right
-HIDDEN_X=981        # "Ausgeblendete" checkbox
-SETTINGS_X=1145     # "Einstellungen" button
-PANEL_HW_X=835; PANEL_HW_Y=89   # hardware-acceleration checkbox in the settings panel
-TABS_Y=57           # tab strip (34 px)
-NAV_Y=94            # pane toolbar (40 px): back, forward, up, address
-BACK_X=230; FWD_X=264; UP_X=298; CRUMB0_X=332
-HEADER_Y=127        # column header (26 px)
-NAME_X=500; TYPE_X=1045
-ROW0_Y=140          # first list row (24 px each)
+# ---- click targets: by name from the app's UI dump (scripts/ui-lib.sh, redesign R0);
+# rows by index below the column header; LIST_X lies inside the name column ----
+. "$(dirname "$0")/ui-lib.sh"
 LIST_X=500
-SIDEBAR_X=80; SIDEBAR_ITEM0_Y=84   # quick-access items (28 px each)
-row_y() { echo $((ROW0_Y + 24 * $1 + 12)); }
+row_y() { echo $(( $(ui_list_top) + 24 * $1 + 12 )); }
 
 mkdir -p $W; rm -rf $W/big $W/watch $W/config $W/m2 $W/home $W/*.png; mkdir -p $W/big $W/watch/sub/inner
 python3 - "$W/big" <<'PY'
@@ -70,9 +61,9 @@ check "[4] invalid path -> NotFound error" "grep -qE 'failed tab=1 gen=[0-9]+ No
 ADDR=$(grep '^\[trace\] address=' $LOG | tail -1)
 check "[4b] address bar restored to current folder" '[ "$ADDR" = "[trace] address=$W/watch" ]'
 BEFORE=$(grep -c "navigate" $LOG)
-xdotool mousemove $HIDDEN_X $TOP_Y click 1; sleep 1.5; shot s5_hidden
+ui_click "Ausgeblendete"; sleep 1.5; shot s5_hidden
 check "[5] hidden toggle reloads" "[ \$(grep -c navigate $LOG) -gt $BEFORE ] && grep -q 'total=2 shown=2' $LOG"
-xdotool mousemove $UP_X $NAV_Y click 1; sleep 1; shot s6_up
+ui_click "Nach oben"; sleep 1; shot s6_up
 check "[6] go up to e2e" "navigated_to '$W'"
 ADDR=$(grep '^\[trace\] address=' $LOG | tail -1)
 check "[6b] address bar follows navigation after typing" '[ "$ADDR" = "[trace] address=$W" ]'
@@ -81,12 +72,15 @@ N0=$(grep -c "watch: refresh$" $LOG); sleep 3; N1=$(grep -c "watch: refresh$" $L
 echo "refreshes in 3 s: $((N1-N0))"
 check "[7] <= 7 refreshes in 3 s (was ~30 before fix)" "[ $((N1-N0)) -le 7 ]"
 check "process alive" "kill -0 $PID"
+echo "== [7b] UI dump (redesign R0): named targets with positions"
+check "[7b] dump lists buttons, icon buttons (spoken names), list rows" "ui_has 'Einstellungen' && ui_has 'Zurück' && ui_has 'Nach oben' && ui_has 'Adresszeile' && ui_has 'watch'"
+check "[7c] positions are inside the window" "awk -F'\t' 'NR>1 && (\$2<0 || \$3<0 || \$2>1200 || \$3>720){bad=1} END{exit bad}' $UI_DUMP"
 echo "== [8] settings panel: disable hardware acceleration"
-xdotool mousemove $SETTINGS_X $TOP_Y click 1; sleep 0.8; shot s8_panel
-xdotool mousemove $PANEL_HW_X $PANEL_HW_Y click 1; sleep 0.8; shot s8_toggled
+ui_click "Einstellungen"; sleep 0.8; shot s8_panel
+ui_click "Hardwarebeschleunigung verwenden, wenn verfügbar"; sleep 0.8; shot s8_toggled
 check "[8] setting saved to settings.ini" "grep -qx 'hardware_acceleration = false' $CFG"
 check "[9] show_hidden persisted" "grep -qx 'show_hidden = true' $CFG"
-xdotool mousemove $SETTINGS_X $TOP_Y click 1; sleep 0.3   # close panel again
+ui_click "Einstellungen"; sleep 0.3   # close panel again
 kill $PID; wait $PID 2>/dev/null
 check "no panic in log" "! grep -qi panic $LOG"
 
@@ -116,12 +110,12 @@ printf '#!/bin/sh\nprintf "%%s\\n" "$1" >> "%s"\n' "$OPENLOG" > "$OPENER"; chmod
 EXPLORER2_OPEN_CMD=$OPENER $EXE "$M" > $LOG 2>&1 & PID=$!
 sleep 2.5; focus
 check "[12] name sort: folders first, natural order" "last '\[trace\] order' | grep -qF '[\"Bilder\", \"Musik\", \"a.png\", \"b.txt\", \"foto2.png\", \"foto10.png\", \"Makefile\"]'"
-xdotool mousemove $TYPE_X $HEADER_Y click 1; sleep 1.2
+ui_click "Typ"; sleep 1.2
 check "[13] header 'Typ' sorts by type (no ext first, then natural)" "grep -q 'sort key=type desc=false' $LOG && last '\[trace\] order' | grep -qF '[\"Bilder\", \"Musik\", \"Makefile\", \"a.png\", \"foto2.png\", \"foto10.png\", \"b.txt\"]'"
-xdotool mousemove $TYPE_X $HEADER_Y click 1; sleep 1.2
+ui_click "Typ"; sleep 1.2
 check "[14] second click reverses direction" "grep -q 'sort key=type desc=true' $LOG && last '\[trace\] order' | grep -qF '[\"Musik\", \"Bilder\", \"b.txt\"'"
 check "[15] sort persisted in settings.ini" "grep -qx 'sort_key = type' $CFG && grep -qx 'sort_desc = true' $CFG"
-xdotool mousemove $NAME_X $HEADER_Y click 1; sleep 1.2
+ui_click "Name"; sleep 1.2
 xdotool mousemove $LIST_X $(row_y 0) click 1; sleep 0.4
 xdotool key Down Down; sleep 0.5
 check "[16] arrow keys move selection" "last 'selection pane' | grep -q 'count=1 focus=a.png'"
@@ -144,7 +138,7 @@ xdotool key ctrl+l; sleep 0.3; xdotool type --delay 5 "/nonsense"; xdotool key E
 check "[24] Esc in the address bar restores the real path" "last 'address(cancel)=' | grep -qxF '[trace] address(cancel)=$M'"
 xdotool mousemove $LIST_X $(row_y 1) click --repeat 2 --delay 80 1; sleep 1.2
 check "[25] double-click opens a folder" "navigated_to '$M/Musik'"
-xdotool mousemove $CRUMB0_X $NAV_Y click 1; sleep 1.2
+ui_click_after "Adresszeile";   # first breadcrumb sleep 1.2
 NAVP=$(grep -oE 'navigate tab=[0-9]+ gen=[0-9]+ User .* at=' $LOG | tail -1 | sed -E 's/navigate tab=[0-9]+ gen=[0-9]+ User (.*) at=/\1/')
 # "$NAVP" must be a proper ancestor; the root "/" counts too (short CI paths show no "…")
 OK=0; [ -n "$NAVP" ] && [ "$NAVP" != "$M/Musik" ] && case "$M/Musik/" in "${NAVP%/}/"*) OK=1;; esac
@@ -158,7 +152,7 @@ rm -f "$SESSION"
 $EXE "$M" > $LOG 2>&1 & PID=$!
 sleep 2.5; focus
 check "[27] sidebar lists quick-access folders from HOME" "grep -q 'drives loaded n=' $LOG"
-xdotool mousemove $SIDEBAR_X $((SIDEBAR_ITEM0_Y + 28)) click 1; sleep 1.2   # 2nd item = Downloads
+ui_click "Downloads"; sleep 1.2   # sidebar item
 check "[27b] sidebar click navigates (Downloads)" "navigated_to '$W/home/Downloads'"
 xdotool mousemove $LIST_X $(row_y 0) click --repeat 2 --delay 80 1; sleep 1.2
 check "[28] into dl-sub" "navigated_to '$W/home/Downloads/dl-sub'"
@@ -170,7 +164,7 @@ xdotool key alt+Right; sleep 1.2
 check "[28d] Alt+Right goes forward" "last 'history' | grep -qF 'history forward -> $W/home/Downloads'"
 xdotool mousemove $LIST_X 500 click 8; sleep 1.2   # X11 button 8 = mouse "back" side button
 check "[28e] mouse back button" "[ \$(grep -c 'history back' $LOG) -ge 3 ] && last 'history' | grep -qF 'history back -> $M'"
-xdotool mousemove $BACK_X $NAV_Y; sleep 0.2
+xdotool mousemove $(ui_xy "Zurück"); sleep 0.2
 xdotool key ctrl+t; sleep 1.2
 check "[29] Ctrl+T opens a new tab on the same folder" "grep -q 'tab new pane=0' $LOG && last 'layout\|session saved' | grep -q 'session saved'"
 xdotool key ctrl+l; sleep 0.3; xdotool key ctrl+a; xdotool type --delay 5 "$W/home/Documents"; xdotool key Return; sleep 1.2
@@ -197,7 +191,7 @@ sleep 2.5; focus
 check "[32] restored layout: 2 panes, tabs [2, 1], split, right pane active" "grep -qF 'layout panes=2 tabs=[2, 1] split=true active_pane=1' $LOG"
 NAVS=$(grep -c 'navigate tab=' $LOG)
 check "[32b] only the visible tab of each pane is loaded at start (lazy)" "[ $NAVS = 2 ]"
-xdotool mousemove 400 $TABS_Y; sleep 0.2
+xdotool mousemove $(ui_xy "Neuer Tab" | awk '{print 400, $2}'); sleep 0.2   # over the tab strip
 xdotool key F6; sleep 0.3; xdotool key ctrl+Tab; sleep 1.2
 check "[32c] selecting the restored inactive tab loads it" "[ \$(grep -c 'navigate tab=' $LOG) -gt $NAVS ]"
 xdotool key ctrl+backslash; sleep 1

@@ -7,11 +7,10 @@ pass() { echo "PASS  $1"; }
 fail() { echo "FAIL  $1"; FAIL=1; }
 check() { if eval "$2"; then pass "$1"; else fail "$1"; fi; }
 
-# ---- layout (default 1200x720 window, see main.slint / e2e.sh) ----
-TOP_Y=20; NEWFOLDER_X=185; PASTE_X=471; UNDO_X=718; SIDEBAR_X=80
-NAV_Y=94; LIST_X=500; ROW0_Y=140
-row_y() { echo $((ROW0_Y + 24 * $1 + 12)); }
-JOB_Y=672; JOB_PAUSE_X=1060; JOB_CANCEL_X=1150   # operations panel row above the status bar
+# ---- click targets by name (scripts/ui-lib.sh, redesign R0); rows by index ----
+. "$(dirname "$0")/ui-lib.sh"
+LIST_X=500
+row_y() { echo $(( $(ui_list_top) + 24 * $1 + 12 )); }
 
 export EXPLORER2_TRACE=1 SLINT_BACKEND=winit-software EXPLORER2_CONFIG_DIR=$W/config-ops HOME=$W/home-ops
 mkdir -p "$HOME"
@@ -105,7 +104,7 @@ check "[47] Del moves to the trash" "[ ! -e '$DST/b.txt' ] && grep -lx alt $TRAS
 xdotool key ctrl+z; sleep 1.5
 check "[47b] Ctrl+Z restores it from the trash" "[ \"\$(cat '$DST/b.txt')\" = alt ]"
 
-xdotool mousemove $NEWFOLDER_X $TOP_Y click 1; sleep 1.2
+ui_click "Neuer Ordner"; sleep 1.2
 check "[48] toolbar 'Neuer Ordner' works too" "[ -d '$DST/Neuer Ordner' ] && last 'rename start' | grep -q 'name=Neuer Ordner'"
 xdotool key Return; sleep 0.8
 check "[48b] Enter keeps the default name" "[ -d '$DST/Neuer Ordner' ] && grep -q 'rename unchanged' $LOG"
@@ -156,10 +155,10 @@ xdotool key ctrl+c; sleep 0.3
 xdotool mousemove $LIST_X $(row_y 0) click --repeat 2 --delay 80 1; sleep 1.2   # into dst
 xdotool key ctrl+v; sleep 1.0; shot o50_panel
 check "[50] operations panel appears for a long job" "grep -q 'job panel shown' $LOG"
-xdotool mousemove $JOB_PAUSE_X $JOB_Y click 1; sleep 0.6
+ui_click "Pause"; sleep 0.6
 N1=$(ls "$DST/many" 2>/dev/null | wc -l); sleep 1; N2=$(ls "$DST/many" 2>/dev/null | wc -l)
 check "[50b] pause stops progress ($N1 -> $N2)" "last 'job pause' | grep -q 'true' && [ $N1 = $N2 ]"
-xdotool mousemove $JOB_CANCEL_X $JOB_Y click 1; sleep 1.5
+ui_click "Abbrechen"; sleep 1.5
 check "[50c] cancel ends the job" "last 'job done' | grep -q 'cancelled=true'"
 check "[50d] no partial files left" "[ -z \"\$(find '$DST' -name '*.e2part' | head -1)\" ]"
 check "[50e] source complete" "[ \$(ls '$R/many' | wc -l) = 60000 ]"
@@ -175,21 +174,21 @@ check "[55] address alias 'Papierkorb' opens the recycle bin view" "last 'naviga
 check "[55b] trashed file listed with its original folder" "last 'kinds' | grep -qF '$T'"
 xdotool type --delay 40 "x.txt"; sleep 0.5
 check "[55c] type-ahead works in the trash" "sel_is 'focus=x.txt'"
-xdotool mousemove 195 $TOP_Y click 1; sleep 1.5   # "Wiederherstellen"
+ui_click "Wiederherstellen"; sleep 1.5
 check "[56] restore puts the file back" "[ \"\$(cat '$T/x.txt')\" = x ] && last 'trash Restore done' | grep -q 'ok=true'"
 check "[56b] trash view refreshed (x.txt gone)" "! last 'kinds' | grep -q 'nothing' && ! ls $TRASH | grep -qx x.txt"
 xdotool key ctrl+v; sleep 0.5
 check "[56c] paste is refused in the trash" "last 'not available' | grep -q 'command paste not available in Papierkorb'"
 goto "$T"
 xdotool mousemove $LIST_X $(row_y 1) click 1; sleep 0.3; xdotool key Delete; sleep 1.2   # y.txt
-xdotool mousemove $SIDEBAR_X 112 click 1; sleep 1.2   # sidebar "Papierkorb" (2nd quick-access item)
+ui_click "Papierkorb"; sleep 1.2   # sidebar
 check "[57] sidebar 'Papierkorb' opens it" "[ \$(grep -c 'User ::papierkorb' $LOG) -ge 2 ]"
 xdotool type --delay 40 "y.txt"; sleep 0.4; xdotool key Delete; sleep 0.6
 xdotool key Return; sleep 1.5
 check "[57b] Del in the trash = delete for good (after confirmation)" "last 'trash Purge done' | grep -q 'ok=true' && ! ls $TRASH | grep -qx y.txt && [ ! -e '$T/y.txt' ]"
-xdotool mousemove 455 $TOP_Y click 1; sleep 0.6; xdotool key Return; sleep 2   # "Papierkorb leeren"
+ui_click "Papierkorb leeren"; sleep 0.6; xdotool key Return; sleep 2
 check "[57c] empty the trash" "[ -z \"\$(ls -A $TRASH 2>/dev/null)\" ]"
-xdotool mousemove $SIDEBAR_X 150 click 1; sleep 1.5   # "Dieser PC" heading
+ui_click "Dieser PC"; sleep 1.5   # sidebar heading
 check "[58] 'Dieser PC' lists the drives" "last 'navigate tab' | grep -q ' ::dieser-pc ' && last 'done tab' | grep -qE 'total=[1-9]'"
 xdotool key Home Return; sleep 1.2
 check "[58b] opening a drive navigates to its root" "last 'navigate tab' | grep -qE 'User / at='"
@@ -240,20 +239,19 @@ echo "-- M6.1a: folder options (settings panel)"
 F=$R/opt; mkdir -p "$F/Ordner/Tief"; echo x > "$F/x.txt"
 goto "$F"
 # rows: 0 Ordner, 1 x.txt
-SETTINGS_BTN="1144 20"; OPT_EXT="835 205"; OPT_CLICK="835 257"; SETTINGS_CLOSE="1130 63"; VIEW_ALL="926 312"
-xdotool mousemove $SETTINGS_BTN click 1; sleep 0.6
-xdotool mousemove $OPT_EXT click 1; sleep 1.2
+ui_click "Einstellungen"; sleep 0.6
+ui_click "Dateinamenerweiterungen anzeigen"; sleep 1.2
 check "[63] 'Dateinamenerweiterungen anzeigen' off hides known extensions" "last 'option show_extensions' | grep -q '=false' && last 'shown' | grep -qF '\"x\"' && ! last 'shown' | grep -qF 'x.txt'"
-xdotool mousemove $SETTINGS_CLOSE click 1; sleep 0.4
+ui_click "Schließen" last; sleep 0.4
 xdotool mousemove $LIST_X $(row_y 1) click 1; sleep 0.3; xdotool key F2; sleep 0.4
 check "[63b] F2 edits the name without the hidden extension" "last 'rename start' | grep -q 'edit=x hidden_ext=txt'"
 xdotool key ctrl+a; xdotool type --delay 30 "y"; xdotool key Return; sleep 1
 check "[63c] … and keeps it: x.txt -> y.txt" "[ -f '$F/y.txt' ] && [ ! -e '$F/y' ] && [ ! -e '$F/x.txt' ]"
-xdotool mousemove $SETTINGS_BTN click 1; sleep 0.6
-xdotool mousemove $OPT_EXT click 1; sleep 1.2
+ui_click "Einstellungen"; sleep 0.6
+ui_click "Dateinamenerweiterungen anzeigen"; sleep 1.2
 check "[63d] extensions shown again" "last 'option show_extensions' | grep -q '=true' && last 'shown' | grep -qF 'y.txt'"
-xdotool mousemove $OPT_CLICK click 1; sleep 0.4
-xdotool mousemove $SETTINGS_CLOSE click 1; sleep 0.4
+ui_click "Öffnen durch einfachen Klick (Markieren durch Zeigen)"; sleep 0.4
+ui_click "Schließen" last; sleep 0.4
 check "[64] single-click option saved" "grep -q 'single_click = true' $W/config-ops/settings.ini"
 xdotool mousemove $LIST_X $(row_y 0) click 1; sleep 1.2
 check "[64b] one click opens a folder" "last 'single-click open' | grep -q 'row=0' && last 'navigate tab' | grep -qF '$F/Ordner '"
@@ -263,21 +261,20 @@ check "[64c] a double click opens only one level (Ordner, not Ordner/Tief)" "las
 xdotool key BackSpace; sleep 1.2
 xdotool mousemove $LIST_X $(row_y 1) sleep 1.2
 check "[64d] hovering selects (Markieren durch Zeigen)" "sel_is 'focus=y.txt'"
-xdotool mousemove $SETTINGS_BTN click 1; sleep 0.6
-xdotool mousemove $OPT_CLICK click 1; sleep 0.4
-xdotool mousemove $SETTINGS_CLOSE click 1; sleep 0.4
+ui_click "Einstellungen"; sleep 0.6
+ui_click "Öffnen durch einfachen Klick (Markieren durch Zeigen)"; sleep 0.4
+ui_click "Schließen" last; sleep 0.4
 check "[64e] single-click off again" "grep -q 'single_click = false' $W/config-ops/settings.ini"
 echo "-- M6.1b: sort menu + rubber band"
 # still in $F: rows 0 Ordner, 1 y.txt
-SORT_BTN="1018 708"; SORT_NAME="1040 557"; SORT_SIZE="1040 629"; SORT_ASC="1040 654"; SORT_DESC="1040 678"
 xdotool key ctrl+shift+2; sleep 1
 check "[65] icon view hides the column header (list starts higher)" "last 'geometry pane=0' | grep -q ' y=114 '"
-xdotool mousemove $SORT_BTN click 1; sleep 0.5; xdotool mousemove $SORT_SIZE click 1; sleep 0.8
+ui_click "Sortieren"; sleep 0.5; ui_click "Größe" last; sleep 0.8
 check "[65b] sort menu: by size" "last 'sort key' | grep -q 'key=size desc=false'"
-xdotool mousemove $SORT_BTN click 1; sleep 0.5; xdotool mousemove $SORT_DESC click 1; sleep 0.8
+ui_click "Sortieren"; sleep 0.5; ui_click "Absteigend"; sleep 0.8
 check "[65c] sort menu: descending keeps the column" "last 'sort key' | grep -q 'key=size desc=true'"
-xdotool mousemove $SORT_BTN click 1; sleep 0.5; xdotool mousemove $SORT_NAME click 1; sleep 0.5
-xdotool mousemove $SORT_BTN click 1; sleep 0.5; xdotool mousemove $SORT_ASC click 1; sleep 0.8
+ui_click "Sortieren"; sleep 0.5; ui_click "Name" last; sleep 0.5
+ui_click "Sortieren"; sleep 0.5; ui_click "Aufsteigend"; sleep 0.8
 check "[65d] back to name ascending" "last 'sort key' | grep -q 'key=name desc=false'"
 xdotool mousemove 1150 420 mousedown 1; sleep 0.2
 for s in 1 2 3 4 5 6; do xdotool mousemove $((1150 - s * 140)) $((420 - s * 45)); sleep 0.08; done
@@ -304,9 +301,9 @@ goto "$VB"
 check "[67b] another folder keeps the default (details)" "last 'view follows folder' | grep -q 'mode=details' && last 'geometry pane=0' | grep -q 'cols=1 '"
 xdotool key alt+Left; sleep 1.2
 check "[67c] back in the first folder: large icons again" "last 'view follows folder' | grep -q 'mode=large'"
-xdotool mousemove $SETTINGS_BTN click 1; sleep 0.6
-xdotool mousemove $VIEW_ALL click 1; sleep 0.6
-xdotool mousemove $SETTINGS_CLOSE click 1; sleep 0.4
+ui_click "Einstellungen"; sleep 0.6
+ui_click "Aktuelle Ansicht für alle Ordner"; sleep 0.6
+ui_click "Schließen" last; sleep 0.4
 check "[67d] 'Aktuelle Ansicht für alle Ordner' makes it the default" "last 'view applied to all' | grep -q 'mode=large' && grep -q 'view = large' $W/config-ops/settings.ini && [ ! -s $W/config-ops/views.ini ]"
 goto "$VB"
 check "[67e] … so the other folder now opens with large icons" "! last 'geometry pane=0' | grep -q 'cols=1 '"
@@ -370,14 +367,15 @@ theme_run() { # <log> [env...]
 theme_run $W/trace-70.log
 check "[70] first start follows the system (light here) with the original colours" "last 'theme why=init' | grep -q 'choice=system dark=false accent=#0067c0 selection=#cce8ff'"
 xdotool mousemove 900 680; sleep 0.3; shot t70-light
-P=$(px t70-light $LIST_X $(row_y 5)); B=$(px t70-light $NEWFOLDER_X 9)
+# button: inside "Neuer Ordner" near its corner; sidebar: empty space low in it
+BTN=$(ui_box "Neuer Ordner" | awk '{print $1+4, $2+4}'); SIDE=$(ui_box "Schnellzugriff" | awk '{print $1+20, 600}')
+P=$(px t70-light $LIST_X $(row_y 5)); B=$(px t70-light $BTN)
 check "[70b] light: list background #fafafa ($P), button light ($B)" "[ '$P' = 'srgb(250,250,250)' ] && [ \$(red '$B') -gt 200 ]"
-T_DARK="1002 383"; T_ACCENT="835 414"   # settings panel: "Dunkel", "Windows-Akzentfarbe verwenden"
-xdotool mousemove $SETTINGS_BTN click 1; sleep 0.6; xdotool mousemove $T_DARK click 1; sleep 0.8
+ui_click "Einstellungen"; sleep 0.6; ui_click "Dunkel"; sleep 0.8
 check "[70c] 'Dunkel' in the settings switches live and is saved" "last 'theme why=choice' | grep -q 'choice=dark dark=true' && grep -qx 'theme = dark' $TCFG/settings.ini"
-xdotool mousemove $SETTINGS_CLOSE click 1; sleep 0.4
+ui_click "Schließen" last; sleep 0.4
 xdotool mousemove $LIST_X $(row_y 0) click 1; sleep 0.4; xdotool mousemove 900 680; sleep 0.3; shot t70-dark
-P=$(px t70-dark $LIST_X $(row_y 5)); S=$(px t70-dark $((LIST_X + 200)) $(row_y 0)); B=$(px t70-dark $NEWFOLDER_X 9); C=$(px t70-dark $SIDEBAR_X 600)
+P=$(px t70-dark $LIST_X $(row_y 5)); S=$(px t70-dark $((LIST_X + 200)) $(row_y 0)); B=$(px t70-dark $BTN); C=$(px t70-dark $SIDE)
 check "[70d] dark: list #191919 ($P), selection #1c3f63 ($S), sidebar #202020 ($C)" "[ '$P' = 'srgb(25,25,25)' ] && [ '$S' = 'srgb(28,63,99)' ] && [ '$C' = 'srgb(32,32,32)' ]"
 check "[70e] the std widgets follow (dark button: $B)" "[ \$(red '$B') -lt 90 ]"
 kill $PID; wait $PID 2>/dev/null
@@ -390,9 +388,9 @@ check "[70g] 'Wie Windows' follows a dark system with its accent" "last 'theme w
 xdotool mousemove $LIST_X $(row_y 1) click 1; sleep 0.4; xdotool mousemove 900 680; sleep 0.3; shot t70-green
 S=$(px t70-green $((LIST_X + 200)) $(row_y 1))
 check "[70h] the selection takes the accent's hue (green: $S)" "green_wins '$S'"
-xdotool mousemove $SETTINGS_BTN click 1; sleep 0.6; xdotool mousemove $T_ACCENT click 1; sleep 0.8
+ui_click "Einstellungen"; sleep 0.6; ui_click "Windows-Akzentfarbe verwenden"; sleep 0.8
 check "[70h2] unticking 'Windows-Akzentfarbe' goes back to the blue" "last 'theme why=accent' | grep -q 'dark=true accent=#4cc2ff selection=#1c3f63' && grep -qx 'system_accent = false' $TCFG/settings.ini"
-xdotool mousemove $T_ACCENT click 1; sleep 0.6; xdotool mousemove $SETTINGS_CLOSE click 1; sleep 0.4
+ui_click "Windows-Akzentfarbe verwenden"; sleep 0.6; ui_click "Schließen" last; sleep 0.4
 xdotool key ctrl+shift+p; sleep 0.4; xdotool type --delay 40 "hell"; sleep 0.5; xdotool key Return; sleep 1
 check "[70i] 'Hell' overrides the dark system" "last 'theme why=choice' | grep -q 'choice=light dark=false'"
 xdotool key ctrl+shift+p; sleep 0.4; xdotool type --delay 40 "wie windows"; sleep 0.5; xdotool key Return; sleep 1
@@ -402,34 +400,33 @@ kill $PID; wait $PID 2>/dev/null
 
 echo "== [71] R-001: Windows integration status + one-button reset (settings, palette)"
 ICFG=$W/config-integration; mkdir -p "$ICFG"
-T_RESET="956 502"   # settings panel: "Alle Windows-Integrationen zurücksetzen" ("Suche" lies below it)
 LOG=$W/trace-71.log
 EXPLORER2_CONFIG_DIR=$ICFG $EXE "$TW" > $LOG 2>&1 & PID=$!
 sleep 2.5; focus
-xdotool mousemove $SETTINGS_BTN click 1; sleep 0.8
+ui_click "Einstellungen"; sleep 0.8
 check "[71] opening the settings reads the integration status" "last 'integration status' | grep -q 'entries=0 active_points=0 journal=None'"
-xdotool mousemove $SETTINGS_CLOSE click 1; sleep 0.4
+ui_click "Schließen" last; sleep 0.4
 xdotool key ctrl+shift+p; sleep 0.4; xdotool type --delay 40 "integrationen zur"; sleep 0.5; xdotool key Return; sleep 0.8
 check "[71b] palette: nothing active -> no dialog, settings show the state" "last 'palette run' | grep -q 'integration-reset' && grep -q 'integration reset: nothing active' $LOG && ! grep -q 'confirm integration reset' $LOG"
-xdotool mousemove $SETTINGS_CLOSE click 1; sleep 0.4
+ui_click "Schließen" last; sleep 0.4
 # a damaged journal (e.g. after a crash): the reset must still work
 printf 'v1\nvalue\tHKCU\tzz\n' > "$ICFG/integration-journal.txt"
-xdotool mousemove $SETTINGS_BTN click 1; sleep 0.8
+ui_click "Einstellungen"; sleep 0.8
 check "[71c] damaged journal is reported" "last 'integration status' | grep -q 'journal=Damaged'"
-xdotool mousemove $T_RESET click 1; sleep 0.8
+ui_click "Alle Windows-Integrationen zurücksetzen"; sleep 0.8
 check "[71d] the button asks first" "grep -q 'confirm integration reset' $LOG"
 xdotool key Return; sleep 1
 check "[71e] confirmed: reset ran, damaged journal removed" "last 'integration reset restored' | grep -q 'errors=0 journal=Damaged' && [ ! -e '$ICFG/integration-journal.txt' ]"
 check "[71f] status afterwards: nothing active" "last 'integration status' | grep -q 'entries=0 active_points=0 journal=None'"
 # CI #86/#88: red only on the runner – show what happened after the click
 grep -q 'integration reset restored' $LOG || { echo "----- trace-71 (tail)"; tail -30 $LOG; command -v import >/dev/null && import -window root "$W/71e-fail.png"; }
-xdotool mousemove $SETTINGS_CLOSE click 1; sleep 0.4
+ui_click "Schließen" last; sleep 0.4
 # the same from the palette: the dialog must get the keyboard (Enter went nowhere, CI #60)
 printf 'v1\nvalue\tHKCU\tzz\n' > "$ICFG/integration-journal.txt"
 xdotool key ctrl+shift+p; sleep 0.4; xdotool type --delay 40 "integrationen zur"; sleep 0.5; xdotool key Return; sleep 0.8
 xdotool key Return; sleep 1
 check "[71f2] palette -> question -> Enter resets" "[ \$(grep -c 'integration reset restored' $LOG) -eq 2 ] && [ ! -e '$ICFG/integration-journal.txt' ]"
-xdotool mousemove $SETTINGS_CLOSE click 1; sleep 0.4
+ui_click "Schließen" last; sleep 0.4
 check "[71g] process alive, no panic" "kill -0 $PID && ! grep -qi panic $LOG"
 kill $PID; wait $PID 2>/dev/null
 

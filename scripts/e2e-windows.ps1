@@ -60,12 +60,32 @@ function WaitFor($pattern, [int]$ms = 5000) {
 function Keys($k) { [System.Windows.Forms.SendKeys]::SendWait($k); Start-Sleep -Milliseconds 400 }
 
 # ---- layout (main.slint, logical px from the client origin) ----
-$ROW0 = 140; $ROWH = 24; $LISTX = 330
+$ROWH = 24; $LISTX = 330
+# click targets by name (redesign R0): the app writes every named element
+# (accessible-label / Text) with its client-area position to this file
+$env:EXPLORER2_UI_DUMP = Join-Path $Work 'ui-dump.txt'
+function UiBox([string]$label, $which = 1) {
+  $lines = @(Get-Content $env:EXPLORER2_UI_DUMP -Encoding UTF8 -ErrorAction SilentlyContinue | Select-Object -Skip 1 |
+    Where-Object { ($_ -split "`t")[0] -ceq $label })
+  if ($lines.Count -eq 0) { return $null }
+  $k = if ($which -eq 'last') { $lines.Count - 1 } else { [int]$which - 1 }
+  if ($k -ge $lines.Count) { return $null }
+  $f = $lines[$k] -split "`t"
+  return @{ X = [int]$f[1]; Y = [int]$f[2]; W = [int]$f[3]; H = [int]$f[4] }
+}
+function UiClick([string]$label, $which = 1, [string]$button = 'left') {
+  $b = $null
+  for ($i = 0; $i -lt 30 -and $null -eq $b; $i++) { $b = UiBox $label $which; if ($null -eq $b) { Start-Sleep -Milliseconds 100 } }
+  if ($null -eq $b) { Write-Host "UI   target not found: '$label'"; return $false }
+  Click ($b.X + [int]($b.W / 2)) ($b.Y + [int]($b.H / 2)) $button; return $true
+}
+# first row = below the "Name" column header (falls back to the old layout)
+function ListTop { $b = UiBox 'Name'; if ($null -eq $b) { 140 } else { $b.Y + $b.H } }
 function Pt([int]$x, [int]$y) {
   $p = New-Object W+POINT; $p.X = [int]($x * $script:scale); $p.Y = [int]($y * $script:scale)
   [void][W]::ClientToScreen($script:hwnd, [ref]$p); return $p
 }
-function RowY([int]$i) { $ROW0 + $ROWH * $i + 12 }
+function RowY([int]$i) { (ListTop) + $ROWH * $i + 12 }
 function Click([int]$x, [int]$y, [string]$button = 'left') {
   $p = Pt $x $y; [void][W]::SetCursorPos($p.X, $p.Y); Start-Sleep -Milliseconds 80
   if ($button -eq 'left') { [W]::mouse_event(0x02, 0, 0, 0, [UIntPtr]::Zero); [W]::mouse_event(0x04, 0, 0, 0, [UIntPtr]::Zero) }
@@ -653,6 +673,34 @@ try {
   $env:EXPLORER2_INDEX = 'off'
 }
 if ($script:fail -ne $failSearch) { Write-Host "----- trace (search)"; Write-Host (Log) }
+
+# ---- UI gallery (redesign R0): the real Windows look (Segoe UI, shell icons), light + dark
+$gal = New-Item -ItemType Directory -Force "$Work\gallery"
+foreach ($theme in @('light', 'dark')) {
+  $cfgG = "$Work\cfg-gallery-$theme"; New-Item -ItemType Directory -Force $cfgG | Out-Null
+  Set-Content "$cfgG\settings.ini" "theme = $theme`nsystem_accent = false"
+  $env:EXPLORER2_CONFIG_DIR = $cfgG
+  $script:log = "$Work\win-gallery-$theme.log"
+  $p = Start-Process -FilePath $Exe -ArgumentList "`"$sr`"" -PassThru -RedirectStandardError $script:log
+  try {
+    if (WaitFor 'done tab=1 ' 15000) {
+      Start-Sleep -Seconds 1
+      $p.Refresh(); $script:hwnd = $p.MainWindowHandle
+      [void][W]::ShowWindow($script:hwnd, 3); Start-Sleep -Milliseconds 800
+      Focus
+      Click $LISTX (RowY 0); Keys '{RIGHT}'
+      Shot "gallery\$theme-01-ordner"
+      Keys '^f'; Keys 'datei'; Start-Sleep -Milliseconds 1200; Shot "gallery\$theme-02-suche"
+      Keys '{ESC}'; Start-Sleep -Milliseconds 600
+      Keys '^+p'; Start-Sleep -Milliseconds 500; Shot "gallery\$theme-03-befehlspalette"; Keys '{ESC}'
+      if (UiClick 'Einstellungen') { Start-Sleep -Milliseconds 800; Shot "gallery\$theme-04-einstellungen" }
+      Click $LISTX (RowY 1) 'right'; Start-Sleep -Milliseconds 1200; Shot "gallery\$theme-05-kontextmenue"; Keys '{ESC}'
+    }
+  } finally {
+    if (-not $p.HasExited) { Stop-Process -Id $p.Id -Force }
+  }
+}
+Write-Host "gallery: $(@(Get-ChildItem "$gal\*.png").Count) screenshots"
 $script:log = $mainLog
 if ($script:fail) { Write-Host "----- trace"; Write-Host (Log) }
 exit $script:fail

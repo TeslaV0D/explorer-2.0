@@ -13,6 +13,7 @@ check() { if eval "$2"; then pass "$1"; else fail "$1"; fi; }
 # poll a condition for up to $2 seconds (default 10)
 wait_for() { local n=$(( ${2:-10} * 5 )); for _ in $(seq 1 $n); do eval "$1" && return 0; sleep 0.2; done; return 1; }
 last() { grep "$1" $LOG | tail -1; }
+. "$(dirname "$0")/ui-lib.sh"
 focus() { xdotool windowfocus --sync "$(xdotool search --name 'Explorer 2.0' | head -1)"; }
 palette() { focus; xdotool key ctrl+shift+p; sleep 0.4; xdotool type --delay 30 "$1"; sleep 0.5; xdotool key Return; sleep 0.6; }
 
@@ -109,9 +110,9 @@ echo "== [79] S1.5b: marked hits, sorting by the header, search history"
 focus; xdotool key ctrl+f; sleep 0.2; xdotool key ctrl+a; xdotool type --delay 30 "datei1"; xdotool key Return; sleep 1.2
 check "[79] Enter puts the search into the history (saved)" "grep -q 'search history saved=true query=.datei1.' $LOG && head -1 $IC/search-history.txt | grep -qx 'datei1'"
 check "[79b] the matched letters are marked" "last 'marks' | grep -qF '[datei1].txt'"
-xdotool mousemove 260 126 click 1; sleep 1.5
+ui_click "Name"; sleep 1.5
 check "[79c] header click: searched again in the new order (name descending)" "last 'sort key' | grep -q 'key=name desc=true' && wait_for \"last 'order' | grep -q 'order .\\\"datei19.txt'\" 3"
-xdotool mousemove 260 126 click 1; sleep 1.2
+ui_click "Name"; sleep 1.2
 focus; xdotool key ctrl+f; sleep 0.2; xdotool key Escape; sleep 0.8
 N0=$(grep -c 'search pane=0 scope=.* query=.datei1.' $LOG)
 xdotool key ctrl+f; sleep 0.2; xdotool key Up; sleep 1.2
@@ -129,15 +130,14 @@ check "[77k] a search tab is saved as its folder (session)" "! grep -q '::suche'
 
 echo "== [80] S1.5c: which drives are indexed (settings)"
 SR2=$W/search-root2-$$; IC2=$W/config-drives; mkdir -p "$SR2/x" "$IC2"; echo y > "$SR2/x/zweit.txt"
-DRIVE2="858 616"   # second drive box in the settings ("Suche" lies below "Windows-Integration")
 start80() { env -u EXPLORER2_INDEX_ROOTS EXPLORER2_CONFIG_DIR=$IC2 EXPLORER2_INDEX_CANDIDATES=$SR:$SR2 $EXE "$SR" > $LOG 2>&1 & PID=$!; }
 LOG=$W/trace-80.log; start80
 check "[80] automatic: both candidates are indexed" "wait_for \"[ \\\$(grep -c 'phase=Ready' $LOG) -ge 2 ]\" && last 'search: start roots' | grep -qF '$SR2'"
 palette "einstellungen"; sleep 0.8
 check "[80b] the settings list the drives (both on)" "last 'search drives' | grep -qF '$SR2=true'"
-xdotool mousemove $DRIVE2 click 1; sleep 0.5
+ui_click "$SR2"; sleep 0.5
 check "[80c] one switched off: saved, the index restarts without it" "grep -qF 'index_roots = $SR' $IC2/settings.ini && ! grep -qF 'index_roots = $SR;' $IC2/settings.ini && wait_for \"[ \\\$(grep -c 'search: start roots' $LOG) -ge 2 ] && ! last 'search: start roots' | grep -qF '$SR2'\""
-xdotool mousemove 1130 63 click 1; sleep 0.4
+ui_click "Schließen" last; sleep 0.4
 wait_for "[ \$(grep -c 'phase=Ready' $LOG) -ge 3 ]" >/dev/null
 focus; xdotool key ctrl+shift+f; sleep 0.4; xdotool type --delay 40 "zweit"; sleep 1
 check "[80d] its files are no longer found" "wait_for \"last 'quick search query' | grep -q 'query=.zweit. total=0'\" 3"
@@ -146,7 +146,7 @@ kill $PID; wait $PID 2>/dev/null
 LOG=$W/trace-80e.log; start80
 check "[80e] next start keeps the choice" "wait_for \"grep -q 'search: start roots' $LOG\" && ! last 'search: start roots' | grep -qF '$SR2'"
 sleep 1; palette "einstellungen"; sleep 0.8
-xdotool mousemove $DRIVE2 click 1; sleep 0.5
+ui_click "$SR2"; sleep 0.5
 check "[80f] on again = automatic again (empty setting)" "grep -qx 'index_roots = ' $IC2/settings.ini && wait_for \"last 'search: start roots' | grep -qF '$SR2'\""
 kill $PID; wait $PID 2>/dev/null
 

@@ -1062,6 +1062,7 @@ dependencies = [
  "explorer-ops",
  "explorer-search",
  "explorer-shell",
+ "i-slint-core",
  "libc",
  "raw-window-handle",
  "slint",

@@ -124,6 +124,16 @@ jobs:
           n=$(grep -ciE "libEGL" "$RUNNER_TEMP/gl/gpu.log" || true)
           echo "EGL driver lines in forced-GPU run: $n"
           test "$n" -gt 0 || { echo "GL path not taken in forced-GPU run"; exit 1; }
+      # redesign R0: every screen light + dark, for before/after comparisons
+      - name: UI gallery (screenshots of all main screens)
+        if: always()
+        run: xvfb-run -a -s "-screen 0 1280x800x24" scripts/gallery.sh "$PWD/target/release/explorer2" "$RUNNER_TEMP/gallery"
+      - name: Upload UI gallery
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ui-gallery-linux
+          path: ${{ runner.temp }}/gallery/*.png
       - name: Upload screenshots on failure
         if: failure()
         uses: actions/upload-artifact@v4
@@ -318,6 +328,12 @@ jobs:
         run: |
           powershell -ExecutionPolicy Bypass -File scripts/m8-stress.ps1 (Resolve-Path "target/release/explorer2.exe").Path "$env:RUNNER_TEMP\m83c"
           if ($LASTEXITCODE) { throw "Windows endurance test failed" }
+      - name: Upload Windows UI gallery
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ui-gallery-windows
+          path: ${{ runner.temp }}/e2e-win/gallery/*.png
       - name: Upload Windows E2E screenshots on failure
         if: failure()
         uses: actions/upload-artifact@v4

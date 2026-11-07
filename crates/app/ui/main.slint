@@ -193,8 +193,14 @@ component ResizeHandle inherits Rectangle {
 
 component NavButton inherits Rectangle {
     in property <string> text;
+    // spoken name (screen readers, test targets) – stays when the glyph becomes an icon
+    in property <string> label;
     in property <bool> enabled: true;
     callback clicked();
+    accessible-role: button;
+    accessible-label: root.label;
+    accessible-enabled: root.enabled;
+    accessible-action-default => { if (root.enabled) { root.clicked(); } }
     width: 30px;
     border-radius: 4px;
     background: ta.has-hover && root.enabled ? Theme.c.hover : transparent;
@@ -225,6 +231,9 @@ component TabItem inherits Rectangle {
         label := Text { text: root.title; vertical-alignment: center; overflow: elide; horizontal-stretch: 1; color: Theme.c.text; }
         if root.closable : Rectangle {
             width: 20px;
+            accessible-role: button;
+            accessible-label: "Tab schließen";
+            accessible-action-default => { root.close(); }
             border-radius: 4px;
             background: close-ta.has-hover ? Theme.c.hover-strong : transparent;
             Text { text: "×"; horizontal-alignment: center; vertical-alignment: center; color: Theme.c.text4; }
@@ -553,17 +562,19 @@ component FilePane inherits Rectangle {
                     select => { root.activate(); root.tab-select(ti); }
                     close => { root.activate(); root.tab-close(ti); }
                 }
-                NavButton { text: "+"; width: 28px; clicked => { root.activate(); root.tab-new(); } }
+                NavButton { text: "+"; label: "Neuer Tab"; width: 28px; clicked => { root.activate(); root.tab-new(); } }
                 Rectangle { horizontal-stretch: 1; }
             }
         }
         // ---------- nav toolbar ----------
         HorizontalLayout {
             padding: 5px; spacing: 4px; height: 40px;
-            NavButton { text: "←"; enabled: root.data.can-back; clicked => { root.activate(); root.back(); } }
-            NavButton { text: "→"; enabled: root.data.can-forward; clicked => { root.activate(); root.forward(); } }
-            NavButton { text: "↑"; clicked => { root.activate(); root.go-up(); } }
+            NavButton { text: "←"; label: "Zurück"; enabled: root.data.can-back; clicked => { root.activate(); root.back(); } }
+            NavButton { text: "→"; label: "Vorwärts"; enabled: root.data.can-forward; clicked => { root.activate(); root.forward(); } }
+            NavButton { text: "↑"; label: "Nach oben"; clicked => { root.activate(); root.go-up(); } }
             address := Rectangle {
+                accessible-role: groupbox;
+                accessible-label: "Adresszeile";
                 border-width: 1px;
                 border-color: root.editing-path ? Theme.c.accent : Theme.c.outline;
                 border-radius: 4px;
@@ -1661,8 +1672,8 @@ export component MainWindow inherits Window {
         TouchArea { }
         settings-scroll := ScrollView {
           x: 1px; y: 1px; width: parent.width - 2px; height: parent.height - 2px;
-          viewport-width: self.visible-width;
-          viewport-height: settings-layout.preferred-height;
+          content-width: self.visible-width;
+          content-height: settings-layout.preferred-height;
           settings-layout := VerticalLayout {
             width: settings-scroll.visible-width;
             padding: 14px;

@@ -18,6 +18,7 @@ mod quick;
 mod search;
 mod theme;
 mod thumbs;
+mod uidump;
 
 use std::io::Write;
 use std::path::PathBuf;
@@ -381,6 +382,7 @@ fn main() -> Result<(), slint::PlatformError> {
         p.as_str(),
         on
     ));
+    uidump::init(&win);
     nav::trace_line(&format!("init done at={:.1}ms", nav::since_start_ms()));
 
     // Drives come and go (USB sticks, network shares): refresh the sidebar periodically.
