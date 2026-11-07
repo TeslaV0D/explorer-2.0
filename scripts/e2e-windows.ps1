@@ -24,6 +24,7 @@ public static class W {
   [DllImport("user32.dll")] public static extern int GetWindowText(IntPtr h, StringBuilder s, int n);
   [DllImport("user32.dll")] public static extern uint GetWindowThreadProcessId(IntPtr h, out uint pid);
   [DllImport("user32.dll")] public static extern IntPtr SendMessage(IntPtr h, uint m, IntPtr w, IntPtr l);
+  [DllImport("user32.dll", CharSet = CharSet.Unicode)] public static extern IntPtr FindWindow(string cls, string title);
   public static string Titles(uint pid) {
     var sb = new StringBuilder();
     EnumWindows((h, l) => { uint p; GetWindowThreadProcessId(h, out p);
@@ -172,7 +173,13 @@ Check "[W9] Ctrl+Z restores it (with extension)" { Test-Path "$dst\a.txt" }
 # R8: right-click = our menu; "Weitere Optionen" = the real shell context menu (dark), closed with Esc
 Click $LISTX (RowY 0) 'right'; Start-Sleep -Milliseconds 800; Shot "w10-own-menu"
 Check "[W10a] right-click shows our menu with 'Weitere Optionen'" { (Last 'context menu own') -match 'more' -and $null -ne (UiBox 'Weitere Optionen') }
-[void](UiClick 'Weitere Optionen'); Start-Sleep -Milliseconds 1500; Shot "w10-menu"
+[void](UiClick 'Weitere Optionen')
+# the shell builds its menu (extensions) asynchronously - wait for the real popup menu
+# window (class #32768) before Esc, or the key goes to our window (CI #129)
+$t = [Diagnostics.Stopwatch]::StartNew(); $menuUp = $false
+while ($t.ElapsedMilliseconds -lt 8000) { if ([W]::FindWindow('#32768', $null) -ne [IntPtr]::Zero) { $menuUp = $true; break }; Start-Sleep -Milliseconds 100 }
+Write-Host "shell menu up: $menuUp after $($t.ElapsedMilliseconds) ms"
+Start-Sleep -Milliseconds 300; Shot "w10-menu"
 Keys '{ESC}'; Start-Sleep -Milliseconds 600
 # the result is written after the shell's modal menu loop ended - poll (CI #113: later than 600 ms)
 Check "[W10] 'Weitere Optionen' shows the shell menu (closed with Esc)" { WaitFor 'context menu result Dismissed' 3000 }
