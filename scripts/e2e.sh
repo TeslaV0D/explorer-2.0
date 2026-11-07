@@ -77,6 +77,7 @@ check "process alive" "kill -0 $PID"
 echo "== [7b] UI dump (redesign R0): named targets with positions"
 check "[7b] dump lists buttons, icon buttons (spoken names), list rows" "ui_has 'Einstellungen' && ui_has 'Zurück' && ui_has 'Nach oben' && ui_has 'Adresszeile' && ui_has 'watch'"
 check "[7c] positions are inside the window" "awk -F'\t' 'NR>1 && (\$2<0 || \$3<0 || \$2>1200 || \$3>720){bad=1} END{exit bad}' $UI_DUMP"
+check "[7d] navigation row (R4): address bar and icon buttons 26 px high, list header right below the 34 px row" "[ \$(ui_box 'Adresszeile' | cut -d' ' -f4) -eq 26 ] && [ \$(ui_box 'Zurück' | cut -d' ' -f4) -eq 26 ] && [ \$(( \$(ui_box 'Name' | cut -d' ' -f2) - \$(ui_box 'Adresszeile' | cut -d' ' -f2) )) -le 32 ]"
 echo "== [8] settings panel: disable hardware acceleration"
 ui_click "Einstellungen"; sleep 0.8; shot s8_panel
 ui_click "Hardwarebeschleunigung verwenden, wenn verfügbar"; sleep 0.8; shot s8_toggled
