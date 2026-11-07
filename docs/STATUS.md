@@ -1,6 +1,6 @@
 # Zwischenstand
 
-**Stand:** 2026-11-07 · **Phase:** 1 · M0–M7 ✅ (M7.3 verschoben) · R-001 ✅ · **M8.1/M8.2 Installer ✅ (Run #69)** · **M8.3 Härtung ✅ (Run #70–#73)** · **Phase 2 Suche: S1.1 ✅ (Run #78), S1.2 ✅ (Run #80), S1.3 ✅ (Run #83), S1.4 ✅ (Run #90), S1.5 ✅ (Run #91/#93) → **S1 komplett**, Praxistest ✅ (Boss: „es funktioniert“) · **Redesign läuft: R0 ✅ (Run #101), R1 ✅ (Run #104), R2 ✅ (Run #110), R3 ✅ (Run #115), R4 ✅ (Run #120), R5 ✅ (Run #123), R6 ✅ (Run #124), R7 ✅ (Run #125), R8 ✅ (Run #128), R9 lokal fertig (CI läuft)** (`docs/PLAN-REDESIGN.md`)** (Plan `docs/PLAN-SEARCH.md`) · **Branch:** `claude/relaxed-pasteur-ufhh1p`
+**Stand:** 2026-11-07 · **Phase:** 1 · M0–M7 ✅ (M7.3 verschoben) · R-001 ✅ · **M8.1/M8.2 Installer ✅ (Run #69)** · **M8.3 Härtung ✅ (Run #70–#73)** · **Phase 2 Suche: S1.1 ✅ (Run #78), S1.2 ✅ (Run #80), S1.3 ✅ (Run #83), S1.4 ✅ (Run #90), S1.5 ✅ (Run #91/#93) → **S1 komplett**, Praxistest ✅ (Boss: „es funktioniert“) · **Redesign läuft: R0 ✅ (Run #101), R1 ✅ (Run #104), R2 ✅ (Run #110), R3 ✅ (Run #115), R4 ✅ (Run #120), R5 ✅ (Run #123), R6 ✅ (Run #124), R7 ✅ (Run #125), R8 ✅ (Run #128), R9 ✅ (Run #130), als Nächstes R10 Konsistenz + QA** (`docs/PLAN-REDESIGN.md`)** (Plan `docs/PLAN-SEARCH.md`) · **Branch:** `claude/relaxed-pasteur-ufhh1p`
 
 ## M5 – Shell-Integration (läuft, Freigabe Boss 2026-11-04)
 ### CI-Run #37 – alles grün ✅ (M5.0–M5.5)
@@ -40,10 +40,11 @@
 - **Bug (CI #32/#33, UI-Matrix)**: OLE-Drop-Target wurde nie registriert („Invalid window handle“) – der Timer lief, bevor Slint das native Fenster erzeugt hatte → Ablegen aus anderen Apps wäre tot gewesen. Fix: Registrierung wiederholt bis HWND existiert (50 ms, max. 5 s), sonst Rückfall auf In-App-DnD.
 - Neu: **Windows-E2E mit echter Tastatur/Maus** (`scripts/e2e-windows.ps1`, CI-Schritt im Release-Job, Screenshots bei Fehler).
 
-### Redesign R9 – Zustände + Bewegung (lokal, CI läuft)
+### Redesign R9 – Zustände + Bewegung ✅ (CI-Run #130)
 - Durchgang über alle Bedienelemente: **Gedrückt** (`pressed`) jetzt auch für Menüeinträge, Tabs und Seitenleiste (vorher nur Knöpfe/Kopf/Brotkrumen); **Hover-Übergänge 120 ms** auch in Menüs und Palette; **Erscheinen** einheitlich: ⋮-Menü + Sortier-Menü blenden in 120 ms ein (wie das Kontextmenü), Konflikt-/Bestätigungsdialog blenden ein **und aus** (bleiben nur während des Ausblendens sichtbar), Einstellungs-Panel 160 ms. Gesperrt = `faint` überall (Knöpfe, Menüs, Palette), Fokus = Akzentrand (Felder, Zeilen, Kacheln).
 - Nichts wartet auf eine Animation: Tastatur/Enter wirken sofort (Dialoge nehmen Eingaben ab dem ersten Frame).
-- **Pixel-Checks der Zustände** (E2E [20b]/[20c]): Hover #2a2a2a, Auswahl mit Fokus #2a3750, ohne Fokus #2c2c2c (Adresszeile hat den Fokus), Esc gibt den Fokus zurück; dazu bestehen [19], [57a] (Akzentmarke), [7e] (Tab-Strich), [70b/d], W37c/W38b/W39b.
+- **Pixel-Checks der Zustände** (E2E [20b]/[20c]): Hover #2a2a2a, Auswahl mit Fokus #2a3750, ohne Fokus #2c2c2c (Adresszeile hat den Fokus), Esc gibt den Fokus zurück; dazu bestehen [19], [57a] (Akzentmarke), [7e] (Tab-Strich), [70b/d], W37c/W38b/W39b. Lokal 270/270.
+- CI #129: Windows-W10 rot – das native Menü hinter „Weitere Optionen“ baute sich später als 1,5 s auf, Esc ging an unser Fenster → W10 wartet jetzt auf das echte Menüfenster (`#32768`) vor Esc; CI #130 komplett grün.
 
 ### Redesign R8 – Menüs + Dialoge ✅ (CI-Run #128)
 - **R8a eigenes Kontextmenü** (Entscheidung 2): kompaktes Menü im neuen Stil als Overlay (erscheint in 120 ms, bleibt im Fenster, Tastatur: ↑/↓ überspringt Trenner + gesperrte Einträge, Enter, Esc, Klick daneben schließt). Einträge auf Elementen: Öffnen · Ausschneiden/Kopieren/Einfügen/Umbenennen (nur bei 1)/Löschen · Eigenschaften; auf dem Hintergrund: Neuer Ordner · Einfügen · Aktualisieren · Eigenschaften (des Ordners). Gleiche Befehle wie Leiste/Palette (`palette::execute`). Windows: **„Weitere Optionen“** öffnet das native Shell-Menü mit allen Erweiterungen an derselben Stelle; native Menüs folgen dem dunklen Schema über uxtheme `SetPreferredAppMode`/`FlushMenuThemes` (Ordinal 135/136, zur Laufzeit gesucht → fehlt es, bleibt das Menü hell). Linux hat jetzt erstmals ein Kontextmenü. Tests: [53]–[53f] (Esc, Hintergrund, Klick auf Eintrag, Shift+F10 + Tastatur, Mehrfachauswahl), Windows W10a/W10/W10b, Galerie-Bilder.
