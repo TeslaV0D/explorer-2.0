@@ -1,0 +1,350 @@
+name: ci
+on:
+  # pure documentation commits need no build (saves ~15 runner minutes each)
+  push:
+    paths-ignore: ["docs/**", "**/*.md"]
+  pull_request:
+    paths-ignore: ["docs/**", "**/*.md"]
+jobs:
+  test:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest, ubuntu-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with: { components: "rustfmt, clippy" }
+      - uses: Swatinem/rust-cache@v2
+      - name: Linux UI deps
+        if: runner.os == 'Linux'
+        run: sudo apt-get update && sudo apt-get install -y libfontconfig1-dev libxkbcommon-dev libwayland-dev libx11-dev
+      - run: cargo fmt --all -- --check
+      - run: cargo clippy --workspace --all-targets -- -D warnings
+      - run: cargo test --workspace
+      - name: Disk full while copying (1 MiB tmpfs) leaves no partial file
+        if: runner.os == 'Linux'
+        run: |
+          sudo mkdir -p /mnt/small && sudo mount -t tmpfs -o size=1m,mode=1777 tmpfs /mnt/small
+          EXPLORER2_SMALL_FS=/mnt/small cargo test -p explorer-ops --test ops disk_full -- --ignored --exact disk_full_reports_error_and_leaves_no_partial_file
+      - name: Clipboard interop with the Windows shell (CF_HDROP + Preferred DropEffect)
+        if: runner.os == 'Windows'
+        # Windows PowerShell 5.1: only it has Get-Clipboard -Format FileDropList / Set-Clipboard -Path
+        shell: powershell
+        run: |
+          $ErrorActionPreference = 'Stop'
+          cargo build -q -p explorer-ops --example clip
+          $clip = (Resolve-Path "target/debug/examples/clip.exe").Path
+          $d = New-Item -ItemType Directory -Force "$env:RUNNER_TEMP\clip"
+          $a = New-Item -ItemType File -Force "$d\a ä.txt"; $b = New-Item -ItemType File -Force "$d\b.txt"
+          Add-Type -AssemblyName System.Windows.Forms
+          function Formats { try { ([System.Windows.Forms.Clipboard]::GetDataObject().GetFormats()) -join ', ' } catch { "error: $_" } }
+          $fail = @()
+          # ours -> Windows: PowerShell must see the file list
+          & $clip set $a.FullName $b.FullName; "clip set exit=$LASTEXITCODE"
+          "formats after clip set: $(Formats)"
+          "own reader (new process): $((& $clip get) -join ' | ')"
+          # .NET API = what other Windows apps use (CF_HDROP); the Get-Clipboard cmdlet
+          # returned nothing here although FileDrop was listed (cmdlet quirk, kept as info only)
+          # another process reads the clipboard: right after it was set, .NET can
+          # see it empty for a moment (CI #92) – read like an app would, retrying
+          $seen = @()
+          for ($i = 0; $i -lt 5 -and $seen.Count -lt 2; $i++) {
+            if ($i -gt 0) { Start-Sleep -Milliseconds 300 }
+            $seen = @([System.Windows.Forms.Clipboard]::GetFileDropList())
+          }
+          "Windows (.NET GetFileDropList) sees: $($seen -join ', ')"
+          "Get-Clipboard -Format FileDropList (info): $((Get-Clipboard -Format FileDropList -ErrorAction SilentlyContinue | ForEach-Object { "$_" }) -join ', ')"
+          if ($seen.Count -ne 2 -or $seen[0] -ne $a.FullName -or $seen[1] -ne $b.FullName) { $fail += "Windows does not see our files" }
+          # Windows -> ours (Set-Clipboard -Path = what Explorer's "Copy" produces)
+          Set-Clipboard -Path $b.FullName
+          "formats after Set-Clipboard: $(Formats)"
+          $got = @(& $clip get)
+          "clip get: $($got -join ' | ')"
+          if ($got[0] -ne 'copy' -or $got[1] -ne $b.FullName) { $fail += "we do not read the Windows file clipboard" }
+          # cut flag (Preferred DropEffect = 2) survives a round trip
+          & $clip set --cut $a.FullName
+          $got = @(& $clip get)
+          "cut round trip: $($got -join ' | ')"
+          if ($got[0] -ne 'cut' -or $got[1] -ne $a.FullName) { $fail += "cut flag lost" }
+          if ($fail) { throw ($fail -join '; ') }
+          "clipboard interop OK"
+      - name: Benchmark 100k folder (budgets from PLAN-BASICS)
+        run: cargo run --release -p explorer-fs --example bench -- --files 100000 --runs 9 --assert
+      - name: "Search benchmark: 1 M entries, name queries < 10 ms, index < 100 MB (PLAN-SEARCH)"
+        run: cargo run --release -p explorer-index --example bench -- 1000000 --gate
+      # CI #82: the cold system drive of the Windows VM gave ~1 100 entries/s
+      # (C:\ did not finish in 15 min). Measured here, numbers only: cold vs
+      # warm (disk) and below-normal vs normal priority + more threads.
+      - name: "Search: index speed on the cold system drive (numbers only)"
+        if: runner.os == 'Windows'
+        run: |
+          cargo build --release -q -p explorer-search --example drive
+          $d = "target\release\examples\drive.exe"
+          & $d --probe C:\Windows --secs 40
+          & $d --probe C:\Windows --secs 40
+          $env:EXPLORER2_INDEX_PRIORITY = 'normal'
+          & $d --probe "C:\Program Files" --secs 40 --threads 32
+          & $d --probe "C:\Program Files (x86)" --secs 40
+      # gate on the drive of the checkout (Windows: local SSD of the VM)
+      - name: "Search service on a real drive: first build, live change < 1 s, load < 1 s (PLAN-SEARCH S1.3)"
+        if: runner.os == 'Windows'
+        run: |
+          $root = (Split-Path -Qualifier $env:RUNNER_TEMP) + '\'
+          cargo run --release -p explorer-search --example drive -- $root --live $env:RUNNER_TEMP --gate
+      - name: "Search service on $HOME (numbers only: inotify limits of the runner are not ours)"
+        if: runner.os != 'Windows'
+        run: cargo run --release -p explorer-search --example drive
+  e2e-linux:
+    runs-on: ubuntu-latest
+    needs: test
+    # app tests without the search index (own block e2e-search.sh switches it on)
+    env: { EXPLORER2_INDEX: "off" }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+      - name: UI deps
+        run: sudo apt-get update && sudo apt-get install -y libfontconfig1-dev libxkbcommon-dev libxkbcommon-x11-0 libwayland-dev libx11-dev xvfb xdotool imagemagick libgl1-mesa-dri libegl1 libgl1 x11-utils
+      # the installer test [72] needs explorer2-recover next to the app
+      - run: cargo build --release -p explorer2 -p explorer-integrate --bins
+      - name: E2E UI test (Xvfb)
+        run: xvfb-run -a -s "-screen 0 1280x800x24" scripts/e2e.sh "$PWD/target/release/explorer2" "$RUNNER_TEMP/e2e"
+      - name: GL environment check (Mesa GL under Xvfb, forced GPU + auto)
+        run: |
+          mkdir -p "$RUNNER_TEMP/gl/data" && touch "$RUNNER_TEMP/gl/data/a.txt"
+          for mode in gpu auto; do
+            xvfb-run -a -s "-screen 0 1280x800x24 +extension GLX" env EXPLORER2_TRACE=1 EGL_LOG_LEVEL=debug EXPLORER2_RENDERER=$mode EXPLORER2_CONFIG_DIR="$RUNNER_TEMP/gl/cfg-$mode" \
+              bash -c "./target/release/explorer2 '$RUNNER_TEMP/gl/data' 2> '$RUNNER_TEMP/gl/$mode.log' & P=\$!; sleep 4; kill -0 \$P && echo ALIVE > '$RUNNER_TEMP/gl/$mode.alive'; kill \$P"
+            grep -E "renderer choice|first paint|done tab=1" "$RUNNER_TEMP/gl/$mode.log"
+            test -f "$RUNNER_TEMP/gl/$mode.alive" || { echo "[$mode] app died"; exit 1; }
+            ! grep -qi panic "$RUNNER_TEMP/gl/$mode.log" || { echo "[$mode] panic"; exit 1; }
+          done
+          n=$(grep -ciE "libEGL" "$RUNNER_TEMP/gl/gpu.log" || true)
+          echo "EGL driver lines in forced-GPU run: $n"
+          test "$n" -gt 0 || { echo "GL path not taken in forced-GPU run"; exit 1; }
+      # redesign R0: every screen light + dark, for before/after comparisons
+      - name: UI gallery (screenshots of all main screens)
+        if: always()
+        run: xvfb-run -a -s "-screen 0 1280x800x24" scripts/gallery.sh "$PWD/target/release/explorer2" "$RUNNER_TEMP/gallery"
+      - name: Upload UI gallery
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ui-gallery-linux
+          path: ${{ runner.temp }}/gallery/*.png
+      - name: Upload screenshots on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-screenshots
+          path: |
+            ${{ runner.temp }}/e2e/*.png
+            ${{ runner.temp }}/e2e/trace-*.log
+  build-windows-release:
+    runs-on: windows-latest
+    needs: test
+    # the index would read all of C:\ during the timing gates and E2E tests
+    env: { EXPLORER2_INDEX: "off" }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+      - id: build
+        run: |
+          cargo build --release -p explorer2
+          cargo build --release -p explorer-integrate --bins --example r001_selftest
+      - name: "R-001 reset: snapshot -> integration on -> reset -> snapshot identical (reg.exe)"
+        shell: pwsh
+        run: pwsh -File scripts/r001-snapshot.ps1 (Resolve-Path target/release).Path "$env:RUNNER_TEMP\r001"
+      - name: "M8 install -> Start menu -> update while running -> uninstall (Apps & Features) -> as before"
+        shell: pwsh
+        run: pwsh -File scripts/m8-install.ps1 (Resolve-Path target/release).Path "$env:RUNNER_TEMP\m8"
+      - name: "M8.3 crash report (Windows exception, panic) + safe start after two dead starts"
+        shell: pwsh
+        run: pwsh -File scripts/m8-crash.ps1 (Resolve-Path target/release).Path "$env:RUNNER_TEMP\m83"
+      - name: "M8.3b one window: second start -> tab in the running window (named pipe, hung instance, --new-instance)"
+        shell: pwsh
+        run: pwsh -File scripts/m8-instance.ps1 (Resolve-Path target/release).Path "$env:RUNNER_TEMP\m83b"
+      - name: Smoke test exe (starts, prints version, manifest embedded)
+        shell: pwsh
+        run: |
+          $exe = (Resolve-Path "target/release/explorer2.exe").Path
+          # GUI-subsystem exe: PowerShell does not wait for it, so use Start-Process -Wait
+          $p = Start-Process -FilePath $exe -ArgumentList "--version" -Wait -PassThru -NoNewWindow -RedirectStandardOutput "$env:RUNNER_TEMP\ver.txt"
+          $out = (Get-Content "$env:RUNNER_TEMP\ver.txt" -Raw).Trim()
+          if ($p.ExitCode -ne 0 -or $out -notmatch '^explorer2 \d+\.\d+\.\d+') { throw "bad --version (exit $($p.ExitCode)): '$out'" }
+          $text = [System.Text.Encoding]::UTF8.GetString([System.IO.File]::ReadAllBytes($exe))
+          foreach ($needle in 'PerMonitorV2','longPathAware') {
+            if (-not $text.Contains($needle)) { throw "manifest missing: $needle" }
+          }
+          $size = (Get-Item $exe).Length
+          "$out; size=$size bytes ($([math]::Round($size / 1MB, 2)) MB)"
+          # Size budget (PLAN-BASICS): < 20 MB, hard gate so growth is noticed early
+          if ($size -ge 20MB) { throw "exe too large: $([math]::Round($size / 1MB, 2)) MB (budget 20 MB)" }
+          # Exe icon must be ours (yellow folder), not the generic default icon
+          Add-Type -AssemblyName System.Drawing
+          $bmp = [System.Drawing.Icon]::ExtractAssociatedIcon($exe).ToBitmap()
+          $px = $bmp.GetPixel([int]($bmp.Width / 2), [int]($bmp.Height / 2))
+          "exe icon $($bmp.Width)x$($bmp.Height), center pixel R=$($px.R) G=$($px.G) B=$($px.B)"
+          if (-not ($px.R -gt 200 -and $px.G -gt 150 -and $px.B -lt 120)) { throw "exe icon is not the Explorer 2.0 folder icon" }
+      - name: Fetch Mesa OpenGL (simulated GPU driver for the GL path test)
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          $rel = Invoke-RestMethod https://api.github.com/repos/pal1000/mesa-dist-win/releases/latest -Headers @{ Authorization = "Bearer $env:GH_TOKEN" }
+          # MinGW build: Mesa 26.x MSVC builds ship without software OpenGL (known upstream issue)
+          $asset = $rel.assets | Where-Object { $_.name -match 'release-mingw\.7z$' } | Select-Object -First 1
+          if (-not $asset) { throw "test setup: mesa-dist-win mingw asset not found" }
+          "Mesa: $($asset.name)"
+          Invoke-WebRequest $asset.browser_download_url -OutFile "$env:RUNNER_TEMP\mesa.7z"
+          7z x "$env:RUNNER_TEMP\mesa.7z" "-o$env:RUNNER_TEMP\mesa" -y | Out-Null
+          $dst = "$env:RUNNER_TEMP\mesa-app"
+          New-Item -ItemType Directory $dst -Force | Out-Null
+          $gl = Get-ChildItem "$env:RUNNER_TEMP\mesa" -Recurse -Filter opengl32.dll | Where-Object { $_.DirectoryName -match 'x64' } | Select-Object -First 1
+          if (-not $gl) { throw "test setup: no x64 opengl32.dll in $($asset.name) (not an app failure)" }
+          "Mesa GL dir: $($gl.DirectoryName)"
+          Copy-Item "$($gl.DirectoryName)\*.dll" $dst
+          Copy-Item target/release/explorer2.exe $dst
+          Get-ChildItem $dst | Format-Table Name, Length
+      - name: UI smoke matrix (renderer selection in different environments)
+        shell: pwsh
+        run: |
+          $dir = "$env:RUNNER_TEMP\big"
+          cargo run --release -q -p explorer-fs --example bench -- --create-in $dir --files 100000
+          $exe = (Resolve-Path "target/release/explorer2.exe").Path
+          $mesaExe = "$env:RUNNER_TEMP\mesa-app\explorer2.exe"
+          function Field([string]$text, [string]$line, [string]$name) {
+            $m = [regex]::Match($text, $line + '.*? ' + $name + '=([\d.]+)ms')
+            if (-not $m.Success) { throw "trace field missing: $line $name" }
+            [double]::Parse($m.Groups[1].Value, [cultureinfo]::InvariantCulture)
+          }
+          function Invoke-App([string]$label, [string]$app, [hashtable]$vars, [int]$seconds = 8) {
+            $log = "$env:RUNNER_TEMP\ui-$label.log"
+            $vars['EXPLORER2_TRACE'] = '1'
+            $saved = @{}
+            foreach ($k in @($vars.Keys)) { $saved[$k] = [Environment]::GetEnvironmentVariable($k); [Environment]::SetEnvironmentVariable($k, $vars[$k]) }
+            try {
+              $p = Start-Process -FilePath $app -ArgumentList "`"$dir`"" -PassThru -RedirectStandardError $log
+              Start-Sleep -Seconds $seconds
+              $alive = -not $p.HasExited
+              if ($alive) { Stop-Process -Id $p.Id -Force }
+            } finally {
+              foreach ($k in @($vars.Keys)) { [Environment]::SetEnvironmentVariable($k, $saved[$k]) }
+            }
+            Start-Sleep -Milliseconds 300
+            $text = Get-Content $log -Raw
+            Write-Host "----- [$label]"
+            Write-Host $text
+            if (-not $alive) { throw "[$label] explorer2 exited early" }
+            if ($text -notmatch 'done tab=1 gen=\d+ total=100000 shown=100000') { throw "[$label] 100k folder not fully loaded" }
+            if ($text -match '(?i)panic') { throw "[$label] panic in log" }
+            $first = Field $text 'first paint tab=1 ' 'data_ready'
+            $all = Field $text 'done tab=1 ' 'data_ready'
+            $cold = Field $text 'first paint tab=1 ' 'at'
+            Write-Host "[$label] first rows ready: $first ms | all 100k ready: $all ms | cold start to content: $cold ms"
+            if ($first -gt 100) { throw "[$label] first rows budget exceeded: $first ms" }
+            if ($all -gt 1000) { throw "[$label] full load budget exceeded: $all ms" }
+            # M5.5: our OLE drop target replaced winit's
+            if ($text -notmatch 'ole drop target registered=true') { throw "[$label] OLE drop target not registered" }
+            # M5.1/5.2: real shell icons (folder + .txt) and shell type names in the "Typ" column
+            if ($text -notmatch 'icons loaded n=\d+ total=([2-9]|[1-9]\d+) ') { throw "[$label] shell icons not loaded" }
+            if ($text -notmatch 'kinds \[.*"(Textdokument|Text Document)"') { throw "[$label] no shell type names: $([regex]::Match($text, 'kinds \[.*').Value)" }
+            return @{ text = $text; cold = $cold }
+          }
+          function Expect($r, [string]$pattern, [string]$what) {
+            if ($r.text -notmatch $pattern) { throw "expected: $what (pattern: $pattern)" }
+            Write-Host "  ok: $what"
+          }
+
+          # 1) No GPU (runner), auto, very first start: software immediately, GPU probe in background
+          #    (first launch on a fresh VM also pays one-time OS costs: file cache, fonts -> reported, sanity gate only)
+          $cfgA = "$env:RUNNER_TEMP\cfg-auto"
+          $r = Invoke-App 'auto-fresh' $exe @{ EXPLORER2_CONFIG_DIR = $cfgA }
+          Expect $r 'renderer choice=Software reason="GPU probe pending \(background\)" background=Now' 'no probe on the startup path'
+          Expect $r 'background probe: Unusable \{ reason: "software OpenGL \(gdi generic\)" \}' 'background probe rejects runner GL'
+          # one-shot start on a fresh VM: varies ~0.6-1.2 s with VM speed for the same
+          # code (#54/#55) -> warning from 1 s, red from 2 s (D-018, Boss 2026-11-04)
+          # Timing gates are collected and thrown at the end: a slow VM must not hide
+          # the real budget (normal start) and the renderer paths below (CI #57).
+          $gateErrors = @()
+          $vm = [regex]::Match($r.text, 'probe_ms=([\d.]+)').Groups[1].Value
+          Write-Host "[auto-fresh] VM speed indicator: background probe_ms=$vm (typical 70-170)"
+          # D-018 coupled to the VM (Boss, 2026-11-05): red above 2 s only on a VM of
+          # normal speed (background probe < 300 ms); a slow VM (#57: 521, #63: 1189)
+          # cannot judge the first start -> warning with the numbers instead
+          $vmMs = if ($vm) { [double]$vm } else { 0 }
+          if ($r.cold -gt 2000 -and $vmMs -lt 300) { $gateErrors += "[auto-fresh] first start sanity gate exceeded: $($r.cold) ms > 2000 ms (probe_ms=$vm)" }
+          elseif ($r.cold -gt 2000) { Write-Host "::warning title=VM too slow to judge the first start::[auto-fresh] first start $($r.cold) ms, but probe_ms=$vm (normal 70-170) - not gated" }
+          if ($r.cold -gt 1000) { Write-Host "::warning title=First start slow::[auto-fresh] first start $($r.cold) ms > 1000 ms (VM variance or a real regression - compare 'run at' / 'event loop running' with earlier runs)" }
+          # 2) Normal starts: cached result, delayed re-probe; cold start budget 300 ms (best of 3, D-008)
+          $colds = @()
+          foreach ($n in 1..3) {
+            $r = Invoke-App "auto-cached-$n" $exe @{ EXPLORER2_CONFIG_DIR = $cfgA } 9
+            Expect $r 'reason="no usable GPU: cached probe" background=Later' 'probe result from cache'
+            Expect $r 'background probe: Unusable' 'delayed background re-probe ran'
+            $colds += $r.cold
+          }
+          $best = ($colds | Measure-Object -Minimum).Minimum
+          Write-Host "[auto-cached] cold start best=$best ms (all: $($colds -join ', ') ms, budget 300 ms)"
+          if ($best -gt 300) { $gateErrors += "[auto-cached] cold start budget exceeded: best $best ms > 300 ms" }
+          # 2b) OLE drag out (modal loop inside the running event loop): must not crash or hang
+          $r = Invoke-App 'ole-drag' $exe @{ EXPLORER2_CONFIG_DIR = $cfgA; EXPLORER2_TEST_OLE_DRAG = '1' } 9
+          Expect $r 'ole drag start n=1' 'drag started'
+          Expect $r 'ole drag skipped: button released' 'no drag without a pressed button (would drop on the next mouse move)'
+          # 3) Forced GPU without GPU: Skia falls back by itself, app keeps working
+          $r = Invoke-App 'forced-gpu' $exe @{ EXPLORER2_CONFIG_DIR = "$env:RUNNER_TEMP\cfg-gpu"; EXPLORER2_RENDERER = 'gpu' }
+          Expect $r 'renderer choice=Gpu reason="forced' 'GPU forced'
+          # 4) Forced software
+          $r = Invoke-App 'forced-software' $exe @{ EXPLORER2_CONFIG_DIR = "$env:RUNNER_TEMP\cfg-sw"; EXPLORER2_RENDERER = 'software' }
+          Expect $r 'renderer choice=Software reason="forced' 'software forced'
+          # 5) Setting off (browser-style switch)
+          $cfgOff = "$env:RUNNER_TEMP\cfg-off"
+          New-Item -ItemType Directory $cfgOff -Force | Out-Null
+          Set-Content "$cfgOff\settings.ini" "hardware_acceleration = false"
+          $r = Invoke-App 'setting-off' $exe @{ EXPLORER2_CONFIG_DIR = $cfgOff }
+          Expect $r 'reason="hardware acceleration disabled in settings"' 'setting honoured'
+          # 6) Simulated GL driver (Mesa llvmpipe next to the exe), auto: software GL must be rejected
+          $r = Invoke-App 'mesa-auto' $mesaExe @{ EXPLORER2_CONFIG_DIR = "$env:RUNNER_TEMP\cfg-mesa" }
+          Expect $r 'background probe: Unusable \{ reason: "software OpenGL \(llvmpipe\)" \}' 'probe classifies llvmpipe as software GL'
+          # 7) Simulated GL driver, forced GPU: Skia's OpenGL surface must initialise (real GL path)
+          $r = Invoke-App 'mesa-forced-gpu' $mesaExe @{ EXPLORER2_CONFIG_DIR = "$env:RUNNER_TEMP\cfg-mesa-gpu"; EXPLORER2_RENDERER = 'gpu' }
+          if ($r.text -match 'Failed to initialize Skia opengl surface') { throw "[mesa-forced-gpu] Skia GL surface failed even with an OpenGL 4.x driver" }
+          Write-Host "  ok: Skia OpenGL surface initialised on Mesa (GL path works)"
+          if ($gateErrors.Count) { throw ($gateErrors -join "; ") }
+      - name: "Windows E2E (real keyboard + mouse: rename, undo, clipboard, recycle bin, context menu, properties, OLE drag)"
+        # also after a red timing gate in the smoke matrix: the functional
+        # results are needed either way (the job stays red)
+        if: (success() || failure()) && steps.build.outcome == 'success'
+        shell: powershell
+        run: |
+          New-Item -ItemType Directory -Force "$env:RUNNER_TEMP\e2e-win" | Out-Null
+          powershell -ExecutionPolicy Bypass -File scripts/e2e-windows.ps1 (Resolve-Path "target/release/explorer2.exe").Path "$env:RUNNER_TEMP\e2e-win"
+          if ($LASTEXITCODE) { throw "Windows E2E failed" }
+      - name: "M8.3c endurance on Windows (navigations, tabs, views, file churn: memory/handles/threads/GDI flat)"
+        shell: powershell
+        run: |
+          powershell -ExecutionPolicy Bypass -File scripts/m8-stress.ps1 (Resolve-Path "target/release/explorer2.exe").Path "$env:RUNNER_TEMP\m83c"
+          if ($LASTEXITCODE) { throw "Windows endurance test failed" }
+      - name: Upload Windows UI gallery
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ui-gallery-windows
+          path: ${{ runner.temp }}/e2e-win/gallery/*.png
+      - name: Upload Windows E2E screenshots on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-windows-screenshots
+          path: |
+            ${{ runner.temp }}/e2e-win/*.png
+            ${{ runner.temp }}/m83c/*.png
+      - uses: actions/upload-artifact@v4
+        with:
+          name: explorer2-windows-x64
+          path: |
+            target/release/explorer2.exe
+            target/release/explorer2-recover.exe

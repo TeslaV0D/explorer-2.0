@@ -1,0 +1,9 @@
+[package]
+name = "explorer-core"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+# local time zone (Windows API / tzdata); already part of the build via Slint
+chrono = { version = "0.4", default-features = false, features = ["clock"] }
