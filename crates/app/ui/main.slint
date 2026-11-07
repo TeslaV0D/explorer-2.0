@@ -2,7 +2,7 @@ import { Button, ListView, CheckBox, ScrollView, Palette } from "std-widgets.sli
 
 import { Theme, ThemeColors, DesignColors, Ui } from "theme.slint";
 import { IconData } from "icons.slint";
-import { UiKit, Icon, IconButton, MenuItem, MenuSeparator, SectionLabel } from "kit.slint";
+import { UiKit, Icon, IconButton, MenuItem, MenuSeparator, SectionLabel, ToolbarButton } from "kit.slint";
 export { Theme, ThemeColors, DesignColors, Ui }
 
 export struct Row {
@@ -1086,26 +1086,6 @@ component FilePane inherits Rectangle {
     // the active pane is marked by its current tab's accent line (R5)
 }
 
-// One entry of the sort menu (dot = current choice).
-component SortItem inherits Rectangle {
-    in property <string> label;
-    in property <bool> on;
-    callback picked();
-    height: 24px;
-    border-radius: 3px;
-    background: item-ta.has-hover ? Theme.c.accent-hover : transparent;
-    HorizontalLayout {
-        padding-left: 6px; spacing: 6px;
-        // dot drawn as a circle (no glyph lookup)
-        Rectangle {
-            width: 10px;
-            if root.on : Rectangle { x: 2px; y: (parent.height - 6px) / 2; width: 6px; height: 6px; border-radius: 3px; background: Theme.c.accent; }
-        }
-        Text { text: root.label; vertical-alignment: center; color: Theme.c.text; }
-    }
-    item-ta := TouchArea { clicked => { root.picked(); } }
-}
-
 // Command palette (Ctrl+Shift+P). Created when opened (init focuses the input).
 component CommandPalette inherits Rectangle {
     in property <[PaletteItem]> items;
@@ -1123,7 +1103,7 @@ component CommandPalette inherits Rectangle {
     // Ctrl+Enter / Shift+Enter (quick search: show in its folder)
     callback run-alt(int);
     callback close();
-    init => { pal-input.focus(); }
+    init => { pal-input.focus(); self.shown = true; }
     function move(d: int) {
         root.sel = max(0, min(root.items.length - 1, root.sel + d));
         // keep the selection visible (rows are 30 px)
@@ -1134,25 +1114,36 @@ component CommandPalette inherits Rectangle {
         }
     }
 
-        background: Theme.c.scrim-soft;
+        // R8: soft scrim, floating box in the overlay layer, appears with 160 ms
+        property <bool> shown;
+        background: self.shown ? Theme.d.scrim.with-alpha(Theme.d.scrim.alpha / 255 * 0.5) : transparent;
+        animate background { duration: Ui.normal; }
         TouchArea { clicked => { root.close(); } }
         Rectangle {
             x: (parent.width - self.width) / 2;
-            y: 48px;
-            width: min(600px, parent.width - 40px);
+            y: root.shown ? 56px : 48px;
+            animate y { duration: Ui.normal; easing: ease-out; }
+            opacity: root.shown ? 1 : 0;
+            animate opacity { duration: Ui.normal; easing: ease-out; }
+            width: min(620px, parent.width - 40px);
             height: pal-box.preferred-height;
-            background: Theme.c.card;
-            border-color: Theme.c.outline; border-width: 1px; border-radius: 6px;
-            drop-shadow-blur: 16px; drop-shadow-color: Theme.c.shadow;
+            background: Theme.d.overlay;
+            border-color: Theme.d.border; border-width: 1px; border-radius: Ui.r-large;
+            drop-shadow-blur: 24px; drop-shadow-offset-y: 8px; drop-shadow-color: Theme.d.shadow;
+            clip: true;
             TouchArea { }   // clicks inside do not close
             pal-box := VerticalLayout {
-                padding: 8px; spacing: 6px;
+                padding: 0px; spacing: 0px;
                 Rectangle {
-                    height: 32px;
-                    border-color: Theme.c.accent; border-width: 1px; border-radius: 4px;
+                    height: 44px;
+                    Rectangle { y: parent.height - 1px; height: 1px; background: Theme.d.border; }
+                    Icon { x: 14px; y: (parent.height - self.height) / 2; d: IconData.search; tint: Theme.d.icon-muted; }
                     pal-input := TextInput {
-                        x: 8px; width: parent.width - 16px;
-                        vertical-alignment: center; single-line: true; font-size: 14px;
+                        x: 40px; width: parent.width - 52px;
+                        vertical-alignment: center; single-line: true; font-size: Ui.font-title;
+                        color: Theme.d.text;
+                        selection-background-color: Theme.d.selected;
+                        selection-foreground-color: Theme.d.text;
                         edited => { root.query(self.text); }
                         accepted => { root.run(root.sel); }
                         key-pressed(e) => {
@@ -1166,26 +1157,40 @@ component CommandPalette inherits Rectangle {
                         }
                     }
                     if pal-input.text == "" : Text {
-                        x: 8px; vertical-alignment: center; color: Theme.c.faint; font-size: 14px;
+                        x: 40px; vertical-alignment: center; color: Theme.d.faint; font-size: Ui.font-title;
                         text: root.hint;
                     }
                 }
+                Rectangle { height: 4px; }
                 pal-list := ListView {
                     height: min(12, max(1, root.items.length)) * 30px;
                     for it[i] in root.items : Rectangle {
                         height: 30px;
-                        border-radius: 4px;
-                        background: i == root.sel ? Theme.c.selection : (item-ta.has-hover ? Theme.c.row-hover : transparent);
                         item-ta := TouchArea { clicked => { root.sel = i; root.run(i); } }
+                        Rectangle {
+                            x: 6px; width: parent.width - 12px; y: 1px; height: parent.height - 2px;
+                            border-radius: Ui.r-small;
+                            background: i == root.sel ? Theme.d.selected : (item-ta.has-hover ? Theme.d.hover : transparent);
+                            if i == root.sel : Rectangle {
+                                x: 0; y: 6px; width: 2px; height: parent.height - 12px; border-radius: 1px;
+                                background: Theme.d.accent;
+                            }
+                        }
                         HorizontalLayout {
-                            padding-left: 10px; padding-right: 10px; spacing: 12px;
-                            Text { text: it.label; vertical-alignment: center; color: it.enabled ? Theme.c.text : Theme.c.disabled; overflow: elide; horizontal-stretch: 1; }
-                            Text { text: it.detail; vertical-alignment: center; color: Theme.c.muted; font-size: 11px; overflow: elide; max-width: 260px; }
+                            padding-left: 18px; padding-right: 18px; spacing: 12px;
+                            Text { text: it.label; vertical-alignment: center; font-size: Ui.font-body; color: it.enabled ? Theme.d.text : Theme.d.faint; overflow: elide; horizontal-stretch: 1; }
+                            Text { text: it.detail; vertical-alignment: center; color: Theme.d.muted; font-size: Ui.font-small; overflow: elide; max-width: 260px; }
                         }
                     }
                 }
-                if root.items.length == 0 : Text { text: root.empty-text; color: Theme.c.faint; height: 24px; vertical-alignment: center; x: 10px; }
-                if root.footer != "" : Text { text: root.footer; color: Theme.c.muted; font-size: 11px; height: 18px; vertical-alignment: center; x: 10px; overflow: elide; }
+                if root.items.length == 0 : Text { text: root.empty-text; color: Theme.d.muted; height: 30px; vertical-alignment: center; x: 18px; font-size: Ui.font-body; }
+                Rectangle { height: 4px; }
+                if root.footer != "" : Rectangle {
+                    height: 26px;
+                    background: Theme.d.panel;
+                    Rectangle { y: 0; height: 1px; background: Theme.d.border; }
+                    Text { x: 14px; text: root.footer; color: Theme.d.muted; font-size: Ui.font-small; vertical-alignment: center; overflow: elide; width: parent.width - 28px; }
+                }
             }
         }
     }
@@ -1328,7 +1333,7 @@ export component MainWindow inherits Window {
     min-width: 560px;
     min-height: 360px;
     forward-focus: focus-root;
-    background: Theme.c.chrome;
+    background: Theme.d.app;
     // the std widgets (buttons, check boxes, scroll bars) follow our scheme,
     // not their own system detection
     property <bool> theme-dark: Theme.dark;
@@ -1542,7 +1547,7 @@ export component MainWindow inherits Window {
                 }
                 for pane[pi] in root.panes : HorizontalLayout {
                     horizontal-stretch: 1;
-                    if pi > 0 : Rectangle { width: 1px; background: Theme.c.line-strong; }
+                    if pi > 0 : Rectangle { width: 1px; background: Theme.d.border; }
                     FilePane {
                         horizontal-stretch: 1;
                         data: pane;
@@ -1690,69 +1695,68 @@ export component MainWindow inherits Window {
             }
             // ---------- operations panel ----------
             for j in root.jobs : Rectangle {
-                height: 48px;
-                background: Theme.c.panel;
-                Rectangle { height: 1px; y: 0; background: Theme.c.line; }
+                height: 52px;
+                background: Theme.d.panel;
+                Rectangle { height: 1px; y: 0; background: Theme.d.border; }
                 HorizontalLayout {
                     padding-left: 10px; padding-right: 8px; padding-top: 4px; padding-bottom: 4px; spacing: 8px;
                     VerticalLayout {
                         horizontal-stretch: 1;
                         spacing: 3px;
-                        Text { text: j.title; overflow: elide; color: Theme.c.text; }
+                        Text { text: j.title; overflow: elide; font-size: Ui.font-body; color: Theme.d.text; }
                         Rectangle {
-                            height: 6px; border-radius: 3px; background: Theme.c.track;
+                            height: 4px; border-radius: 2px; background: Theme.d.border-strong;
                             Rectangle {
-                                x: 0; width: parent.width * clamp(j.fraction, 0, 1); border-radius: 3px;
-                                background: j.paused ? Theme.c.warning : Theme.c.accent;
+                                x: 0; width: parent.width * clamp(j.fraction, 0, 1); border-radius: 2px;
+                                background: j.paused ? Theme.d.warning : Theme.d.accent;
+                                animate width { duration: Ui.normal; }
                             }
                         }
-                        Text { text: j.detail; font-size: 11px; color: Theme.c.text4; overflow: elide; }
+                        Text { text: j.detail; font-size: Ui.font-small; color: Theme.d.muted; overflow: elide; }
                     }
-                    Button { text: j.paused ? "Fortsetzen" : "Pause"; clicked => { root.job-pause(j.id, !j.paused); } }
-                    Button { text: "Abbrechen"; clicked => { root.job-cancel(j.id); } }
+                    ToolbarButton { y: (parent.height - self.height) / 2; text: j.paused ? "Fortsetzen" : "Pause"; clicked => { root.job-pause(j.id, !j.paused); } }
+                    ToolbarButton { y: (parent.height - self.height) / 2; text: "Abbrechen"; clicked => { root.job-cancel(j.id); } }
                 }
             }
             // ---------- status bar ----------
             Rectangle {
-                height: 24px; background: Theme.c.chrome;
+                height: Ui.status-h; background: Theme.d.app;
+                Rectangle { y: 0; height: 1px; background: Theme.d.border; }
                 HorizontalLayout {
-                    padding-left: 8px; padding-right: 4px; spacing: 16px;
-                    Text { text: root.status; vertical-alignment: center; color: Theme.c.text3; }
-                    Text { text: root.error; vertical-alignment: center; color: Theme.c.danger; horizontal-stretch: 1; overflow: elide; }
+                    padding-left: 10px; padding-right: 4px; spacing: 16px;
+                    Text { text: root.status; vertical-alignment: center; font-size: Ui.font-small; color: Theme.d.text2; }
+                    Text { text: root.error; vertical-alignment: center; font-size: Ui.font-small; color: Theme.d.danger; horizontal-stretch: 1; overflow: elide; }
                     // sort menu (the icon view has no column headers)
                     sort-btn := Rectangle {
-                        width: sort-text.preferred-width + 23px;
-                        border-radius: 3px;
-                        background: sort-ta.has-hover ? Theme.c.hover : transparent;
+                        width: sort-text.preferred-width + 26px;
+                        y: 1px; height: 22px;
+                        border-radius: Ui.r;
+                        background: sort-ta.has-hover ? Theme.d.hover : transparent;
                         // caret drawn, not a "▾" glyph: Segoe UI has none, and the font
                         // fallback search cost seconds on a fresh Windows VM (CI #50)
                         HorizontalLayout {
                             padding-left: 6px; spacing: 4px;
-                            sort-text := Text { text: "Sortieren"; vertical-alignment: center; color: Theme.c.text2; font-size: 11px; }
-                            Path {
-                                width: 7px; height: 4px; y: (parent.height - 4px) / 2;
-                                commands: "M 0 0 L 7 0 L 3.5 4 Z";
-                                fill: Theme.c.text4;
-                            }
+                            sort-text := Text { text: "Sortieren"; vertical-alignment: center; color: Theme.d.text2; font-size: Ui.font-small; }
+                            Icon { y: (parent.height - self.height) / 2; d: IconData.chevron-up; size: 12px; tint: Theme.d.icon-muted; }
                         }
                         sort-ta := TouchArea { clicked => { sort-popup.show(); } }
                         sort-popup := PopupWindow {
-                            x: 0; y: -self.height - 2px;
-                            width: 190px;
+                            x: 0; y: -self.height - 4px;
+                            width: 200px;
                             Rectangle {
-                                background: Theme.c.card;
-                                border-width: 1px; border-color: Theme.c.outline; border-radius: 4px;
-                                drop-shadow-blur: 8px; drop-shadow-color: Theme.c.shadow-soft;
+                                background: Theme.d.overlay;
+                                border-width: 1px; border-color: Theme.d.border; border-radius: Ui.r-large;
+                                drop-shadow-blur: 16px; drop-shadow-offset-y: 4px; drop-shadow-color: Theme.d.shadow;
                                 VerticalLayout {
                                     padding: 4px;
                                     for k in [{ id: "name", label: "Name" }, { id: "modified", label: "Änderungsdatum" },
-                                              { id: "type", label: "Typ" }, { id: "size", label: "Größe" }] : SortItem {
-                                        label: k.label; on: root.sort-key == k.id;
-                                        picked => { root.sort-pick(k.id); }
+                                              { id: "type", label: "Typ" }, { id: "size", label: "Größe" }] : MenuItem {
+                                        text: k.label; checked: root.sort-key == k.id;
+                                        clicked => { root.sort-pick(k.id); }
                                     }
-                                    Rectangle { height: 1px; background: Theme.c.line; }
-                                    SortItem { label: "Aufsteigend"; on: !root.sort-desc; picked => { root.sort-dir(false); } }
-                                    SortItem { label: "Absteigend"; on: root.sort-desc; picked => { root.sort-dir(true); } }
+                                    MenuSeparator {}
+                                    MenuItem { text: "Aufsteigend"; checked: !root.sort-desc; clicked => { root.sort-dir(false); } }
+                                    MenuItem { text: "Absteigend"; checked: root.sort-desc; clicked => { root.sort-dir(true); } }
                                 }
                             }
                         }
@@ -1774,17 +1778,18 @@ export component MainWindow inherits Window {
     // ---------- conflict dialog (modal) ----------
     Rectangle {
         visible: root.conflict-open;
-        background: Theme.c.scrim;
+        background: Theme.d.scrim;
         TouchArea { }
         Rectangle {
             width: 520px;
             height: conflict-layout.preferred-height;
-            background: Theme.c.card;
-            border-radius: 8px;
-            border-color: Theme.c.outline;
+            background: Theme.d.raised;
+            border-radius: Ui.r-large;
+            border-color: Theme.d.border;
             border-width: 1px;
-            drop-shadow-blur: 16px;
-            drop-shadow-color: Theme.c.shadow;
+            drop-shadow-blur: 24px;
+            drop-shadow-offset-y: 8px;
+            drop-shadow-color: Theme.d.shadow;
             conflict-focus := FocusScope {
                 key-pressed(e) => {
                     if (e.text == Key.Escape) { root.conflict-answer(3); return accept; }
@@ -1795,17 +1800,22 @@ export component MainWindow inherits Window {
                     accept
                 }
                 conflict-layout := VerticalLayout {
-                    padding: 16px; spacing: 8px;
-                    Text { text: root.conflict-title; font-size: 14px; font-weight: 700; wrap: word-wrap; }
-                    Text { text: root.conflict-source; color: Theme.c.text2; wrap: word-wrap; }
-                    Text { text: root.conflict-target; color: Theme.c.text2; wrap: word-wrap; }
+                    padding: 18px; spacing: 8px;
+                    HorizontalLayout {
+                        spacing: 10px;
+                        Icon { y: 2px; d: IconData.warning; tint: Theme.d.warning; }
+                        Text { text: root.conflict-title; font-size: Ui.font-title; font-weight: 600; color: Theme.d.text; wrap: word-wrap; horizontal-stretch: 1; }
+                    }
+                    Text { text: root.conflict-source; font-size: Ui.font; color: Theme.d.text2; wrap: word-wrap; }
+                    Text { text: root.conflict-target; font-size: Ui.font; color: Theme.d.text2; wrap: word-wrap; }
                     CheckBox { text: "Für alle weiteren Konflikte übernehmen"; checked <=> root.conflict-all; }
+                    Rectangle { height: 4px; }
                     HorizontalLayout {
                         spacing: 6px; alignment: end;
-                        Button { text: root.conflict-dirs ? "Zusammenführen" : "Ersetzen"; clicked => { root.conflict-answer(0); } }
-                        Button { text: "Überspringen"; clicked => { root.conflict-answer(1); } }
-                        Button { text: "Beide behalten"; clicked => { root.conflict-answer(2); } }
-                        Button { text: "Abbrechen"; clicked => { root.conflict-answer(3); } }
+                        ToolbarButton { text: root.conflict-dirs ? "Zusammenführen" : "Ersetzen"; primary: true; clicked => { root.conflict-answer(0); } }
+                        ToolbarButton { text: "Überspringen"; clicked => { root.conflict-answer(1); } }
+                        ToolbarButton { text: "Beide behalten"; clicked => { root.conflict-answer(2); } }
+                        ToolbarButton { text: "Abbrechen"; clicked => { root.conflict-answer(3); } }
                     }
                 }
             }
@@ -1815,17 +1825,18 @@ export component MainWindow inherits Window {
     // ---------- confirmation dialog (modal) ----------
     Rectangle {
         visible: root.confirm-open;
-        background: Theme.c.scrim;
+        background: Theme.d.scrim;
         TouchArea { }
         Rectangle {
             width: 440px;
             height: confirm-layout.preferred-height;
-            background: Theme.c.card;
-            border-radius: 8px;
-            border-color: Theme.c.outline;
+            background: Theme.d.raised;
+            border-radius: Ui.r-large;
+            border-color: Theme.d.border;
             border-width: 1px;
-            drop-shadow-blur: 16px;
-            drop-shadow-color: Theme.c.shadow;
+            drop-shadow-blur: 24px;
+            drop-shadow-offset-y: 8px;
+            drop-shadow-color: Theme.d.shadow;
             confirm-focus := FocusScope {
                 // modal: the keyboard stays here while open (opening it can close
                 // the settings panel, whose focused button then disappears – that
@@ -1837,12 +1848,12 @@ export component MainWindow inherits Window {
                     accept
                 }
                 confirm-layout := VerticalLayout {
-                    padding: 16px; spacing: 12px;
-                    Text { text: root.confirm-text; wrap: word-wrap; color: Theme.c.text; }
+                    padding: 18px; spacing: 16px;
+                    Text { text: root.confirm-text; wrap: word-wrap; font-size: Ui.font-body; color: Theme.d.text; }
                     HorizontalLayout {
                         spacing: 6px; alignment: end;
-                        Button { text: root.confirm-ok; clicked => { root.confirm-answer(true); } }
-                        Button { text: "Abbrechen"; clicked => { root.confirm-answer(false); } }
+                        ToolbarButton { text: root.confirm-ok; primary: true; clicked => { root.confirm-answer(true); } }
+                        ToolbarButton { text: "Abbrechen"; clicked => { root.confirm-answer(false); } }
                     }
                 }
             }
@@ -1855,23 +1866,25 @@ export component MainWindow inherits Window {
         height: notice-layout.preferred-height;
         x: (root.width - self.width) / 2;
         y: root.height - self.height - 34px;
-        background: Theme.c.card;
-        border-radius: 6px;
+        background: Theme.d.raised;
+        border-radius: Ui.r-large;
         border-width: 1px;
-        border-color: Theme.c.warning;
-        drop-shadow-blur: 12px;
-        drop-shadow-color: Theme.c.shadow;
+        border-color: Theme.d.border;
+        drop-shadow-blur: 16px;
+        drop-shadow-offset-y: 4px;
+        drop-shadow-color: Theme.d.shadow;
         notice-layout := HorizontalLayout {
-            padding: 10px; spacing: 8px;
-            Rectangle { width: 4px; border-radius: 2px; background: Theme.c.warning; }
+            padding: 12px; spacing: 10px;
+            Rectangle { width: 3px; border-radius: 1.5px; background: Theme.d.warning; }
+            Icon { y: (parent.height - self.height) / 2; d: IconData.warning; tint: Theme.d.warning; }
             Text {
                 text: root.notice; wrap: word-wrap; vertical-alignment: center;
-                color: Theme.c.text; horizontal-stretch: 1;
+                font-size: Ui.font; color: Theme.d.text; horizontal-stretch: 1;
             }
             VerticalLayout {
                 alignment: center; spacing: 4px;
-                if root.notice-folder : Button { text: "Bericht anzeigen"; clicked => { root.notice-open(); } }
-                Button { text: "OK"; clicked => { root.notice = ""; } }
+                if root.notice-folder : ToolbarButton { text: "Bericht anzeigen"; clicked => { root.notice-open(); } }
+                ToolbarButton { text: "OK"; primary: true; clicked => { root.notice = ""; } }
             }
         }
     }
@@ -1905,12 +1918,13 @@ export component MainWindow inherits Window {
         width: 380px;
         // small screens: the panel scrolls instead of running off the bottom
         height: min(settings-layout.preferred-height + 2px, root.height - self.y - 8px);
-        background: Theme.c.card;
-        border-color: Theme.c.outline;
+        background: Theme.d.raised;
+        border-color: Theme.d.border;
         border-width: 1px;
-        border-radius: 6px;
-        drop-shadow-blur: 12px;
-        drop-shadow-color: Theme.c.shadow;
+        border-radius: Ui.r-large;
+        drop-shadow-offset-y: 6px;
+        drop-shadow-blur: 24px;
+        drop-shadow-color: Theme.d.shadow;
         // clicks on empty panel space must not reach the list below
         TouchArea { }
         settings-scroll := ScrollView {
@@ -1921,16 +1935,16 @@ export component MainWindow inherits Window {
             width: settings-scroll.visible-width;
             padding: 14px;
             spacing: 8px;
-            Text { text: "Einstellungen"; font-size: 15px; font-weight: 700; }
+            Text { text: "Einstellungen"; font-size: Ui.font-title; font-weight: 600; color: Theme.d.text; }
             CheckBox {
                 text: "Hardwarebeschleunigung verwenden, wenn verfügbar";
                 checked <=> root.hw-accel;
                 toggled => { root.toggle-hw-accel(self.checked); }
             }
-            Text { text: "Änderung wird beim nächsten Start wirksam."; font-size: 11px; color: Theme.c.muted; }
-            Text { text: root.renderer-status; font-size: 11px; color: Theme.c.text3; wrap: word-wrap; }
-            Rectangle { height: 1px; background: Theme.c.line; }
-            Text { text: "Ordneroptionen"; font-size: 13px; font-weight: 600; }
+            Text { text: "Änderung wird beim nächsten Start wirksam."; font-size: Ui.font-small; color: Theme.d.muted; }
+            Text { text: root.renderer-status; font-size: Ui.font-small; color: Theme.d.text2; wrap: word-wrap; }
+            Rectangle { height: 1px; background: Theme.d.border; }
+            Text { text: "Ordneroptionen"; font-size: Ui.font-body; font-weight: 600; color: Theme.d.text; }
             CheckBox {
                 text: "Dateinamenerweiterungen anzeigen";
                 checked <=> root.opt-show-ext;
@@ -1946,28 +1960,28 @@ export component MainWindow inherits Window {
                 checked <=> root.opt-single-click;
                 toggled => { root.set-option("single_click", self.checked); }
             }
-            Text { text: "Die Ansicht wird pro Ordner gemerkt."; font-size: 11px; color: Theme.c.muted; }
+            Text { text: "Die Ansicht wird pro Ordner gemerkt."; font-size: Ui.font-small; color: Theme.d.muted; }
             HorizontalLayout {
                 alignment: start;
                 Button { text: "Aktuelle Ansicht für alle Ordner"; clicked => { root.apply-view-all(); } }
             }
-            Rectangle { height: 1px; background: Theme.c.line; }
-            Text { text: "Farbschema"; font-size: 13px; font-weight: 600; }
+            Rectangle { height: 1px; background: Theme.d.border; }
+            Text { text: "Farbschema"; font-size: Ui.font-body; font-weight: 600; color: Theme.d.text; }
             // segmented control (own drawing: checkable Buttons would toggle themselves)
             HorizontalLayout {
                 alignment: start;
                 Rectangle {
-                    border-width: 1px; border-color: Theme.c.outline; border-radius: 4px;
+                    border-width: 1px; border-color: Theme.d.border; border-radius: 4px;
                     width: theme-row.preferred-width; height: 28px;
                     theme-row := HorizontalLayout {
                         padding: 2px; spacing: 2px;
                         for t in [{ id: "system", label: "Wie Windows" }, { id: "light", label: "Hell" }, { id: "dark", label: "Dunkel" }] : Rectangle {
                             width: theme-text.preferred-width + 20px;
                             border-radius: 3px;
-                            background: root.theme-choice == t.id ? Theme.c.current : (theme-ta.has-hover ? Theme.c.hover : transparent);
+                            background: root.theme-choice == t.id ? Theme.d.selected : (theme-ta.has-hover ? Theme.d.hover : transparent);
                             border-width: root.theme-choice == t.id ? 1px : 0px;
-                            border-color: Theme.c.accent;
-                            theme-text := Text { text: t.label; vertical-alignment: center; horizontal-alignment: center; color: Theme.c.text; }
+                            border-color: Theme.d.accent;
+                            theme-text := Text { text: t.label; vertical-alignment: center; horizontal-alignment: center; color: Theme.d.text; }
                             theme-ta := TouchArea { clicked => { root.set-theme(t.id); } }
                         }
                     }
@@ -1978,8 +1992,8 @@ export component MainWindow inherits Window {
                 checked <=> root.opt-system-accent;
                 toggled => { root.set-option("system_accent", self.checked); }
             }
-            Rectangle { height: 1px; background: Theme.c.line; }
-            Text { text: "Windows-Integration"; font-size: 13px; font-weight: 600; }
+            Rectangle { height: 1px; background: Theme.d.border; }
+            Text { text: "Windows-Integration"; font-size: Ui.font-body; font-weight: 600; color: Theme.d.text; }
             if root.integration-available : CheckBox {
                 text: "Ordner mit Explorer 2.0 öffnen (Doppelklick, „Ordner öffnen“)";
                 checked <=> root.feat-folder-open;
@@ -2000,7 +2014,7 @@ export component MainWindow inherits Window {
                 checked <=> root.opt-single-instance;
                 toggled => { root.set-option("single_instance", self.checked); }
             }
-            Text { text: root.integration-status; font-size: 11px; color: Theme.c.muted; wrap: word-wrap; }
+            Text { text: root.integration-status; font-size: Ui.font-small; color: Theme.d.muted; wrap: word-wrap; }
             HorizontalLayout {
                 alignment: start;
                 Button {
@@ -2009,8 +2023,8 @@ export component MainWindow inherits Window {
                     clicked => { root.integration-reset(); }
                 }
             }
-            Rectangle { height: 1px; background: Theme.c.line; }
-            Text { text: "Suche"; font-size: 13px; font-weight: 600; }
+            Rectangle { height: 1px; background: Theme.d.border; }
+            Text { text: "Suche"; font-size: Ui.font-body; font-weight: 600; color: Theme.d.text; }
             CheckBox {
                 text: "Laufwerke für die Suche indexieren";
                 checked <=> root.opt-index-enabled;
@@ -2025,14 +2039,14 @@ export component MainWindow inherits Window {
                     toggled => { root.index-drive(d.path, self.checked); }
                 }
             }
-            Text { text: root.search-status; font-size: 11px; color: Theme.c.muted; wrap: word-wrap; }
+            Text { text: root.search-status; font-size: Ui.font-small; color: Theme.d.muted; wrap: word-wrap; }
             if root.opt-index-enabled : HorizontalLayout {
                 alignment: start;
                 Button { text: "Neu mit der Platte abgleichen"; clicked => { root.search-rescan(); } }
             }
-            if root.install-available : Rectangle { height: 1px; background: Theme.c.line; }
-            if root.install-available : Text { text: "Installation"; font-size: 13px; font-weight: 600; }
-            if root.install-available : Text { text: root.install-status; font-size: 11px; color: Theme.c.muted; wrap: word-wrap; }
+            if root.install-available : Rectangle { height: 1px; background: Theme.d.border; }
+            if root.install-available : Text { text: "Installation"; font-size: Ui.font-body; font-weight: 600; color: Theme.d.text; }
+            if root.install-available : Text { text: root.install-status; font-size: Ui.font-small; color: Theme.d.muted; wrap: word-wrap; }
             if root.install-available && root.install-button != "" : HorizontalLayout {
                 alignment: start;
                 Button { text: root.install-button; clicked => { root.install-now(); } }
