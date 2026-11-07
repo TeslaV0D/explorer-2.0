@@ -172,7 +172,8 @@ Check "[W9] Ctrl+Z restores it (with extension)" { Test-Path "$dst\a.txt" }
 # real shell context menu: open on the row, close with Esc
 Click $LISTX (RowY 0) 'right'; Start-Sleep -Milliseconds 1200; Shot "w10-menu"
 Keys '{ESC}'; Start-Sleep -Milliseconds 600
-Check "[W10] right-click shows the shell menu (closed with Esc)" { (Last 'context menu result') -match 'Dismissed' }
+# the result is written after the shell's modal menu loop ended - poll (CI #113: later than 600 ms)
+Check "[W10] right-click shows the shell menu (closed with Esc)" { WaitFor 'context menu result Dismissed' 3000 }
 
 # properties dialog (shell window in our process)
 Keys '%{ENTER}'
