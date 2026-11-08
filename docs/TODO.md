@@ -157,7 +157,7 @@ Legende: `[ ]` offen · `[~]` in Arbeit · `[x]` erledigt · Prio P0/P1/P2
 - [x] R7 Inspector (CI-Run #125): Gruppen, Pfad kopieren, Einblenden
 - [x] R8 Menüs + Dialoge (CI-Run #128): eigenes Kontextmenü + „Weitere Optionen“ (natives Menü dunkel), Dialoge/Palette/Schnellsuche/Einstellungen/Jobs/Hinweis/Statusleiste; Installer schließt erst nach erfolgreichem Start der installierten Kopie
 - [x] R9 Zustände + Bewegung (CI-Run #130): Gedrückt/Hover/Erscheinen einheitlich, Pixel-Checks der Zustände
-- [ ] R10 Konsistenz + QA: alte Tokens weg, Skalierung 125/150 % (E2E [83]), Galerie vorher/nachher, Budgets, Checkliste – lokal fertig, CI ausstehend
+- [x] R10 Konsistenz + QA (CI-Run #131): alte Tokens weg, Skalierung 125/150 % (E2E [83]), Galerie vorher/nachher, Budgets, Checkliste → **Redesign R0–R10 komplett**
 - [ ] Praxistest Redesign auf echtem Windows (Boss, `docs/PRAXISTEST-REDESIGN.md`)
 - [ ] Exe-Größe beobachten (19,31 MB nach Redesign, Gate 20 MB): bei Annäherung Ursachen messen (Slint-Codegen pro Komponente), nichts verschlechtern (D-015)
 - [ ] E2E-Wackler beobachten: [49] erster Drag nach Gesamtlauf ([72c] behoben: Installer wartet auf die laufende Kopie, CI #128)
