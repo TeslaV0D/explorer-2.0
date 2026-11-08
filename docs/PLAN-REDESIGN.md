@@ -1,6 +1,6 @@
 # Plan: UI/UX-Redesign (File-Pilot-inspiriert)
 
-Stand 2026-11-07 · Auftrag Boss: **nur Design + Bediengefühl**. Funktionen, Logik,
+Stand 2026-11-08 · **R0–R10 umgesetzt** (CI #101–#131, Abnahme: Praxistest `docs/PRAXISTEST-REDESIGN.md`) · Auftrag Boss: **nur Design + Bediengefühl**. Funktionen, Logik,
 Datenmodelle, Dateioperationen, Navigation, Suche, Integration (R-001) bleiben
 unverändert. Jeder Knopf löst danach exakt dieselbe Aktion aus wie vorher.
 

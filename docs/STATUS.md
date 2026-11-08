@@ -1,6 +1,6 @@
 # Zwischenstand
 
-**Stand:** 2026-11-07 · **Phase:** 1 · M0–M7 ✅ (M7.3 verschoben) · R-001 ✅ · **M8.1/M8.2 Installer ✅ (Run #69)** · **M8.3 Härtung ✅ (Run #70–#73)** · **Phase 2 Suche: S1.1 ✅ (Run #78), S1.2 ✅ (Run #80), S1.3 ✅ (Run #83), S1.4 ✅ (Run #90), S1.5 ✅ (Run #91/#93) → **S1 komplett**, Praxistest ✅ (Boss: „es funktioniert“) · **Redesign läuft: R0 ✅ (Run #101), R1 ✅ (Run #104), R2 ✅ (Run #110), R3 ✅ (Run #115), R4 ✅ (Run #120), R5 ✅ (Run #123), R6 ✅ (Run #124), R7 ✅ (Run #125), R8 ✅ (Run #128), R9 ✅ (Run #130), als Nächstes R10 Konsistenz + QA** (`docs/PLAN-REDESIGN.md`)** (Plan `docs/PLAN-SEARCH.md`) · **Branch:** `claude/relaxed-pasteur-ufhh1p`
+**Stand:** 2026-11-07 · **Phase:** 1 · M0–M7 ✅ (M7.3 verschoben) · R-001 ✅ · **M8.1/M8.2 Installer ✅ (Run #69)** · **M8.3 Härtung ✅ (Run #70–#73)** · **Phase 2 Suche: S1.1 ✅ (Run #78), S1.2 ✅ (Run #80), S1.3 ✅ (Run #83), S1.4 ✅ (Run #90), S1.5 ✅ (Run #91/#93) → **S1 komplett**, Praxistest ✅ (Boss: „es funktioniert“) · **Redesign läuft: R0 ✅ (Run #101), R1 ✅ (Run #104), R2 ✅ (Run #110), R3 ✅ (Run #115), R4 ✅ (Run #120), R5 ✅ (Run #123), R6 ✅ (Run #124), R7 ✅ (Run #125), R8 ✅ (Run #128), R9 ✅ (Run #130), R10 lokal fertig (CI läuft) → danach Praxistest Boss** (`docs/PLAN-REDESIGN.md`)** (Plan `docs/PLAN-SEARCH.md`) · **Branch:** `claude/relaxed-pasteur-ufhh1p`
 
 ## M5 – Shell-Integration (läuft, Freigabe Boss 2026-11-04)
 ### CI-Run #37 – alles grün ✅ (M5.0–M5.5)
@@ -39,6 +39,14 @@
 
 - **Bug (CI #32/#33, UI-Matrix)**: OLE-Drop-Target wurde nie registriert („Invalid window handle“) – der Timer lief, bevor Slint das native Fenster erzeugt hatte → Ablegen aus anderen Apps wäre tot gewesen. Fix: Registrierung wiederholt bis HWND existiert (50 ms, max. 5 s), sonst Rückfall auf In-App-DnD.
 - Neu: **Windows-E2E mit echter Tastatur/Maus** (`scripts/e2e-windows.ps1`, CI-Schritt im Release-Job, Screenshots bei Fehler).
+
+### Redesign R10 – Konsistenz + QA (lokal, CI läuft)
+- **Alte Farb-Tokens entfernt**: `core::theme::Tokens` = Schema + Farbrollen (`Design`), alter 38-Token-Satz, `tint()` und die alten Standardfarben weg, ebenso Slint `ThemeColors`/`Theme.c`; Trace meldet Akzent/Auswahl der neuen Rollen (E2E [70]/[70h2] nachgezogen: hell #2f6feb/#dce7fc, dunkel #4f8cff/#2a3750).
+- **Anzeige-Skalierung** 125 %/150 % (`SLINT_SCALE_FACTOR`, Fenster 1280×800 physisch): E2E [83] – Bedienelemente da, alles im Fenster, Adresszeile endet vor ⋮; bei 150 % greifen die Breakpoints (schmale Seitenleiste, Aktionen im ⋮-Menü). Galerie: `13-skalierung-150` (Linux), `07-skalierung-125` (Windows).
+- **Galerie vorher/nachher**: Stand R0 (Commit c50a5ce) neu gebaut und mit derselben Galerie fotografiert; 11 Bildschirme × hell/dunkel nebeneinander (an Boss geschickt).
+- **Budgets** (CI #130 gegen #93 vor dem Redesign): Exe 18,08 → **19,31 MB** (Frühwarn-Gate 20 MB, D-015: Qualität vor Größe – beobachten, nicht blind kürzen); normaler Start best-of-3 54,8 → **87,8 ms** (Budget 300 ms); Erststart 106,8 ms; 100k-Ordner erste Zeilen 4 ms. Mehr UI-Elemente im ersten Frame (Icons als Pfade, Tooltips, Plättchen) kosten messbar, aber weit im Budget.
+- **Praxistest-Checkliste** `docs/PRAXISTEST-REDESIGN.md` (8 Abschnitte, inkl. „Weitere Optionen“ dunkel, 125/150 %, kräftige Akzentfarben).
+- Lokal 276/276.
 
 ### Redesign R9 – Zustände + Bewegung ✅ (CI-Run #130)
 - Durchgang über alle Bedienelemente: **Gedrückt** (`pressed`) jetzt auch für Menüeinträge, Tabs und Seitenleiste (vorher nur Knöpfe/Kopf/Brotkrumen); **Hover-Übergänge 120 ms** auch in Menüs und Palette; **Erscheinen** einheitlich: ⋮-Menü + Sortier-Menü blenden in 120 ms ein (wie das Kontextmenü), Konflikt-/Bestätigungsdialog blenden ein **und aus** (bleiben nur während des Ausblendens sichtbar), Einstellungs-Panel 160 ms. Gesperrt = `faint` überall (Knöpfe, Menüs, Palette), Fokus = Akzentrand (Felder, Zeilen, Kacheln).
