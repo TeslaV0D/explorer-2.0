@@ -8,4 +8,4 @@ Neueste Version: **[Releases](https://github.com/TeslaV0D/explorer-2.0/releases/
 
 ## Release erstellen
 
-Version in `Cargo.toml` heben, committen, Tag `v<Version>` pushen → `.github/workflows/release.yml` baut, testet das Setup und veröffentlicht das Release.
+Version in `Cargo.toml` heben und pushen (`main` oder `claude/**`) → `.github/workflows/release.yml` sieht eine Version ohne Release, baut, testet das Setup, legt den Tag `v<Version>` an und veröffentlicht das Release. Alternativ Tag `v<Version>` pushen oder den Workflow von Hand starten.

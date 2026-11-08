@@ -6,7 +6,7 @@
 ## M8.4 Release-Paket (2026-11-08, Boss: „mach ein Release, sodass man bequem installieren kann“)
 - **`Explorer2-Setup-0.1.0-x64.exe`**: eine Datei, Doppelklick → Nachfrage (Ziel, ohne Admin; „bereits installiert → aktualisieren?“) → Installation über die App selbst (`--install`, D-023) → „Jetzt starten?“. Fehler als Dialog; `--quiet` ohne Dialoge (Exit 0/1/2/1223).
 - Dazu Portable-ZIP (`explorer2.exe` + `explorer2-recover.exe`) und `SHA256SUMS.txt`; Release-Notes auf Deutsch inkl. SmartScreen-Hinweis (unsigniert).
-- `scripts/release-package.ps1` baut + prüft das Setup in **jedem** Windows-CI-Run (Artefakt `explorer2-windows-x64` enthält jetzt die Release-Dateien); `release.yml` veröffentlicht bei Tag `v0.1.0`.
+- `scripts/release-package.ps1` baut + prüft das Setup in **jedem** Windows-CI-Run (Artefakt `explorer2-windows-x64` enthält jetzt die Release-Dateien); `release.yml` veröffentlicht, sobald eine Version ohne Release gepusht wird (legt den Tag selbst an; Tag-Push aus der Session blockt der Proxy).
 - Version 0.0.1 → **0.1.0**.
 
 ## M5 – Shell-Integration (läuft, Freigabe Boss 2026-11-04)
