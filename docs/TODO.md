@@ -172,6 +172,10 @@ Legende: `[ ]` offen · `[~]` in Arbeit · `[x]` erledigt · Prio P0/P1/P2
   - [ ] Sprache in den Einstellungen umschaltbar (Standard: Windows-Sprache), live oder mit Neustart-Hinweis
   - [ ] Zahlen/Datum/Größen nach Gebietsschema; Schriftabdeckung beachten (Gotcha: fehlende Glyphen kosten Startzeit)
 - [ ] **„Neu“-Untermenü wie Windows**: nicht nur Ordner, sondern alle Erstellungsmöglichkeiten (Textdokument, Verknüpfung, gezippter Ordner, Word/Excel/… aus `HKCR\.<ext>\ShellNew` – `NullFile`/`FileName`/`Data`/`Command`), Name direkt im Umbenennen-Modus, Undo wie bei Neuer Ordner
+- [ ] **Autostart mit Windows** (opt-in, Schalter in Einstellungen + Palette)
+  - [ ] Eintrag `HKCU\Software\Microsoft\Windows\CurrentVersion\Run` (ohne Admin), **nur über `integrate::apply`** (Journal) + Eintrag in `manifest::points()` → Reset/Recovery/Deinstallation entfernen ihn (R-001, Snapshot-Test)
+  - [ ] Start im Hintergrund (`--background`: kein Fenster, Instanz-Server + Suchindex warm) → Win+E/Ordner öffnen zeigt sofort ein Fenster über die Eine-Instanz-Übergabe; Fenster schließen = im Hintergrund weiterlaufen? (Entscheidung Boss, ggf. Tray-Symbol zum Beenden)
+  - [ ] Start-Wächter beachten (Hintergrundstart darf nicht als Absturz zählen), Startkosten beim Windows-Login messen (darf das Login nicht bremsen), Exe-Pfad nach Update/Installation umbiegen wie bei M7
 - [ ] **Notfall: Shift + Rechtsklick öffnet direkt das native Windows-Kontextmenü** (statt unseres eigenen; inkl. erweiterter Verben wie „Als Pfad kopieren“, Windows-Verhalten bei Shift = Extended-Verben `CMF_EXTENDEDVERBS`)
 
 ## Phase 3 – Datei-Aktions-Shortcuts (Sweetch-Stil)  *(später, nur beschrieben)*
