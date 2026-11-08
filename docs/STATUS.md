@@ -44,7 +44,7 @@
 - **Alte Farb-Tokens entfernt**: `core::theme::Tokens` = Schema + Farbrollen (`Design`), alter 38-Token-Satz, `tint()` und die alten Standardfarben weg, ebenso Slint `ThemeColors`/`Theme.c`; Trace meldet Akzent/Auswahl der neuen Rollen (E2E [70]/[70h2] nachgezogen: hell #2f6feb/#dce7fc, dunkel #4f8cff/#2a3750).
 - **Anzeige-Skalierung** 125 %/150 % (`SLINT_SCALE_FACTOR`, Fenster 1280×800 physisch): E2E [83] – Bedienelemente da, alles im Fenster, Adresszeile endet vor ⋮; bei 150 % greifen die Breakpoints (schmale Seitenleiste, Aktionen im ⋮-Menü). Galerie: `13-skalierung-150` (Linux), `07-skalierung-125` (Windows).
 - **Galerie vorher/nachher**: Stand R0 (Commit c50a5ce) neu gebaut und mit derselben Galerie fotografiert; 11 Bildschirme × hell/dunkel nebeneinander (an Boss geschickt).
-- **Budgets** (CI #130 gegen #93 vor dem Redesign): Exe 18,08 → **19,31 MB** (Frühwarn-Gate 20 MB, D-015: Qualität vor Größe – beobachten, nicht blind kürzen); normaler Start best-of-3 54,8 → **87,8 ms** (Budget 300 ms); Erststart 106,8 ms; 100k-Ordner erste Zeilen 4 ms. Mehr UI-Elemente im ersten Frame (Icons als Pfade, Tooltips, Plättchen) kosten messbar, aber weit im Budget.
+- **Budgets** (CI #130 gegen #93 vor dem Redesign): Exe 18,08 → **19,31 MB** (Frühwarn-Gate 20 MB, D-015: Qualität vor Größe – beobachten, nicht blind kürzen); normaler Start best-of-3 **unverändert** (#93: 54,8 ms, #131: 52,9 ms; #130 zeigte 87,8 ms = VM-Schwankung, Budget 300 ms); Erststart #131 59,2 ms; 100k-Ordner erste Zeilen 3 ms. Windows-Galerie 18 Bilder (inkl. 125 %).
 - **Praxistest-Checkliste** `docs/PRAXISTEST-REDESIGN.md` (8 Abschnitte, inkl. „Weitere Optionen“ dunkel, 125/150 %, kräftige Akzentfarben).
 - Lokal 276/276.
 
