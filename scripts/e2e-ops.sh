@@ -388,7 +388,7 @@ theme_run() { # <log> [env...]
   sleep 2.5; focus; LOG=$log
 }
 theme_run $W/trace-70.log
-check "[70] first start follows the system (light here) with the original colours" "last 'theme why=init' | grep -q 'choice=system dark=false accent=#0067c0 selection=#cce8ff'"
+check "[70] 'Wie Windows' follows the system (light here): calm blue + its selection" "last 'theme why=init' | grep -q 'choice=system dark=false accent=#2f6feb selection=#dce7fc'"
 xdotool mousemove 900 680; sleep 0.3; shot t70-light
 # std widget: the settings panel's "Schließen" button, near its corner; sidebar: empty space low in it
 SIDE=$(ui_box "Schnellzugriff" | awk '{print $1+20, 600}')
@@ -414,7 +414,7 @@ xdotool mousemove $LIST_X $(row_y 1) click 1; sleep 0.4; xdotool mousemove 900 6
 S=$(px t70-green $((LIST_X + 200)) $(row_y 1))
 check "[70h] the selection takes the accent's hue (green: $S)" "green_wins '$S'"
 ui_click "Einstellungen"; sleep 0.6; ui_click "Windows-Akzentfarbe verwenden"; sleep 0.8
-check "[70h2] unticking 'Windows-Akzentfarbe' goes back to the blue" "last 'theme why=accent' | grep -q 'dark=true accent=#4cc2ff selection=#1c3f63' && grep -qx 'system_accent = false' $TCFG/settings.ini"
+check "[70h2] unticking 'Windows-Akzentfarbe' goes back to the blue" "last 'theme why=accent' | grep -q 'dark=true accent=#4f8cff selection=#2a3750' && grep -qx 'system_accent = false' $TCFG/settings.ini"
 ui_click "Windows-Akzentfarbe verwenden"; sleep 0.6; ui_click "Schließen" last; sleep 0.4
 xdotool key ctrl+shift+p; sleep 0.4; xdotool type --delay 40 "hell"; sleep 0.5; xdotool key Return; sleep 1
 check "[70i] 'Hell' overrides the dark system" "last 'theme why=choice' | grep -q 'choice=light dark=false'"
@@ -556,5 +556,20 @@ check "[81] kit shows colour roles, controls (spoken names) and all 50 icons" "u
 ui_click "UI-Kit schließen"; sleep 0.8
 check "[81b] closing it shows the normal window" "! ui_has 'UI-Kit schließen' && ui_has 'Einstellungen'"
 kill $P2; wait $P2 2>/dev/null
+UI_DUMP=$MAIN_DUMP
+
+echo "== [83] redesign R10: display scaling 125 % / 150 % (SLINT_SCALE_FACTOR, window 1280x800 physical)"
+for SC in 1.25 1.5; do
+  SCC=$W/cfg-scale-$SC; mkdir -p $SCC; printf 'theme = dark\n' > $SCC/settings.ini
+  UI_DUMP=$W/ui-dump-scale-$SC.txt
+  EXPLORER2_UI_DUMP=$UI_DUMP SLINT_SCALE_FACTOR=$SC EXPLORER2_CONFIG_DIR=$SCC $EXE --new-instance "$TW" > $W/trace-83-$SC.log 2>&1 & P2=$!
+  ui_wait "Einstellungen" 8
+  xdotool windowsize "$(xdotool search --name 'Explorer 2.0' | tail -1)" 1280 800 2>/dev/null; sleep 1.2; shot s83_scale_$SC
+  check "[83] $SC: scale reported, controls there (back, address, more, settings, list header)" "head -1 $UI_DUMP | grep -q ' $SC\$' && ui_has 'Zurück' && ui_has 'Adresszeile' && ui_has 'Mehr' && ui_has 'Einstellungen' && ui_has 'Name'"
+  check "[83b] $SC: everything inside the window (physical px)" "awk -F'\t' 'NR==1{split(\$0,w,\" \"); s=w[4]; next} (\$2*s<0 || \$3*s<0 || (\$2+\$4)*s>1281 || (\$3+\$5)*s>801){bad=1; print \"outside: \" \$0} END{exit bad}' $UI_DUMP"
+  AX=$(ui_box 'Adresszeile' | awk '{print $1+$3}'); MX=$(ui_box 'Mehr' | awk '{print $1}')
+  check "[83c] $SC: address bar ends before the ⋮ button ($AX <= $MX)" "[ -n '$AX' ] && [ -n '$MX' ] && [ $AX -le $MX ]"
+  kill $P2; wait $P2 2>/dev/null
+done
 UI_DUMP=$MAIN_DUMP
 exit $FAIL

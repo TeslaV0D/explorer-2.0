@@ -3,7 +3,7 @@
 //! into the Slint global `Theme`; the std widgets follow via
 //! `Palette.color-scheme` (main.slint), the title bar via DWM.
 
-use crate::{nav, DesignColors, MainWindow, Theme, ThemeColors};
+use crate::{nav, DesignColors, MainWindow, Theme};
 use explorer_core::theme::{hex, tokens, Design, Rgba, SystemTheme, ThemeChoice, Tokens};
 use slint::{Color, ComponentHandle};
 use std::cell::RefCell;
@@ -102,7 +102,6 @@ fn apply(win: &MainWindow, why: &str) {
     ST.with_borrow_mut(|s| s.applied = Some(t));
     let g = win.global::<Theme>();
     g.set_dark(t.dark);
-    g.set_c(colors(&t));
     g.set_d(design_colors(&t.ds));
     // the shell's own menus ("Weitere Optionen") follow the scheme where Windows allows it
     if cfg!(windows) {
@@ -114,8 +113,8 @@ fn apply(win: &MainWindow, why: &str) {
         "theme why={why} choice={} dark={} accent={} selection={} system_dark={} system_accent={}",
         choice.as_str(),
         t.dark,
-        hex([t.accent[0], t.accent[1], t.accent[2]]),
-        hex([t.selection[0], t.selection[1], t.selection[2]]),
+        hex([t.ds.accent[0], t.ds.accent[1], t.ds.accent[2]]),
+        hex([t.ds.selected[0], t.ds.selected[1], t.ds.selected[2]]),
         sys.dark,
         sys.accent.map_or("-".to_string(), |a| hex(a.base)),
     ));
@@ -145,48 +144,6 @@ fn title_bar(win: &MainWindow, attempt: u32) {
 
 fn col(c: Rgba) -> Color {
     Color::from_argb_u8(c[3], c[0], c[1], c[2])
-}
-
-fn colors(t: &Tokens) -> ThemeColors {
-    ThemeColors {
-        content: col(t.content),
-        card: col(t.card),
-        chrome: col(t.chrome),
-        panel: col(t.panel),
-        header: col(t.header),
-        tabs_active: col(t.tabs_active),
-        tabs_idle: col(t.tabs_idle),
-        line: col(t.line),
-        line_strong: col(t.line_strong),
-        outline: col(t.outline),
-        hover: col(t.hover),
-        hover_strong: col(t.hover_strong),
-        row_hover: col(t.row_hover),
-        accent_hover: col(t.accent_hover),
-        current: col(t.current),
-        selection: col(t.selection),
-        selection_idle: col(t.selection_idle),
-        drop: col(t.drop),
-        accent: col(t.accent),
-        band: col(t.band),
-        text: col(t.text),
-        text2: col(t.text2),
-        text3: col(t.text3),
-        text4: col(t.text4),
-        muted: col(t.muted),
-        faint: col(t.faint),
-        disabled: col(t.disabled),
-        danger: col(t.danger),
-        warning: col(t.warning),
-        track: col(t.track),
-        folder: col(t.folder),
-        file: col(t.file),
-        drive: col(t.drive),
-        scrim: col(t.scrim),
-        scrim_soft: col(t.scrim_soft),
-        shadow: col(t.shadow),
-        shadow_soft: col(t.shadow_soft),
-    }
 }
 
 fn design_colors(d: &Design) -> DesignColors {

@@ -1,47 +1,6 @@
 // Theme and design system (redesign R1). Colours come from Rust
 // (core::theme::tokens → app theme.rs), metrics are fixed here.
 
-// Every colour of the UI (filled from Rust: core::theme::tokens).
-export struct ThemeColors {
-    content: color,
-    card: color,
-    chrome: color,
-    panel: color,
-    header: color,
-    tabs-active: color,
-    tabs-idle: color,
-    line: color,
-    line-strong: color,
-    outline: color,
-    hover: color,
-    hover-strong: color,
-    row-hover: color,
-    accent-hover: color,
-    current: color,
-    selection: color,
-    selection-idle: color,
-    drop: color,
-    accent: color,
-    band: color,
-    text: color,
-    text2: color,
-    text3: color,
-    text4: color,
-    muted: color,
-    faint: color,
-    disabled: color,
-    danger: color,
-    warning: color,
-    track: color,
-    folder: color,
-    file: color,
-    drive: color,
-    scrim: color,
-    scrim-soft: color,
-    shadow: color,
-    shadow-soft: color,
-}
-
 // Colour roles of the redesign (D-026, core::theme::Design): layers instead
 // of black, one text hierarchy, one accent. New UI uses only these.
 export struct DesignColors {
@@ -75,8 +34,6 @@ export struct DesignColors {
 
 export global Theme {
     in property <bool> dark;
-    // the old look (retired in R10)
-    in property <ThemeColors> c;
     // the redesign's roles
     in property <DesignColors> d;
 }

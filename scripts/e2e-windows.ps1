@@ -721,6 +721,17 @@ foreach ($theme in @('light', 'dark')) {
   } finally {
     if (-not $p.HasExited) { Stop-Process -Id $p.Id -Force }
   }
+  # display scaling 125 % (R10): Slint's scale factor, window maximised
+  $env:SLINT_SCALE_FACTOR = '1.25'
+  $p = Start-Process -FilePath $Exe -ArgumentList "--new-instance `"$sr`"" -PassThru -RedirectStandardError "$Work\win-gallery-scale-$theme.log"
+  try {
+    Start-Sleep -Seconds 4
+    $p.Refresh(); $script:hwnd = $p.MainWindowHandle
+    if ($script:hwnd -ne 0) { [void][W]::ShowWindow($script:hwnd, 3); Start-Sleep -Milliseconds 800; Focus; Shot "gallery\$theme-07-skalierung-125" }
+  } finally {
+    Remove-Item Env:SLINT_SCALE_FACTOR -ErrorAction SilentlyContinue
+    if (-not $p.HasExited) { Stop-Process -Id $p.Id -Force }
+  }
   # the design system (R1): colour roles, controls, icons with the real fonts
   $env:EXPLORER2_UI_KIT = '1'
   $p = Start-Process -FilePath $Exe -ArgumentList "--new-instance `"$sr`"" -PassThru -RedirectStandardError "$Work\win-gallery-kit-$theme.log"

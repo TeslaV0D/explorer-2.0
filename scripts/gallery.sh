@@ -68,6 +68,12 @@ run_theme() {
   ui_wait "UI-Kit schließen" 10 || echo "WARN UI kit not shown"
   sleep 0.5; shot 12-ui-kit
   kill $PID; wait $PID 2>/dev/null
+  # display scaling 150 % (R10): same window size in physical pixels
+  EXPLORER2_CONFIG_DIR=$cfg SLINT_SCALE_FACTOR=1.5 SLINT_BACKEND=winit-software HOME=$W/home EXPLORER2_INDEX=off \
+    $EXE --new-instance "$D" > "$W/trace-scale-$THEME.log" 2>&1 & PID=$!
+  ui_wait "Einstellungen" 10 || echo "WARN scaled window not shown"
+  xdotool windowsize "$(xdotool search --name 'Explorer 2.0' | tail -1)" 1200 720; sleep 1; shot 13-skalierung-150
+  kill $PID; wait $PID 2>/dev/null
 }
 
 : > "$OUT/index.txt"

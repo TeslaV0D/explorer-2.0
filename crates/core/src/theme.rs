@@ -77,12 +77,6 @@ pub struct SystemTheme {
     pub accent: Option<Accent>,
 }
 
-/// The accent the UI used before M6.4 (= Windows 11 "Dark 1" of the default
-/// blue, readable on white).
-pub const DEFAULT_ACCENT: Rgb = [0x00, 0x67, 0xc0];
-/// Default blue on dark backgrounds (Windows 11 "Light 2").
-pub const DEFAULT_ACCENT_ON_DARK: Rgb = [0x4c, 0xc2, 0xff];
-
 /// Redesign (D-026): the calm default blue of the new look, on dark …
 pub const DESIGN_ACCENT_DARK: Rgb = [0x4f, 0x8c, 0xff];
 /// … and on light surfaces (darker: readable on white).
@@ -185,34 +179,6 @@ fn from_hsl(h: f64, s: f64, l: f64) -> Rgb {
     [r, g, b].map(|v| ((v + m) * 255.0).round().clamp(0.0, 255.0) as u8)
 }
 
-/// Re-colour a colour designed for the default blue to the hue (and
-/// saturation) of `accent`, keeping its lightness: a light-blue selection
-/// becomes light-green for a green accent, grey for a grey one.
-///
-/// The luminance (not the HSL lightness) is kept: a yellow at the lightness
-/// of the light-blue selection would be almost white.
-pub fn tint(designed: Rgb, accent: Rgb) -> Rgb {
-    if accent == DEFAULT_ACCENT {
-        return designed;
-    }
-    let (h0, s0, _) = to_hsl(DEFAULT_ACCENT);
-    let (ha, sa, _) = to_hsl(accent);
-    let (h, s, _) = to_hsl(designed);
-    let (h, s) = (h + (ha - h0), (s * sa / s0).min(1.0));
-    let want = luminance(designed);
-    // luminance grows with the lightness at fixed hue/saturation → bisect
-    let (mut lo, mut hi) = (0.0f64, 1.0f64);
-    for _ in 0..30 {
-        let mid = (lo + hi) / 2.0;
-        if luminance(from_hsl(h, s, mid)) < want {
-            lo = mid;
-        } else {
-            hi = mid;
-        }
-    }
-    from_hsl(h, s, (lo + hi) / 2.0)
-}
-
 /// Move the lightness of `c` (darker on light, lighter on dark backgrounds)
 /// until it reaches `min` contrast against `bg`.
 pub fn readable(c: Rgb, bg: Rgb, min: f64) -> Rgb {
@@ -292,60 +258,11 @@ fn rgb(v: u32) -> Rgb {
     [(v >> 16) as u8, (v >> 8) as u8, v as u8]
 }
 
-/// Every colour the UI draws.
+/// Every colour the UI draws: the scheme and its colour roles (`Theme.d` in
+/// Slint). The pre-redesign token set (`Theme.c`) was retired in R10.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct Tokens {
     pub dark: bool,
-    /// File list background.
-    pub content: Rgba,
-    /// Raised surfaces: dialogs, popups, address field, current tab, previews.
-    pub card: Rgba,
-    /// Window frame: tool bar, sidebar, status bar.
-    pub chrome: Rgba,
-    /// Side panels: inspector, operations.
-    pub panel: Rgba,
-    /// Column header.
-    pub header: Rgba,
-    pub tabs_active: Rgba,
-    pub tabs_idle: Rgba,
-    pub line: Rgba,
-    pub line_strong: Rgba,
-    /// Border of inputs and dialogs.
-    pub outline: Rgba,
-    pub hover: Rgba,
-    pub hover_strong: Rgba,
-    pub row_hover: Rgba,
-    pub accent_hover: Rgba,
-    /// Current place in the sidebar, active view button.
-    pub current: Rgba,
-    pub selection: Rgba,
-    /// Selection while the list has no focus.
-    pub selection_idle: Rgba,
-    pub drop: Rgba,
-    /// Focus border, active pane, progress, radio dot.
-    pub accent: Rgba,
-    /// Rubber band fill.
-    pub band: Rgba,
-    pub text: Rgba,
-    pub text2: Rgba,
-    pub text3: Rgba,
-    pub text4: Rgba,
-    pub muted: Rgba,
-    pub faint: Rgba,
-    pub disabled: Rgba,
-    pub danger: Rgba,
-    pub warning: Rgba,
-    /// Empty part of meters and progress bars.
-    pub track: Rgba,
-    pub folder: Rgba,
-    pub file: Rgba,
-    pub drive: Rgba,
-    pub scrim: Rgba,
-    pub scrim_soft: Rgba,
-    pub shadow: Rgba,
-    pub shadow_soft: Rgba,
-    /// The redesign's colour roles (layers instead of black; `Theme.d` in
-    /// Slint). The fields above are the old look until R10 retires them.
     pub ds: Design,
 }
 
@@ -483,112 +400,11 @@ pub fn design(dark: bool, accent: Option<&Accent>) -> Design {
     }
 }
 
-/// The colour set for `dark` and an optional accent (`None` = default blue).
+/// The colours for `dark` with an optional (Windows) accent.
 pub fn tokens(dark: bool, accent: Option<&Accent>) -> Tokens {
-    let base = accent.map(|a| a.base);
-    let tinted = |c: u32| -> Rgba {
-        let c = rgb(c);
-        op(base.map_or(c, |a| tint(c, a)))
-    };
-    let solid = |c: u32| op(rgb(c));
-    let alpha = |c: u32, a: u8| {
-        let [r, g, b] = rgb(c);
-        [r, g, b, a]
-    };
-    if !dark {
-        let card = rgb(0xffffff);
-        let acc = match accent {
-            None => DEFAULT_ACCENT,
-            Some(a) => readable(a.on_light.unwrap_or(a.base), rgb(0xfafafa), 4.5),
-        };
-        Tokens {
-            dark,
-            content: solid(0xfafafa),
-            card: op(card),
-            chrome: solid(0xf3f4f6),
-            panel: solid(0xf7f8fa),
-            header: solid(0xf4f5f7),
-            tabs_active: solid(0xe4e8ee),
-            tabs_idle: solid(0xeceef1),
-            line: solid(0xe1e4e8),
-            line_strong: solid(0xd0d4d9),
-            outline: solid(0xc8ccd0),
-            hover: solid(0xe9ecf0),
-            hover_strong: solid(0xd9dde2),
-            row_hover: tinted(0xeef3f9),
-            accent_hover: tinted(0xe5f1fb),
-            current: tinted(0xdde8f5),
-            selection: tinted(0xcce8ff),
-            selection_idle: solid(0xe5e5e5),
-            drop: tinted(0xb3dcff),
-            accent: op(acc),
-            band: [acc[0], acc[1], acc[2], 0x22],
-            text: solid(0x222222),
-            text2: solid(0x333333),
-            text3: solid(0x444444),
-            text4: solid(0x555555),
-            muted: solid(0x5e5e5e),
-            faint: solid(0x888888),
-            disabled: solid(0x999999),
-            danger: solid(0xc0262d),
-            warning: solid(0xc9a227),
-            track: solid(0xdde1e6),
-            folder: solid(0xe8b730),
-            file: solid(0x9aa5b1),
-            drive: solid(0x7a8794),
-            scrim: alpha(0, 0x30),
-            scrim_soft: alpha(0, 0x18),
-            shadow: alpha(0, 0x40),
-            shadow_soft: alpha(0, 0x22),
-            ds: design(false, accent),
-        }
-    } else {
-        let card = rgb(0x2b2b2b);
-        let acc = match accent {
-            None => DEFAULT_ACCENT_ON_DARK,
-            Some(a) => readable(a.on_dark.unwrap_or(a.base), card, 4.5),
-        };
-        Tokens {
-            dark,
-            content: solid(0x191919),
-            card: op(card),
-            chrome: solid(0x202020),
-            panel: solid(0x242424),
-            header: solid(0x222222),
-            tabs_active: solid(0x1e1e1e),
-            tabs_idle: solid(0x1a1a1a),
-            line: solid(0x333333),
-            line_strong: solid(0x3d3d3d),
-            outline: solid(0x4a4a4a),
-            hover: solid(0x2f2f2f),
-            hover_strong: solid(0x3c3c3c),
-            row_hover: tinted(0x232a31),
-            accent_hover: tinted(0x263545),
-            current: tinted(0x2b3e52),
-            selection: tinted(0x1c3f63),
-            selection_idle: solid(0x3a3a3a),
-            drop: tinted(0x22507c),
-            accent: op(acc),
-            band: [acc[0], acc[1], acc[2], 0x33],
-            text: solid(0xeeeeee),
-            text2: solid(0xe0e0e0),
-            text3: solid(0xd0d0d0),
-            text4: solid(0xc2c2c2),
-            muted: solid(0xa8a8a8),
-            faint: solid(0x858585),
-            disabled: solid(0x6e6e6e),
-            danger: solid(0xff99a4),
-            warning: solid(0xe0b84a),
-            track: solid(0x3a3a3a),
-            folder: solid(0xe8b730),
-            file: solid(0x8a95a1),
-            drive: solid(0x8f9ba8),
-            scrim: alpha(0, 0x70),
-            scrim_soft: alpha(0, 0x50),
-            shadow: alpha(0, 0xa0),
-            shadow_soft: alpha(0, 0x60),
-            ds: design(true, accent),
-        }
+    Tokens {
+        dark,
+        ds: design(dark, accent),
     }
 }
 
@@ -644,88 +460,11 @@ mod tests {
     }
 
     #[test]
-    fn hsl_round_trip_and_tint() {
+    fn hsl_round_trip() {
         for v in ACCENTS.iter().chain(&[0xcce8ff, 0xeef3f9, 0x1c3f63]) {
             let x = rgb(*v);
             let (h, s, l) = to_hsl(x);
             assert_eq!(from_hsl(h, s, l), x, "{}", hex(x));
-        }
-        // the default accent leaves the designed colours alone
-        assert_eq!(tint(rgb(0xcce8ff), DEFAULT_ACCENT), rgb(0xcce8ff));
-        // a grey accent gives a grey selection, green gives green
-        let g = tint(rgb(0xcce8ff), rgb(0x767676));
-        assert!(g[0] == g[1] && g[1] == g[2], "{g:?}");
-        let gr = tint(rgb(0xcce8ff), rgb(0x107c10));
-        assert!(gr[1] > gr[0] && gr[1] > gr[2], "{gr:?}");
-    }
-
-    #[test]
-    fn light_without_accent_is_the_original_look() {
-        let t = tokens(false, None);
-        assert_eq!(c(t.selection), rgb(0xcce8ff), "E2E [19] measures this");
-        assert_eq!(c(t.accent), DEFAULT_ACCENT);
-        assert_eq!(c(t.content), rgb(0xfafafa));
-        assert!(!t.dark && tokens(true, None).dark);
-    }
-
-    fn check_contrast(t: &Tokens, what: &str) {
-        let bgs = [
-            ("content", t.content),
-            ("card", t.card),
-            ("chrome", t.chrome),
-            ("panel", t.panel),
-            ("header", t.header),
-            ("tabs_active", t.tabs_active),
-            ("hover", t.hover),
-            ("row_hover", t.row_hover),
-            ("accent_hover", t.accent_hover),
-            ("current", t.current),
-            ("selection", t.selection),
-            ("selection_idle", t.selection_idle),
-            ("drop", t.drop),
-        ];
-        // surfaces carry every text colour, rows (hover/selection/…) only
-        // the name (text) and the detail columns (text4)
-        for (i, (name, bg)) in bgs.into_iter().enumerate() {
-            let bg = c(bg);
-            let surface = i < 6;
-            for (tn, fg, min) in [
-                ("text", t.text, 7.0),
-                ("text4", t.text4, 4.5),
-                ("muted", t.muted, if surface { 4.5 } else { 0.0 }),
-                ("faint", t.faint, if surface { 2.5 } else { 0.0 }),
-            ] {
-                let r = contrast(c(fg), bg);
-                assert!(r >= min, "{what}: {tn} on {name} = {r:.2} < {min}");
-            }
-        }
-        // borders and markers in the accent colour must stand out (WCAG 1.4.11: 3:1)
-        for (name, bg) in [
-            ("content", t.content),
-            ("card", t.card),
-            ("tabs_active", t.tabs_active),
-        ] {
-            let r = contrast(c(t.accent), c(bg));
-            assert!(r >= 3.0, "{what}: accent on {name} = {r:.2}");
-        }
-        let r = contrast(c(t.danger), c(t.chrome));
-        assert!(r >= 4.5, "{what}: error text = {r:.2}");
-        // the selection must be visible against the list
-        let r = contrast(c(t.selection), c(t.content));
-        assert!(r >= 1.15, "{what}: selection vs list = {r:.2}");
-    }
-
-    #[test]
-    fn every_scheme_and_accent_is_readable() {
-        for dark in [false, true] {
-            check_contrast(&tokens(dark, None), &format!("dark={dark} default"));
-            for v in ACCENTS {
-                let a = Accent::plain(rgb(*v));
-                check_contrast(
-                    &tokens(dark, Some(&a)),
-                    &format!("dark={dark} accent={}", hex(a.base)),
-                );
-            }
         }
     }
 
@@ -832,6 +571,6 @@ mod tests {
         let b = readable(rgb(0x000000), dark, 4.5);
         assert!(contrast(b, dark) >= 4.5);
         // already fine → untouched
-        assert_eq!(readable(DEFAULT_ACCENT, white, 4.5), DEFAULT_ACCENT);
+        assert_eq!(readable(rgb(0x0067c0), white, 4.5), rgb(0x0067c0));
     }
 }
