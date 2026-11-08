@@ -1,0 +1,20 @@
+[package]
+name = "explorer2-setup"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+build = "build.rs"
+description = "Explorer 2.0 – Ein-Datei-Installer (enthält explorer2.exe + explorer2-recover.exe)"
+
+[[bin]]
+name = "Explorer2-Setup"
+path = "src/main.rs"
+
+[dependencies]
+explorer-integrate = { path = "../integrate" }
+
+[target.'cfg(windows)'.dependencies]
+windows-sys = { version = "0.60", features = ["Win32_Foundation", "Win32_UI_WindowsAndMessaging"] }
+
+[build-dependencies]
+embed-resource = "3"

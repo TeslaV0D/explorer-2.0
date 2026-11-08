@@ -342,9 +342,10 @@ jobs:
           path: |
             ${{ runner.temp }}/e2e-win/*.png
             ${{ runner.temp }}/m83c/*.png
+      - name: "Release: setup + smoke test (silent install -> uninstall) + ZIP + checksums"
+        shell: pwsh
+        run: pwsh -File scripts/release-package.ps1 target/release "$env:RUNNER_TEMP\dist" "$env:RUNNER_TEMP\release"
       - uses: actions/upload-artifact@v4
         with:
           name: explorer2-windows-x64
-          path: |
-            target/release/explorer2.exe
-            target/release/explorer2-recover.exe
+          path: ${{ runner.temp }}/dist/*

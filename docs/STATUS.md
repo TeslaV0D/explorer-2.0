@@ -1,6 +1,13 @@
 # Zwischenstand
 
-**Stand:** 2026-11-07 · **Phase:** 1 · M0–M7 ✅ (M7.3 verschoben) · R-001 ✅ · **M8.1/M8.2 Installer ✅ (Run #69)** · **M8.3 Härtung ✅ (Run #70–#73)** · **Phase 2 Suche: S1.1 ✅ (Run #78), S1.2 ✅ (Run #80), S1.3 ✅ (Run #83), S1.4 ✅ (Run #90), S1.5 ✅ (Run #91/#93) → **S1 komplett**, Praxistest ✅ (Boss: „es funktioniert“) · **Redesign läuft: R0 ✅ (Run #101), R1 ✅ (Run #104), R2 ✅ (Run #110), R3 ✅ (Run #115), R4 ✅ (Run #120), R5 ✅ (Run #123), R6 ✅ (Run #124), R7 ✅ (Run #125), R8 ✅ (Run #128), R9 ✅ (Run #130), R10 ✅ (Run #131) → **Redesign komplett**, als Nächstes Praxistest Boss (`docs/PRAXISTEST-REDESIGN.md`)** (`docs/PLAN-REDESIGN.md`)** (Plan `docs/PLAN-SEARCH.md`) · **Branch:** `claude/relaxed-pasteur-ufhh1p`
+**Stand:** 2026-11-07 · **Phase:** 1 · M0–M7 ✅ (M7.3 verschoben) · R-001 ✅ · **M8.1/M8.2 Installer ✅ (Run #69)** · **M8.3 Härtung ✅ (Run #70–#73)** · **Phase 2 Suche: S1.1 ✅ (Run #78), S1.2 ✅ (Run #80), S1.3 ✅ (Run #83), S1.4 ✅ (Run #90), S1.5 ✅ (Run #91/#93) → **S1 komplett**, Praxistest ✅ (Boss: „es funktioniert“) · **Redesign läuft: R0 ✅ (Run #101), R1 ✅ (Run #104), R2 ✅ (Run #110), R3 ✅ (Run #115), R4 ✅ (Run #120), R5 ✅ (Run #123), R6 ✅ (Run #124), R7 ✅ (Run #125), R8 ✅ (Run #128), R9 ✅ (Run #130), R10 ✅ (Run #131) → **Redesign komplett**, als Nächstes Praxistest Boss (`docs/PRAXISTEST-REDESIGN.md`)** (`docs/PLAN-REDESIGN.md`)** (Plan `docs/PLAN-SEARCH.md`) · **Branch:** `claude/eloquent-gauss-sd6qhp`
+
+
+## M8.4 Release-Paket (2026-11-08, Boss: „mach ein Release, sodass man bequem installieren kann“)
+- **`Explorer2-Setup-0.1.0-x64.exe`**: eine Datei, Doppelklick → Nachfrage (Ziel, ohne Admin; „bereits installiert → aktualisieren?“) → Installation über die App selbst (`--install`, D-023) → „Jetzt starten?“. Fehler als Dialog; `--quiet` ohne Dialoge (Exit 0/1/2/1223).
+- Dazu Portable-ZIP (`explorer2.exe` + `explorer2-recover.exe`) und `SHA256SUMS.txt`; Release-Notes auf Deutsch inkl. SmartScreen-Hinweis (unsigniert).
+- `scripts/release-package.ps1` baut + prüft das Setup in **jedem** Windows-CI-Run (Artefakt `explorer2-windows-x64` enthält jetzt die Release-Dateien); `release.yml` veröffentlicht, sobald eine Version ohne Release gepusht wird (legt den Tag selbst an; Tag-Push aus der Session blockt der Proxy).
+- Version 0.0.1 → **0.1.0**.
 
 ## M5 – Shell-Integration (läuft, Freigabe Boss 2026-11-04)
 ### CI-Run #37 – alles grün ✅ (M5.0–M5.5)
