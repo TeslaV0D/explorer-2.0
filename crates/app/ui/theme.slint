@@ -1,0 +1,66 @@
+// Theme and design system (redesign R1). Colours come from Rust
+// (core::theme::tokens → app theme.rs), metrics are fixed here.
+
+// Colour roles of the redesign (D-026, core::theme::Design): layers instead
+// of black, one text hierarchy, one accent. New UI uses only these.
+export struct DesignColors {
+    app: color,
+    panel: color,
+    surface: color,
+    raised: color,
+    overlay: color,
+    hover: color,
+    pressed: color,
+    selected: color,
+    selected-idle: color,
+    border: color,
+    border-strong: color,
+    text: color,
+    text2: color,
+    muted: color,
+    faint: color,
+    icon: color,
+    icon-muted: color,
+    accent: color,
+    on-accent: color,
+    danger: color,
+    warning: color,
+    success: color,
+    folder: color,
+    file: color,
+    scrim: color,
+    shadow: color,
+}
+
+export global Theme {
+    in property <bool> dark;
+    // the redesign's roles
+    in property <DesignColors> d;
+}
+
+// Metrics of the redesign (docs/PLAN-REDESIGN.md §3): 4 px grid, dense rows.
+export global Ui {
+    out property <length> row-h: 24px;
+    out property <length> tab-h: 30px;
+    out property <length> nav-h: 34px;
+    out property <length> header-h: 24px;
+    out property <length> status-h: 24px;
+    out property <length> sidebar-w: 200px;
+    out property <length> control-h: 26px;
+    out property <length> icon: 16px;
+    out property <length> icon-small: 14px;
+    out property <length> stroke: 1.5px;
+    out property <length> r-small: 4px;
+    out property <length> r: 6px;
+    out property <length> r-large: 8px;
+    out property <length> gap: 4px;
+    out property <length> pad: 8px;
+    out property <length> pad-large: 12px;
+    out property <length> font-small: 11px;
+    out property <length> font: 12px;
+    out property <length> font-body: 13px;
+    out property <length> font-title: 14px;
+    out property <duration> fast: 120ms;
+    out property <duration> normal: 160ms;
+    out property <duration> slow: 180ms;
+}

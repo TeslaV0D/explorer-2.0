@@ -1,0 +1,424 @@
+// Building blocks of the redesign (R1). They only use Theme.d (colour roles)
+// and Ui (metrics); every control has a spoken name (accessible-label), which
+// the tests click by (R0). Introduced here, used by the layout from R2 on.
+
+import { Theme, Ui } from "theme.slint";
+import { IconData, IconList } from "icons.slint";
+
+// A line icon (Lucide path data, 24×24 view box) drawn as a thin stroke.
+export component Icon inherits Rectangle {
+    in property <string> d;
+    in property <color> tint: Theme.d.icon;
+    in property <length> size: Ui.icon;
+    width: root.size;
+    height: root.size;
+    Path {
+        width: 100%;
+        height: 100%;
+        commands: root.d;
+        viewbox-x: 0;
+        viewbox-y: 0;
+        viewbox-width: 24;
+        viewbox-height: 24;
+        fill: transparent;
+        stroke: root.tint;
+        stroke-width: Ui.stroke;
+        stroke-line-cap: round;
+    }
+}
+
+// The tooltip's look (Slint shows it after a short hover, near the pointer).
+export component TooltipBox inherits Rectangle {
+    in property <string> text;
+    background: Theme.d.overlay;
+    border-radius: Ui.r;
+    border-width: 1px;
+    border-color: Theme.d.border-strong;
+    drop-shadow-blur: 8px;
+    drop-shadow-offset-y: 2px;
+    drop-shadow-color: Theme.d.shadow;
+    HorizontalLayout {
+        padding-left: 8px;
+        padding-right: 8px;
+        padding-top: 4px;
+        padding-bottom: 4px;
+        Text { text: root.text; color: Theme.d.text; font-size: Ui.font; }
+    }
+}
+
+// Square button with one icon (tool bar, tab strip, inspector).
+export component IconButton inherits Rectangle {
+    in property <string> icon;
+    in property <string> label;
+    in property <bool> enabled: true;
+    in property <bool> checked;
+    in property <length> size: Ui.control-h;
+    // shown in the tooltip next to the name ("Strg+C")
+    in property <string> shortcut;
+    callback clicked();
+    accessible-role: button;
+    accessible-label: root.label;
+    accessible-enabled: root.enabled;
+    accessible-checked: root.checked;
+    accessible-action-default => { if (root.enabled) { root.clicked(); } }
+    width: root.size;
+    height: root.size;
+    border-radius: Ui.r;
+    background: !root.enabled ? transparent
+        : ta.pressed ? Theme.d.pressed
+        : root.checked ? Theme.d.selected
+        : ta.has-hover ? Theme.d.hover : transparent;
+    animate background { duration: Ui.fast; easing: ease-out; }
+    Icon {
+        d: root.icon;
+        tint: !root.enabled ? Theme.d.faint : root.checked ? Theme.d.accent : (ta.has-hover ? Theme.d.text : Theme.d.icon);
+    }
+    ta := TouchArea {
+        enabled: root.enabled;
+        mouse-cursor: MouseCursor.pointer;
+        clicked => { root.clicked(); }
+    }
+    Tooltip {
+        TooltipBox { text: root.shortcut == "" ? root.label : root.label + "  ·  " + root.shortcut; }
+    }
+}
+
+// Button with icon and text (status bar, dialogs, empty states).
+export component ToolbarButton inherits Rectangle {
+    in property <string> icon;
+    in property <string> text;
+    in property <bool> enabled: true;
+    in property <bool> primary;
+    callback clicked();
+    accessible-role: button;
+    accessible-label: root.text;
+    accessible-enabled: root.enabled;
+    accessible-action-default => { if (root.enabled) { root.clicked(); } }
+    height: Ui.control-h;
+    min-width: lay.preferred-width;
+    border-radius: Ui.r;
+    background: root.primary
+        ? (root.enabled ? (ta.pressed ? Theme.d.accent.darker(15%) : ta.has-hover ? Theme.d.accent.brighter(8%) : Theme.d.accent) : Theme.d.hover)
+        : (!root.enabled ? transparent : ta.pressed ? Theme.d.pressed : ta.has-hover ? Theme.d.hover : transparent);
+    border-width: root.primary ? 0px : 1px;
+    border-color: Theme.d.border;
+    animate background { duration: Ui.fast; easing: ease-out; }
+    property <color> fg: !root.enabled ? Theme.d.faint : root.primary ? Theme.d.on-accent : Theme.d.text;
+    lay := HorizontalLayout {
+        padding-left: root.icon == "" ? 12px : 8px;
+        padding-right: 12px;
+        spacing: 6px;
+        alignment: center;
+        if root.icon != "" : Icon {
+            y: (parent.height - self.height) / 2;
+            d: root.icon;
+            size: Ui.icon-small;
+            tint: root.fg;
+        }
+        Text {
+            text: root.text;
+            color: root.fg;
+            font-size: Ui.font;
+            vertical-alignment: center;
+        }
+    }
+    ta := TouchArea {
+        enabled: root.enabled;
+        mouse-cursor: MouseCursor.pointer;
+        clicked => { root.clicked(); }
+    }
+}
+
+// One line of a menu (context menu, ⋮ menu): icon, text, shortcut.
+export component MenuItem inherits Rectangle {
+    in property <string> icon;
+    in property <string> text;
+    in property <string> shortcut;
+    in property <bool> enabled: true;
+    in property <bool> danger;
+    in property <bool> checked;
+    // keyboard selection (context menu: ↑/↓)
+    in property <bool> highlighted;
+    callback clicked();
+    accessible-role: button;
+    accessible-label: root.text;
+    accessible-enabled: root.enabled;
+    accessible-action-default => { if (root.enabled) { root.clicked(); } }
+    height: Ui.control-h;
+    border-radius: Ui.r-small;
+    background: !root.enabled ? transparent
+        : ta.pressed ? Theme.d.pressed
+        : (ta.has-hover || root.highlighted) ? Theme.d.hover : transparent;
+    animate background { duration: Ui.fast; easing: ease-out; }
+    property <color> fg: !root.enabled ? Theme.d.faint : root.danger ? Theme.d.danger : Theme.d.text;
+    HorizontalLayout {
+        padding-left: 8px;
+        padding-right: 10px;
+        spacing: 8px;
+        Rectangle {
+            width: Ui.icon;
+            if root.icon != "" : Icon {
+                d: root.icon;
+                tint: root.danger && root.enabled ? Theme.d.danger : (root.enabled ? Theme.d.icon : Theme.d.faint);
+            }
+            if root.icon == "" && root.checked : Icon {
+                d: IconData.check;
+                tint: Theme.d.accent;
+            }
+        }
+        Text {
+            text: root.text;
+            color: root.fg;
+            font-size: Ui.font;
+            vertical-alignment: center;
+            overflow: elide;
+            horizontal-stretch: 1;
+        }
+        if root.shortcut != "" : Text {
+            text: root.shortcut;
+            color: Theme.d.muted;
+            font-size: Ui.font-small;
+            vertical-alignment: center;
+        }
+    }
+    ta := TouchArea {
+        enabled: root.enabled;
+        clicked => { root.clicked(); }
+    }
+}
+
+export component MenuSeparator inherits Rectangle {
+    height: 9px;
+    Rectangle { x: 8px; width: parent.width - 16px; height: 1px; background: Theme.d.border; }
+}
+
+// Group heading (sidebar, inspector, settings): small, muted.
+export component SectionLabel inherits Text {
+    color: Theme.d.muted;
+    font-size: Ui.font-small;
+    font-weight: 600;
+    letter-spacing: 0.3px;
+    vertical-alignment: center;
+    overflow: elide;
+}
+
+// Text input with optional leading icon, placeholder and focus ring.
+export component Field inherits Rectangle {
+    in-out property <string> text;
+    in property <string> placeholder;
+    in property <string> icon;
+    in property <string> label;
+    out property <bool> focused: input.has-focus;
+    callback accepted(string);
+    callback edited(string);
+    public function take-focus() { input.focus(); }
+    accessible-role: text-input;
+    accessible-label: root.label != "" ? root.label : root.placeholder;
+    accessible-value: root.text;
+    height: Ui.control-h;
+    border-radius: Ui.r;
+    background: Theme.d.raised;
+    border-width: 1px;
+    border-color: input.has-focus ? Theme.d.accent : (ta.has-hover ? Theme.d.border-strong : Theme.d.border);
+    animate border-color { duration: Ui.fast; }
+    ta := TouchArea {
+        mouse-cursor: MouseCursor.text;
+        clicked => { input.focus(); }
+    }
+    HorizontalLayout {
+        padding-left: root.icon == "" ? 8px : 6px;
+        padding-right: 8px;
+        spacing: 6px;
+        if root.icon != "" : Icon {
+            y: (parent.height - self.height) / 2;
+            d: root.icon;
+            size: Ui.icon-small;
+            tint: Theme.d.icon-muted;
+        }
+        Rectangle {
+            horizontal-stretch: 1;
+            if root.text == "" : Text {
+                width: 100%;
+                text: root.placeholder;
+                color: Theme.d.faint;
+                font-size: Ui.font;
+                vertical-alignment: center;
+                overflow: elide;
+            }
+            input := TextInput {
+                width: 100%;
+                text <=> root.text;
+                color: Theme.d.text;
+                font-size: Ui.font;
+                vertical-alignment: center;
+                single-line: true;
+                selection-background-color: Theme.d.selected;
+                selection-foreground-color: Theme.d.text;
+                accepted => { root.accepted(self.text); }
+                edited => { root.edited(self.text); }
+            }
+        }
+    }
+}
+
+// Overview of the design system (EXPLORER2_UI_KIT=1, captured by the gallery):
+// colour roles, type scale, icons, controls in their states.
+struct Swatch { name: string, c: color }
+
+export component UiKit inherits Rectangle {
+    callback close();
+    background: Theme.d.app;
+    TouchArea {}
+    property <[Swatch]> swatches: [
+        { name: "app", c: Theme.d.app },
+        { name: "panel", c: Theme.d.panel },
+        { name: "surface", c: Theme.d.surface },
+        { name: "raised", c: Theme.d.raised },
+        { name: "overlay", c: Theme.d.overlay },
+        { name: "hover", c: Theme.d.hover },
+        { name: "pressed", c: Theme.d.pressed },
+        { name: "selected", c: Theme.d.selected },
+        { name: "selected-idle", c: Theme.d.selected-idle },
+        { name: "border", c: Theme.d.border },
+        { name: "border-strong", c: Theme.d.border-strong },
+        { name: "accent", c: Theme.d.accent },
+        { name: "danger", c: Theme.d.danger },
+        { name: "warning", c: Theme.d.warning },
+        { name: "success", c: Theme.d.success },
+        { name: "folder", c: Theme.d.folder },
+    ];
+    property <string> demo-text;
+    VerticalLayout {
+        padding: 16px;
+        spacing: 12px;
+        HorizontalLayout {
+            spacing: 8px;
+            Text { text: "UI-Kit"; color: Theme.d.text; font-size: Ui.font-title; font-weight: 600; vertical-alignment: center; }
+            Text { text: Theme.dark ? "dunkel" : "hell"; color: Theme.d.muted; font-size: Ui.font; vertical-alignment: center; horizontal-stretch: 1; }
+            IconButton { icon: IconData.close; label: "UI-Kit schließen"; clicked => { root.close(); } }
+        }
+        SectionLabel { text: "FARBROLLEN"; }
+        HorizontalLayout {
+            height: 50px;
+            spacing: 6px;
+            alignment: start;
+            for s in root.swatches : VerticalLayout {
+                spacing: 3px;
+                Rectangle {
+                    width: 62px;
+                    height: 30px;
+                    border-radius: Ui.r-small;
+                    background: s.c;
+                    border-width: 1px;
+                    border-color: Theme.d.border-strong;
+                }
+                Text { text: s.name; color: Theme.d.text2; font-size: 10px; width: 62px; overflow: elide; }
+            }
+        }
+        HorizontalLayout {
+            height: 152px;
+            spacing: 24px;
+            alignment: start;
+            Rectangle {
+                width: 300px;
+                height: 120px;
+                border-radius: Ui.r-large;
+                background: Theme.d.surface;
+                border-width: 1px;
+                border-color: Theme.d.border;
+                VerticalLayout {
+                    padding: 10px;
+                    spacing: 4px;
+                    Text { text: "Text – 13 px Inhalt"; color: Theme.d.text; font-size: Ui.font-body; }
+                    Text { text: "Text 2 – Datum, Größe"; color: Theme.d.text2; font-size: Ui.font; }
+                    Text { text: "Gedämpft – Gruppen, Hinweise"; color: Theme.d.muted; font-size: Ui.font; }
+                    Text { text: "Schwach – Platzhalter"; color: Theme.d.faint; font-size: Ui.font; }
+                    Text { text: "Klein – 11 px"; color: Theme.d.text2; font-size: Ui.font-small; }
+                }
+            }
+            // a few rows as the file list will draw them
+            Rectangle {
+                width: 300px;
+                height: 120px;
+                border-radius: Ui.r-large;
+                background: Theme.d.surface;
+                border-width: 1px;
+                border-color: Theme.d.border;
+                clip: true;
+                VerticalLayout {
+                    padding: 6px;
+                    for r[i] in [
+                        { n: "Projekte", s: 0 }, { n: "Bericht Q3.pdf", s: 1 },
+                        { n: "Budget.xlsx", s: 2 }, { n: "notizen.txt", s: 3 },
+                    ] : Rectangle {
+                        height: Ui.row-h;
+                        border-radius: Ui.r-small;
+                        background: r.s == 1 ? Theme.d.selected : r.s == 2 ? Theme.d.hover : r.s == 3 ? Theme.d.selected-idle : transparent;
+                        HorizontalLayout {
+                            padding-left: 8px;
+                            spacing: 8px;
+                            Icon {
+                                y: (parent.height - self.height) / 2;
+                                d: i == 0 ? IconData.folder : IconData.file;
+                                tint: i == 0 ? Theme.d.folder : Theme.d.file;
+                            }
+                            Text { text: r.n; color: Theme.d.text; font-size: Ui.font; vertical-alignment: center; horizontal-stretch: 1; }
+                            Text { text: r.s == 1 ? "ausgewählt" : r.s == 2 ? "Zeiger" : r.s == 3 ? "ohne Fokus" : ""; color: Theme.d.text2; font-size: Ui.font-small; vertical-alignment: center; }
+                            Rectangle { width: 6px; }
+                        }
+                    }
+                }
+            }
+            // a menu
+            Rectangle {
+                width: 220px;
+                height: 152px;
+                border-radius: Ui.r-large;
+                background: Theme.d.overlay;
+                border-width: 1px;
+                border-color: Theme.d.border;
+                drop-shadow-blur: 16px;
+                drop-shadow-offset-y: 4px;
+                drop-shadow-color: Theme.d.shadow;
+                VerticalLayout {
+                    padding: 4px;
+                    MenuItem { icon: IconData.copy; text: "Kopieren"; shortcut: "Strg+C"; }
+                    MenuItem { icon: IconData.paste; text: "Einfügen"; shortcut: "Strg+V"; enabled: false; }
+                    MenuItem { icon: IconData.rename; text: "Umbenennen"; shortcut: "F2"; }
+                    MenuSeparator {}
+                    MenuItem { text: "Ausgeblendete zeigen"; checked: true; }
+                    MenuItem { icon: IconData.delete; text: "Löschen"; shortcut: "Entf"; danger: true; }
+                }
+            }
+        }
+        SectionLabel { text: "BEDIENELEMENTE"; }
+        HorizontalLayout {
+            spacing: 6px;
+            alignment: start;
+            IconButton { icon: IconData.back; label: "Kit Zurück"; }
+            IconButton { icon: IconData.forward; label: "Kit Vorwärts"; enabled: false; }
+            IconButton { icon: IconData.inspector; label: "Kit Inspector"; checked: true; }
+            Rectangle { width: 10px; }
+            ToolbarButton { icon: IconData.new-folder; text: "Neuer Ordner"; }
+            ToolbarButton { text: "Abbrechen"; }
+            ToolbarButton { text: "Löschen"; primary: true; }
+            ToolbarButton { text: "Gesperrt"; enabled: false; }
+            Rectangle { width: 10px; }
+            Field { width: 220px; icon: IconData.search; placeholder: "Suchen"; label: "Kit Suchfeld"; text <=> root.demo-text; }
+        }
+        SectionLabel { text: "SYMBOLE (LUCIDE)"; }
+        Rectangle {
+            vertical-stretch: 1;
+            // a simple wrap: fixed cells, columns from the width
+            property <int> cols: max(1, floor(self.width / 84px));
+            for ic[i] in IconList.all : Rectangle {
+                x: mod(i, parent.cols) * 84px;
+                y: floor(i / parent.cols) * 44px;
+                width: 80px;
+                height: 40px;
+                Icon { y: 2px; d: ic.d; }
+                Text { y: 22px; width: 100%; text: ic.name; color: Theme.d.muted; font-size: 10px; horizontal-alignment: center; overflow: elide; }
+            }
+        }
+    }
+}

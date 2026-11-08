@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <!-- simplified for 16-32 px: no tile, no chevrons, pixel-aligned shapes -->
+  <path d="M2 7 q0-2 2-2 h7 l2 2.5 h15 q2 0 2 2 v16.5 q0 2-2 2 H4 q-2 0-2-2 z" fill="#E09A1C"/>
+  <path d="M1.5 13 q0-1.5 1.5-1.5 h26 q1.5 0 1.5 1.5 l-1 13 q-0.2 2-2 2 H4.5 q-1.8 0-2-2 z" fill="#FFCB45"/>
+  <path d="M2.3 22 h27.4 l-0.4 4 q-0.2 2-2 2 H4.7 q-1.8 0-2-2 z" fill="#1F6FEB"/>
+</svg>
