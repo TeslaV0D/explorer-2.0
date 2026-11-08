@@ -1,0 +1,56 @@
+name: release
+# A tag `v<version>` (= workspace version in Cargo.toml) builds the Windows
+# release, smoke-tests the setup and publishes a GitHub release with
+# Explorer2-Setup-<v>-x64.exe, the portable ZIP and SHA256SUMS.txt.
+# The same commit runs the full CI (ci.yml) as well.
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Tag, z. B. v0.1.0 (muss zur Version in Cargo.toml passen)"
+        required: true
+permissions:
+  contents: write
+jobs:
+  release:
+    runs-on: windows-latest
+    env:
+      EXPLORER2_INDEX: "off"
+      TAG: ${{ github.event.inputs.tag || github.ref_name }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+      - name: Tag matches the version in Cargo.toml
+        shell: pwsh
+        run: |
+          $v = (Select-String -Path Cargo.toml -Pattern '^version = "(.+)"' | Select-Object -First 1).Matches[0].Groups[1].Value
+          if ($env:TAG -ne "v$v") { throw "tag $env:TAG does not match Cargo.toml version $v" }
+      - name: Build
+        run: |
+          cargo build --release -p explorer2
+          cargo build --release -p explorer-integrate --bins
+      - name: Setup + smoke test + packages
+        shell: pwsh
+        run: pwsh -File scripts/release-package.ps1 target/release dist "$env:RUNNER_TEMP\release"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: explorer2-release
+          path: dist/*
+      - name: Publish GitHub release
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          $v = $env:TAG.TrimStart('v')
+          (Get-Content scripts/release-notes.md -Raw).Replace('@VERSION@', $v) | Set-Content "$env:RUNNER_TEMP\notes.md" -Encoding utf8
+          gh release view $env:TAG *> $null
+          if ($LASTEXITCODE -eq 0) {
+            gh release upload $env:TAG (Get-ChildItem dist).FullName --clobber
+          } else {
+            gh release create $env:TAG (Get-ChildItem dist).FullName --target $env:GITHUB_SHA `
+              --title "Explorer 2.0 $env:TAG (Beta)" --notes-file "$env:RUNNER_TEMP\notes.md"
+          }
+          if ($LASTEXITCODE) { throw "gh release failed" }

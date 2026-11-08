@@ -1,9 +1,9 @@
 [workspace]
 resolver = "2"
-members = ["crates/core", "crates/fs", "crates/gpu", "crates/ops", "crates/shell", "crates/integrate", "crates/index", "crates/search", "crates/app"]
+members = ["crates/core", "crates/fs", "crates/gpu", "crates/ops", "crates/shell", "crates/integrate", "crates/index", "crates/search", "crates/app", "crates/setup"]
 
 [workspace.package]
-version = "0.0.1"
+version = "0.1.0"
 edition = "2021"
 license = "MIT"
 rust-version = "1.88"  # slice::as_chunks

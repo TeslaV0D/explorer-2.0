@@ -976,14 +976,14 @@ dependencies = [
 
 [[package]]
 name = "explorer-core"
-version = "0.0.1"
+version = "0.1.0"
 dependencies = [
  "chrono",
 ]
 
 [[package]]
 name = "explorer-fs"
-version = "0.0.1"
+version = "0.1.0"
 dependencies = [
  "explorer-core",
  "notify",
@@ -993,7 +993,7 @@ dependencies = [
 
 [[package]]
 name = "explorer-gpu"
-version = "0.0.1"
+version = "0.1.0"
 dependencies = [
  "explorer-core",
  "windows-sys 0.60.2",
@@ -1001,7 +1001,7 @@ dependencies = [
 
 [[package]]
 name = "explorer-index"
-version = "0.0.1"
+version = "0.1.0"
 dependencies = [
  "explorer-core",
  "memchr",
@@ -1011,7 +1011,7 @@ dependencies = [
 
 [[package]]
 name = "explorer-integrate"
-version = "0.0.1"
+version = "0.1.0"
 dependencies = [
  "tempfile",
  "windows-sys 0.60.2",
@@ -1019,7 +1019,7 @@ dependencies = [
 
 [[package]]
 name = "explorer-ops"
-version = "0.0.1"
+version = "0.1.0"
 dependencies = [
  "explorer-core",
  "tempfile",
@@ -1029,7 +1029,7 @@ dependencies = [
 
 [[package]]
 name = "explorer-search"
-version = "0.0.1"
+version = "0.1.0"
 dependencies = [
  "explorer-core",
  "explorer-fs",
@@ -1041,7 +1041,7 @@ dependencies = [
 
 [[package]]
 name = "explorer-shell"
-version = "0.0.1"
+version = "0.1.0"
 dependencies = [
  "explorer-core",
  "windows",
@@ -1051,7 +1051,7 @@ dependencies = [
 
 [[package]]
 name = "explorer2"
-version = "0.0.1"
+version = "0.1.0"
 dependencies = [
  "embed-resource",
  "explorer-core",
@@ -1067,6 +1067,15 @@ dependencies = [
  "raw-window-handle",
  "slint",
  "slint-build",
+ "windows-sys 0.60.2",
+]
+
+[[package]]
+name = "explorer2-setup"
+version = "0.1.0"
+dependencies = [
+ "embed-resource",
+ "explorer-integrate",
  "windows-sys 0.60.2",
 ]
 
