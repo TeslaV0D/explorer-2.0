@@ -164,10 +164,6 @@ Legende: `[ ]` offen · `[~]` in Arbeit · `[x]` erledigt · Prio P0/P1/P2
 - [ ] Praxistest Redesign auf echtem Windows (Boss, `docs/PRAXISTEST-REDESIGN.md`)
 - [ ] Exe-Größe beobachten (19,31 MB nach Redesign, Gate 20 MB): bei Annäherung Ursachen messen (Slint-Codegen pro Komponente), nichts verschlechtern (D-015)
 - [ ] E2E-Wackler beobachten: [49] erster Drag nach Gesamtlauf ([72c] behoben: Installer wartet auf die laufende Kopie, CI #128)
-- [ ] R2 Hauptlayout (globale Leiste auflösen, Statusleiste, Breakpoints)
-- [ ] R3 Seitenleiste · R4 Navigation · R5 Tabs
-- [ ] R6 Dateiliste · R7 Inspector · R8 Menüs + Dialoge
-- [ ] R9 Zustände + Bewegung · R10 Konsistenz + QA (Galerie vorher/nachher, Gates, Abnahme)
 
 ## Wünsche Boss (2026-11-08) – für später, noch nicht geplant
 - [ ] **Lokalisierung (i18n)**: UI in weitere Sprachen übersetzen (löst D-007 ab, z. B. Slint `@tr` + Rust-Texte)
