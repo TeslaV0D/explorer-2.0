@@ -185,6 +185,10 @@ Legende: `[ ]` offen · `[~]` in Arbeit · `[x]` erledigt · Prio P0/P1/P2
   - [ ] Nie kaputt machen: `Folder` (virtuelle Ordner, Systemsteuerung, Papierkorb …) bleibt beim Windows Explorer, Fallback auf echten Explorer, wenn Explorer 2.0 fehlt/abstürzt; R-001-Snapshot-Test für alle neuen Werte; Windows-E2E pro Weg
 - [ ] **Notfall: Shift + Rechtsklick öffnet direkt das native Windows-Kontextmenü** (statt unseres eigenen; inkl. erweiterter Verben wie „Als Pfad kopieren“, Windows-Verhalten bei Shift = Extended-Verben `CMF_EXTENDEDVERBS`)
 
+## Dokumentation auf Englisch (Boss 2026-11-09) – Start Do 12.11. 16:00, schrittweise
+- [ ] Ganze Doku auf GitHub ins Englische umschreiben: `docs/*.md` (PROJECT, PLAN-*, WINDOWS-INTEGRATION, PRAXISTEST-*, STATUS, TODO), `THIRD-PARTY.md`, `scripts/release-notes.md` **und `CLAUDE.md`** (Boss 2026-11-09) – Inhalt 1:1, keine Logik-Änderung; D-004 entsprechend geändert
+- [ ] README vervollständigen (aktuell 11 Zeilen): Was ist Explorer 2.0, Features (Panes/Tabs, Suche, Inspector, Palette, Farbschemata), Screenshots aus der Galerie, Download/Installation (Setup/Portable, SmartScreen-Hinweis), Notausgang/Reset (R-001), Bauen aus dem Quellcode, Tests/CI, Projektstruktur, Lizenz
+
 ## Phase 3 – Datei-Aktions-Shortcuts (Sweetch-Stil)  *(später, nur beschrieben)*
 - [ ] Tray-Helper mit Kreismenü: Drag von Dateien auf Sektor oder Hotkey (Sweetch: Ctrl+Alt+Space) 
 - [ ] Modifier-Gruppen: Shift = Konvertieren, Ctrl = Tools, Alt = Aktionen
