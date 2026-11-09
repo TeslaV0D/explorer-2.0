@@ -25,7 +25,7 @@
 | D-001 | Stack: **Rust + Slint** (Skia-OpenGL-Renderer, Software-Fallback) + `windows`-crate (Win32/COM) für Shell-Integration | **fix (Boss, 2026-11-03)** |
 | D-002 | Reihenfolge: Basis → Suche (voidtools-Stil) → Datei-Shortcuts (Sweetch-Stil) | fix (Boss) |
 | D-003 | Explorer-Ersatz in Stufen, jede Stufe reversibel; riskante Hooks (IFEO) zuletzt + opt-in | vorgeschlagen |
-| D-004 | Dokumentation auf Deutsch, Code/Identifier auf Englisch | fix |
+| D-004 | Code/Identifier auf Englisch; Dokumentation bisher Deutsch → **wird komplett auf Englisch umgestellt** (alle `docs/*.md`, README, CLAUDE.md, THIRD-PARTY, Release-Notes; neue Doku danach nur Englisch), Antworten an Boss bleiben Deutsch | **fix (Boss, 2026-11-09)** |
 | D-005 | Enumeration Windows: `FindFirstFileExW` (Basic + Large Fetch) statt `NtQueryDirectoryFile` – dokumentierte API, Messung zeigt Budget-Reserve; NtQuery nur bei Bedarf | fix (M1) |
 | D-006 | Watcher: `notify`-Crate (ReadDirectoryChangesW/inotify), eigener Debounce + adaptive Drossel statt notify-debouncer | fix (M1) |
 | D-007 | UI-Sprache vorerst Deutsch hart codiert; i18n später (Slint `@tr`) | vorgeschlagen |
@@ -52,7 +52,7 @@
 
 ## Arbeitsumgebung / Constraints
 - Dev-Sandbox ist **Linux**, Zielplattform **Windows**. Windows-Code kann hier nicht ausgeführt werden → Build/Test via GitHub Actions (`windows-latest`); Kernlogik plattformneutral halten, damit sie auch unter Linux testbar ist.
-- Branch: `claude/eloquent-gauss-sd6qhp` (vorher `claude/relaxed-pasteur-ufhh1p`, gemergt als PR 2). Kein PR ohne explizite Ansage.
+- Branch: `claude/affectionate-tesla-dwsapg` (vorher `claude/eloquent-gauss-sd6qhp`, gemergt als PR 3). Kein PR ohne explizite Ansage.
 - User-Präferenz: Anrede „Boss“, Bro-Ton, auf Deutsch antworten, kurz & präzise.
 
 ## Harte Anforderungen (Boss)
@@ -60,7 +60,7 @@
 
 ## Meilenstein-Stand
 - M0 ✅ · M1 ✅ (Run #10) · M1.5 ✅ Renderer-Wahl + Einstellungen + Icon (Run #13) · M2 ✅ (Run #16) · M3 ✅ (Run #19) · M4 ✅ (Run #26) · **M5 ✅: M5.0–M5.5 ✅ (Run #37), M5.6a/b ✅ (Run #39), M5.6c ✅ (Run #41), M5.6 ✅ komplett (Papierkorb, Dieser PC, Netzwerk, Adresszeile/Icons, Bibliotheken; Run #39–#44), M5.7 ✅ Kachel-Ansicht + Vorschaubilder (Run #48) → M5 komplett**, **M6 ✅ komplett: M6.1 ✅ (Ordneroptionen, Sortier-Menü, Rahmen-Auswahl, Ansicht pro Ordner; Run #49–#51), M6.2 ✅ Inspector (Run #52), M6.3 ✅ Befehlspalette (Run #55), M6.4 ✅ Farbschemata (Run #58)**, **R-001 ✅ Ein-Knopf-Reset (Journal, `explorer2-recover.exe`, App-Knopf, CI-Snapshot-Test; Run #59–#61)**, **M7 ✅: M7.1 Ordner öffnen + Kontextmenü (Run #64), M7.2 Win+E (Run #67); M7.3 IFEO verschoben (D-022)**, **M8.1/M8.2 ✅ eigener Installer + Deinstallation (Run #69)**, **M8.3 Härtung läuft (Boss): M8.3a ✅ Absturzbericht + Start-Wächter (Run #70), M8.3b ✅ eine Instanz (Run #71), M8.3c ✅ Fuzz + Dauertest (Run #72/#73) → M8.3 komplett** (M8.4 Beta-Paket zurückgestellt), **Phase 2 Suche läuft (Boss 2026-11-05): S1.1 ✅ Index-Kern (Run #78)**, S1.2 ✅ Persistenz + Ausschlüsse (Run #80), S1.3 ✅ Aufbau + Abgleich + Live-Updates (Run #83), S1.4 ✅ Such-UI: Dienst in der App, Suchfeld pro Tab, Schnellsuche (Run #90), S1.5 ✅ Feinschliff (Run #91/#93) → **S1 komplett**; Praxistest ✅ (Boss 2026-11-07, S2 vorerst nicht nötig); **Redesign läuft** (`docs/PLAN-REDESIGN.md`, D-026): R0 ✅ Absicherung (UI-Dump, Klicks per Name, Galerie; Run #101), R1 ✅ Design-System (Farbrollen, `Ui`, Icons, Bausteine, UI-Kit; Run #104), R2 ✅ Hauptlayout (globale Leiste aufgelöst, ⋮-Menü, Tooltips, Breakpoints, Dunkel-Standard; Run #110), R3 ✅ Seitenleiste (Linien-Icons, Akzentmarke, Laufwerksbalken; Run #115), R4 ✅ Navigation (Icon-Knöpfe, Brotkrumen-Segmente, Suchfeld mit Lupe; Run #120), R5 ✅ Tabs (IDE-Stil, Akzentstrich nur in der aktiven Ansicht, × bei Hover; Run #123), R6 ✅ Dateiliste (Kopf mit Chevron, Zeilen-Plättchen + Akzentbalken, Kacheln; Run #124), R7 ✅ Inspector (Gruppen, Pfad kopieren, Einblenden; Run #125), R8 ✅ Menüs + Dialoge (eigenes Kontextmenü + „Weitere Optionen“, Dialoge/Palette/Einstellungen; Run #128), R9 ✅ Zustände + Bewegung (Gedrückt/Hover/Erscheinen einheitlich, Pixel-Checks; Run #130), R10 ✅ Konsistenz + QA (alte Tokens weg, Skalierung 125/150 %, Galerie vorher/nachher; Run #131) → **Redesign komplett**, nächster Schritt Praxistest Boss (`docs/PRAXISTEST-REDESIGN.md`)
-- Arbeitsregel (Boss): nächste Stufe erst, wenn die aktuelle vollständig abgeschlossen, getestet und CI-grün ist.
+- Arbeitsregel (Boss): nächste Stufe erst, wenn die aktuelle vollständig abgeschlossen, getestet und CI-grün ist. TODO-Punkte schrittweise: erst weiter, wenn der Punkt komplett fertig + abgehakt ist; selbstständig arbeiten, nur bei wichtigen Entscheidungen fragen (Boss 2026-11-09).
 
 ## Code-Layout (seit M0)
 - `crates/core` (`explorer-core`): plattformneutrales Modell, Sortierung (natürlich, Ordner zuerst), Unit-Tests

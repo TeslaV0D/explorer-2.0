@@ -169,8 +169,8 @@ Legende: `[ ]` offen · `[~]` in Arbeit · `[x]` erledigt · Prio P0/P1/P2
 - [ ] R6 Dateiliste · R7 Inspector · R8 Menüs + Dialoge
 - [ ] R9 Zustände + Bewegung · R10 Konsistenz + QA (Galerie vorher/nachher, Gates, Abnahme)
 
-## Dokumentation auf Englisch (Boss 2026-11-09)
-- [ ] Ganze Doku auf GitHub ins Englische umschreiben: `docs/*.md` (PROJECT, PLAN-*, WINDOWS-INTEGRATION, PRAXISTEST-*, STATUS, TODO), `THIRD-PARTY.md`, `scripts/release-notes.md` – Inhalt 1:1, keine Logik-Änderung; kippt D-004 (Doku Deutsch) → neue Entscheidung im Decision Log; offen: `CLAUDE.md` mit umstellen?
+## Dokumentation auf Englisch (Boss 2026-11-09) – Start Do 12.11. 16:00, schrittweise
+- [ ] Ganze Doku auf GitHub ins Englische umschreiben: `docs/*.md` (PROJECT, PLAN-*, WINDOWS-INTEGRATION, PRAXISTEST-*, STATUS, TODO), `THIRD-PARTY.md`, `scripts/release-notes.md` **und `CLAUDE.md`** (Boss 2026-11-09) – Inhalt 1:1, keine Logik-Änderung; D-004 entsprechend geändert
 - [ ] README vervollständigen (aktuell 11 Zeilen): Was ist Explorer 2.0, Features (Panes/Tabs, Suche, Inspector, Palette, Farbschemata), Screenshots aus der Galerie, Download/Installation (Setup/Portable, SmartScreen-Hinweis), Notausgang/Reset (R-001), Bauen aus dem Quellcode, Tests/CI, Projektstruktur, Lizenz
 
 ## Phase 3 – Datei-Aktions-Shortcuts (Sweetch-Stil)  *(später, nur beschrieben)*
