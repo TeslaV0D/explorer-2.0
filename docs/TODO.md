@@ -164,10 +164,26 @@ Legende: `[ ]` offen · `[~]` in Arbeit · `[x]` erledigt · Prio P0/P1/P2
 - [ ] Praxistest Redesign auf echtem Windows (Boss, `docs/PRAXISTEST-REDESIGN.md`)
 - [ ] Exe-Größe beobachten (19,31 MB nach Redesign, Gate 20 MB): bei Annäherung Ursachen messen (Slint-Codegen pro Komponente), nichts verschlechtern (D-015)
 - [ ] E2E-Wackler beobachten: [49] erster Drag nach Gesamtlauf ([72c] behoben: Installer wartet auf die laufende Kopie, CI #128)
-- [ ] R2 Hauptlayout (globale Leiste auflösen, Statusleiste, Breakpoints)
-- [ ] R3 Seitenleiste · R4 Navigation · R5 Tabs
-- [ ] R6 Dateiliste · R7 Inspector · R8 Menüs + Dialoge
-- [ ] R9 Zustände + Bewegung · R10 Konsistenz + QA (Galerie vorher/nachher, Gates, Abnahme)
+
+## Wünsche Boss (2026-11-08) – für später, noch nicht geplant
+- [ ] **Lokalisierung (i18n)**: UI in weitere Sprachen übersetzen (löst D-007 ab, z. B. Slint `@tr` + Rust-Texte)
+  - [ ] Bedeutungen exakt treffen, nicht verwirrend: Begriffe wie im Windows Explorer der jeweiligen Sprache (Papierkorb, Dieser PC, Schnellzugriff, Eigenschaften …), Glossar pro Sprache
+  - [ ] Layout-Festigkeit beim Umschalten: **alle** Texte prüfen, ob sie in Knöpfe/Menüs/Spalten/Dialoge/Einstellungen passen (Deutsch/Französisch/Russisch lang, CJK andere Schrift) – kürzen, umbrechen oder Breiten dynamisch; Galerie pro Sprache + Pixel-/Überlauf-Check in E2E
+  - [ ] Sprache in den Einstellungen umschaltbar (Standard: Windows-Sprache), live oder mit Neustart-Hinweis
+  - [ ] Zahlen/Datum/Größen nach Gebietsschema; Schriftabdeckung beachten (Gotcha: fehlende Glyphen kosten Startzeit)
+- [ ] **„Neu“-Untermenü wie Windows**: nicht nur Ordner, sondern alle Erstellungsmöglichkeiten (Textdokument, Verknüpfung, gezippter Ordner, Word/Excel/… aus `HKCR\.<ext>\ShellNew` – `NullFile`/`FileName`/`Data`/`Command`), Name direkt im Umbenennen-Modus, Undo wie bei Neuer Ordner
+- [ ] **Autostart mit Windows** (opt-in, Schalter in Einstellungen + Palette)
+  - [ ] Eintrag `HKCU\Software\Microsoft\Windows\CurrentVersion\Run` (ohne Admin), **nur über `integrate::apply`** (Journal) + Eintrag in `manifest::points()` → Reset/Recovery/Deinstallation entfernen ihn (R-001, Snapshot-Test)
+  - [ ] Start im Hintergrund (`--background`: kein Fenster, Instanz-Server + Suchindex warm) → Win+E/Ordner öffnen zeigt sofort ein Fenster über die Eine-Instanz-Übergabe; Fenster schließen = **im Hintergrund weiterlaufen + Tray-Symbol** (Boss 2026-11-08)
+  - [ ] Tray-Symbol (`Shell_NotifyIconW`): Klick = Fenster öffnen, Menü = Neues Fenster / Einstellungen / Beenden; Speicher im Leerlauf klein halten (Ordner-Daten geschlossener Fenster freigeben), Dauertest auf Lecks
+  - [ ] Start-Wächter beachten (Hintergrundstart darf nicht als Absturz zählen), Startkosten beim Windows-Login messen (darf das Login nicht bremsen), Exe-Pfad nach Update/Installation umbiegen wie bei M7
+- [ ] **„Im Explorer öffnen“ systemweit → Explorer 2.0** (Boss 2026-11-08, Beispiel: Steam „Lokale Dateien durchsuchen“ öffnet noch den Windows Explorer)
+  - [ ] Zuerst messen, **wie** die betroffenen Apps öffnen (Process Monitor / API-Trace: Steam, Browser-Downloads „Im Ordner anzeigen“, VS Code, Discord, Installer …) und Liste der Wege führen
+  - [ ] Weg 1 – `ShellExecute` mit ausdrücklichem Verb `open`/`explore` (umgeht unser Standard-Verb `explorer2open`, D-021): HKCU-Übersteuerung von `Directory`/`Drive` `shell\open` + `shell\explore` (ohne Admin), nur über `integrate::apply` + `manifest`, einzeln schaltbar
+  - [ ] Weg 2 – direkter Aufruf `explorer.exe <Pfad>` bzw. `explorer.exe /select,<Datei>`: nur per IFEO-Umleitung (= M7.3, verschoben nach D-022) – `/select,` (Ordner öffnen + Datei markieren), `/e,`, `/root,`, `shell:`-Pfade und virtuelle Ordner verstehen bzw. an echten Explorer durchreichen
+  - [ ] Weg 3 – `SHOpenFolderAndSelectItems` (geht über die laufende Explorer-Shell): Machbarkeit prüfen (ShellWindows/DDE), sonst als bekannte Lücke dokumentieren
+  - [ ] Nie kaputt machen: `Folder` (virtuelle Ordner, Systemsteuerung, Papierkorb …) bleibt beim Windows Explorer, Fallback auf echten Explorer, wenn Explorer 2.0 fehlt/abstürzt; R-001-Snapshot-Test für alle neuen Werte; Windows-E2E pro Weg
+- [ ] **Notfall: Shift + Rechtsklick öffnet direkt das native Windows-Kontextmenü** (statt unseres eigenen; inkl. erweiterter Verben wie „Als Pfad kopieren“, Windows-Verhalten bei Shift = Extended-Verben `CMF_EXTENDEDVERBS`)
 
 ## Phase 3 – Datei-Aktions-Shortcuts (Sweetch-Stil)  *(später, nur beschrieben)*
 - [ ] Tray-Helper mit Kreismenü: Drag von Dateien auf Sektor oder Hotkey (Sweetch: Ctrl+Alt+Space) 
