@@ -172,7 +172,7 @@ The app UI is German; UI labels are quoted as they appear (with a translation wh
 - [~] **Localisation (i18n)**: translate the UI into further languages (supersedes D-007) – plan `docs/PLAN-I18N.md`, D-029 (Boss 2026-11-10: de, en, es, fr, ru, uk, pl, it, zh, ja; English source; live switch)
   - [x] L0 Basics (CI run #141): crate `explorer-i18n` (`tr!`/`tr_n!`, plural rules, `.po` reader, build-time tables, `extract` tool, catalog test), setting `language`, Windows/POSIX system language, Slint bundled translations, tests pinned to `de`, E2E [84]
   - [x] L1 Slint texts → `@tr` (English source) + `de.po` filled, German UI unchanged – 89 texts, `de` complete, E2E [84a]/[84d] (CI run #144)
-  - [~] L2 Rust texts → `tr!`/`tr_n!` + numbers per language; 411 texts, `de` complete; Inspector + job labels by id (CI pending)
+  - [x] L2 Rust texts → `tr!`/`tr_n!` + numbers per language; 411 texts, `de` complete; Inspector + job labels by id (CI run #146)
   - [ ] Conflict dialog letter keys (R/S/B/A) per language (today they match German and English only)
   - [ ] R-001-safe relabel of the texts written to Windows (folder verb texts “Öffnen (Explorer 2.0)”, Start menu `.lnk` names + descriptions): written in the language at switch-on time, state/reset must not depend on the text (today fixed German, compared by the journal)
   - [ ] L3 English review + gallery in English

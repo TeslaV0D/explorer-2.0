@@ -9,7 +9,7 @@ The app UI is German; UI labels and messages are quoted as they appear (with a t
 - Field-test checklists renamed: `PRAXISTEST-SUCHE.md` → `FIELD-TEST-SEARCH.md`, `PRAXISTEST-REDESIGN.md` → `FIELD-TEST-REDESIGN.md`.
 - No code change; CI ignores doc-only commits (`paths-ignore`).
 
-## Localisation L2 – Rust texts (2026-11-10, CI pending)
+## Localisation L2 – Rust texts ✅ (CI run #146, 2026-11-10)
 - All user-visible texts in Rust are now `tr!`/`tr_n!` with English source – `core` (command names, type labels, sizes, attributes, places, renderer status, crash notice), `fs`/`ops`/`index`/`search`/`shell`/`integrate` (errors, drive names, copy/new-folder names, reset summaries), the app (status bar, search status, context menu, dialogs, job panel, Inspector, quick search, installer, integration), the setup and the recovery tool. **411 texts, `de.po` complete** → the German UI is unchanged; with `EXPLORER2_LANG=en` everything is English.
 - `tr_noop!("…")` (gettext `N_`) marks texts in `const` tables (command directory) – translated where shown (`Command::title`/`shortcut`).
 - Numbers per language: `explorer_i18n::format_integer`/`format_decimal`/`separators` (`1,234.5` en, `1.234,5` de/es/it, no-break space fr/pl/ru/uk) → `core::format_count`/`format_size`. Visible change for German: sizes now with a decimal comma (“3,1 KB” like Explorer, before “3.1 KB”).
@@ -17,6 +17,7 @@ The app UI is German; UI labels and messages are quoted as they appear (with a t
 - Language detection moved into `explorer-i18n` (`system_languages`, `init`), used by the app (also for `--install` console output), the setup and the recovery tool (its yes/no prompt accepts the current language's word plus `j/ja/y/yes`).
 - **Deliberately not translated**: crash reports (a file for developers → fixed English: `Cause: Panic`), technical reasons inside “index damaged: …”, traces, and the **values written to the registry / Start menu** (folder verb texts, `.lnk` names) – the R-001 journal and the state detection compare them; translating them needs an R-001-safe relabel (own TODO).
 - Bug found in the extractor: a byte string with `\x89` (PNG signature in `core::inspect`) made the strict string reader give up and **silently skip the rest of the file** (6 texts missing). Fix: other strings are only skipped (any escape), and `collect` now fails loudly if a file has more `tr!`/`tr_n!`/`tr_noop!`/`@tr` calls than were read.
+- CI #145: the catalog test failed on Windows only – the recovery tool's multi-line usage text had `\r\n` in the CRLF checkout while rustc reads it with `\n` → the extractor normalises CRLF (checked against a CRLF copy of all sources). CI #146 fully green, Linux E2E locally 281/281.
 - Tests: all unit tests on English source texts (core/fs/ops/index/search/integrate/app), E2E/Windows checks still on German (pinned); updated: [68d] `9,8 KB`, [73]/[C2] crash report `Cause: …`.
 
 ## Localisation L1 – Slint texts ✅ (CI run #144, 2026-11-10)
