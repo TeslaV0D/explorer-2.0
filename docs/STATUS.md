@@ -9,7 +9,7 @@ The app UI is German; UI labels and messages are quoted as they appear (with a t
 - Field-test checklists renamed: `PRAXISTEST-SUCHE.md` → `FIELD-TEST-SEARCH.md`, `PRAXISTEST-REDESIGN.md` → `FIELD-TEST-REDESIGN.md`.
 - No code change; CI ignores doc-only commits (`paths-ignore`).
 
-## Localisation L3 – English review + gallery (2026-11-10, CI pending)
+## Localisation L3 – English review + gallery ✅ (CI run #147, 2026-11-10)
 - **Language-neutral test targets**: the UI scripts keep clicking German names; with `EXPLORER2_LANG=<code>` `scripts/ui-lib.sh` looks each name up first (`scripts/ui-lang-map.py`: German → English source via `lang/de`, → target via `lang/<code>`; 275 names). The gallery now runs in any language: CI artifact **`ui-gallery-linux-en`** next to `ui-gallery-linux`.
 - English gallery checked screen by screen (32 images, light/dark): everything English, nothing clipped or overlapping; file type names (“TXT File”, “File folder”), sizes (“3.1 KB (3,170 bytes)”), Inspector groups GENERAL/DATE/LOCATION, dialogs, palette, quick search, settings.
 - **Review of all 411 English texts** as a product language (Windows wording, US spelling, natural English) – ~40 changed, e.g. “Like Windows” → “System default”, “More options” → “Show more options” (Windows 11), “Search in X” → “Search X” (Explorer's search box), palette toggles “… on/off” → “Toggle …”, “Not possible here” → “Not available here”, “Opening failed” → “Couldn't open”, installer/setup/integration sentences rewritten. Every translation was carried over to the new source text; checked automatically: **the German texts are exactly the same as before** (multiset of all `msgstr`).
