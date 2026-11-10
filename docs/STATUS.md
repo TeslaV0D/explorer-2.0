@@ -1,559 +1,565 @@
-# Zwischenstand
+# Current state
 
-**Stand:** 2026-11-07 · **Phase:** 1 · M0–M7 ✅ (M7.3 verschoben) · R-001 ✅ · **M8.1/M8.2 Installer ✅ (Run #69)** · **M8.3 Härtung ✅ (Run #70–#73)** · **Phase 2 Suche: S1.1 ✅ (Run #78), S1.2 ✅ (Run #80), S1.3 ✅ (Run #83), S1.4 ✅ (Run #90), S1.5 ✅ (Run #91/#93) → **S1 komplett**, Praxistest ✅ (Boss: „es funktioniert“) · **Redesign läuft: R0 ✅ (Run #101), R1 ✅ (Run #104), R2 ✅ (Run #110), R3 ✅ (Run #115), R4 ✅ (Run #120), R5 ✅ (Run #123), R6 ✅ (Run #124), R7 ✅ (Run #125), R8 ✅ (Run #128), R9 ✅ (Run #130), R10 ✅ (Run #131) → **Redesign komplett**, als Nächstes Praxistest Boss (`docs/PRAXISTEST-REDESIGN.md`)** (`docs/PLAN-REDESIGN.md`)** (Plan `docs/PLAN-SEARCH.md`) · **Branch:** `claude/eloquent-gauss-sd6qhp`
+**As of:** 2026-11-07 · **Phase:** 1 · M0–M7 ✅ (M7.3 postponed) · R-001 ✅ · **M8.1/M8.2 installer ✅ (run #69)** · **M8.3 hardening ✅ (runs #70–#73)** · **Phase 2 search: S1.1 ✅ (run #78), S1.2 ✅ (run #80), S1.3 ✅ (run #83), S1.4 ✅ (run #90), S1.5 ✅ (runs #91/#93) → **S1 complete**, field test ✅ (Boss: “es funktioniert” – it works) · **Redesign: R0 ✅ (run #101), R1 ✅ (run #104), R2 ✅ (run #110), R3 ✅ (run #115), R4 ✅ (run #120), R5 ✅ (run #123), R6 ✅ (run #124), R7 ✅ (run #125), R8 ✅ (run #128), R9 ✅ (run #130), R10 ✅ (run #131) → **redesign complete**, next: field test by Boss (`docs/FIELD-TEST-REDESIGN.md`)** (`docs/PLAN-REDESIGN.md`)** (plan `docs/PLAN-SEARCH.md`) · **Branch:** `claude/eloquent-gauss-sd6qhp`
 
+The app UI is German; UI labels and messages are quoted as they appear (with a translation where it helps).
 
-## M8.4 Release-Paket (2026-11-08, Boss: „mach ein Release, sodass man bequem installieren kann“)
-- **`Explorer2-Setup-0.1.0-x64.exe`**: eine Datei, Doppelklick → Nachfrage (Ziel, ohne Admin; „bereits installiert → aktualisieren?“) → Installation über die App selbst (`--install`, D-023) → „Jetzt starten?“. Fehler als Dialog; `--quiet` ohne Dialoge (Exit 0/1/2/1223).
-- Dazu Portable-ZIP (`explorer2.exe` + `explorer2-recover.exe`) und `SHA256SUMS.txt`; Release-Notes auf Deutsch inkl. SmartScreen-Hinweis (unsigniert).
-- `scripts/release-package.ps1` baut + prüft das Setup in **jedem** Windows-CI-Run (Artefakt `explorer2-windows-x64` enthält jetzt die Release-Dateien); `release.yml` veröffentlicht, sobald eine Version ohne Release gepusht wird (legt den Tag selbst an; Tag-Push aus der Session blockt der Proxy).
+## Documentation in English (2026-11-10, Boss: start brought forward from Thu 12.11.)
+- All documentation translated to English, content 1:1 (D-004): `docs/*.md`, `CLAUDE.md`, `THIRD-PARTY.md`, `scripts/release-notes.md` (the next GitHub release gets English notes), README completed.
+- Field-test checklists renamed: `PRAXISTEST-SUCHE.md` → `FIELD-TEST-SEARCH.md`, `PRAXISTEST-REDESIGN.md` → `FIELD-TEST-REDESIGN.md`.
+- No code change; CI ignores doc-only commits (`paths-ignore`).
+
+## M8.4 Release package (2026-11-08, Boss: “mach ein Release, sodass man bequem installieren kann” – make a release that's easy to install)
+- **`Explorer2-Setup-0.1.0-x64.exe`**: one file, double-click → confirmation (target, without admin; “already installed → update?”) → installation via the app itself (`--install`, D-023) → “Jetzt starten?” (start now?). Errors as a dialog; `--quiet` without dialogs (exit 0/1/2/1223).
+- Plus a portable ZIP (`explorer2.exe` + `explorer2-recover.exe`) and `SHA256SUMS.txt`; release notes in German including a SmartScreen notice (unsigned).
+- `scripts/release-package.ps1` builds + checks the setup in **every** Windows CI run (artifact `explorer2-windows-x64` now contains the release files); `release.yml` publishes as soon as a version without a release is pushed (creates the tag itself; the proxy blocks tag pushes from the session).
 - Version 0.0.1 → **0.1.0**.
 
-## M5 – Shell-Integration (läuft, Freigabe Boss 2026-11-04)
-### CI-Run #37 – alles grün ✅ (M5.0–M5.5)
-- Windows-Tests inkl. echte Icons, Shell-Typnamen, Kontextmenü-Verben, Drop-Target-Datenpfad; Clipboard-Interop; Benchmark.
-- UI-Matrix: Drop-Target registriert (1. Versuch), Icons + Typnamen geladen, Drag ohne gedrückte Taste wird übersprungen.
-- **Windows-E2E mit echter Tastatur/Maus: 16/16** (Auswahl, F2 + Undo, Neuer Ordner, Strg+C → Windows-Clipboard, Strg+V, Entf → Papierkorb + Undo, echtes Shell-Menü, Eigenschaften-Dialog, echtes OLE-Drag per Maus).
-- Linux-E2E 104/104. Exe Windows 16,5 MB.
+## M5 – Shell integration (in progress, Boss approval 2026-11-04)
+### CI run #37 – everything green ✅ (M5.0–M5.5)
+- Windows tests including real icons, shell type names, context menu verbs, drop-target data path; clipboard interop; benchmark.
+- UI matrix: drop target registered (1st attempt), icons + type names loaded, drag without a pressed button is skipped.
+- **Windows E2E with real keyboard/mouse: 16/16** (selection, F2 + undo, new folder, Ctrl+C → Windows clipboard, Ctrl+V, Del → Recycle Bin + undo, real shell menu, Properties dialog, real OLE drag by mouse).
+- Linux E2E 104/104. Exe Windows 16.5 MB.
 
-### M5.0 Exe-Größe
-- Analyse (Linux-Build als Näherung): 22,9 MB gesamt, davon Skia ≈ 8 MB (vorkompiliert, durch `opt-level` nicht beeinflussbar), Rest Rust (std, Slint-Core/Renderer, Winit, Text-Shaping harfrust/skrifa/parley, SVG usvg/resvg, Bilddecoder). Wayland/X11/zbus/sctk-adwaita (inkl. eingebetteter Cantarell-Schrift) sind **nur Linux**. Bildformate/SVG kommen aus Slint-Interna → nicht sauber abschaltbar.
-- Maßnahme: `opt-level = "s"` → Linux **22,9 → 19,6 MB (−15 %)**. Bench 100k (2×9 Läufe): erste Zeilen und Gesamtladen im Rauschen, Sortieren 43 → ~50 ms. `"z"` spart kaum mehr, ist langsamer.
-- E2E mit `"s"`: 100/100, First Paint 19 ms.
-- CI-Gate: Windows-Exe ≥ 20 MB → Build rot. **Windows-Exe jetzt 16,47 MB** (Run #29, vorher 19,7 MB).
+### M5.0 Exe size
+- Analysis (Linux build as an approximation): 22.9 MB total, of which Skia ≈ 8 MB (precompiled, not affected by `opt-level`), the rest Rust (std, Slint core/renderer, winit, text shaping harfrust/skrifa/parley, SVG usvg/resvg, image decoders). Wayland/X11/zbus/sctk-adwaita (including the embedded Cantarell font) are **Linux only**. Image formats/SVG come from Slint internals → cannot be switched off cleanly.
+- Measure: `opt-level = "s"` → Linux **22.9 → 19.6 MB (−15 %)**. Bench 100k (2×9 runs): first rows and total load within noise, sorting 43 → ~50 ms. `"z"` saves hardly more and is slower.
+- E2E with `"s"`: 100/100, first paint 19 ms.
+- CI gate: Windows exe ≥ 20 MB → build red. **Windows exe now 16.47 MB** (run #29, previously 19.7 MB).
 
-### M5.1 Icons / M5.2 Typnamen
-- Neue Crate `explorer-shell`: Icon-Schlüssel (pro Endung bzw. pro Datei für exe/lnk/ico/url/…, Ordner mit R/S-Attribut), threadsichere `IconRegistry`, `SHGetFileInfoW` → HICON → RGBA (Alpha bzw. Maske), Typnamen per `SHGFI_TYPENAME|USEFILEATTRIBUTES` mit Cache.
-- App: Zeile trägt nur eine `icon`-id, UI hält `[image]`-Modell; Worker-Thread lädt gebündelt nach, Einzel-Icons nur für sichtbare Zeilen (Viewport-Callback ±20 Zeilen). Typ-Spalte zeigt Shell-Namen, **Sortieren nach Typ nach angezeigtem Namen** (wie Explorer: .jpg/.jpeg zusammen).
-- Linux: keine Shell → Fallback-Quadrate und eigene Typnamen wie bisher.
-- Tests: shell 8 Unit (Schlüsselregeln, Registry unter Konkurrenz, Pixel-Konvertierung) + Windows-Test mit echten Icons (16/32 px, Ordner ≠ txt, eigene Exe), core +1 (Typ-Sortierung), app +3; CI-UI-Matrix prüft „icons loaded“ + Shell-Typnamen.
+### M5.1 Icons / M5.2 Type names
+- New crate `explorer-shell`: icon keys (per extension or per file for exe/lnk/ico/url/…, folders with the R/S attribute), thread-safe `IconRegistry`, `SHGetFileInfoW` → HICON → RGBA (alpha or mask), type names via `SHGFI_TYPENAME|USEFILEATTRIBUTES` with a cache.
+- App: a row carries only an `icon` id, the UI holds an `[image]` model; a worker thread loads in batches, individual icons only for visible rows (viewport callback ±20 rows). The type column shows shell names, **sorting by type uses the displayed name** (like Explorer: .jpg/.jpeg together).
+- Linux: no shell → fallback squares and our own type names as before.
+- Tests: shell 8 unit (key rules, registry under concurrency, pixel conversion) + Windows test with real icons (16/32 px, folder ≠ txt, own exe), core +1 (type sorting), app +3; CI UI matrix checks “icons loaded” + shell type names.
 
-### M5.3 Kontextmenü / M5.4 Eigenschaften
-- `explorer-shell::menu`: Shell-Kontextmenü über `IShellFolder::GetUIObjectOf` (Auswahl) bzw. `CreateViewObject` (Ordner-Hintergrund) → `IContextMenu`, Untermenüs (Senden an, Öffnen mit, Neu) über Window-Subclassing + `IContextMenu2/3::HandleMenuMsg(2)`. Ausführung per Position (`MAKEINTRESOURCE`).
-- Eigene Verben statt Shell: Umbenennen, Löschen, Ausschneiden/Kopieren/Einfügen, Neuer Ordner → laufen über unsere Engine (Undo, Fortschritt, Konfliktdialog). Alles andere (Erweiterungen Dritter) führt die Shell aus, danach Refresh.
-- Rechtsklick wie Explorer: nicht markierte Zeile wird markiert, Mehrfachauswahl bleibt; leere Fläche = Ordner-Hintergrund; Shift+F10/Menü-Taste an der fokussierten Zeile; Alt+Enter = Eigenschaften (eine Datei: `SHObjectProperties`, mehrere: `SHMultiFileProperties`).
-- Windows-Test: Menü wird gebaut (ohne Anzeige) und muss die Verben open/delete/rename/properties enthalten; Hintergrund-Menü nicht leer. E2E Linux 53–53d (UI-Pfad).
-- CI-Run #29: Tests + Kontextmenü-Test + Release-Build auf Windows grün (App kompiliert mit HWND-Code); Icons laden in der UI-Matrix (2 Icons nach 23 ms). Rot nur der `kinds`-Trace: erste 200 Zeilen im 100k-Ordner sind alles Ordner → Trace sucht jetzt alle Zeilen ab (max. 10 Namen).
-- CI-Run #28: Shell-Icons und Typnamen laufen auf Windows (Runner englisch: „File folder“); nur ein App-Test erwartete fest den Linux-Fallback → plattformbewusst gemacht.
+### M5.3 Context menu / M5.4 Properties
+- `explorer-shell::menu`: shell context menu via `IShellFolder::GetUIObjectOf` (selection) or `CreateViewObject` (folder background) → `IContextMenu`, submenus (Send to, Open with, New) via window subclassing + `IContextMenu2/3::HandleMenuMsg(2)`. Execution by position (`MAKEINTRESOURCE`).
+- Own verbs instead of the shell: rename, delete, cut/copy/paste, new folder → run through our engine (undo, progress, conflict dialog). Everything else (third-party extensions) is executed by the shell, then a refresh.
+- Right-click like Explorer: an unselected row gets selected, multi-selection stays; empty space = folder background; Shift+F10/menu key at the focused row; Alt+Enter = Properties (one file: `SHObjectProperties`, several: `SHMultiFileProperties`).
+- Windows test: the menu is built (without showing it) and must contain the verbs open/delete/rename/properties; background menu not empty. E2E Linux 53–53d (UI path).
+- CI run #29: tests + context menu test + release build on Windows green (the app compiles with HWND code); icons load in the UI matrix (2 icons after 23 ms). Only the `kinds` trace was red: the first 200 rows in the 100k folder are all folders → the trace now searches all rows (max. 10 names).
+- CI run #28: shell icons and type names run on Windows (runner English: “File folder”); only one app test expected the Linux fallback hard → made platform-aware.
 
-### M5.5 OLE-Drag&Drop
-- Ablegen: eigenes `IDropTarget` (`#[implement]`) ersetzt per `RevokeDragDrop`/`RegisterDragDrop` den Winit-Handler; Pfade aus `CF_HDROP` (`DragQueryFileW`). Ziel per Hit-Test (Slint meldet Listen-Geometrie + Scroll je Pane) → Ordnerzeile = hinein, Datei/leer = angezeigter Ordner.
-- Standard wie Explorer: gleiches Laufwerk = Verschieben, anderes = Kopieren, Strg = Kopieren, Umschalt = Verschieben, begrenzt auf das, was die Quelle erlaubt; nie in sich selbst. Ausführung über unsere Engine (Fortschritt, Konflikte, Undo).
-- Ziehen: `SHDoDragDrop` mit Shell-Datenobjekt (`GetUIObjectOf`) = Explorer-kompatibel inkl. Drag-Bild; Start per Timer nach dem Slint-Callback (modale Schleife), danach Pointer-Release nachgereicht. Windows: auch In-App-DnD über OLE; Linux: Slint-DragArea wie bisher.
-- Tests: Windows-Unit-Test schiebt ein echtes Shell-Datenobjekt durch unser `IDropTarget` (Pfade inkl. Umlaut, Strg → Kopieren); CI-UI-Matrix: Drop-Target registriert + Test-Hook `EXPLORER2_TEST_OLE_DRAG` (modale Drag-Schleife im laufenden Event-Loop, kein Absturz/Hänger); App-Unit-Test Hit-Test (Panes, Scroll, Sidebar/Header).
+### M5.5 OLE drag & drop
+- Dropping: own `IDropTarget` (`#[implement]`) replaces the winit handler via `RevokeDragDrop`/`RegisterDragDrop`; paths from `CF_HDROP` (`DragQueryFileW`). Target by hit test (Slint reports list geometry + scroll per pane) → folder row = into it, file/empty = the displayed folder.
+- Default like Explorer: same drive = move, other = copy, Ctrl = copy, Shift = move, limited to what the source allows; never into itself. Executed through our engine (progress, conflicts, undo).
+- Dragging: `SHDoDragDrop` with a shell data object (`GetUIObjectOf`) = Explorer-compatible including the drag image; started via a timer after the Slint callback (modal loop), then the pointer release is dispatched. Windows: in-app DnD via OLE too; Linux: Slint DragArea as before.
+- Tests: Windows unit test pushes a real shell data object through our `IDropTarget` (paths including an umlaut, Ctrl → copy); CI UI matrix: drop target registered + test hook `EXPLORER2_TEST_OLE_DRAG` (modal drag loop in the running event loop, no crash/hang); app unit test hit test (panes, scroll, sidebar/header).
 
-- **CI-Run #31 (rot)**: Drop-Test verglich `%TEMP%`-Kurznamen (`RUNNER~1`) roh mit den Langnamen der Shell → Test vergleicht kanonisch. Dabei echtes Risiko gefunden: Start über einen Kurznamen-Pfad hätte Drop-Vergleiche (gleicher Ordner/in sich selbst) ausgehebelt → **Navigation expandiert jetzt Kurznamen** (`explorer_fs::path::long_path`, `GetLongPathNameW`, Junctions bleiben) und Drop-Vergleiche sind unter Windows case-insensitiv.
+- **CI run #31 (red)**: the drop test compared `%TEMP%` short names (`RUNNER~1`) raw with the shell's long names → the test compares canonically. Found a real risk along the way: starting via a short-name path would have defeated drop comparisons (same folder/into itself) → **navigation now expands short names** (`explorer_fs::path::long_path`, `GetLongPathNameW`, junctions stay) and drop comparisons are case-insensitive on Windows.
 
-- **Bug (CI #32/#33, UI-Matrix)**: OLE-Drop-Target wurde nie registriert („Invalid window handle“) – der Timer lief, bevor Slint das native Fenster erzeugt hatte → Ablegen aus anderen Apps wäre tot gewesen. Fix: Registrierung wiederholt bis HWND existiert (50 ms, max. 5 s), sonst Rückfall auf In-App-DnD.
-- Neu: **Windows-E2E mit echter Tastatur/Maus** (`scripts/e2e-windows.ps1`, CI-Schritt im Release-Job, Screenshots bei Fehler).
+- **Bug (CI #32/#33, UI matrix)**: the OLE drop target was never registered (“Invalid window handle”) – the timer ran before Slint had created the native window → dropping from other apps would have been dead. Fix: registration retried until the HWND exists (50 ms, max. 5 s), otherwise fallback to in-app DnD.
+- New: **Windows E2E with real keyboard/mouse** (`scripts/e2e-windows.ps1`, CI step in the release job, screenshots on failure).
 
-### Redesign R10 – Konsistenz + QA ✅ (CI-Run #131) → Redesign R0–R10 komplett
-- **Alte Farb-Tokens entfernt**: `core::theme::Tokens` = Schema + Farbrollen (`Design`), alter 38-Token-Satz, `tint()` und die alten Standardfarben weg, ebenso Slint `ThemeColors`/`Theme.c`; Trace meldet Akzent/Auswahl der neuen Rollen (E2E [70]/[70h2] nachgezogen: hell #2f6feb/#dce7fc, dunkel #4f8cff/#2a3750).
-- **Anzeige-Skalierung** 125 %/150 % (`SLINT_SCALE_FACTOR`, Fenster 1280×800 physisch): E2E [83] – Bedienelemente da, alles im Fenster, Adresszeile endet vor ⋮; bei 150 % greifen die Breakpoints (schmale Seitenleiste, Aktionen im ⋮-Menü). Galerie: `13-skalierung-150` (Linux), `07-skalierung-125` (Windows).
-- **Galerie vorher/nachher**: Stand R0 (Commit c50a5ce) neu gebaut und mit derselben Galerie fotografiert; 11 Bildschirme × hell/dunkel nebeneinander (an Boss geschickt).
-- **Budgets** (CI #130 gegen #93 vor dem Redesign): Exe 18,08 → **19,31 MB** (Frühwarn-Gate 20 MB, D-015: Qualität vor Größe – beobachten, nicht blind kürzen); normaler Start best-of-3 **unverändert** (#93: 54,8 ms, #131: 52,9 ms; #130 zeigte 87,8 ms = VM-Schwankung, Budget 300 ms); Erststart #131 59,2 ms; 100k-Ordner erste Zeilen 3 ms. Windows-Galerie 18 Bilder (inkl. 125 %).
-- **Praxistest-Checkliste** `docs/PRAXISTEST-REDESIGN.md` (8 Abschnitte, inkl. „Weitere Optionen“ dunkel, 125/150 %, kräftige Akzentfarben).
-- Lokal 276/276.
+### Redesign R10 – Consistency + QA ✅ (CI run #131) → redesign R0–R10 complete
+- **Old colour tokens removed**: `core::theme::Tokens` = scheme + colour roles (`Design`), the old 38-token set, `tint()` and the old default colours gone, as well as Slint `ThemeColors`/`Theme.c`; the trace reports accent/selection of the new roles (E2E [70]/[70h2] updated: light #2f6feb/#dce7fc, dark #4f8cff/#2a3750).
+- **Display scaling** 125 %/150 % (`SLINT_SCALE_FACTOR`, window 1280×800 physical): E2E [83] – controls present, everything inside the window, the address bar ends before ⋮; at 150 % the breakpoints kick in (narrow sidebar, actions in the ⋮ menu). Gallery: `13-skalierung-150` (Linux), `07-skalierung-125` (Windows).
+- **Gallery before/after**: state R0 (commit c50a5ce) rebuilt and photographed with the same gallery; 11 screens × light/dark side by side (sent to Boss).
+- **Budgets** (CI #130 against #93 before the redesign): exe 18.08 → **19.31 MB** (early-warning gate 20 MB, D-015: quality over size – watch, don't cut blindly); normal start best-of-3 **unchanged** (#93: 54.8 ms, #131: 52.9 ms; #130 showed 87.8 ms = VM variance, budget 300 ms); first start #131 59.2 ms; 100k folder first rows 3 ms. Windows gallery 18 images (including 125 %).
+- **Field-test checklist** `docs/FIELD-TEST-REDESIGN.md` (8 sections, including “Weitere Optionen” dark, 125/150 %, strong accent colours).
+- Locally 276/276.
 
-### Redesign R9 – Zustände + Bewegung ✅ (CI-Run #130)
-- Durchgang über alle Bedienelemente: **Gedrückt** (`pressed`) jetzt auch für Menüeinträge, Tabs und Seitenleiste (vorher nur Knöpfe/Kopf/Brotkrumen); **Hover-Übergänge 120 ms** auch in Menüs und Palette; **Erscheinen** einheitlich: ⋮-Menü + Sortier-Menü blenden in 120 ms ein (wie das Kontextmenü), Konflikt-/Bestätigungsdialog blenden ein **und aus** (bleiben nur während des Ausblendens sichtbar), Einstellungs-Panel 160 ms. Gesperrt = `faint` überall (Knöpfe, Menüs, Palette), Fokus = Akzentrand (Felder, Zeilen, Kacheln).
-- Nichts wartet auf eine Animation: Tastatur/Enter wirken sofort (Dialoge nehmen Eingaben ab dem ersten Frame).
-- **Pixel-Checks der Zustände** (E2E [20b]/[20c]): Hover #2a2a2a, Auswahl mit Fokus #2a3750, ohne Fokus #2c2c2c (Adresszeile hat den Fokus), Esc gibt den Fokus zurück; dazu bestehen [19], [57a] (Akzentmarke), [7e] (Tab-Strich), [70b/d], W37c/W38b/W39b. Lokal 270/270.
-- CI #129: Windows-W10 rot – das native Menü hinter „Weitere Optionen“ baute sich später als 1,5 s auf, Esc ging an unser Fenster → W10 wartet jetzt auf das echte Menüfenster (`#32768`) vor Esc; CI #130 komplett grün.
+### Redesign R9 – States + motion ✅ (CI run #130)
+- Pass over all controls: **pressed** (`pressed`) now also for menu entries, tabs and the sidebar (previously only buttons/header/breadcrumbs); **hover transitions 120 ms** also in menus and the palette; **appearance** uniform: ⋮ menu + sort menu fade in over 120 ms (like the context menu), conflict/confirmation dialogs fade in **and out** (stay visible only while fading out), settings panel 160 ms. Disabled = `faint` everywhere (buttons, menus, palette), focus = accent frame (fields, rows, tiles).
+- Nothing waits for an animation: keyboard/Enter act immediately (dialogs take input from the first frame).
+- **Pixel checks of the states** (E2E [20b]/[20c]): hover #2a2a2a, selection with focus #2a3750, without focus #2c2c2c (the address bar has the focus), Esc returns the focus; plus [19], [57a] (accent mark), [7e] (tab stroke), [70b/d], W37c/W38b/W39b pass. Locally 270/270.
+- CI #129: Windows W10 red – the native menu behind “Weitere Optionen” took longer than 1.5 s to build, Esc went to our window → W10 now waits for the real menu window (`#32768`) before Esc; CI #130 fully green.
 
-### Redesign R8 – Menüs + Dialoge ✅ (CI-Run #128)
-- **R8a eigenes Kontextmenü** (Entscheidung 2): kompaktes Menü im neuen Stil als Overlay (erscheint in 120 ms, bleibt im Fenster, Tastatur: ↑/↓ überspringt Trenner + gesperrte Einträge, Enter, Esc, Klick daneben schließt). Einträge auf Elementen: Öffnen · Ausschneiden/Kopieren/Einfügen/Umbenennen (nur bei 1)/Löschen · Eigenschaften; auf dem Hintergrund: Neuer Ordner · Einfügen · Aktualisieren · Eigenschaften (des Ordners). Gleiche Befehle wie Leiste/Palette (`palette::execute`). Windows: **„Weitere Optionen“** öffnet das native Shell-Menü mit allen Erweiterungen an derselben Stelle; native Menüs folgen dem dunklen Schema über uxtheme `SetPreferredAppMode`/`FlushMenuThemes` (Ordinal 135/136, zur Laufzeit gesucht → fehlt es, bleibt das Menü hell). Linux hat jetzt erstmals ein Kontextmenü. Tests: [53]–[53f] (Esc, Hintergrund, Klick auf Eintrag, Shift+F10 + Tastatur, Mehrfachauswahl), Windows W10a/W10/W10b, Galerie-Bilder.
-- **R8b**: Konflikt-/Bestätigungsdialog auf `raised` mit Kit-Knöpfen (Hauptaktion in Akzent, Warn-Icon beim Konflikt), Absturz-Hinweis mit Warn-Icon, Jobs-Panel mit dünnen Fortschrittsbalken (Breite animiert), Befehlspalette + Schnellsuche mit Lupen-Zeile, Akzent-Auswahl + Balken, Fußzeile, weichem Scrim und Erscheinen in 160 ms, Statusleiste auf der Fensterfläche, Sortier-Menü aus Kit-`MenuItem`s (Haken statt Punkte), Einstellungs-Panel in den neuen Farben/Schriftgrößen (Std-Widgets bleiben). **main.slint nutzt keine alten `Theme.c`-Farben mehr** (Entfernen der alten Tokens in R10).
-- **Installer robuster** (Wackler [72c], CI #107/#126: die installierte Kopie bekam unter Xvfb manchmal keine X-Verbindung und das alte Fenster war schon zu): das Fenster schließt sich erst, wenn die installierte Kopie nach 0,9 s noch läuft; stirbt sie sofort, zweiter Start; scheitert auch der, bleibt das Fenster mit Fehlermeldung offen (vorher: kein Fenster mehr).
-- Lokal 268/268 (R8a + R8b), e2e-ops 159/159; CI #126 Windows: W10a/W10/W10b grün (natives Menü dunkel), Galerie 16 Bilder; CI #127 + #128 komplett grün.
+### Redesign R8 – Menus + dialogs ✅ (CI run #128)
+- **R8a own context menu** (decision 2): compact menu in the new style as an overlay (appears in 120 ms, stays inside the window, keyboard: ↑/↓ skips separators + disabled entries, Enter, Esc, a click outside closes). Entries on items: Open · Cut/Copy/Paste/Rename (only for 1)/Delete · Properties; on the background: New folder · Paste · Refresh · Properties (of the folder). Same commands as bar/palette (`palette::execute`). Windows: **“Weitere Optionen” (more options)** opens the native shell menu with all extensions at the same place; native menus follow the dark scheme via uxtheme `SetPreferredAppMode`/`FlushMenuThemes` (ordinals 135/136, looked up at runtime → if missing, the menu stays light). Linux has a context menu for the first time. Tests: [53]–[53f] (Esc, background, click on an entry, Shift+F10 + keyboard, multi-selection), Windows W10a/W10/W10b, gallery images.
+- **R8b**: conflict/confirmation dialog on `raised` with kit buttons (main action in accent, warning icon for the conflict), crash notice with a warning icon, jobs panel with thin progress bars (width animated), command palette + quick search with a magnifier row, accent selection + bar, footer, soft scrim and appearance in 160 ms, status bar on the window surface, sort menu made of kit `MenuItem`s (check marks instead of dots), settings panel in the new colours/font sizes (std widgets stay). **main.slint no longer uses any old `Theme.c` colours** (old tokens removed in R10).
+- **Installer more robust** (flake [72c], CI #107/#126: under Xvfb the installed copy sometimes got no X connection and the old window was already closed): the window closes only once the installed copy is still running after 0.9 s; if it dies immediately, a second start; if that fails too, the window stays open with an error message (before: no window any more).
+- Locally 268/268 (R8a + R8b), e2e-ops 159/159; CI #126 Windows: W10a/W10/W10b green (native menu dark), gallery 16 images; CI #127 + #128 fully green.
 
-### Redesign R7 – Inspector ✅ (CI-Run #125)
-- „Property Inspector“ auf `panel`: Vorschau als Karte (Radius 8, Rand), Titel 14 px halbfett + Typ gedämpft, Fakten in **Gruppen ALLGEMEIN / DATUM / ORT** mit kleinen Köpfen statt Linie pro Zeile; Schlüssel links gedämpft (96 px), Wert rechts (markier- und kopierbar); der **Pfad** volle Breite mit Knopf **„Pfad kopieren“** (`TextInput.copy()`); Inhalt blendet beim Öffnen in 180 ms ein (die Fläche selbst ist sofort da – die Liste wartet nie auf eine Animation).
-- Rust: `InfoRow` bekommt `group`/`first`; `inspector::arrange` sortiert stabil nach Gruppe und markiert den ersten Eintrag (auch für nachgereichte Fakten wie Erstellt/Abmessungen), Unit-Test.
-- Tests: E2E [68h] Gruppenköpfe, [68i] „Pfad kopieren“ → Einfügen ins Suchfeld landet als Suchtext. Lokal 265/265, CI #125 komplett grün.
+### Redesign R7 – Inspector ✅ (CI run #125)
+- “Property Inspector” on `panel`: preview as a card (radius 8, border), title 14 px semibold + type dimmed, facts in **groups ALLGEMEIN / DATUM / ORT** (general / date / location) with small headers instead of a line per row; key left dimmed (96 px), value right (selectable and copyable); the **path** full width with a button **“Pfad kopieren”** (copy path) (`TextInput.copy()`); the content fades in over 180 ms when opened (the area itself is there immediately – the list never waits for an animation).
+- Rust: `InfoRow` gets `group`/`first`; `inspector::arrange` sorts stably by group and marks the first entry (also for facts delivered later like Created/Dimensions), unit test.
+- Tests: E2E [68h] group headers, [68i] “Pfad kopieren” → pasting into the search field lands as search text. Locally 265/265, CI #125 fully green.
 
-### Redesign R6 – Dateiliste ✅ (CI-Run #124)
-- **Spaltenkopf** 24 px (vorher 26) auf der Listenfläche, Beschriftung klein/gedämpft, sortierte Spalte heller + **gezeichneter Chevron** in Akzent statt „▲/▼“-Zeichen (Schrift-Glyphen sind die bekannte Erststart-Falle), Hover/Pressed-Flächen, Spaltentrenner werden beim Ziehen/Hover akzentfarben; Beschriftung fluchtet mit den Namen.
-- **Zeilen** 24 px als eingerückte, gerundete Plättchen (Trefferfläche bleibt volle Breite): Hover `hover`, Auswahl `selected` (Akzent-Lasur) + **2-px-Akzentbalken** links, ohne Fokus `selected-idle`, Fokusrahmen 1 px Akzent, **Drop-Ziel** = kräftigere Akzent-Lasur + Rahmen; Namen 13 px, Spalten 12 px gedämpft; Treffer-Hervorhebung bleibt fett. Übergänge 120 ms.
-- **Kacheln** im selben Stil (Radius 6, gleiche Zustände), Namen 12 px; Rahmenauswahl als Akzent-Lasur mit Akzentrand; Inline-Umbenennen auf `raised` mit Akzentrand; Liste auf `surface`.
-- Tests auf die neuen Werte gezogen (per Pixel gemessen): Auswahl dunkel #2a3750 ([19], [70d]), Liste #1f1f1f/#ffffff ([70b/d], W37c/W38b), Spaltenkopf 24 px ([65]). Lokal 263/263, CI #124 komplett grün (inkl. Windows-Pixeltests W37c/W38b/W39b).
+### Redesign R6 – File list ✅ (CI run #124)
+- **Column header** 24 px (previously 26) on the list surface, label small/dimmed, sorted column brighter + **drawn chevron** in accent instead of “▲/▼” characters (font glyphs are the known first-start trap), hover/pressed areas, column separators turn accent-coloured while dragging/hovering; the label lines up with the names.
+- **Rows** 24 px as indented, rounded tiles (hit area stays full width): hover `hover`, selection `selected` (accent glaze) + **2 px accent bar** on the left, without focus `selected-idle`, focus frame 1 px accent, **drop target** = stronger accent glaze + frame; names 13 px, columns 12 px dimmed; hit highlighting stays bold. Transitions 120 ms.
+- **Tiles** in the same style (radius 6, same states), names 12 px; rubber-band selection as an accent glaze with an accent border; inline rename on `raised` with an accent border; list on `surface`.
+- Tests updated to the new values (measured by pixel): selection dark #2a3750 ([19], [70d]), list #1f1f1f/#ffffff ([70b/d], W37c/W38b), column header 24 px ([65]). Locally 263/263, CI #124 fully green (including Windows pixel tests W37c/W38b/W39b).
 
-### Redesign R5 – Tabs ✅ (CI-Run #123)
-- Tabs im IDE-Stil: Leiste auf der Fensterfläche (`app`), Tabs 30 px mit oben gerundeten Ecken; der **aktuelle Tab** trägt die Fläche der Navigationszeile (beide lesen sich als eine Fläche) und – nur in der **aktiven Ansicht** – einen 2-px-Akzentstrich oben (ersetzt die alte Akzentlinie über der ganzen Ansicht); Titel gedämpft außer aktuell/Hover; **× nur bei Hover oder am aktuellen Tab** (Linien-Icon, Platz bleibt reserviert → kein Springen), Mittelklick schließt wie bisher; „+“ als Icon-Knopf mit Tooltip „Neuer Tab · Strg+T“.
-- Tabs sind jetzt für Screenreader `tab`-Rollen mit Titel als Namen. Alte `NavButton`-Komponente entfernt (nicht mehr benutzt).
-- Test: E2E [7e] misst den Akzentstrich am aktuellen Tab per Pixel (erster Versuch maß eine Listenzeile gleichen Namens → misst jetzt den Tab des aktuellen Ordners). Lokal 263/263, CI #123 komplett grün.
+### Redesign R5 – Tabs ✅ (CI run #123)
+- Tabs in IDE style: bar on the window surface (`app`), tabs 30 px with rounded top corners; the **current tab** carries the surface of the navigation row (both read as one surface) and – only in the **active view** – a 2 px accent stroke at the top (replaces the old accent line over the whole view); title dimmed except current/hover; **× only on hover or on the current tab** (line icon, space stays reserved → no jumping), middle-click closes as before; “+” as an icon button with the tooltip “Neuer Tab · Strg+T” (new tab · Ctrl+T).
+- Tabs now have `tab` roles for screen readers with the title as the name. Old `NavButton` component removed (no longer used).
+- Test: E2E [7e] measures the accent stroke on the current tab by pixel (the first attempt measured a list row with the same name → now measures the tab of the current folder). Locally 263/263, CI #123 fully green.
 
-### Redesign R4 – Navigation ✅ (CI-Run #120)
-- Navigationszeile 34 px (vorher 40) auf `panel` mit Trennlinie: Zurück/Vorwärts/Nach oben als Linien-Icon-Knöpfe mit Tooltip + Kürzel, **Adresszeile** als ruhige Segmente (Weg dorthin gedämpft, aktueller Ordner hell, Chevron-Icon statt „›“, Hover-Fläche pro Segment, Rahmen hebt sich bei Hover, Akzent beim Bearbeiten), Klick in die freie Fläche = Bearbeiten wie bisher; **Suchfeld mit Lupe** (Akzent bei Fokus), gleiche Tasten (Esc, ↑/↓-Verlauf, Enter).
-- Logik unverändert (`navigate`, `start-edit`, `search-*`); Namen für Tests unverändert („Zurück“, „Adresszeile“ …). E2E [7d] prüft die Maße; lokal 261/261, CI #120 komplett grün.
+### Redesign R4 – Navigation ✅ (CI run #120)
+- Navigation row 34 px (previously 40) on `panel` with a separator line: back/forward/up as line-icon buttons with tooltip + shortcut, **address bar** as calm segments (the way there dimmed, current folder bright, chevron icon instead of “›”, hover area per segment, the frame lifts on hover, accent while editing), a click into the free area = edit as before; **search field with magnifier** (accent on focus), same keys (Esc, ↑/↓ history, Enter).
+- Logic unchanged (`navigate`, `start-edit`, `search-*`); names for tests unchanged (“Zurück”, “Adresszeile” …). E2E [7d] checks the sizes; locally 261/261, CI #120 fully green.
 
-### Redesign R3 – Seitenleiste ✅ (CI-Run #115)
-- Neue `Sidebar` nur aus `Theme.d` + `Ui`: Gruppenköpfe klein/halbfett (`SectionLabel`, „Dieser PC“ bleibt klickbar = Laufwerksübersicht), Einträge 26 px mit **Linien-Icon** (Rust liefert `PlaceItem.glyph`: home/desktop/downloads/…/trash, Laufwerke drive/usb/network), aktiver Ort mit **3-px-Akzentmarke** + ruhiger Fläche (`selected-idle`), Hover 120 ms, Text gedämpft bis Hover/aktiv; Laufwerke mit **2-px-Füllbalken** (über 90 % rot) und Freiplatz klein darunter. Jeder Eintrag hat seinen Namen als `accessible-label` (Tests klicken wie bisher per Name).
-- Farben nachgeschärft: heller Hover auf der Fensterfläche war unsichtbar (#f2f2f2 auf #f0f0f0) → #e9e9e9; damit Auswahl und Hover nie verwechselbar sind, bekommt eine graue/blasse Akzent-Auswahl mehr Akzent (`apart_from`, Test: Kanalabstand ≥ 15 für alle 12 Akzente; grauer Akzent war vorher identisch mit Hover).
-- Tests: E2E [57a] misst die Akzentmarke per Pixel, [70d] Seitenleiste dunkel = #141414. Lokal 261/261.
-- CI #113: Windows-W10 rot – das Ergebnis des nativen Kontextmenüs kam später als die festen 600 ms (stand im Trace) → W10 wartet jetzt bis 3 s darauf; CI #115 komplett grün.
+### Redesign R3 – Sidebar ✅ (CI run #115)
+- New `Sidebar` only from `Theme.d` + `Ui`: group headers small/semibold (`SectionLabel`, “Dieser PC” (This PC) stays clickable = drive overview), entries 26 px with a **line icon** (Rust supplies `PlaceItem.glyph`: home/desktop/downloads/…/trash, drives drive/usb/network), active place with a **3 px accent mark** + calm surface (`selected-idle`), hover 120 ms, text dimmed until hover/active; drives with a **2 px fill bar** (red above 90 %) and free space small underneath. Every entry has its name as `accessible-label` (tests click by name as before).
+- Colours sharpened: a light hover on the window surface was invisible (#f2f2f2 on #f0f0f0) → #e9e9e9; so that selection and hover can never be confused, a grey/pale accent selection gets more accent (`apart_from`, test: channel distance ≥ 15 for all 12 accents; the grey accent was previously identical to hover).
+- Tests: E2E [57a] measures the accent mark by pixel, [70d] sidebar dark = #141414. Locally 261/261.
+- CI #113: Windows W10 red – the result of the native context menu came later than the fixed 600 ms (it was in the trace) → W10 now waits up to 3 s for it; CI #115 fully green.
 
-### Redesign R2 – Hauptlayout ✅ (CI-Run #110)
-- **Globale Leiste entfernt** (−40 px Höhe für Dateien). Ihre Aktionen machen exakt dasselbe wie vorher (`command(...)`), sitzen jetzt aber dort, wo man arbeitet:
-  - **Datei-Aktionen als Symbol-Knöpfe rechts in der Navigationszeile der aktiven Ansicht**, je Ort wie bisher (Ordner: Neuer Ordner, Ausschneiden, Kopieren, Einfügen, Umbenennen, Löschen; Suche ohne Neuer Ordner/Einfügen; Papierkorb: Wiederherstellen, Endgültig löschen, Papierkorb leeren) + Rückgängig/Wiederholen. In der inaktiven Ansicht unsichtbar (Platz bleibt → Adresszeile springt nicht).
-  - **⋮-Menü („Mehr“)**: Zwei Ansichten/Eine Ansicht, Ausgeblendete Elemente anzeigen, Inspector, Befehlspalette, Einstellungen – mit Tastenkürzeln.
-  - **Statusleiste rechts**: Sortieren, Details/Symbole, Inspector, Einstellungen (Symbol-Knöpfe).
-- **Tooltips** mit Name + Kürzel an allen Symbol-Knöpfen (Slint 1.18 `Tooltip`, eigener Look `TooltipBox`).
-- **Breakpoints**: Fenster < 900 px → Seitenleiste 160 px, Inspector 240 px; Ansicht < 800 px breit → Datei-Aktionen wandern ins ⋮-Menü (z. B. bei zwei Ansichten). Werte in `changed`-Handlern statt Bindungen (eine Bindung an die Fensterbreite war eine Layout-Schleife, Slint warnt „binding loop … may panic“).
-- **Dunkel = Standard für neue Installationen** (`ThemeChoice::default()`), gespeicherte Wahl bleibt; E2E [1d] prüft das, die Farbtests für „Wie Windows“ setzen `theme = system` selbst.
-- Tests: `ui_action`/`UiAction` (Knopf oder ⋮-Menü), „Ausgeblendete“ über das ⋮-Menü, Std-Widget-Pixeltest jetzt am „Schließen“-Knopf der Einstellungen, Windows W16 per Name statt Koordinate (letzte feste Klick-Koordinate auf die alte Leiste). E2E [1e] prüft das neue Layout. Galerie: ⋮-Menü + Tooltip.
-- Lokal: e2e-ops 153/153; im ersten Gesamtlauf waren [49] (erster Drag) und [72c] (installierte Kopie bekam keine X-Verbindung, auch in CI #107 mit altem Code) einmal rot, Einzellauf + CI #110 grün → als wackelig beobachtet. Erster Frame startete kurz mit schmaler Seitenleiste (Breite 0 vor dem Fenster) → behoben.
-- CI #110: alles grün, Windows-Galerie 14 Bilder (inkl. ⋮-Menü), W16 per Name.
-- Abweichung vom Plan: Inspector schließt sich bei schmalem Fenster **nicht** selbst (würde einen gespeicherten Zustand ändern = Verhalten), er wird nur schmaler.
+### Redesign R2 – Main layout ✅ (CI run #110)
+- **Global bar removed** (−40 px height for files). Its actions do exactly the same as before (`command(...)`), but now sit where you work:
+  - **File actions as icon buttons on the right of the navigation row of the active view**, per place as before (folder: New folder, Cut, Copy, Paste, Rename, Delete; search without New folder/Paste; Recycle Bin: Restore, Delete permanently, Empty Recycle Bin) + Undo/Redo. Invisible in the inactive view (the space stays → the address bar doesn't jump).
+  - **⋮ menu (“Mehr” – more)**: two views/one view, show hidden items, Inspector, command palette, settings – with keyboard shortcuts.
+  - **Status bar on the right**: sorting, details/icons, Inspector, settings (icon buttons).
+- **Tooltips** with name + shortcut on all icon buttons (Slint 1.18 `Tooltip`, own look `TooltipBox`).
+- **Breakpoints**: window < 900 px → sidebar 160 px, Inspector 240 px; view < 800 px wide → file actions move into the ⋮ menu (e.g. with two views). Values in `changed` handlers instead of bindings (a binding to the window width was a layout loop, Slint warns “binding loop … may panic”).
+- **Dark = default for new installations** (`ThemeChoice::default()`), a saved choice stays; E2E [1d] checks this, the colour tests for “Wie Windows” set `theme = system` themselves.
+- Tests: `ui_action`/`UiAction` (button or ⋮ menu), “Ausgeblendete” via the ⋮ menu, the std-widget pixel test now on the settings' “Schließen” (close) button, Windows W16 by name instead of coordinate (the last fixed click coordinate on the old bar). E2E [1e] checks the new layout. Gallery: ⋮ menu + tooltip.
+- Locally: e2e-ops 153/153; in the first full run [49] (first drag) and [72c] (the installed copy got no X connection, also in CI #107 with old code) were red once, a single run + CI #110 green → watched as flaky. The first frame briefly started with a narrow sidebar (width 0 before the window) → fixed.
+- CI #110: everything green, Windows gallery 14 images (including the ⋮ menu), W16 by name.
+- Deviation from the plan: the Inspector does **not** close itself in a narrow window (that would change a saved state = behaviour), it only gets narrower.
 
-### Redesign R1 – Design-System ✅ (CI-Run #104)
-- **Farbrollen** `core::theme::Design` (Feld `ds` an `Tokens`, 26 Rollen: Ebenen app/panel/surface/raised/overlay, Zustände hover/pressed/selected/selected-idle, Linien, Text-Hierarchie text/text2/muted/faint, Icons, Akzent + Text darauf, Signale, Ordner/Datei, Scrim/Schatten). Dunkel = geschichtete Graustufen statt Schwarz, Akzent ruhiges Blau `#4f8cff` (hell `#2f6feb`). Windows-Akzent wird übernommen und auf Lesbarkeit geschoben; die Auswahl ist eine dünne Akzent-Lasur, die bei grellen Akzenten (Gelb auf Dunkel) so weit ausgedünnt wird, dass sie so hell bleibt wie mit dem Standard-Blau.
-- **Kontrast-Test** für Standard + 12 Akzente × hell/dunkel: Text ≥ 7 auf jeder Ebene, Text 2 ≥ 4,5, gedämpft ≥ 4,5 (in ausgewählten Zeilen ≥ 3), Icons ≥ 4,5, Akzent ≥ 3, Text auf Akzent ≥ 4,5, Signale ≥ 4,5, Ebenen unterscheidbar. Mehrere Startwerte sind daran gescheitert und wurden nachgezogen (z. B. gedämpft auf „gedrückt“ 4,35 → heller).
-- **Slint**: `ui/theme.slint` (`ThemeColors` alt, `DesignColors` neu, `Theme.d`, Global `Ui` mit Maßen/Radien/Schriftgrößen/Dauern), `ui/icons.slint` (50 Lucide-Icons als Pfaddaten, erzeugt von `scripts/make-ui-icons.py`; Fehler gefunden: ein kleines `m` am Anfang eines Teilpfads wird nach dem Zusammenfügen relativ → wird zu `M x y l …`), `ui/kit.slint` (`Icon`, `IconButton`, `ToolbarButton`, `MenuItem`, `MenuSeparator`, `SectionLabel`, `Field`, alle mit sprechendem Namen).
-- **UI-Kit** `EXPLORER2_UI_KIT=1`: Übersicht aller Farbrollen, Schriftstufen, Zeilen-/Menü-Muster, Bedienelemente in ihren Zuständen und aller Icons → Galerie-Bild `12-ui-kit` (Linux) bzw. `06-ui-kit` (Windows), E2E [81]/[81b].
-- Lokal: Linux-E2E 258/258 grün; CI #104: alles grün (Tests Windows + Linux, E2E Linux, Windows-Release + E2E + Galerie mit UI-Kit-Bild).
-- Sichtbares Aussehen der App unverändert (alte `Theme.c`-Werte unangetastet); Lizenz der Icons in `THIRD-PARTY.md`.
+### Redesign R1 – Design system ✅ (CI run #104)
+- **Colour roles** `core::theme::Design` (field `ds` on `Tokens`, 26 roles: layers app/panel/surface/raised/overlay, states hover/pressed/selected/selected-idle, lines, text hierarchy text/text2/muted/faint, icons, accent + text on it, signals, folder/file, scrim/shadow). Dark = layered greys instead of black, accent calm blue `#4f8cff` (light `#2f6feb`). The Windows accent is adopted and pushed towards readability; the selection is a thin accent glaze that is thinned out so much for garish accents (yellow on dark) that it stays as bright as with the default blue.
+- **Contrast test** for the default + 12 accents × light/dark: text ≥ 7 on every layer, text 2 ≥ 4.5, dimmed ≥ 4.5 (in selected rows ≥ 3), icons ≥ 4.5, accent ≥ 3, text on accent ≥ 4.5, signals ≥ 4.5, layers distinguishable. Several starting values failed this and were adjusted (e.g. dimmed on “pressed” 4.35 → brighter).
+- **Slint**: `ui/theme.slint` (`ThemeColors` old, `DesignColors` new, `Theme.d`, global `Ui` with sizes/radii/font sizes/durations), `ui/icons.slint` (50 Lucide icons as path data, generated by `scripts/make-ui-icons.py`; bug found: a lower-case `m` at the start of a sub-path becomes relative after concatenation → becomes `M x y l …`), `ui/kit.slint` (`Icon`, `IconButton`, `ToolbarButton`, `MenuItem`, `MenuSeparator`, `SectionLabel`, `Field`, all with a meaningful name).
+- **UI kit** `EXPLORER2_UI_KIT=1`: overview of all colour roles, font levels, row/menu patterns, controls in their states and all icons → gallery image `12-ui-kit` (Linux) or `06-ui-kit` (Windows), E2E [81]/[81b].
+- Locally: Linux E2E 258/258 green; CI #104: everything green (tests Windows + Linux, E2E Linux, Windows release + E2E + gallery with the UI kit image).
+- Visible look of the app unchanged (old `Theme.c` values untouched); icon license in `THIRD-PARTY.md`.
 
-### Redesign R0 – Absicherung ✅ (CI-Run #101)
-- Lokal: Linux-E2E komplett grün (nach Popup-Fix: Sortier-Menü liegt in einem eigenen Popup-Baum, der Dump geht ihn jetzt mit Versatz durch). CI #101: alles grün, Galerie-Artefakte `ui-gallery-linux` (22) und `ui-gallery-windows` (10, inkl. natives Kontextmenü) = „Vorher“-Stand.
-- Boss: alle 5 Empfehlungen angenommen (Dunkel als Standard, eigenes Kontextmenü + „Weitere Optionen“, globale Leiste auflösen, Systemschrift, ruhiges Blau).
-- **UI-Dump** (`app/src/uidump.rs`): Test-Modus `EXPLORER2_UI_DUMP=<datei>` schreibt alle benannten Elemente (`accessible-label`; Slint gibt jedem `Text` seinen Inhalt als Label → auch Dateizeilen, Spaltenköpfe, Seitenleiste) mit Fensterposition, bei Änderung und jede Sekunde. Spike: die öffentliche Slint-Test-API (`ElementHandle`) findet ohne einkompilierte Debug-Infos **nichts** (`element_count()` = 0) → direkter Gang durch den Item-Baum über `i-slint-core` (exakte Version wie Slint, keine Debug-Infos, kein Größenzuwachs).
-- **Tests klicken per Name**: `scripts/ui-lib.sh` (`ui_click "Einstellungen"`, `ui_click "Größe" last`, `ui_click_after "Adresszeile"`, `ui_box`, `ui_list_top`); alle Leisten-, Panel-, Menü-, Seitenleisten- und Jobs-Klicks umgestellt; Zeilen weiter per Index, aber relativ zum Spaltenkopf aus dem Dump. Windows: `UiBox`/`UiClick`/`ListTop`, `RowY` relativ.
-- **Sprechende Namen** für Symbol-Knöpfe (bleiben, wenn die Zeichen zu Symbolen werden): „Zurück“, „Vorwärts“, „Nach oben“, „Neuer Tab“, „Tab schließen“, „Adresszeile“ – zugleich für Screenreader.
-- **Galerie** `scripts/gallery.sh`: 11 Screens × hell/dunkel (Ordner, Inspector, Mehrfachauswahl, Zwei Ansichten, Kacheln, Suche, Schnellsuche, Palette, Einstellungen, Bestätigung, schmales Fenster) → CI-Artefakt `ui-gallery-linux`; Windows 5 Screens × 2 (inkl. natives Kontextmenü) → `ui-gallery-windows`. Das ist der „Vorher“-Stand.
-- E2E [7b]/[7c] prüfen den Dump selbst.
+### Redesign R0 – Safeguards ✅ (CI run #101)
+- Locally: Linux E2E fully green (after a popup fix: the sort menu lives in its own popup tree, the dump now walks it with an offset). CI #101: everything green, gallery artifacts `ui-gallery-linux` (22) and `ui-gallery-windows` (10, including the native context menu) = the “before” state.
+- Boss: all 5 recommendations accepted (dark as default, own context menu + “Weitere Optionen”, dissolve the global bar, system font, calm blue).
+- **UI dump** (`app/src/uidump.rs`): test mode `EXPLORER2_UI_DUMP=<file>` writes all named elements (`accessible-label`; Slint gives every `Text` its content as a label → also file rows, column headers, sidebar) with window position, on change and every second. Spike: the public Slint test API (`ElementHandle`) finds **nothing** without compiled-in debug info (`element_count()` = 0) → a direct walk through the item tree via `i-slint-core` (exact version like Slint, no debug info, no size growth).
+- **Tests click by name**: `scripts/ui-lib.sh` (`ui_click "Einstellungen"`, `ui_click "Größe" last`, `ui_click_after "Adresszeile"`, `ui_box`, `ui_list_top`); all bar, panel, menu, sidebar and jobs clicks converted; rows still by index, but relative to the column header from the dump. Windows: `UiBox`/`UiClick`/`ListTop`, `RowY` relative.
+- **Meaningful names** for icon buttons (they stay when the characters become symbols): “Zurück”, “Vorwärts”, “Nach oben”, “Neuer Tab”, “Tab schließen”, “Adresszeile” (back, forward, up, new tab, close tab, address bar) – for screen readers at the same time.
+- **Gallery** `scripts/gallery.sh`: 11 screens × light/dark (folder, Inspector, multi-selection, two views, tiles, search, quick search, palette, settings, confirmation, narrow window) → CI artifact `ui-gallery-linux`; Windows 5 screens × 2 (including the native context menu) → `ui-gallery-windows`. That is the “before” state.
+- E2E [7b]/[7c] check the dump itself.
 
-### Redesign – Plan erstellt (2026-11-07)
-- Boss: Praxistest der Suche auf echtem Windows bestanden („es funktioniert“) → S2 vorerst nicht nötig.
-- Nächstes Vorhaben: UI/UX-Redesign im File-Pilot-Stil, **nur Design/Bediengefühl**. Plan mit Ist-Analyse, Design-System, Ziel-Layout, Stufen R0–R10 und 5 offenen Entscheidungen: `docs/PLAN-REDESIGN.md`.
-- Wichtigster Befund: 140 px Chrome bis zur ersten Zeile (Ziel ~90 px), ~100 feste Klick-Koordinaten in den E2E-Tests → R0 macht Klickziele zuerst benennbar.
+### Redesign – plan created (2026-11-07)
+- Boss: field test of the search on real Windows passed (“es funktioniert” – it works) → S2 not needed for now.
+- Next project: UI/UX redesign in the File Pilot style, **design/feel only**. Plan with current-state analysis, design system, target layout, stages R0–R10 and 5 open decisions: `docs/PLAN-REDESIGN.md`.
+- Most important finding: 140 px of chrome up to the first row (goal ~90 px), ~100 fixed click coordinates in the E2E tests → R0 makes click targets nameable first.
 
-### Phase 2 – S1.5c Laufwerksauswahl ✅ (CI-Run #93) → **S1.5 komplett, S1 komplett**
-- CI #92 rot nur im Clipboard-Interop-Test (Windows): .NET `GetFileDropList` sah die gerade gesetzte Zwischenablage kurz leer, unser Lesen und `Get-Clipboard` sahen die Dateien → Test liest jetzt mit bis zu 5 Versuchen (wie eine App). #93 grün, lokal Linux-E2E 254/254.
-- **Nächster Schritt: Praxistest auf echtem Windows** (`docs/PRAXISTEST-SUCHE.md`), danach Entscheidung über S2.
-- `core::index_roots` (`Candidate`, `chosen`, `toggle`): Einstellung `index_roots` leer = **automatisch** (Windows: feste lokale Laufwerke; Linux: persönlicher Ordner), sonst `;`-Liste; `;` allein = ausdrücklich keins. Wird die Wahl wieder gleich der automatischen, steht die Einstellung wieder auf leer (später hinzukommende Platten werden mitgenommen). Gelistete, gerade fehlende Laufwerke (USB abgezogen) bleiben in der Liste, werden aber nicht indexiert.
-- Einstellungen „Suche“: alle Laufwerke mit Haken (Laufwerkssuche im Hintergrund), Netzlaufwerke/Wechseldatenträger/sonstige zuschaltbar, DVD/BD nie; **über** der Statuszeile (Klickziele stabil). Haken ändern = speichern + Dienst neu starten (alter stoppt und speichert, dann Start mit neuer Wahl). `EXPLORER2_INDEX_ROOTS` gewinnt weiterhin, `EXPLORER2_INDEX_CANDIDATES` ersetzt die Laufwerkssuche in Tests.
-- Test fand einen echten Fehler: `;` (ausdrücklich keins) wurde wie „automatisch“ behandelt.
-- Tests: Unit (automatisch, an/aus, zurück zu automatisch, fehlende Laufwerke, Unix-Groß/Klein), Fuzz, E2E [80]–[80f] (beide automatisch, Liste in den Einstellungen, abwählen → Neustart ohne, dessen Dateien nicht mehr gefunden, Wahl bleibt nach Neustart, wieder an = automatisch).
+### Phase 2 – S1.5c Drive selection ✅ (CI run #93) → **S1.5 complete, S1 complete**
+- CI #92 red only in the clipboard interop test (Windows): .NET `GetFileDropList` briefly saw the clipboard that had just been set as empty, our reading and `Get-Clipboard` saw the files → the test now reads with up to 5 attempts (like an app). #93 green, locally Linux E2E 254/254.
+- **Next step: field test on real Windows** (`docs/FIELD-TEST-SEARCH.md`), then the decision on S2.
+- `core::index_roots` (`Candidate`, `chosen`, `toggle`): setting `index_roots` empty = **automatic** (Windows: fixed local drives; Linux: home folder), otherwise a `;` list; `;` alone = explicitly none. If the choice becomes equal to the automatic one again, the setting goes back to empty (disks added later are included). Listed drives that are currently missing (USB unplugged) stay in the list but are not indexed.
+- Settings “Suche” (search): all drives with check boxes (drive detection in the background), network drives/removable media/others can be added, DVD/BD never; **above** the status line (click targets stable). Changing a check box = save + restart the service (the old one stops and saves, then start with the new choice). `EXPLORER2_INDEX_ROOTS` still wins, `EXPLORER2_INDEX_CANDIDATES` replaces the drive detection in tests.
+- A test found a real bug: `;` (explicitly none) was treated like “automatic”.
+- Tests: unit (automatic, on/off, back to automatic, missing drives, Unix case), fuzz, E2E [80]–[80f] (both automatic, list in the settings, deselect → restart without it, its files no longer found, choice stays after restart, on again = automatic).
 
-### Phase 2 – S1.5a/b Ortszeit, Watcher-Status, Hervorhebung, Suchverlauf ✅ (CI-Run #91)
-- **Ortszeit**: `core::local_offset_at(t)` (Versatz *dieses* Datums → Sommer-/Winterzeit richtig, über `chrono`, das ohnehin via Slint im Build ist) + `format_local` für Liste, Inspector, Dialoge; `dm:`-Abfragen rechnen „heute“ in Ortszeit. Test mit `TZ=Europe/Berlin`: Januar +1 h, Juli +2 h.
-- **Watcher-Status**: `Pending::lost(grund)` zählt verpasste Ereignisse (Puffer-Überlauf, Watcher-Fehler) → Status „Änderungen 2-mal verpasst, danach abgeglichen (zu viele Änderungen auf einmal)“; `watch::describe` macht aus notify-Fehlern Text (inotify-Grenze: „fs.inotify.max_user_watches erhöhen“).
-- **Hervorhebung**: `core::highlight` (`pieces` = wörtliche Stücke der Abfrage ohne `ext:`/`!`/Platzhalter, `find`/`split` ohne Groß/Klein zeichengenau) → Zeile bekommt `hl-pre/hl-hit/hl-post`, der Treffer wird **fett** gezeichnet (Slint kann Text nicht teilweise formatieren). Im Zufallstest: Stücke ergeben immer wieder den Namen.
-- **Suchverlauf**: `core::searches` (`parse`/`serialize`/`push`/`step`, max. 20) in `search-history.txt`; gespeichert bei Enter im Suchfeld, beim Öffnen eines Treffers, in der Schnellsuche. ↑/↓ im Tab-Suchfeld wie in einer Shell (ohne die Reihenfolge zu ändern), ↓ am Ende = in die Liste. Schnellsuche zeigt bei leerem Feld die letzten Suchen, Enter übernimmt eine ins Feld.
-- Sortieren per Spaltenkopf in Treffern: sucht neu in der Reihenfolge (war schon so, jetzt getestet).
-- Slint-Fund: eine `let`-Variable zweimal benutzt → generierter Rust-Code verschiebt sie („borrow of moved value“) → zweite Verwendung über `self.text`.
-- Platte voll (Sandbox): `target/debug` + alte E2E-Arbeitsordner (je 100k Dateien) im Scratchpad gelöscht.
-- Tests: E2E [79]–[79f], Unit: Ortszeit (+ Berlin), Hervorhebung, Verlauf, Status-Zeile; Fuzz: Hervorhebung + Verlaufsdatei.
+### Phase 2 – S1.5a/b Local time, watcher status, highlighting, search history ✅ (CI run #91)
+- **Local time**: `core::local_offset_at(t)` (offset of *this* date → summer/winter time correct, via `chrono`, which is in the build anyway through Slint) + `format_local` for the list, Inspector, dialogs; `dm:` queries compute “today” in local time. Test with `TZ=Europe/Berlin`: January +1 h, July +2 h.
+- **Watcher status**: `Pending::lost(reason)` counts missed events (buffer overflow, watcher errors) → status “Änderungen 2-mal verpasst, danach abgeglichen (zu viele Änderungen auf einmal)” (changes missed twice, reconciled afterwards (too many changes at once)); `watch::describe` turns notify errors into text (inotify limit: “fs.inotify.max_user_watches erhöhen” – increase fs.inotify.max_user_watches).
+- **Highlighting**: `core::highlight` (`pieces` = literal pieces of the query without `ext:`/`!`/wildcards, `find`/`split` case-insensitive and character-exact) → the row gets `hl-pre/hl-hit/hl-post`, the hit is drawn **bold** (Slint cannot format text partially). In the random test: the pieces always reassemble the name.
+- **Search history**: `core::searches` (`parse`/`serialize`/`push`/`step`, max. 20) in `search-history.txt`; saved on Enter in the search field, when opening a hit, in the quick search. ↑/↓ in the tab search field like in a shell (without changing the order), ↓ at the end = into the list. The quick search shows the last searches when the field is empty, Enter takes one into the field.
+- Sorting by column header in hits: searches again in that order (it already did, now tested).
+- Slint finding: a `let` variable used twice → the generated Rust code moves it (“borrow of moved value”) → second use via `self.text`.
+- Disk full (sandbox): `target/debug` + old E2E working folders (100k files each) in the scratchpad deleted.
+- Tests: E2E [79]–[79f], unit: local time (+ Berlin), highlighting, history, status line; fuzz: highlighting + history file.
 
-### Phase 2 – S1.4c Globale Schnellsuche ✅ (CI-Run #90) → **S1.4 komplett**
-- Strg+Umschalt+F (oder Palette „Alle Laufwerke durchsuchen“): Overlay wie die Befehlspalette (`CommandPalette` mit eigenem Hinweis, Fußzeile, Leertext und zweiter Aktion Strg/Umschalt+Enter). Sucht über **alle** indexierten Laufwerke nach 120 ms Pause, ältere Abfragen werden verworfen.
-- Ranking der besten **50**: Name = Text (auch ohne Endung) → beginnt damit → kürzerer Name; bei Abfragesprache (`ext:`, `*`, `|` …) bleibt die Index-Reihenfolge. Ordner links gekürzt („…/Dokumente/Bericht“), weil das Ende den Unterschied macht.
-- Enter: Ordner im aktiven Tab öffnen, Datei mit ihrem Programm. Strg+Enter: im Ordner zeigen und markieren (`nav::show_in_folder` über `pending_select`). Fußzeile: „2 Laufwerke, 1.234.567 Einträge“ bzw. „Suchindex ist aus“.
-- **CI #86/#88/#89: [71e] rot, lokal immer grün.** Erster Verdacht (Fokusverlust des Dialogs) war falsch; das Trace-Ende aus der CI (#89, neue Diagnose) zeigte: der Klick auf den Reset-Knopf erzeugte gar keinen Dialog, sondern `selection … count=0` = einen Klick **in die Liste**. Ursachen: (1) mit dem neuen Abschnitt „Suche“ über „Windows-Integration“ hing die Knopfposition an der Statuszeile der Suche, die mit den Schriften des Runners umbricht (lokal knapp einzeilig) → Klick auf Text statt Knopf; (2) **das Panel ließ Klicks auf leere Flächen zur Liste durch** (echter UX-Bug: Klick ins Panel hob die Auswahl auf); (3) [71d] war ein **Falsch-Grün**: `last '…' >/dev/null` liefert den Exit-Code von `tail`, nicht von `grep` – dasselbe Muster in 5 weiteren Prüfungen. Fixes: Panel schluckt Klicks, „Suche“ steht hinter „Windows-Integration“ (Klickziele wie in CI erprobt, 502), kürzere Statuszeile, alle `last … >/dev/null` → `grep -q`. Der Dialog hält zusätzlich den Fokus (schadet nicht, war aber nicht die Ursache). Windows: [W44] 7/7, [W45] neu.
-- Tests: E2E [78]–[78f] (öffnen, `tief` → tief.pdf, Enter öffnet, `datei2` → datei2.txt vor datei20–29, Strg+Enter zeigt markiert, Esc), Windows [W45]/[W45b], Unit: Ranking, linksseitiges Kürzen.
+### Phase 2 – S1.4c Global quick search ✅ (CI run #90) → **S1.4 complete**
+- Ctrl+Shift+F (or palette “Alle Laufwerke durchsuchen” – search all drives): overlay like the command palette (`CommandPalette` with its own hint, footer, empty text and a second action Ctrl/Shift+Enter). Searches across **all** indexed drives after a 120 ms pause, older queries are discarded.
+- Ranking of the best **50**: name = text (also without extension) → starts with it → shorter name; with query language (`ext:`, `*`, `|` …) the index order stays. Folder truncated on the left (“…/Dokumente/Bericht”), because the end makes the difference.
+- Enter: open a folder in the active tab, a file with its program. Ctrl+Enter: show in its folder and select it (`nav::show_in_folder` via `pending_select`). Footer: “2 Laufwerke, 1.234.567 Einträge” (2 drives, 1,234,567 entries) or “Suchindex ist aus” (search index is off).
+- **CI #86/#88/#89: [71e] red, locally always green.** The first suspicion (the dialog losing focus) was wrong; the end of the trace from CI (#89, new diagnostics) showed: the click on the reset button produced no dialog at all, but `selection … count=0` = a click **into the list**. Causes: (1) with the new section “Suche” above “Windows-Integration”, the button position depended on the search status line, which wraps with the runner's fonts (locally just one line) → click on text instead of the button; (2) **the panel let clicks on empty areas through to the list** (a real UX bug: a click into the panel cleared the selection); (3) [71d] was a **false green**: `last '…' >/dev/null` returns the exit code of `tail`, not of `grep` – the same pattern in 5 more checks. Fixes: the panel swallows clicks, “Suche” comes after “Windows-Integration” (click targets as proven in CI, 502), shorter status line, all `last … >/dev/null` → `grep -q`. The dialog additionally keeps the focus (doesn't hurt, but wasn't the cause). Windows: [W44] 7/7, [W45] new.
+- Tests: E2E [78]–[78f] (open, `tief` → tief.pdf, Enter opens, `datei2` → datei2.txt before datei20–29, Ctrl+Enter shows it selected, Esc), Windows [W45]/[W45b], unit: ranking, left-side truncation.
 
-### Phase 2 – S1.4b Suchfeld pro Tab ✅ (CI-Run #90; Windows [W44] 7/7)
-- Feld rechts neben der Adresszeile („Suchen in <Ordner>“), Strg+F / Strg+E / F3 (auch Palette „Suchen“). Tippen sucht nach 250 ms Pause; Enter sofort; ↓ in die Liste; Esc oder leeres Feld führt zurück zum Ordner.
-- Eine Suche ist eine Navigation zum Platzhalter `::suche:<Ordner>\u{1f}<Abfrage>` (`core::places::search_path`/`search_of`). Damit gibt es Verlauf, Tab-Titel „Suche: …“ und Brotkrume „Suche „…““ gratis. Erste Suche aus einem Ordner = ein Verlaufsschritt; Weitertippen ersetzt ihn; Verlassen nimmt den Ordner wieder vom Stapel (`History::return_to`), also keine Spur. Sitzung speichert den Ordner, nicht die Suche.
-- Treffer: `VirtualData::Search { paths, total, walked }` mit vollem Pfad pro Zeile (Namen wiederholen sich über Ordner). Dadurch funktionieren `selected_paths`/`entry_at`/`inspect_target`/Öffnen/Vorschaubilder → Öffnen, Kopieren, Ausschneiden, Umbenennen, Löschen, Ziehen, Kontextmenü, Inspector. Einfügen und Neuer Ordner sind in Treffern gesperrt (`pane_dir` = None). Eigene Leiste für Suchtreffer.
-- Spalte „Ordner“ relativ zum durchsuchten Ordner (`a/b`), über alle Laufwerke voller Pfad. Höchstens **20.000** Zeilen (vorher sortiert): „20.000 von 123.456 Treffern – Suche verfeinern“.
-- `search::find`: Index, wo er den Ordner abdeckt (`Volume::search_with`: Treffer + Namen/Pfade unter derselben Lese-Sperre, Wurzel und Suchordner selbst sind keine Treffer). Sonst (Index aus, im Aufbau, Ordner auf nicht indexiertem Laufwerk) wird der Ordner mit `walk::build` durchlaufen – gleiche Abfragesprache, abbrechbar beim Weitertippen; Status „(Ordner durchsucht, ohne Index)“.
-- Live: Index-Änderung → sichtbare Such-Tabs neu (höchstens alle 2 s, die letzte Änderung kommt immer an). Ohne Index: `refresh_dirs` lädt durchlaufene Suchen neu, wenn sich darunter etwas ändert.
-- Gefundene Bugs: Slint-Binding-Schleife (Breite des Suchfelds an der Layout-Breite → „Recursion detected“, Panic beim Start) → bevorzugte/Mindestbreite. Ziel wurde vor der Platzhalter-Erkennung absolut gemacht (`/home/…/::suche:…` → „Ordner nicht gefunden“).
-- Einstellungs-Panel: „Schließen“ sitzt jetzt fest oben rechts (beim Scrollen erreichbar, verschiebt sich nicht mehr). Der E2E-Klick zielte auf die alte Position → Kaskade [63d]–[71f2] im lokalen Lauf, behoben.
-- Tests: E2E [76i] (ohne Index durchlaufen), [77]–[77k] (Strg+F, eine Suche pro Pause, Spalten, Öffnen eines Treffers aus einem anderen Ordner, Löschen in den Papierkorb, Treffer folgen dem Index, `ext:pdf`, Esc, keine Spur im Verlauf, Sitzung); Windows [W44]; Unit: Statuszeile, Ordner-Spalte, Sortierung der Treffer, `search_path`-Rundreise, `History::return_to`.
+### Phase 2 – S1.4b Search field per tab ✅ (CI run #90; Windows [W44] 7/7)
+- Field to the right of the address bar (“Suchen in <Ordner>” – search in <folder>), Ctrl+F / Ctrl+E / F3 (also palette “Suchen”). Typing searches after a 250 ms pause; Enter immediately; ↓ into the list; Esc or an empty field leads back to the folder.
+- A search is a navigation to the placeholder `::suche:<folder>\u{1f}<query>` (`core::places::search_path`/`search_of`). That gives history, tab title “Suche: …” and breadcrumb “Suche „…““ for free. The first search from a folder = one history step; typing further replaces it; leaving takes the folder off the stack again (`History::return_to`), so no trace. The session saves the folder, not the search.
+- Hits: `VirtualData::Search { paths, total, walked }` with a full path per row (names repeat across folders). Thereby `selected_paths`/`entry_at`/`inspect_target`/open/thumbnails work → open, copy, cut, rename, delete, drag, context menu, Inspector. Paste and New folder are disabled in hits (`pane_dir` = None). Own bar for search hits.
+- Column “Ordner” (folder) relative to the searched folder (`a/b`), across all drives the full path. At most **20,000** rows (sorted beforehand): “20.000 von 123.456 Treffern – Suche verfeinern” (20,000 of 123,456 hits – refine the search).
+- `search::find`: the index where it covers the folder (`Volume::search_with`: hits + names/paths under the same read lock, the root and the searched folder itself are not hits). Otherwise (index off, building, folder on a non-indexed drive) the folder is walked with `walk::build` – same query language, cancellable when typing further; status “(Ordner durchsucht, ohne Index)” (folder searched, without index).
+- Live: index change → visible search tabs refreshed (at most every 2 s, the last change always arrives). Without an index: `refresh_dirs` reloads walked searches when something below changes.
+- Bugs found: Slint binding loop (width of the search field from the layout width → “Recursion detected”, panic on start) → preferred/minimum width. The target was made absolute before placeholder detection (`/home/…/::suche:…` → “Ordner nicht gefunden” – folder not found).
+- Settings panel: “Schließen” (close) now sits fixed at the top right (reachable while scrolling, no longer moves). The E2E click aimed at the old position → cascade [63d]–[71f2] in the local run, fixed.
+- Tests: E2E [76i] (walk without index), [77]–[77k] (Ctrl+F, one search per pause, columns, opening a hit from another folder, deleting into the Recycle Bin, hits follow the index, `ext:pdf`, Esc, no trace in the history, session); Windows [W44]; unit: status line, folder column, sorting of hits, `search_path` round trip, `History::return_to`.
 
-### Phase 2 – S1.4a Such-Dienst in der App ✅ (CI-Run #90)
-- `app/src/search.rs`: Dienst startet **3 s nach dem Fenster** in einem eigenen Thread (Laufwerkssuche kann blockieren), nie im Startpfad. Laufwerke: feste lokale (Windows), sonst `$HOME`. Beim Beenden wird gewartet, bis gespeichert ist (Fenster ist da schon zu).
-- **Sperrdatei `index/lock`** (`File::try_lock`): Ein zweites Fenster (`--new-instance`, „eine Instanz“ aus) pflegt den Index nicht mit, sonst schrieben zwei Prozesse dieselben Dateien. Aus/Ein kurz hintereinander: Der neue Start wartet, bis der alte gespeichert hat (nie zwei Dienste auf denselben Dateien).
-- Einstellungen „Suche“: Ein/Aus (`index_enabled`), Status pro Laufwerk („bereit, 1.012.345 Einträge (aufgebaut in 3,4 s)“, „wird aufgebaut … 120.000 Einträge“, ohne Live-Aktualisierung + Grund, Speicherfehler), Knopf „Neu mit der Platte abgleichen“. Das Panel **scrollt**, wenn der Bildschirm zu klein ist (unter Windows mit Integrations- und Installations-Block sonst > 768 px).
-- Palette: „Suchindex neu mit der Platte abgleichen“, „Suchindex ein/aus“.
-- Tests: E2E [76]–[76h] (Aufbau nach „event loop running“, Datei gespeichert, Palette Abgleich/Aus/Ein → geladen, zweites Fenster durch Sperre ausgeschlossen, nächster Start lädt + findet Offline-Änderung, `EXPLORER2_INDEX=off`). Alle anderen App-Tests laufen mit `EXPLORER2_INDEX=off` (CI job-weit), damit der Index ihre Zeitmessungen nicht stört.
+### Phase 2 – S1.4a Search service in the app ✅ (CI run #90)
+- `app/src/search.rs`: the service starts **3 s after the window** in its own thread (drive detection can block), never in the start path. Drives: fixed local ones (Windows), otherwise `$HOME`. On exit it waits until saved (the window is already closed by then).
+- **Lock file `index/lock`** (`File::try_lock`): a second window (`--new-instance`, “single instance” off) does not co-maintain the index, otherwise two processes would write the same files. Off/on in quick succession: the new start waits until the old one has saved (never two services on the same files).
+- Settings “Suche” (search): on/off (`index_enabled`), status per drive (“bereit, 1.012.345 Einträge (aufgebaut in 3,4 s)” – ready, 1,012,345 entries (built in 3.4 s), “wird aufgebaut … 120.000 Einträge” – building … 120,000 entries, without live updates + reason, save errors), button “Neu mit der Platte abgleichen” (reconcile with the disk again). The panel **scrolls** when the screen is too small (on Windows with the integration and installation blocks otherwise > 768 px).
+- Palette: “Suchindex neu mit der Platte abgleichen” (reconcile the search index with the disk), “Suchindex ein/aus” (search index on/off).
+- Tests: E2E [76]–[76h] (build after “event loop running”, file saved, palette reconcile/off/on → loaded, second window excluded by the lock, the next start loads + finds an offline change, `EXPLORER2_INDEX=off`). All other app tests run with `EXPLORER2_INDEX=off` (CI job-wide), so the index doesn't disturb their timing measurements.
 
-### Phase 2 – S1.3 Aufbau + Abgleich + Live-Updates ✅ (CI-Run #83)
-- **CI #83 Messläufe Windows (je 40 s):**
+### Phase 2 – S1.3 Build + reconciliation + live updates ✅ (CI run #83)
+- **CI #83 measuring runs Windows (40 s each):**
 
-  | Messlauf | Einträge/s | CPU |
+  | Measuring run | Entries/s | CPU |
   |---|---|---|
-  | `C:\Windows` kalt | 5 363 | 10 % eines Kerns |
+  | `C:\Windows` cold | 5 363 | 10 % of one core |
   | `C:\Windows` **warm** | **206 928** | 305 % |
-  | `Program Files` kalt, normale Priorität + 32 Threads | 3 133 | 4 % |
-  | `Program Files (x86)` kalt, normale Priorität | 5 023 | 7 % |
+  | `Program Files` cold, normal priority + 32 threads | 3 133 | 4 % |
+  | `Program Files (x86)` cold, normal priority | 5 023 | 7 % |
 
-  Die **kalte VM-Platte (IOPS) bremst**, nicht unser Code und nicht die Priorität → „unter normal“ bleibt. Warm wären 1 Mio in ~5 s. Für sehr große Laufwerke bleibt S2 (MFT, sequenziell) der Weg.
-- **Gate `D:\` (Windows):** Live 204/203 ms, Laden 0 ms, Abgleich 22 ms.
-- **Linux `$HOME`:** Live best 29 ms, Laden 4 ms.
-- Neue Crate `explorer-search`:
-  - `walk`: paralleler Erstaufbau. Lese-Threads lesen Ordner, ein Sammler schreibt in den Index. Links werden gelistet, nie betreten.
-  - `refresh`: Abgleich nach dem Laden. Ein Ordner wird nur neu gelesen, wenn seine Änderungszeit anders ist oder ≥ Speicherzeit − 2 s; sonst kostet er ein `stat`. Läuft in Scheiben, damit Suchen weiterlaufen.
-  - `live`: ein geänderter Pfad → Index. Die Platte entscheidet, nie die Ereignisart. Ab 32 Ereignissen in einem Ordner wird er einmal gelesen statt jeder Name einzeln gesucht.
-  - `watch`: rekursiver Watcher → Menge geänderter Pfade (Doppelte zählen einmal), Entprellung 200 ms / max. 600 ms. Bei Überlauf oder Watcher-Fehler folgt ein Abgleich des ganzen Laufwerks. Mehr als 200 000 Pfade zählen als Überlauf.
-  - `service`: ein Pflege-Thread pro Laufwerk, Windows mit Priorität „unter normal“ (auch die Lese-Threads). Ablauf:
-    - gespeicherten Index laden: sofort durchsuchbar, dann Watcher, dann Abgleich
-    - sonst: Watcher, dann Erstaufbau
-    - danach Änderungen im Takt anwenden, ab 5 % unsortiertem Teil neu ordnen, alle 5 min und beim Beenden speichern
-- Sperren: Nur der Pflege-Thread schreibt, und zwar in Scheiben von max. 15 ms. Neu ordnen und speichern laufen unter der Lese-Sperre (`Index::reordered` baut eine Kopie, dann wird getauscht). Ids ändern sich nur mit neuer **Generation**; `path_of(gen, id)` liefert bei alter Generation None, dann neu suchen.
-- **Gespeichert wird nur ein exakter Stand.** Wird eine Änderung beim Beenden abgeschnitten (großer Ordner halb eingefügt), wird nicht gespeichert. Die alte Datei bleibt, der nächste Start findet den Unterschied. Speicherzeit = letzter exakter Moment − 10 s.
-- Laufwerks-Kennung `fs::places::volume_tag`: Windows Wurzel + Dateisystem + Seriennummer, Unix Gerätenummer. Ein neu formatiertes Laufwerk bekommt nie einen fremden Index.
-- Echtes Rennen gefunden (Test unter Last, 1 von 20): notify/inotify meldet einen neuen Ordner **bevor** es ihn überwacht (`handle_inotify`: erst Ereignisse, dann `add_watch`). Dateien aus diesem Moment kommen nie als Ereignis. Fix: Unter Linux wird ein Ordner, in dem etwas neu ist, 1 s später noch einmal abgeglichen (`RECHECK_NEW`, Teilbaum-`Refresh`). Windows überwacht den Baum mit einem Handle und braucht das nicht. Danach 72/72 Läufe mit 6 Prozessen parallel grün.
-- Bug gefunden und behoben: `Index::find` panikte bei einem Pfad, der kürzer als die Wurzel ist. Neuer Zufallstest `random_paths`.
+  The **cold VM disk (IOPS) is the brake**, not our code and not the priority → “below normal” stays. Warm, 1 M would take ~5 s. For very large drives S2 (MFT, sequential) remains the way.
+- **Gate `D:\` (Windows):** live 204/203 ms, load 0 ms, reconciliation 22 ms.
+- **Linux `$HOME`:** live best 29 ms, load 4 ms.
+- New crate `explorer-search`:
+  - `walk`: parallel initial build. Reader threads read folders, one collector writes into the index. Links are listed, never entered.
+  - `refresh`: reconciliation after loading. A folder is only re-read if its modification time differs or is ≥ save time − 2 s; otherwise it costs one `stat`. Runs in slices so searches keep running.
+  - `live`: a changed path → index. The disk decides, never the event type. From 32 events in one folder, it is read once instead of looking up every name individually.
+  - `watch`: recursive watcher → set of changed paths (duplicates count once), debounce 200 ms / max. 600 ms. On overflow or watcher error, a reconciliation of the whole drive follows. More than 200,000 paths count as overflow.
+  - `service`: one maintenance thread per drive, on Windows with priority “below normal” (the reader threads too). Sequence:
+    - load the saved index: searchable immediately, then watcher, then reconciliation
+    - otherwise: watcher, then initial build
+    - afterwards apply changes in cycles, reorder from 5 % unsorted part, save every 5 min and on exit
+- Locks: only the maintenance thread writes, in slices of max. 15 ms. Reordering and saving run under the read lock (`Index::reordered` builds a copy, then it is swapped). Ids change only with a new **generation**; `path_of(gen, id)` returns None for an old generation, then search again.
+- **Only an exact state is saved.** If a change is cut off on exit (large folder half inserted), nothing is saved. The old file stays, the next start finds the difference. Save time = last exact moment − 10 s.
+- Volume ID `fs::places::volume_tag`: Windows root + file system + serial number, Unix device number. A freshly formatted drive never gets a foreign index.
+- Real race found (test under load, 1 in 20): notify/inotify reports a new folder **before** it watches it (`handle_inotify`: events first, then `add_watch`). Files from that moment never arrive as an event. Fix: on Linux, a folder in which something is new is reconciled once more 1 s later (`RECHECK_NEW`, subtree `Refresh`). Windows watches the tree with one handle and doesn't need this. Afterwards 72/72 runs with 6 processes in parallel green.
+- Bug found and fixed: `Index::find` panicked on a path shorter than the root. New random test `random_paths`.
 - Tests:
-  - Service: bauen, speichern, beim nächsten Start laden und abgleichen = frischer Aufbau
-  - Live (neu, umbenannt, gelöscht, ausgeschlossen, 96 Dateien auf einmal, Ordner mit Inhalt von außen hereingeschoben, Größe geändert) = frischer Aufbau
-  - beschädigt / fremdes Laufwerk / fremder Ordner → neu bauen
-  - Neu ordnen → neue Generation, `rescan`
-  - sofort beenden; Wurzel, die es nicht gibt
-  - 25 Läufe am Stück stabil
-- **CI #82 rot:** Die kalte Systemplatte der Windows-VM schaffte beim Erstaufbau von `C:\` nur ~1 100 Einträge/s (nach 15 min 1,01 Mio, nicht fertig). Linux-CI: 540 000/s. `read_dir` ist ein reines `FindFirstFileExW`. Verdacht: IOPS-Grenze der VM-Platte (zufällige Lesezugriffe pro kaltem Ordner) oder Verdrängung durch „unter normal“. Jetzt gemessen statt geraten: Messläufe auf `C:\` (kalt / warm / normale Priorität + 32 Threads, je 40 s, Wanduhr gegen Prozess-CPU); das Gate läuft auf dem Laufwerk der Arbeitskopie (`D:\`, lokale SSD).
-- CI-Beispiel `examples/drive.rs` (ursprünglich: Windows indexiert ganz `C:\`) (Gate: 1 Mio < 2 min hochgerechnet, Live-Änderung < 1 s, Laden < 1 s). Linux `$HOME` nur mit Zahlen. Lokal (`/home/user`, 30k): Live 202 ms, Laden 3 ms, Abgleich 102 ms.
-- Linux: Der rekursive inotify-Watcher braucht eine Überwachung pro Ordner; das Aufsetzen dauerte in der Sandbox 5 s für 4 230 Ordner. Deshalb startet er erst nach dem Laden.
+  - Service: build, save, load and reconcile on the next start = fresh build
+  - Live (new, renamed, deleted, excluded, 96 files at once, folder with contents pushed in from outside, size changed) = fresh build
+  - damaged / foreign drive / foreign folder → rebuild
+  - reorder → new generation, `rescan`
+  - exit immediately; root that doesn't exist
+  - 25 runs in a row stable
+- **CI #82 red:** the cold system disk of the Windows VM managed only ~1,100 entries/s during the initial build of `C:\` (1.01 M after 15 min, not finished). Linux CI: 540,000/s. `read_dir` is a plain `FindFirstFileExW`. Suspicion: IOPS limit of the VM disk (random reads per cold folder) or displacement by “below normal”. Now measured instead of guessed: measuring runs on `C:\` (cold / warm / normal priority + 32 threads, 40 s each, wall clock against process CPU); the gate runs on the drive of the working copy (`D:\`, local SSD).
+- CI example `examples/drive.rs` (originally: Windows indexes all of `C:\`) (gate: 1 M < 2 min extrapolated, live change < 1 s, load < 1 s). Linux `$HOME` only with numbers. Locally (`/home/user`, 30k): live 202 ms, load 3 ms, reconciliation 102 ms.
+- Linux: the recursive inotify watcher needs one watch per folder; setting it up took 5 s for 4,230 folders in the sandbox. That's why it starts only after loading.
 
-### Phase 2 – S1.2 Gespeicherter Index + Ausschlüsse ✅ (CI-Run #80: Laden 1 Mio Linux 88 ms / Windows 69 ms, Speichern 461 / 862 ms)
-- `persist.rs`: eine Datei pro Laufwerk (`file_name_for(root, case_insensitive)`), Format `EXPL2IDX` + Version + Laufwerks-Kennung (`tag`, z. B. Wurzel + Seriennummer) + Speicherzeit (für den späteren Abgleich „was hat sich seitdem geändert“) + alle Spalten roh (Little-Endian) + 64-Bit-Prüfsumme. Schreiben atomar (Temp-Datei, `sync_all`, Umbenennen).
-- **Laden prüft alles** und sagt warum (`LoadError::Missing/Outdated/OtherVolume/Damaged/Io`): Prüfsumme, jede Grenze und Länge vor dem Anlegen von Speicher, jeder Name zwischen zwei Trennern, Eltern im Bereich + lebend, **keine Kreise** in den Ordnern (sonst hingen `path()`/`is_under()`), sortierter Teil streng steigend und deckungsgleich mit den sauberen Einträgen (darauf verlässt sich die Puffersuche), Endungs-Ids, Flags, Wurzeln. Kinderlisten werden beim Laden aus den Eltern neu gebaut.
-- Tests: Rundreise (inkl. Änderungen nach dem Sortieren: Schwanz, umbenannt, gelöscht; Speichern des Geladenen = dieselben Bytes), Datei + Kennung, **jeder Schnitt und jedes umgekippte Bit wird abgelehnt**, und „beschädigt, aber Prüfsumme stimmt“ (Prüfsumme umgangen) → entweder abgelehnt oder ohne Panic/Endlosschleife benutzbar (lokal 200 000 Runden).
-- `exclude.rs`: Einträge mit Trenner = Pfad (Ordner + alles darunter, Präfix nur an Trennern), ohne = Namensmuster (`node_modules`, `*.tmp`, `~$*`), Windows ohne Groß/Klein, `/` = `\`; Standard immer dabei (Windows `$Recycle.Bin`, `System Volume Information`, `$WinREAgent`; Linux `/proc` `/sys` `/dev` `/run` `/snap`); Einstellung `index_exclude`.
-- Benchmark (1 Mio): Datei **69 MB**, Speichern **179 ms**, Laden **116 ms** (CI-Gate < 1 s).
+### Phase 2 – S1.2 Saved index + exclusions ✅ (CI run #80: load 1 M Linux 88 ms / Windows 69 ms, save 461 / 862 ms)
+- `persist.rs`: one file per drive (`file_name_for(root, case_insensitive)`), format `EXPL2IDX` + version + volume ID (`tag`, e.g. root + serial number) + save time (for the later reconciliation “what has changed since then”) + all columns raw (little-endian) + 64-bit checksum. Written atomically (temp file, `sync_all`, rename).
+- **Loading checks everything** and says why (`LoadError::Missing/Outdated/OtherVolume/Damaged/Io`): checksum, every bound and length before allocating memory, every name between two separators, parents in range + alive, **no cycles** in the folders (otherwise `path()`/`is_under()` would hang), sorted part strictly increasing and congruent with the clean entries (the buffer search relies on that), extension ids, flags, roots. Child lists are rebuilt from the parents when loading.
+- Tests: round trip (including changes after sorting: tail, renamed, deleted; saving what was loaded = the same bytes), file + ID, **every truncation and every flipped bit is rejected**, and “damaged, but checksum matches” (checksum bypassed) → either rejected or usable without panic/endless loop (locally 200,000 rounds).
+- `exclude.rs`: entries with a separator = path (folder + everything below, prefix only at separators), without = name pattern (`node_modules`, `*.tmp`, `~$*`), Windows case-insensitive, `/` = `\`; defaults always included (Windows `$Recycle.Bin`, `System Volume Information`, `$WinREAgent`; Linux `/proc` `/sys` `/dev` `/run` `/snap`); setting `index_exclude`.
+- Benchmark (1 M): file **69 MB**, save **179 ms**, load **116 ms** (CI gate < 1 s).
 
-### Phase 2 – S1.1 Index-Kern ✅ (CI-Run #78)
-- Neue Crate **`explorer-index`** (plattformneutral): Einträge als Spalten-Arrays (Elternindex, Name, Größe, Datum, Flags, Kinderliste), Kleinbuchstaben-Namen **lückenlos in einem Puffer** (`\0` dazwischen), Originalnamen nur wo abweichend. Einfügen/Ändern/Umbenennen/Verschieben/Löschen für Live-Updates; `find(path)` (Windows ohne Groß/Klein).
-- **Abfragesprache** (Everything-Teilmenge): UND (Leerzeichen), ODER `|` (bindet stärker), NICHT `!`, `"Phrase"`, `*`/`?` (ganzer Name), `ext:`, `size:` (Einheiten, Bereiche, `empty…gigantic`), `dm:` (`today`/`yesterday`/`thisweek`/`lastmonth`/`2026`/`2026-11-05`, `>`/`<`/`..`, lokale Zeit), `file:`/`folder:`, `path:`, `case:`, `regex:` (eigenes `|` bleibt im Ausdruck).
-- **Wie schnell, warum**: (1) Daten liegen physisch in **natürlicher Namensreihenfolge** (`rebuild_order`) → sequenzieller Speicherzugriff und Treffer sind ohne Sortieren nach Name geordnet (vorher 680 ms Sortieren bei 293 000 Treffern); (2) Teilstring/Präfix/Suffix/`ext:` = **ein SIMD-Durchlauf** (`memmem`) über den Namenspuffer, Treffer → Eintrag per Binärsuche, nur diese Kandidaten werden voll geprüft; (3) `path:wort` ohne Trenner = einmal pro Abfrage vorberechnet (eigener Name **oder** ein Vorfahr enthält es, O(n) gemerkt) statt Pfade zu bauen (1 742 → 21 ms); (4) parallele Blöcke über alle Kerne. Änderungen nach dem Umsortieren laufen über einen kleinen unsortierten Rest, der beim Suchen einsortiert wird.
-- **Benchmark** (1 Mio realistische Einträge, Tiefe ≤ 12, 4 Kerne, bester von 9): Index **82 MB**; Namensabfragen **0,7–5,3 ms** inkl. Namensordnung (`bericht` 2,8 · `*.jpg` 3,7 · `urlaub|foto` 3,9 · `ext:jpg;png;mp4` 2,3 · `size:>32mb` 4,2); `path:garten` 20 ms, `regex:^img_\d{3}\.jpg$` 7,7 ms. CI-Gate: Namensabfragen < 10 ms, `path:`/`regex:` < 60 ms, < 100 MB.
-- **CI #78 grün** (1 Mio, bester von 9): Linux schlechteste Namensabfrage **3,2 ms** (`b`), `size:>32mb` 2,8, `ext:` 2,3, `regex:` 6,1, `path:` 21; Windows **5,1 ms** (`b`), `size:` 4,5, `ext:` 3,5, `regex:` 8,4, `path:` 27 – Budget 10 / 60 ms mit Abstand.
-- **Windows-Dauertest-Rätsel gelöst (#75/#76/#78)**: „Tasten kommen an, nichts passiert“ war **Notepad** (34× im Vordergrund): die Runde ging einen Ordner weiter, `Home` kam nur alle 20 Runden → jede 20. Runde stand die Auswahl **hinter** den 20 Ordnern auf einer Wechsel-Datei, `Enter` öffnete sie (richtig so) im Standardprogramm. Testfehler, nicht App: `Home` alle 19 Runden (Linux + Windows), neuer Check [S7] „kein fremdes Fenster kam nach vorn“.
-- **CI #77**: Windows-VM 2,5× langsamer als sonst (Aufbau 543 statt ~200 ms) → `size:>32mb` 10,32 ms. Budget nicht an die VM gekoppelt (wäre Lockerung), sondern Code schneller: Einzelthread-Messung zeigte **~10 ns pro Eintrag** für einen Größenvergleich = Iterator-/Closure-Last → Spaltenschleife als schlichte Schleife (Einzelbedingung direkt), Puffer-Treffer über durchlaufende SIMD-Iteratoren (`memchr_iter`/`find_iter`, Treffer im schon erfassten Namen = ein Vergleich) statt Neustart pro Treffer, vorab reservierte Ergebnisse → lokal **alle Namensabfragen ≤ 2,9 ms** (4 Threads; `b` 2,9 · `size:>32mb` 2,6 · `ext:` 2,0 · `bericht` 0,8). Mess-Schalter `EXPLORER2_INDEX_THREADS`.
-- **CI #75**: Benchmark grün auf beiden (Linux schlechteste 9,96 ms = `b`, Windows 6,3), aber zu knapp → Ein-Byte-Suche per `memchr`, `folder:x`/`file:x` (Art UND Text) treiben über den Text, Platzhalter mit festem Anfang (`img_1*.png`) über `\nimg_1`, Zuordnung Treffer → Eintrag galoppierend statt Binärsuche, und eine Abfrage, die **genau** ein Wort/Präfix/Suffix ist, übernimmt die Puffer-Treffer ohne Nachprüfung → lokal **alle Namensabfragen ≤ 4,8 ms** (`b` 4,8 · `bericht` 1,3 · `img_1*.png` 0,7 · `folder:projekt` 1,5). Windows-Dauertest #75: nach ~115 Navigationen kamen keine Tasten mehr an (Fokus weg, Speicher/Handles sauber) → vor jeder Runde Vordergrund prüfen + Fokus zurückholen, Fokus-Diebe werden protokolliert.
-- **CI #74 rot → nachgebessert**: Linux-Runner ~1,4× langsamer, `ext:jpg;png;mp4` 10,39 ms > 10 (Windows 6,8 grün), `regex:` 50 ms knapp. Budget nicht aufgeweicht, sondern: (a) **Endungs-Id** pro Eintrag (u16, +2 MB) → `ext:` vergleicht Zahlen in einem Array (8,1 → 2,3 ms); (b) `regex:` über **Pflicht-Literale** (`regex-syntax`-Extraktor, nur ASCII) als Vorfilter im Namenspuffer, Regex nur auf den Kandidaten (18 → 7,7 ms). Gemessen und verworfen: Regex im Mehrzeilenmodus über den ganzen Puffer ist 4× **langsamer** als Einzelprüfungen (447 vs 117 ms). Trenner im Puffer jetzt `\n`, langes `ſ` wird für die Suche zu `s` gefaltet (sonst verfehlt der Literal-Vorfilter `(?i)s`).
-- **Tests**: 11 Unit (Pfade, Logik, Filter, Bereich, Sortierung, Live-Änderungen, Kompaktierung), `tests/agree.rs` (Schnellwege = einfacher Weg über 5 Bäume, 41 Abfragen, nach Umbenennen/Verschieben/Löschen/Anlegen, mit Ordner-Bereich, nach erneutem Umsortieren), `tests/fuzz.rs` (Zufallsabfragen: kein Panic + beide Wege gleich; lokal 90 000 Runden). Fund dabei: `|` im regulären Ausdruck wurde als ODER zerlegt → gefixt.
+### Phase 2 – S1.1 Index core ✅ (CI run #78)
+- New crate **`explorer-index`** (platform-neutral): entries as column arrays (parent index, name, size, date, flags, child list), lower-case names **contiguous in one buffer** (`\0` in between), original names only where they differ. Insert/change/rename/move/delete for live updates; `find(path)` (Windows case-insensitive).
+- **Query language** (Everything subset): AND (space), OR `|` (binds tighter), NOT `!`, `"phrase"`, `*`/`?` (whole name), `ext:`, `size:` (units, ranges, `empty…gigantic`), `dm:` (`today`/`yesterday`/`thisweek`/`lastmonth`/`2026`/`2026-11-05`, `>`/`<`/`..`, local time), `file:`/`folder:`, `path:`, `case:`, `regex:` (its own `|` stays in the expression).
+- **How fast, and why**: (1) data lies physically in **natural name order** (`rebuild_order`) → sequential memory access, and hits are ordered by name without sorting (previously 680 ms of sorting for 293,000 hits); (2) substring/prefix/suffix/`ext:` = **one SIMD pass** (`memmem`) over the name buffer, hit → entry by binary search, only those candidates are fully checked; (3) `path:word` without a separator = precomputed once per query (own name **or** an ancestor contains it, O(n) memoised) instead of building paths (1,742 → 21 ms); (4) parallel blocks across all cores. Changes after re-sorting go through a small unsorted rest that is merged in when searching.
+- **Benchmark** (1 M realistic entries, depth ≤ 12, 4 cores, best of 9): index **82 MB**; name queries **0.7–5.3 ms** including name order (`bericht` 2.8 · `*.jpg` 3.7 · `urlaub|foto` 3.9 · `ext:jpg;png;mp4` 2.3 · `size:>32mb` 4.2); `path:garten` 20 ms, `regex:^img_\d{3}\.jpg$` 7.7 ms. CI gate: name queries < 10 ms, `path:`/`regex:` < 60 ms, < 100 MB.
+- **CI #78 green** (1 M, best of 9): Linux worst name query **3.2 ms** (`b`), `size:>32mb` 2.8, `ext:` 2.3, `regex:` 6.1, `path:` 21; Windows **5.1 ms** (`b`), `size:` 4.5, `ext:` 3.5, `regex:` 8.4, `path:` 27 – budget 10 / 60 ms with headroom.
+- **Windows endurance-test mystery solved (#75/#76/#78)**: “keys arrive, nothing happens” was **Notepad** (34× in the foreground): each round went one folder further, `Home` came only every 20 rounds → every 20th round the selection sat **behind** the 20 folders on a changing file, and `Enter` opened it (correctly) in the default program. A test bug, not the app: `Home` every 19 rounds (Linux + Windows), new check [S7] “no foreign window came to the front”.
+- **CI #77**: Windows VM 2.5× slower than usual (build 543 instead of ~200 ms) → `size:>32mb` 10.32 ms. Budget not coupled to the VM (that would be loosening), but faster code: a single-thread measurement showed **~10 ns per entry** for a size comparison = iterator/closure load → column loop as a plain loop (single condition directly), buffer hits via continuous SIMD iterators (`memchr_iter`/`find_iter`, hit within an already covered name = one comparison) instead of restarting per hit, results reserved upfront → locally **all name queries ≤ 2.9 ms** (4 threads; `b` 2.9 · `size:>32mb` 2.6 · `ext:` 2.0 · `bericht` 0.8). Measuring switch `EXPLORER2_INDEX_THREADS`.
+- **CI #75**: benchmark green on both (Linux worst 9.96 ms = `b`, Windows 6.3), but too tight → single-byte search via `memchr`, `folder:x`/`file:x` (kind AND text) drive via the text, wildcards with a fixed start (`img_1*.png`) via `\nimg_1`, mapping hit → entry galloping instead of binary search, and a query that is **exactly** one word/prefix/suffix takes over the buffer hits without re-checking → locally **all name queries ≤ 4.8 ms** (`b` 4.8 · `bericht` 1.3 · `img_1*.png` 0.7 · `folder:projekt` 1.5). Windows endurance test #75: after ~115 navigations no more keys arrived (focus gone, memory/handles clean) → check the foreground before every round + take the focus back, focus thieves are logged.
+- **CI #74 red → improved**: Linux runner ~1.4× slower, `ext:jpg;png;mp4` 10.39 ms > 10 (Windows 6.8 green), `regex:` 50 ms tight. Budget not softened, instead: (a) **extension id** per entry (u16, +2 MB) → `ext:` compares numbers in an array (8.1 → 2.3 ms); (b) `regex:` via **mandatory literals** (`regex-syntax` extractor, ASCII only) as a prefilter in the name buffer, regex only on the candidates (18 → 7.7 ms). Measured and rejected: regex in multi-line mode over the whole buffer is 4× **slower** than individual checks (447 vs 117 ms). Separator in the buffer now `\n`, long `ſ` is folded to `s` for the search (otherwise the literal prefilter misses `(?i)s`).
+- **Tests**: 11 unit (paths, logic, filters, scope, sorting, live changes, compaction), `tests/agree.rs` (fast paths = simple path across 5 trees, 41 queries, after rename/move/delete/create, with folder scope, after re-sorting again), `tests/fuzz.rs` (random queries: no panic + both paths equal; locally 90,000 rounds). Found along the way: `|` in a regular expression was split as OR → fixed.
 
-### M8.3c Zufallsdaten-Tests + Dauertest ✅ (CI-Run #72/#73) → M8.3 komplett
-- **Zufallsdaten-Tests** (deterministisch, eigener Xorshift-Generator, keine neue Abhängigkeit): alle Datei-Parser (settings, session, views, Start-Wächter, Instanz-Protokoll) und Text-Helfer (Adresszeile, Breadcrumb, Palette-Suche, Anzeigename/Umbenennen, Bildgröße, Textvorschau, Farbe) mit Zufallstext und beschädigten echten Dateien. Eigenschaften: kein Panic; was eingelesen wurde, übersteht Speichern + Laden unverändert. Lokal je 420 000 Runden über 6 Seeds sauber; CI 4000 pro Test (~1 s).
-- **Journal (R-001)**: ein echtes Journal (alle Integrationen an) – **jede** abgeschnittene Fassung wird als beschädigt erkannt (bis auf das letzte `\n`, Inhalt + Prüfsumme sind dann vollständig), keine Veränderung geht durch, liest sich exakt zurück; lokal 400 000 Runden über 4 Seeds.
-- **Funde + Fixes**: (1) `views.ini` mit einzelnem `\r` am Dateiende → Pfad mit `\r`, beim nächsten Speichern verändert → abgeschnitten; (2) `session.ini`: Tab-Pfade mit `\r` wurden gelesen, aber nie geschrieben → beim Lesen verworfen; (3) Journal: Inhalt **nach** der Prüfsummenzeile war ungeschützt (nur durch Handbearbeitung möglich, unsere Speicherung ist atomar) → gilt jetzt als beschädigt; Prüfsumme muss exakt im geschriebenen Format stehen (führende Null zählte vorher als gleich).
-- **Dauertest** Linux (`scripts/e2e-stress.sh`, von e2e.sh aufgerufen): 150 Runden à Ordner öffnen/hoch, Tab auf/zu, alle 5 Runden Kachel-↔Details-Ansicht, alle 7 Runden Datei-Wechsel im beobachteten Ordner; Messung nach 30 Aufwärmrunden vs. Ende. Lokal: 447 Navigationen in 75 s, **RSS +0,5 MiB (24,2 → 24,6 MiB), Dateien ±0, Threads ±0**. Windows (`scripts/m8-stress.ps1`, echte Tastatur): dasselbe mit Private Bytes, Handles, Threads, GDI-/USER-Objekten (Icon-Lecks).
-- **CI-Messwerte**: Linux #72: RSS 25,2 → 25,5 MiB (448 Navigationen), Dateien 20 ±0, Threads 8 ±0. Windows #72: Private Bytes +14,2 MiB → genauer angesehen: #73 mit zwei Messphasen – Aufwärmen 58,4 MiB (Bild-Cache 37,5), nach 120 Runden 71,6 (Cache 50,0), nach 240 Runden 72,4 (Cache 50,0) → **ohne Bild-Cache Phase A +0,7 MiB, Phase B +0,8 MiB = kein Leck**; der Zuwachs war der Kachel-Bild-Cache (LRU, Budget 96 MiB, bleibt bei 50 stehen). Handles 588 → 586, Threads 16, GDI 53 ±0, USER +3.
+### M8.3c Random-data tests + endurance test ✅ (CI runs #72/#73) → M8.3 complete
+- **Random-data tests** (deterministic, own xorshift generator, no new dependency): all file parsers (settings, session, views, start guard, instance protocol) and text helpers (address bar, breadcrumb, palette search, display name/rename, image size, text preview, colour) with random text and damaged real files. Properties: no panic; what was read in survives save + load unchanged. Locally 420,000 rounds each over 6 seeds clean; CI 4000 per test (~1 s).
+- **Journal (R-001)**: a real journal (all integrations on) – **every** truncated version is detected as damaged (except for the last `\n`, content + checksum are complete then), no modification gets through, reads back exactly; locally 400,000 rounds over 4 seeds.
+- **Findings + fixes**: (1) `views.ini` with a single `\r` at the end of the file → path with `\r`, changed on the next save → truncated; (2) `session.ini`: tab paths with `\r` were read but never written → discarded when reading; (3) journal: content **after** the checksum line was unprotected (only possible by manual editing, our saving is atomic) → now counts as damaged; the checksum must be exactly in the written format (a leading zero previously counted as equal).
+- **Endurance test** Linux (`scripts/e2e-stress.sh`, called from e2e.sh): 150 rounds of open folder/up, tab open/close, every 5 rounds tile ↔ details view, every 7 rounds a file change in the watched folder; measurement after 30 warm-up rounds vs. the end. Locally: 447 navigations in 75 s, **RSS +0.5 MiB (24.2 → 24.6 MiB), files ±0, threads ±0**. Windows (`scripts/m8-stress.ps1`, real keyboard): the same with private bytes, handles, threads, GDI/USER objects (icon leaks).
+- **CI measurements**: Linux #72: RSS 25.2 → 25.5 MiB (448 navigations), files 20 ±0, threads 8 ±0. Windows #72: private bytes +14.2 MiB → looked at more closely: #73 with two measuring phases – warm-up 58.4 MiB (image cache 37.5), after 120 rounds 71.6 (cache 50.0), after 240 rounds 72.4 (cache 50.0) → **without the image cache phase A +0.7 MiB, phase B +0.8 MiB = no leak**; the growth was the tile image cache (LRU, budget 96 MiB, stops at 50). Handles 588 → 586, threads 16, GDI 53 ±0, USER +3.
 
-### M8.3b Eine Instanz ✅ (CI-Run #71)
-- Läuft schon ein Fenster, gibt ein zweiter Start (Ordner-Doppelklick über M7.1, Win+E, Startmenü, Kommandozeile) seinen Ordner dorthin ab: **neuer Tab** in der aktiven Ansicht (ohne Ordner = wie Strg+T), ein minimiertes Fenster kommt wieder hoch und nach vorn (`AllowSetForegroundWindow` vom neuen Prozess), der zweite Prozess beendet sich sofort – vor Fenster, Renderer und Start-Wächter.
-- Kanal: Windows Named Pipe `\\.\pipe\explorer2-<Sitzung>-<Hash>` (nur lokale Clients, Standard-ACL = gleicher Benutzer, nächste Pipe-Instanz entsteht vor dem Schließen der aktuellen → der Name verschwindet nie), Linux Unix-Socket im Temp-Ordner, Rechte 0600. Name pro Konfig-Ordner → Tests/portable Kopien mit eigenem `EXPLORER2_CONFIG_DIR` stören sich nicht. Protokoll rein in `core::instance` (eine Zeile, alles Fremde wird verworfen).
-- **Kein Aussperren**: „ok“ kommt erst, wenn der UI-Thread den Tab wirklich geöffnet hat; antwortet die laufende Instanz nicht (hängt), öffnet der zweite Start nach 4 s sein eigenes Fenster. Wer den Namen nicht bekommt (`--new-instance`, alte Instanz schließt gerade), versucht es alle 2 s und übernimmt danach. Linux: SIGTERM gibt den Socket sofort frei.
-- Abschaltbar: Einstellungen → Windows-Integration → „Ordner im offenen Fenster öffnen (als neuen Tab)“ + Palette; `--new-instance` / `EXPLORER2_NEW_INSTANCE=1` für einen einzelnen Start. Installer-Neustart nutzt `--new-instance`.
-- Tests: core 3 Unit (Protokoll, fremde Eingaben, stabiler Name), Linux-E2E [74]–[74i] (Übergabe < 3 s, neuer Tab, ohne Ordner, angehaltene Instanz per SIGSTOP, `--new-instance`, Schalter, Socket weg nach kill), Windows `scripts/m8-instance.ps1` [N1]–[N9] (Named Pipe, minimiertes Fenster, per `NtSuspendProcess` angehaltene Instanz, `--new-instance`, Pipe nach Prozessende frei).
+### M8.3b Single instance ✅ (CI run #71)
+- If a window is already running, a second start (folder double-click via M7.1, Win+E, Start menu, command line) hands its folder over to it: **new tab** in the active view (without a folder = like Ctrl+T), a minimised window comes back up and to the front (`AllowSetForegroundWindow` from the new process), the second process exits immediately – before window, renderer and start guard.
+- Channel: Windows named pipe `\\.\pipe\explorer2-<session>-<hash>` (local clients only, default ACL = same user, the next pipe instance is created before the current one closes → the name never disappears), Linux Unix socket in the temp folder, permissions 0600. Name per config folder → tests/portable copies with their own `EXPLORER2_CONFIG_DIR` don't disturb each other. Protocol purely in `core::instance` (one line, anything foreign is discarded).
+- **No lock-out**: “ok” comes only when the UI thread has really opened the tab; if the running instance doesn't reply (hangs), the second start opens its own window after 4 s. Whoever doesn't get the name (`--new-instance`, old instance just closing) retries every 2 s and takes over afterwards. Linux: SIGTERM frees the socket immediately.
+- Can be switched off: Settings → Windows-Integration → “Ordner im offenen Fenster öffnen (als neuen Tab)” (open folders in the open window (as a new tab)) + palette; `--new-instance` / `EXPLORER2_NEW_INSTANCE=1` for a single start. The installer restart uses `--new-instance`.
+- Tests: core 3 unit (protocol, foreign input, stable name), Linux E2E [74]–[74i] (hand-over < 3 s, new tab, without folder, instance stopped via SIGSTOP, `--new-instance`, switch, socket gone after kill), Windows `scripts/m8-instance.ps1` [N1]–[N9] (named pipe, minimised window, instance suspended via `NtSuspendProcess`, `--new-instance`, pipe free after the process ends).
 
-### M8.3a Absturzbericht + Start-Wächter ✅ (CI-Run #70)
-- **Absturzbericht**: Panic in jedem Thread (Panic-Hook) und unter Windows unbehandelte Ausnahmen (`SetUnhandledExceptionFilter`: Code, Adresse als `exe+0x…`) schreiben `%APPDATA%\Explorer2\crash\crash-<UTC>-<pid>.txt` – Version, Ursache, Thread, Meldung, Ort und die **letzten 200 Protokollzeilen** (laufen immer im Speicher mit, auch ohne `EXPLORER2_TRACE`). Kein „funktioniert nicht mehr“-Dialog. Max. 10 Berichte.
-- Nächster Start: Hinweis-Karte unten (Overlay, verschiebt nichts) „… wurde beim letzten Mal unerwartet beendet“ + „Bericht anzeigen“ (öffnet den Ordner); jeder Bericht wird einmal gemeldet (`.seen.txt`).
-- **Start-Wächter** (`start-guard.txt`, Logik rein in `core::guard`): ein Start, der keine 5 s übersteht, zählt als abgebrochen; nach **2 in Folge** ist der nächste Start **sicher** (Software-Darstellung, keine Sitzung, keine GPU-Prüfung) – ein kaputter GPU-Treiber oder ein Sitzungseintrag, der abstürzt, sperrt niemanden aus. Läuft der sichere Start stabil, ist der nächste wieder normal. Zweite laufende Instanz (gleiche Exe, Datei < 60 s alt) wird erkannt, PID-Wiederverwendung durch fremde Prozesse auch (Prozessname). Linux: SIGTERM (`kill`, Abmelden) ist gewolltes Ende, kein Absturz.
-- **GPU-Prüfung, die den Prozess mitreißt** (Treiberabsturz): Marker `gpu-probe.txt` → beim nächsten Start GPU dauerhaft „ungeeignet“ (sonst Endlosschleife aus Absturz – sicherer Start – Absturz).
-- Testhaken `EXPLORER2_TEST_CRASH=panic|native|panic-later`. Tests: core 5 Unit (Zählung, PID, UTC-Format, Aufräumen, Texte), app 3 Unit, Linux-E2E [73]–[73j], Windows `scripts/m8-crash.ps1` [C1]–[C8] (echte Windows-Ausnahme per `RaiseException`, Panic, sicherer Start, GPU-Marker).
+### M8.3a Crash report + start guard ✅ (CI run #70)
+- **Crash report**: a panic in any thread (panic hook) and on Windows unhandled exceptions (`SetUnhandledExceptionFilter`: code, address as `exe+0x…`) write `%APPDATA%\Explorer2\crash\crash-<UTC>-<pid>.txt` – version, cause, thread, message, location and the **last 200 log lines** (always kept in memory, even without `EXPLORER2_TRACE`). No “has stopped working” dialog. Max. 10 reports.
+- Next start: notice card at the bottom (overlay, moves nothing) “… wurde beim letzten Mal unerwartet beendet” (… was closed unexpectedly last time) + “Bericht anzeigen” (show report; opens the folder); every report is reported once (`.seen.txt`).
+- **Start guard** (`start-guard.txt`, logic purely in `core::guard`): a start that doesn't survive 5 s counts as aborted; after **2 in a row** the next start is **safe** (software rendering, no session, no GPU check) – a broken GPU driver or a session entry that crashes locks nobody out. If the safe start runs stably, the next one is normal again. A second running instance (same exe, file < 60 s old) is detected, PID reuse by foreign processes too (process name). Linux: SIGTERM (`kill`, logout) is an intended end, not a crash.
+- **GPU check that takes the process down** (driver crash): marker `gpu-probe.txt` → on the next start the GPU is permanently “unsuitable” (otherwise an endless loop of crash – safe start – crash).
+- Test hook `EXPLORER2_TEST_CRASH=panic|native|panic-later`. Tests: core 5 unit (counting, PID, UTC format, cleanup, texts), app 3 unit, Linux E2E [73]–[73j], Windows `scripts/m8-crash.ps1` [C1]–[C8] (real Windows exception via `RaiseException`, panic, safe start, GPU marker).
 
-### M8.1/M8.2 Installer ✅ (CI-Run #69)
-- Boss-Entscheidung: **eigener Installer in Rust** (D-023), pro Benutzer, ohne Administratorrechte.
-- `explorer2.exe --install [--quiet]` bzw. Einstellungen → „Installation“ → „Installieren“ (mit Nachfrage): kopiert App + Notfall-Werkzeug nach `%LOCALAPPDATA%\Programs\Explorer2`, legt im Startmenü „Explorer 2.0“ und „Explorer 2.0 – Windows-Standard wiederherstellen“ an (`.lnk` per `IShellLinkW`), trägt sich in **Apps & Features** ein (Version, Größe, Deinstallieren) und startet danach aus dem Installationsordner weiter. Startmenü + Eintrag laufen **über das Journal** – der Ein-Knopf-Reset und `explorer2-recover` entfernen sie mit.
-- Integrationen, die aus einer heruntergeladenen Kopie eingeschaltet wurden, werden auf die installierte Exe umgebogen (nur eindeutig eigene; fremd übernommene bleiben).
-- Update über eine laufende App: die laufende Exe wird beiseite umbenannt (`*.old-<pid>`), beim nächsten Start aufgeräumt.
-- Deinstallation (Apps & Features / `explorer2-recover --uninstall [--quiet]`): kompletter R-001-Reset (alle Integrationen, Startmenü, Eintrag), dann löscht eine Temp-Kopie den Programmordner – **nur, wenn er ausschließlich unsere Dateien enthält** (Test mit fremder Datei) – und sich selbst; Einstellungen bleiben.
-- Tests: integrate 24 Unit (Installieren → Deinstallieren = Snapshot, Update = ein Eintrag + erstes Original, Integrationen folgen der installierten Exe, fehlende Dateien → nichts journalisiert, fremder Ordner wird nie gelöscht, Eintrag im Manifest), Linux-Funktionstest + E2E [72] (Palette → Nachfrage → installierte Kopie läuft, alte schließt; Deinstallation räumt alles), Windows-CI `scripts/m8-install.ps1` [I1]–[U6] mit den echten Standardpfaden.
-- CI #68: Windows komplett grün (I1–U6), Linux [72b–d] rot – der E2E-Job baute nur `explorer2`, ohne `explorer2-recover` daneben verweigert der Installer (gewollt). Fix: Job baut `-p explorer-integrate --bins` mit → #69 grün.
+### M8.1/M8.2 Installer ✅ (CI run #69)
+- Boss decision: **own installer in Rust** (D-023), per user, without administrator rights.
+- `explorer2.exe --install [--quiet]` or Settings → “Installation” → “Installieren” (install; with confirmation): copies app + emergency tool to `%LOCALAPPDATA%\Programs\Explorer2`, creates “Explorer 2.0” and “Explorer 2.0 – Windows-Standard wiederherstellen” (restore Windows default) in the Start menu (`.lnk` via `IShellLinkW`), registers itself in **Apps & Features** (version, size, uninstall) and then continues running from the installation folder. Start menu + entry go **through the journal** – the one-button reset and `explorer2-recover` remove them as well.
+- Integrations that were switched on from a downloaded copy are redirected to the installed exe (only clearly our own; ones taken over from others stay).
+- Update over a running app: the running exe is renamed aside (`*.old-<pid>`), cleaned up on the next start.
+- Uninstall (Apps & Features / `explorer2-recover --uninstall [--quiet]`): complete R-001 reset (all integrations, Start menu, entry), then a temp copy deletes the program folder – **only if it contains exclusively our files** (test with a foreign file) – and itself; settings stay.
+- Tests: integrate 24 unit (install → uninstall = snapshot, update = one entry + the first original, integrations follow the installed exe, missing files → nothing journaled, a foreign folder is never deleted, entry in the manifest), Linux functional test + E2E [72] (palette → confirmation → the installed copy runs, the old one closes; uninstall cleans everything up), Windows CI `scripts/m8-install.ps1` [I1]–[U6] with the real default paths.
+- CI #68: Windows fully green (I1–U6), Linux [72b–d] red – the E2E job only built `explorer2`; without `explorer2-recover` next to it the installer refuses (intended). Fix: the job builds `-p explorer-integrate --bins` too → #69 green.
 
-### M7 ✅ komplett (7.1 + 7.2); M7.3 IFEO verschoben (Boss, D-022) – nächster Schritt M8 Installer + Recovery
+### M7 ✅ complete (7.1 + 7.2); M7.3 IFEO postponed (Boss, D-022) – next step M8 installer + recovery
 
-### M7.2 Win+E ✅ (CI-Run #67)
-- Einstellungen/Palette: **„Win+E öffnet Explorer 2.0“** – `HKCU\Software\Classes\CLSID\{52205FD8-5DFB-447D-801A-D0B52F2E83E1}\shell\opennewwindow\command` = `"…\explorer2.exe"` (ohne Ordner → letzte Sitzung) + leerer `DelegateExecute` (sonst bleibt Explorers COM-Handler). Über Journal/Manifest wie M7.1, Aus = exakt vorher (`CLSID` selbst wird nur entfernt, wenn wir ihn angelegt haben und er leer ist).
-- Windows-E2E W43–W43h: echtes Win+E per `keybd_event`; vorher Prüfung, ob die Runner-Shell Win+E überhaupt verarbeitet (sonst nur Registry-Prüfung + NOTE); an → Explorer 2.0 startet, kein Explorer-Fenster; aus → CLSID-Schlüssel identisch, Win+E öffnet wieder Windows' Explorer.
-- CI #65/#66: Win+E startete Explorer 2.0 schon richtig (Prozess von der Shell gestartet, ohne Ordner, kein Explorer-Fenster); rot waren nur Testfehler – Trace-Datei erbt die Shell nicht, PS 5.1 zählt ein einzelnes `CimInstance` als `$null`.
+### M7.2 Win+E ✅ (CI run #67)
+- Settings/palette: **“Win+E öffnet Explorer 2.0”** (Win+E opens Explorer 2.0) – `HKCU\Software\Classes\CLSID\{52205FD8-5DFB-447D-801A-D0B52F2E83E1}\shell\opennewwindow\command` = `"…\explorer2.exe"` (without a folder → last session) + empty `DelegateExecute` (otherwise Explorer's COM handler stays). Via journal/manifest like M7.1, off = exactly as before (`CLSID` itself is only removed if we created it and it is empty).
+- Windows E2E W43–W43h: real Win+E via `keybd_event`; beforehand a check whether the runner shell processes Win+E at all (otherwise only a registry check + NOTE); on → Explorer 2.0 starts, no Explorer window; off → CLSID key identical, Win+E opens Windows' Explorer again.
+- CI #65/#66: Win+E already started Explorer 2.0 correctly (process started by the shell, without a folder, no Explorer window); only test bugs were red – the trace file isn't inherited by the shell, PS 5.1 counts a single `CimInstance` as `$null`.
 
-### M7.1 Ordner öffnen + Kontextmenü ✅ (CI-Run #64; funktional schon #63)
-- **CI #63**: Windows-E2E **81/81** inkl. W42–W42m: echtes ShellExecute auf einen Ordner und auf `C:\` startet Explorer 2.0 dort, Kontextmenü zeigt „Öffnen (Explorer 2.0)“ (Standard) + „In Explorer 2.0 öffnen“, `InvokeVerb` öffnet, `Folder` unberührt, beide aus → `reg export` identisch; R-001-Snapshot inkl. [R5]–[R5e]; Linux-E2E 188/188. Rot nur das Erststart-Gate (D-018): 3305 ms bei `probe_ms` **1189** (sonst 70–170), `window created` schon bei 897 ms vor jedem App-Code (sonst ~150) → VM; normaler Start best-of-3 **86,8 ms** (Budget 300). Boss: Gate an die VM koppeln (rot ab 2 s nur bei `probe_ms` < 300, sonst Warnung) → D-018 ergänzt.
-- CI #62: W42 lief nicht (PS 5.1 + `reg export` auf fehlenden Schlüssel = Abbruch, Testskript-Fehler) → behoben; `[forced-gpu]` hing einmalig nach Skias GL-Rückfall (in #63 wieder 505 ms).
-- Einstellungen → „Windows-Integration“: **„Ordner mit Explorer 2.0 öffnen (Doppelklick, „Ordner öffnen“)“** und **„„In Explorer 2.0 öffnen“ im Kontextmenü“**, einzeln an/aus (auch per Palette); nur unter Windows sichtbar. Aus = exakt der Zustand vorher (nur die Werte dieser Funktion, Rest bleibt im Journal).
-- Ordner öffnen: eigenes Verb `explorer2open` als **Standard-Verb** von `Directory` und `Drive` (Windows liefert dort `none`, ohne eigenes Standard-Verb fiele alles auf `Folder` = Explorer zurück). `Folder` (Systemsteuerung, Papierkorb, …) bleibt bei Windows, Windows' `open`-Verb unangetastet.
-- Sicherheit: Exe verschoben/gelöscht → beim nächsten Start werden die Einträge auf die laufende Exe umgebogen (sonst „Windows findet … nicht“ bei jedem Ordner); beim Einschalten Kopie von `explorer2-recover.exe` nach `%LOCALAPPDATA%\Explorer2` (überlebt das Löschen des App-Ordners); Hinweis „nicht verschieben“.
-- Gefunden: Laufwerke kommen als `"C:\"` → nach Windows-Quoting `C:"` → `launch_arg` repariert (Test).
-- Tests: integrate 18 Unit (u. a. Funktionen einzeln an/aus = Snapshot, verschobene Exe, fremd übernommenes Standard-Verb bleibt, Sweep ohne Journal räumt alle Funktionen, `Folder` nie berührt, jede Änderung im Manifest); R-001-CI-Test [R5]–[R5e] (Funktionen mit/ohne Journal zurück = Snapshot); Windows-E2E W42–W42m: per Palette an → **echtes ShellExecute auf einen Ordner startet Explorer 2.0 dort**, Laufwerk `C:\` kommt heil an, Kontextmenü-Eintrag sichtbar + per `InvokeVerb` aufrufbar, `Folder` unberührt, beide aus → `reg export` identisch zu vorher.
+### M7.1 Open folders + context menu ✅ (CI run #64; functionally already #63)
+- **CI #63**: Windows E2E **81/81** including W42–W42m: real ShellExecute on a folder and on `C:\` starts Explorer 2.0 there, the context menu shows “Öffnen (Explorer 2.0)” (default) + “In Explorer 2.0 öffnen”, `InvokeVerb` opens, `Folder` untouched, both off → `reg export` identical; R-001 snapshot including [R5]–[R5e]; Linux E2E 188/188. Only the first-start gate was red (D-018): 3305 ms at `probe_ms` **1189** (usually 70–170), `window created` already at 897 ms before any app code (usually ~150) → VM; normal start best-of-3 **86.8 ms** (budget 300). Boss: couple the gate to the VM (red from 2 s only at `probe_ms` < 300, otherwise a warning) → D-018 extended.
+- CI #62: W42 didn't run (PS 5.1 + `reg export` on a missing key = abort, test script bug) → fixed; `[forced-gpu]` hung once after Skia's GL fallback (505 ms again in #63).
+- Settings → “Windows-Integration”: **“Ordner mit Explorer 2.0 öffnen (Doppelklick, „Ordner öffnen“)”** (open folders with Explorer 2.0 (double-click, “Open folder”)) and **“„In Explorer 2.0 öffnen“ im Kontextmenü”** (“Open in Explorer 2.0” in the context menu), individually on/off (also via the palette); only visible on Windows. Off = exactly the state before (only the values of this function, the rest stays in the journal).
+- Open folders: own verb `explorer2open` as the **default verb** of `Directory` and `Drive` (Windows ships `none` there; without our own default verb everything would fall back to `Folder` = Explorer). `Folder` (Control Panel, Recycle Bin, …) stays with Windows, Windows' `open` verb untouched.
+- Safety: exe moved/deleted → on the next start the entries are redirected to the running exe (otherwise “Windows cannot find …” on every folder); when switching on, a copy of `explorer2-recover.exe` goes to `%LOCALAPPDATA%\Explorer2` (survives deletion of the app folder); notice “nicht verschieben” (don't move).
+- Found: drives arrive as `"C:\"` → after Windows quoting `C:"` → `launch_arg` repairs it (test).
+- Tests: integrate 18 unit (among others functions individually on/off = snapshot, moved exe, a default verb taken over from others stays, sweep without a journal cleans up all functions, `Folder` never touched, every change in the manifest); R-001 CI test [R5]–[R5e] (functions back with/without a journal = snapshot); Windows E2E W42–W42m: on via the palette → **a real ShellExecute on a folder starts Explorer 2.0 there**, drive `C:\` arrives intact, context menu entry visible + invokable via `InvokeVerb`, `Folder` untouched, both off → `reg export` identical to before.
 
-### R-001 Ein-Knopf-Reset („Notausgang“) ✅ komplett (CI-Run #59–#61)
-- Neue Crate **`explorer-integrate`**: jede Windows-Integration (ab M7) läuft nur über `apply()`. Vor jeder Änderung steht der Zustand vorher im **Journal** (write-ahead, atomar mit Flush, Spiegelkopie, Prüfsumme; Registry-Werte roh als Typ + Bytes → bit-genauer Rückbau; Dateien mit Sicherung).
-- `reset()`: Journal rückwärts – nur wo der Wert **noch uns gehört**; hat eine andere Software ihn inzwischen geändert, bleibt er und steht im Bericht („von anderer Software geändert – belassen“). Eigene Schlüssel nur, wenn leer. Danach **Sweep der bekannten Integrationsstellen** (Ordner-Verben Folder/Directory/Drive, eigene Kontextmenü-Einträge, Win+E, `HKCU\Software\Explorer2`; erkannt am Befehl mit `explorer2`) → funktioniert auch ohne oder mit kaputtem Journal. Fehler (z. B. HKLM ohne Admin) bleiben im Journal für den nächsten Versuch. Umgebung → `WM_SETTINGCHANGE`.
-- **`explorer2-recover.exe`**: Konsole, keine UI/GPU (läuft auch im Abgesicherten Modus), `--status` (Exit 1 = aktiv), `--yes`, sonst Nachfrage; als zweite Datei im Windows-Artefakt.
-- **Pflichttest in CI** (`scripts/r001-snapshot.ps1`, Snapshot mit Windows' eigenem `reg.exe export`, unabhängig von unserem Code): Integration an (Ordner-Verb, Umgebungsvariable, überschriebener Fremdwert, eigene Schlüssel, Datei) → Reset → **Snapshot identisch** – (1) aus dem Journal, (2) mit halb zerstörtem Journal über den Spiegel, (3) ganz ohne Journal über den Sweep; dazu „zweiter Reset = nichts zu tun“. Run #59: 15/15, Umgebung + Fremdwert bit-genau (gleicher Hash).
-- Tests: 13 Unit-Tests gegen die Fake-Registry (u. a. Absturz zwischen Journal und Änderung, fremd geänderte Werte, HKLM verweigert → zweiter Versuch, Dateien, Formatschäden) + Windows-Unit-Test gegen die echte Registry (ohne Sweep, damit ein Entwickler-PC nie angefasst wird).
-- Gefunden beim Testen: ein Schlüssel, unter dem ein Rückbau scheiterte, flog als „nicht leer“ aus dem Journal → zweiter Versuch hätte ihn liegen lassen; jetzt bleibt er drin.
-- **CI #60 rot**, zwei Funde: (1) **echter Bug**: Palette-Befehl mit Dialog (Zurücksetzen, aber auch „Endgültig löschen“/„Papierkorb leeren“) – Enter im Dialog kam nicht an, weil die Fokus-Rückgabe der schließenden Palette mit dem Dialog-Fokus konkurrierte → Befehle laufen jetzt einen Event-Loop-Durchlauf später; Linux-E2E [71f2] deckt den Weg ab. (2) W11 wartete starr 2,5 s auf den Eigenschaften-Dialog der Shell; er kam später, blieb offen und nahm W12–W17 den Fokus → Test pollt jetzt bis 10 s und wartet aufs Schließen.
-- **CI #61 grün**: Windows-E2E 68/68 (W41: echte Integration per App-Palette zurückgesetzt – 6 Werte/Dateien, 7 Schlüssel, 0 Fehler, Fremdwert exakt zurück; W11 Dialog nach 261 ms), R-001-Snapshot 15/15, Linux-E2E 188/188.
-- R-001c: Einstellungen → **„Windows-Integration“** (Status beim Öffnen, Knopf „Alle Windows-Integrationen zurücksetzen“ nur wenn etwas aktiv ist, Nachfrage mit Stand), Palette-Befehl; Linux-E2E [71]–[71g] (beschädigtes Journal per Knopf zurückgesetzt, 187/187), Windows-E2E W41–W41h (echte Integration per App-Palette zurückgesetzt).
+### R-001 One-button reset (“emergency exit”) ✅ complete (CI runs #59–#61)
+- New crate **`explorer-integrate`**: every Windows integration (from M7) goes only through `apply()`. Before every change the state before is in the **journal** (write-ahead, atomic with flush, mirror copy, checksum; registry values raw as type + bytes → bit-exact rollback; files with a backup).
+- `reset()`: journal backwards – only where the value **still belongs to us**; if other software has changed it in the meantime, it stays and is in the report (“von anderer Software geändert – belassen” – changed by other software – left). Own keys only if empty. Afterwards a **sweep of the known integration locations** (folder verbs Folder/Directory/Drive, own context menu entries, Win+E, `HKCU\Software\Explorer2`; detected by the command containing `explorer2`) → works even without or with a broken journal. Errors (e.g. HKLM without admin) stay in the journal for the next attempt. Environment → `WM_SETTINGCHANGE`.
+- **`explorer2-recover.exe`**: console, no UI/GPU (also runs in Safe Mode), `--status` (exit 1 = active), `--yes`, otherwise asks; as a second file in the Windows artifact.
+- **Mandatory test in CI** (`scripts/r001-snapshot.ps1`, snapshot with Windows' own `reg.exe export`, independent of our code): integration on (folder verb, environment variable, overwritten foreign value, own keys, file) → reset → **snapshot identical** – (1) from the journal, (2) with a half-destroyed journal via the mirror, (3) entirely without a journal via the sweep; plus “second reset = nothing to do”. Run #59: 15/15, environment + foreign value bit-exact (same hash).
+- Tests: 13 unit tests against the fake registry (among others a crash between journal and change, values changed by others, HKLM denied → second attempt, files, format damage) + a Windows unit test against the real registry (without the sweep, so a developer PC is never touched).
+- Found while testing: a key under which a rollback failed dropped out of the journal as “not empty” → a second attempt would have left it; now it stays in.
+- **CI #60 red**, two findings: (1) **real bug**: palette command with a dialog (reset, but also “Endgültig löschen”/“Papierkorb leeren”) – Enter in the dialog didn't arrive because the focus return of the closing palette competed with the dialog focus → commands now run one event-loop pass later; Linux E2E [71f2] covers the path. (2) W11 waited a fixed 2.5 s for the shell's Properties dialog; it came later, stayed open and took the focus from W12–W17 → the test now polls up to 10 s and waits for it to close.
+- **CI #61 green**: Windows E2E 68/68 (W41: real integration reset via the app palette – 6 values/files, 7 keys, 0 errors, foreign value exactly back; W11 dialog after 261 ms), R-001 snapshot 15/15, Linux E2E 188/188.
+- R-001c: Settings → **“Windows-Integration”** (status when opening, button “Alle Windows-Integrationen zurücksetzen” (reset all Windows integrations) only when something is active, confirmation with the state), palette command; Linux E2E [71]–[71g] (damaged journal reset via the button, 187/187), Windows E2E W41–W41h (real integration reset via the app palette).
 
-### M6.4 Farbschemata ✅ (CI-Run #58) → **M6 komplett**
-- Einstellungen → **Farbschema: Wie Windows / Hell / Dunkel** (+ Befehlspalette „Farbschema: …“), Häkchen **„Windows-Akzentfarbe verwenden“**; gespeichert in settings.ini (`theme`, `system_accent`).
-- **Alle Farben zentral** in `core::theme::tokens` (37 Tokens) → Slint-Global `Theme`; main.slint hat keine Hex-Farbe mehr. Hell = exakt der bisherige Look (Auswahl weiterhin #cce8ff).
-- Akzent: Auswahl, Hover, aktueller Ort, Ablageziel übernehmen den **Farbton** des Windows-Akzents bei gleicher Helligkeit (Gelb wird nicht grell); Fokusrahmen/aktive Pane/Fortschritt nutzen Windows' eigene Schattierung (AccentPalette „Dark 1“ hell, „Light 2“ dunkel), bei Bedarf auf Kontrast ≥ 4,5 nachgedunkelt/-aufgehellt.
-- „Wie Windows“ folgt **live**: Registry-Watcher (`RegNotifyChangeKeyValue` auf Themes + DWM + Accent) → neu lesen → nur bei Änderung anwenden. Std-Widgets (Buttons, Checkboxen, Scrollbalken) über `Palette.color-scheme`, Titelleiste über `DWMWA_USE_IMMERSIVE_DARK_MODE`.
-- Kein Hell-Aufblitzen: Schema wird vor dem ersten Bild gesetzt (Registry-Lesen ~0,01 ms im Startpfad).
-- Tests: core-Unit (WCAG-Kontrast aller Text-/Hintergrund-Paare für 12 Akzente × hell/dunkel inkl. Gelb/Weiß/Schwarz, Akzent-Rahmen ≥ 3:1, HSL-Rundlauf, AccentPalette/ABGR-Format, Settings-Rundlauf), Linux-E2E [70]–[70k] per **Pixelmessung** (Liste #fafafa → #191919, Auswahl #1c3f63, Seitenleiste #202020, Std-Button dunkel, Neustart startet dunkel, System dunkel + grüner Akzent → grüne Auswahl, Akzent-Häkchen aus → Blau), Windows-E2E W37–W40 mit **echter Registry** (live dunkel/hell, live Akzentwechsel, Titelleiste; Registry danach exakt wiederhergestellt).
-- **CI #57:** funktional alles grün (Windows-E2E inkl. W37–W40, Linux-E2E 180/180), rot nur das Erststart-Gate mit 2709 ms. Ursache: **VM**, nicht M6.4. Schon *vor* dem ersten Theme-Code war `window created` bei 612 statt 144 ms (#56), die Hintergrund-Probe bei 521 statt 70 ms (7×) und run→Event-Loop bei 2011 statt 406 ms. Theme-Init kostet 0,49 ms, Linux First Paint 10 → 9 ms. Der Abbruch am Erststart hatte aber die echte Budget-Messung (normaler Start < 300 ms) verhindert → CI sammelt Zeit-Gates jetzt und wirft erst am Ende der Matrix, mit VM-Kennzahl `probe_ms` im Log.
-- **CI #58 grün** (normale VM, `probe_ms` 84,5): Erststart 677 ms (#56 ohne M6.4: 633), normaler Start best-of-3 **102 ms** (#56: 94,5; Budget 300), Windows-E2E inkl. W37–W40 grün.
+### M6.4 Colour schemes ✅ (CI run #58) → **M6 complete**
+- Settings → **Farbschema (colour scheme): Wie Windows / Hell / Dunkel** (like Windows / light / dark) (+ command palette “Farbschema: …”), check box **“Windows-Akzentfarbe verwenden”** (use Windows accent colour); saved in settings.ini (`theme`, `system_accent`).
+- **All colours central** in `core::theme::tokens` (37 tokens) → Slint global `Theme`; main.slint no longer has any hex colour. Light = exactly the previous look (selection still #cce8ff).
+- Accent: selection, hover, current place, drop target take over the **hue** of the Windows accent at the same brightness (yellow doesn't get garish); focus frame/active pane/progress use Windows' own shade (AccentPalette “Dark 1” light, “Light 2” dark), darkened/lightened to contrast ≥ 4.5 if needed.
+- “Wie Windows” follows **live**: registry watcher (`RegNotifyChangeKeyValue` on Themes + DWM + Accent) → re-read → apply only on change. Std widgets (buttons, check boxes, scroll bars) via `Palette.color-scheme`, title bar via `DWMWA_USE_IMMERSIVE_DARK_MODE`.
+- No light flash: the scheme is set before the first frame (registry read ~0.01 ms in the start path).
+- Tests: core unit (WCAG contrast of all text/background pairs for 12 accents × light/dark including yellow/white/black, accent frame ≥ 3:1, HSL round trip, AccentPalette/ABGR format, settings round trip), Linux E2E [70]–[70k] by **pixel measurement** (list #fafafa → #191919, selection #1c3f63, sidebar #202020, std button dark, restart starts dark, system dark + green accent → green selection, accent check box off → blue), Windows E2E W37–W40 with the **real registry** (live dark/light, live accent change, title bar; registry restored exactly afterwards).
+- **CI #57:** functionally everything green (Windows E2E including W37–W40, Linux E2E 180/180), only the first-start gate was red with 2709 ms. Cause: **the VM**, not M6.4. Already *before* the first theme code, `window created` was at 612 instead of 144 ms (#56), the background probe at 521 instead of 70 ms (7×) and run→event loop at 2011 instead of 406 ms. Theme init costs 0.49 ms, Linux first paint 10 → 9 ms. But the abort at the first start had prevented the real budget measurement (normal start < 300 ms) → CI now collects time gates and throws only at the end of the matrix, with the VM metric `probe_ms` in the log.
+- **CI #58 green** (normal VM, `probe_ms` 84.5): first start 677 ms (#56 without M6.4: 633), normal start best-of-3 **102 ms** (#56: 94.5; budget 300), Windows E2E including W37–W40 green.
 
-### M6.3 Befehlspalette ✅ (CI-Run #55)
-- **Strg+Shift+P** öffnet ein Suchfeld oben mittig; ↑/↓/Bild↑/Bild↓ wählen, Enter führt aus, Esc/Klick daneben schließt.
-- `core::commands` (rein, getestet): **ein** Verzeichnis aller 45 Befehle (ID, deutscher Name, Kürzel, Bedingung: Auswahl / echter Ordner / Einfügen möglich / Rückgängig / Wiederholen / Papierkorb), `fuzzy_score` (Teilfolge, Umlaute gefaltet, Wortanfänge + aufeinanderfolgende Treffer zählen), `rank` (zuletzt benutzte zuerst), `push_recent`.
-- Ausführung über dieselben Wege wie die Tasten: `nav::run_action` (aus `list_key` herausgelöst) bzw. `fileops::command`; Unit-Test stellt sicher, dass jeder Befehl des Verzeichnisses ausgeführt wird.
-- Nicht verfügbare Befehle grau (Enter → „Hier nicht möglich“); zuletzt benutzte (8) in settings.ini (`recent_commands`).
-- „>“-Modus: Orte aus Seitenleiste, Laufwerken, virtuellen Orten und dem Verlauf aller Tabs.
-- Tests: Unit, Linux-E2E [69]–[69g] (168/168), Windows-E2E W36.
-- CI #53 rot am Erststart-Gate: run→erstes Bild 1376 ms (#51: 456, #52: 592; VM zusätzlich ~2× langsamer). Die Palette war unsichtbar (`visible: false`), aber **aufgebaut und gelayoutet** → jetzt eigene Komponente unter `if pal-open` (entsteht erst beim Öffnen, `init` fokussiert das Feld).
-- #54 (gleicher App-Code wie #55) trotzdem rot: 1178 ms; #55: **731 ms** bei identischem Code → das Erststart-Gate misst vor allem die VM (Hintergrund-Probe 170 vs 89 ms). CI lässt den Windows-E2E jetzt auch nach einem roten Zeit-Gate laufen (Funktionssignal geht nicht mehr verloren). Gate jetzt Warnung ab 1 s, rot ab 2 s (Boss, D-018).
+### M6.3 Command palette ✅ (CI run #55)
+- **Ctrl+Shift+P** opens a search field at the top centre; ↑/↓/PgUp/PgDn select, Enter executes, Esc/a click outside closes.
+- `core::commands` (pure, tested): **one** directory of all 45 commands (ID, German name, shortcut, condition: selection / real folder / paste possible / undo / redo / Recycle Bin), `fuzzy_score` (subsequence, umlauts folded, word starts + consecutive hits count), `rank` (recently used first), `push_recent`.
+- Executed through the same routes as the keys: `nav::run_action` (extracted from `list_key`) or `fileops::command`; a unit test makes sure every command in the directory is executed.
+- Unavailable commands greyed out (Enter → “Hier nicht möglich” – not possible here); recently used (8) in settings.ini (`recent_commands`).
+- “>” mode: places from the sidebar, drives, virtual places and the history of all tabs.
+- Tests: unit, Linux E2E [69]–[69g] (168/168), Windows E2E W36.
+- CI #53 red at the first-start gate: run→first frame 1376 ms (#51: 456, #52: 592; VM additionally ~2× slower). The palette was invisible (`visible: false`) but **built and laid out** → now its own component under `if pal-open` (created only when opened, `init` focuses the field).
+- #54 (same app code as #55) still red: 1178 ms; #55: **731 ms** with identical code → the first-start gate mainly measures the VM (background probe 170 vs 89 ms). CI now runs the Windows E2E even after a red time gate (the functional signal is no longer lost). Gate now a warning from 1 s, red from 2 s (Boss, D-018).
 
-### M6.2 Inspector ✅ (CI-Run #52)
-- Rechte Seitenleiste (280 px), **Alt+P** oder Knopf „Details“, Zustand in settings.ini (`inspector`).
-- Inhalt: Vorschau (Windows-Vorschaubild 256 px bzw. großes Icon; Textdateien: erste 40 Zeilen, UTF-8/BOM, Binär erkannt), Titel + Typ, Größe (ab 1 KB mit Bytes), Geändert, Erstellt, Attribute, Abmessungen (aus dem Dateikopf, `core::inspect::image_size`), Pfad als markierbarer Text (kopieren).
-- Mehrfachauswahl: Anzahl, Größe der Dateien, Gesamt inkl. Ordnerinhalt. Ordner: Inhalt + Gesamtgröße live im Hintergrund (`fs::dir_stats`: abbrechbar, Links/Junctions werden nicht verfolgt, unlesbare Ordner gezählt, Grenze 500.000 Einträge).
-- Bewusst ohne Plattenlauf: der *offene* Ordner zeigt nur seinen direkten Inhalt (sonst würde `C:\` beim Öffnen die ganze Platte zählen); ganze Laufwerke werden nie automatisch gezählt.
-- Entprellt (120 ms), Generationszähler verwirft veraltete Ergebnisse, laufende Zählung wird bei neuer Auswahl abgebrochen.
-- Tests: Unit (`core::inspect`, `fs::stats` inkl. Symlink-Schleife + Grenze), Linux-E2E [68]–[68g] (161/161), Windows-E2E W35/W35b (echtes Vorschaubild + Maße des PNG).
+### M6.2 Inspector ✅ (CI run #52)
+- Right sidebar (280 px), **Alt+P** or the “Details” button, state in settings.ini (`inspector`).
+- Content: preview (Windows thumbnail 256 px or a large icon; text files: first 40 lines, UTF-8/BOM, binary detected), title + type, size (from 1 KB with bytes), modified, created, attributes, dimensions (from the file header, `core::inspect::image_size`), path as selectable text (copy).
+- Multi-selection: count, size of the files, total including folder contents. Folders: contents + total size live in the background (`fs::dir_stats`: cancellable, links/junctions are not followed, unreadable folders counted, limit 500,000 entries).
+- Deliberately without a disk walk: the *open* folder only shows its direct contents (otherwise opening `C:\` would count the whole disk); whole drives are never counted automatically.
+- Debounced (120 ms), a generation counter discards stale results, a running count is cancelled on a new selection.
+- Tests: unit (`core::inspect`, `fs::stats` including a symlink loop + limit), Linux E2E [68]–[68g] (161/161), Windows E2E W35/W35b (real thumbnail + dimensions of the PNG).
 
-### M6.1c Ansicht pro Ordner ✅ (CI-Run #51) → **M6.1 komplett**
-- `core::views::FolderViews` (rein, getestet): Ordner → Ansicht, LRU bis 5000, Windows case-insensitiv, toleranter Parser; Datei `views.ini` (`modus<TAB>pfad`, atomar geschrieben).
-- Ansicht hängt jetzt am **Tab** (beim Navigieren: gemerkte Ansicht des Ordners, sonst Standard); `PaneData` trägt Modus + Kachelmaße → linke und rechte Pane können verschieden aussehen. Umschalten merkt die Ansicht für den Ordner.
-- Einstellungen: „Aktuelle Ansicht für alle Ordner“ → wird Standard (`view` in settings.ini), alle gemerkten Ordner vergessen.
-- Tests: Unit, Linux-E2E [67]–[67e] (154/154).
+### M6.1c View per folder ✅ (CI run #51) → **M6.1 complete**
+- `core::views::FolderViews` (pure, tested): folder → view, LRU up to 5000, Windows case-insensitive, tolerant parser; file `views.ini` (`mode<TAB>path`, written atomically).
+- The view now belongs to the **tab** (when navigating: the remembered view of the folder, otherwise the default); `PaneData` carries the mode + tile sizes → left and right pane can look different. Switching remembers the view for the folder.
+- Settings: “Aktuelle Ansicht für alle Ordner” (current view for all folders) → becomes the default (`view` in settings.ini), all remembered folders forgotten.
+- Tests: unit, Linux E2E [67]–[67e] (154/154).
 
-### M6.1b Sortier-Menü + Rahmen-Auswahl ✅ (CI-Run #51)
-- CI-Run #50 rot am **Erststart-Gate** (frische VM: 2140 ms > 1000 ms; Fenster→Event-Loop 1,6 s statt ~0,4 s in #40/#48). Verdacht: Zeichen „▾“ im neuen Sortieren-Knopf fehlt in Segoe UI → Schrift-Fallback-Suche beim ersten Rendern. Fix: Dreieck und Auswahlpunkt gezeichnet statt als Zeichen; neue Zeitmarken `init done`/`run` im Trace. **Bestätigt in #51**: Fenster→Event-Loop 1627 ms (#50) → 456 ms (#51, #48: 409 ms), Erststart 2140 → 702 ms; Init selbst nur 8 ms, die Zeit steckt im ersten Frame.
-- „Sortieren ▾“ in der Statusleiste (Popup): Name/Änderungsdatum/Typ/Größe (Richtung bleibt), Auf-/Absteigend; aktuelle Wahl mit Punkt. Kachel-Ansicht ohne Spaltenköpfe (wie Explorer).
-- Rahmen-Auswahl: Ziehen auf freier Fläche (unter den Zeilen, neben/zwischen Kacheln) zeichnet einen Rahmen; berührte Einträge werden live markiert, mit Strg zusätzlich zur Auswahl vom Start. `core::view::band_hits` + `Selection::set_band` (rein, getestet).
-- Gefunden: Slint feuert `clicked` **vor** dem Pointer-Up-Ereignis → Rahmen wird im Pointer-Ereignis abgeschlossen, nicht in `clicked` (sonst kam das Ende nie an).
-- Tests: Unit (Rahmen-Treffer Details/Raster, Auswahl mit/ohne Basis), Linux-E2E [65]–[66d] (149/149), Windows-E2E W34 (Rahmen über zwei Kacheln mit echter Maus).
+### M6.1b Sort menu + rubber-band selection ✅ (CI run #51)
+- CI run #50 red at the **first-start gate** (fresh VM: 2140 ms > 1000 ms; window→event loop 1.6 s instead of ~0.4 s in #40/#48). Suspicion: the character “▾” in the new sort button is missing in Segoe UI → font fallback search at the first render. Fix: triangle and selection dot drawn instead of characters; new time marks `init done`/`run` in the trace. **Confirmed in #51**: window→event loop 1627 ms (#50) → 456 ms (#51, #48: 409 ms), first start 2140 → 702 ms; init itself only 8 ms, the time is in the first frame.
+- “Sortieren ▾” (sort) in the status bar (popup): name/modified date/type/size (direction stays), ascending/descending; current choice with a dot. Tile view without column headers (like Explorer).
+- Rubber-band selection: dragging on free space (below the rows, beside/between tiles) draws a frame; touched entries are selected live, with Ctrl in addition to the selection at the start. `core::view::band_hits` + `Selection::set_band` (pure, tested).
+- Found: Slint fires `clicked` **before** the pointer-up event → the rubber band is finished in the pointer event, not in `clicked` (otherwise the end never arrived).
+- Tests: unit (rubber-band hits details/grid, selection with/without base), Linux E2E [65]–[66d] (149/149), Windows E2E W34 (rubber band over two tiles with a real mouse).
 
-### M6.1a Ordneroptionen ✅ (CI-Run #49)
-- Einstellungs-Panel, Abschnitt „Ordneroptionen“ (in settings.ini: `show_extensions`, `show_protected`, `single_click`):
-  - **Dateinamenerweiterungen anzeigen** (Standard an): aus → Endung nur bei *bekannten* Typen ausgeblendet (Windows: `HKCR\.ext` existiert, gecacht; Ordner, `.gitignore`, `ende.` nie). F2 bearbeitet dann nur den angezeigten Namen, die Endung wird beim Speichern wieder angehängt („x.txt“ tippen → „x.txt.txt“, wie Explorer); bei Fehler bleibt der getippte Text ohne Endung im Editor (keine doppelte Endung).
-  - **Geschützte Systemdateien anzeigen** (Standard aus): versteckt+System bleibt auch bei „Ausgeblendete“ unsichtbar.
-  - **Öffnen durch einfachen Klick**: Loslassen öffnet, Zeigen (600 ms) markiert, Strg/Shift-Klick wählt nur aus; Klicks bis 600 ms nach einem Öffnen werden ignoriert (sonst öffnet der 2. Klick eines Doppelklicks, was im nächsten Ordner unter dem Zeiger liegt); gilt für Zeilen und Kacheln.
-- Tests: Unit (`core::display`, Settings-Roundtrip, Windows `registered_types`), Linux-E2E [63]–[64e] (141/141), Windows-E2E W31–W33b (zweiter Start mit settings.ini: `.txt` ausgeblendet, unbekannte Endung bleibt, `attrib +h +s`-Datei unsichtbar, F2 behält Endung).
+### M6.1a Folder options ✅ (CI run #49)
+- Settings panel, section “Ordneroptionen” (folder options) (in settings.ini: `show_extensions`, `show_protected`, `single_click`):
+  - **Show file name extensions** (default on): off → the extension is hidden only for *known* types (Windows: `HKCR\.ext` exists, cached; folders, `.gitignore`, `ende.` never). F2 then edits only the displayed name, the extension is appended again on save (typing “x.txt” → “x.txt.txt”, like Explorer); on an error the typed text stays in the editor without the extension (no double extension).
+  - **Show protected system files** (default off): hidden+system stays invisible even with “Ausgeblendete” (hidden items).
+  - **Open with a single click**: releasing opens, hovering (600 ms) selects, Ctrl/Shift click only selects; clicks up to 600 ms after an open are ignored (otherwise the 2nd click of a double-click opens whatever lies under the pointer in the next folder); applies to rows and tiles.
+- Tests: unit (`core::display`, settings round trip, Windows `registered_types`), Linux E2E [63]–[64e] (141/141), Windows E2E W31–W33b (second start with settings.ini: `.txt` hidden, an unknown extension stays, `attrib +h +s` file invisible, F2 keeps the extension).
 
-### M5.7 Kachel-Ansicht + Vorschaubilder ✅ (CI-Run #48; W28c: echtes PNG-Vorschaubild, Kachel-Mitte exakt R220 G20 B20) → **M5 komplett**
-- `core::view::ViewMode` (Details/Mittel/Groß/Extra groß, 48/96/256 px, Kachelmaße, `step` für Strg+Mausrad, Explorer-Kürzel Strg+Shift+1/2/3/6 inkl. US/DE-Shift-Zeichen), Einstellung `view` in settings.ini.
-- `shell::thumbnail(path, px)`: `IShellItemImageFactory::GetImage` (Vorschau aus dem Windows-Thumbnail-Cache, sonst großes Shell-Icon), vormultipliziertes BGRA → RGBA; Windows-Test mit selbst geschriebener BMP.
-- `app::thumbs`: 2 Worker, nur sichtbare Kacheln, neueste Anfrage zuerst, weggescrollte werden übersprungen, 96-MB-Grenze (LRU, kommen beim Zurückscrollen neu), Schlüssel inkl. Änderungszeit (bearbeitetes Bild → neue Vorschau).
-- UI: Raster als zweite ListView über **stabile** Zeilen-/Spalten-Modelle aus Rust (ein `int`-Repeater hätte bei jeder Auswahländerung alle Kacheln neu gebaut → Doppelklick/Hover kaputt, gemessen per `init`-Debug), Kachel = gleiche Interaktion wie eine Zeile (Klick/Strg/Shift, Ziehen einer Mehrfachauswahl, Rechtsklick, Doppelklick, Slint-DnD/OLE-Drag), Pfeiltasten im Raster, F2-Feld über der Beschriftung, Kontextmenü per Tastatur an der Kachel, OLE-Drop-Trefferprüfung mit Zeilenhöhe/Spalten.
-- Strg+Mausrad gedrosselt (max. 1 Stufe/250 ms, ab Start gemessen): X11 liefert einen Rad-Klick doppelt, Touchpads viele kleine Ereignisse.
-- Tests: Unit (ViewMode, Tasten im Raster, Trefferprüfung im Raster, BGRA), Linux-E2E [62]–[62h] (132/132), Windows-E2E W28–W30 (echtes rotes PNG → roter Pixel in der Kachel).
-- Runs #45–#47 rot: der Windows-Server-Runner hat **keinen BMP-Vorschau-Anbieter** (Shell gab das Icon) → `Thumb { image, preview }` (erst `THUMBNAILONLY`, dann `ICONONLY`), Tests unterscheiden beide Fälle; PNG-Vorschau gibt es dort.
+### M5.7 Tile view + thumbnails ✅ (CI run #48; W28c: real PNG thumbnail, tile centre exactly R220 G20 B20) → **M5 complete**
+- `core::view::ViewMode` (details/medium/large/extra large, 48/96/256 px, tile sizes, `step` for Ctrl+mouse wheel, Explorer shortcuts Ctrl+Shift+1/2/3/6 including US/DE shift characters), setting `view` in settings.ini.
+- `shell::thumbnail(path, px)`: `IShellItemImageFactory::GetImage` (preview from the Windows thumbnail cache, otherwise a large shell icon), premultiplied BGRA → RGBA; Windows test with a self-written BMP.
+- `app::thumbs`: 2 workers, only visible tiles, newest request first, scrolled-away ones are skipped, 96 MB limit (LRU, they come back when scrolling back), key including modification time (edited image → new preview).
+- UI: grid as a second ListView over **stable** row/column models from Rust (an `int` repeater would have rebuilt all tiles on every selection change → double-click/hover broken, measured via `init` debug), tile = the same interaction as a row (click/Ctrl/Shift, dragging a multi-selection, right-click, double-click, Slint DnD/OLE drag), arrow keys in the grid, F2 field over the label, context menu via keyboard at the tile, OLE drop hit test with row height/columns.
+- Ctrl+mouse wheel throttled (max. 1 step/250 ms, measured from the start): X11 delivers a wheel click twice, touchpads many small events.
+- Tests: unit (ViewMode, keys in the grid, hit test in the grid, BGRA), Linux E2E [62]–[62h] (132/132), Windows E2E W28–W30 (real red PNG → red pixel in the tile).
+- Runs #45–#47 red: the Windows Server runner has **no BMP preview provider** (the shell returned the icon) → `Thumb { image, preview }` (first `THUMBNAILONLY`, then `ICONONLY`), tests distinguish both cases; PNG previews exist there.
 
-### M5.6d2 Bibliotheken ✅ (CI-Run #44) → **M5.6 virtuelle Orte komplett**
-- `shell::libraries`/`library` (`IShellLibrary` über die `.library-ms`-Dateien in `FOLDERID_Libraries`): lokalisierter Name, Mitgliedsordner (nur Dateisystem), Datei fürs Icon.
-- Ansicht „Bibliotheken“ (`::bibliotheken`, Aliase „Bibliotheken“, `shell:Libraries`, CLSID): Zeilen mit echtem Bibliotheks-Icon und „N Ordner“; Bibliothek mit **einem** Ordner öffnet ihn direkt, mit mehreren → `::bibliothek:<Stamm>` listet ihre Ordner (Spalte „Ordner“ = übergeordneter Pfad).
-- `shell:DocumentsLibrary`/`MusicLibrary`/`PicturesLibrary`/`VideosLibrary`/`CameraRoll`/`SavedPicturesLibrary` → Bibliothek; Hoch aus einer Bibliothek → „Bibliotheken“; Breadcrumb „Bibliotheken › Name“; Sitzung merkt sich Bibliotheks-Tabs.
-- Schutz: alle Platzhalter (`::…`) laufen über `places::is_placeholder` → keine Dateioperation, kein Watcher.
-- Bewusst noch nicht: zusammengeführte Ansicht (Explorer zeigt Inhalte aller Ordner gemischt) → eigener TODO.
-- Tests: Unit (Platzhalter, Namen, `shell:`-Bibliotheken), Windows-Unit `libraries_read_without_crashing`, Linux-E2E [61]/[61b], Windows-E2E W23–W27 mit eigener Test-Bibliothek (2 Ordner).
+### M5.6d2 Libraries ✅ (CI run #44) → **M5.6 virtual places complete**
+- `shell::libraries`/`library` (`IShellLibrary` via the `.library-ms` files in `FOLDERID_Libraries`): localised name, member folders (file system only), file for the icon.
+- View “Bibliotheken” (Libraries) (`::bibliotheken`, aliases “Bibliotheken”, `shell:Libraries`, CLSID): rows with the real library icon and “N Ordner” (N folders); a library with **one** folder opens it directly, with several → `::bibliothek:<stem>` lists its folders (column “Ordner” (folder) = parent path).
+- `shell:DocumentsLibrary`/`MusicLibrary`/`PicturesLibrary`/`VideosLibrary`/`CameraRoll`/`SavedPicturesLibrary` → library; Up from a library → “Bibliotheken”; breadcrumb “Bibliotheken › name”; the session remembers library tabs.
+- Protection: all placeholders (`::…`) go through `places::is_placeholder` → no file operation, no watcher.
+- Deliberately not yet: merged view (Explorer shows the contents of all folders mixed) → own TODO.
+- Tests: unit (placeholders, names, `shell:` libraries), Windows unit `libraries_read_without_crashing`, Linux E2E [61]/[61b], Windows E2E W23–W27 with its own test library (2 folders).
 
-### M5.6d1 Adresszeile + echte Shell-Icons ✅ (CI-Run #43)
-- `core::address` (rein, getestet): `%VAR%` (unbekannte bleiben stehen, `100%` bleibt), `shell:<Name>` mit Unterpfad (`shell:Downloads\\Fotos`), Windows-Kanonnamen + Aliase (`Personal` = Dokumente), unbekannter Name → klare Fehlermeldung; `~` nur unter Unix. Existierende Pfade werden nie umgedeutet (Ordner namens `%x%` bleibt erreichbar).
-- `fs::places::known_folder_path`: Windows `SHGetKnownFolderPath` (32 Ordner), Linux XDG-Gegenstücke wo vorhanden.
-- Icons: `IconKey::Shell` (Parsing-Name → `SHParseDisplayName` + `SHGFI_PIDL`) für Papierkorb/Dieser PC; Seitenleiste zeigt echte Icons (Ordner mit desktop.ini-Icon, Laufwerke, Papierkorb), „Dieser PC“-Zeilen echte Laufwerks-Icons; ohne Shell bleibt das Ersatz-Quadrat.
-- CI: reine Doku-Commits (`docs/**`, `*.md`) lösen keinen Lauf mehr aus.
-- Tests: Unit (Adress-Parsing, Windows: Shell-Icons Papierkorb/PC/C:\\), Linux-E2E [60]–[60c], Windows-E2E W20–W22 (`%TEMP%` mit Langnamen, `shell:Downloads`, unbekannter Name).
+### M5.6d1 Address bar + real shell icons ✅ (CI run #43)
+- `core::address` (pure, tested): `%VAR%` (unknown ones stay, `100%` stays), `shell:<name>` with a sub-path (`shell:Downloads\\Fotos`), Windows canonical names + aliases (`Personal` = Documents), unknown name → clear error message; `~` only on Unix. Existing paths are never reinterpreted (a folder named `%x%` stays reachable).
+- `fs::places::known_folder_path`: Windows `SHGetKnownFolderPath` (32 folders), Linux XDG counterparts where available.
+- Icons: `IconKey::Shell` (parsing name → `SHParseDisplayName` + `SHGFI_PIDL`) for Recycle Bin/This PC; the sidebar shows real icons (folders with a desktop.ini icon, drives, Recycle Bin), “This PC” rows real drive icons; without a shell the replacement square stays.
+- CI: pure doc commits (`docs/**`, `*.md`) no longer trigger a run.
+- Tests: unit (address parsing, Windows: shell icons Recycle Bin/PC/C:\\), Linux E2E [60]–[60c], Windows E2E W20–W22 (`%TEMP%` with long names, `shell:Downloads`, unknown name).
 
-### M5.6c Netzwerk ✅ (CI-Run #41, Windows-E2E W18–W19c mit echter SMB-Freigabe grün)
-- `\\server` in der Adresszeile → Freigaben des Servers als Ordnerliste (`NetShareEnum` Level 1); Admin-Freigaben (`C$`, `ADMIN$`, `IPC$`), Drucker und `…$` ausgeblendet wie im Explorer; Freigabe-Kommentar steht in „Typ“.
-- Server will Anmeldung → Windows-Anmeldedialog (`WNetAddConnection3W`, Fenster als Owner, im Hintergrund-Thread), danach neu laden; gilt auch für Ordner in Freigaben (Zugriff verweigert / Anmeldung fehlgeschlagen) – höchstens einmal pro Pfad, keine Dialog-Schleifen.
-- „Hoch“ von `\\nas\film` → `\\nas` (Freigabe vorausgewählt), vom Server → „Dieser PC“; Breadcrumb `\\nas › film › …`; im Server-Ordner kann nichts angelegt werden.
-- Tests: Unit (Pfad-Parsing, Filter, Fehlercodes), Windows-Unit gegen `localhost`, Windows-E2E W18–W19c mit echter SMB-Freigabe (`New-SmbShare`), Linux-E2E [59] (klare Fehlermeldung).
+### M5.6c Network ✅ (CI run #41, Windows E2E W18–W19c with a real SMB share green)
+- `\\server` in the address bar → the server's shares as a folder list (`NetShareEnum` level 1); admin shares (`C$`, `ADMIN$`, `IPC$`), printers and `…$` hidden like in Explorer; the share comment is in “Typ” (type).
+- Server wants a login → Windows login dialog (`WNetAddConnection3W`, window as owner, in a background thread), then reload; also applies to folders in shares (access denied / login failed) – at most once per path, no dialog loops.
+- “Up” from `\\nas\film` → `\\nas` (share preselected), from the server → “Dieser PC” (This PC); breadcrumb `\\nas › film › …`; nothing can be created in the server folder.
+- Tests: unit (path parsing, filter, error codes), Windows unit against `localhost`, Windows E2E W18–W19c with a real SMB share (`New-SmbShare`), Linux E2E [59] (clear error message).
 
-### M5.6a/b Papierkorb-Ansicht + „Dieser PC“ ✅ (CI-Run #39, alles grün inkl. Windows-E2E W15–W17b)
-- `core::places::VirtualPlace` (Platzhalter-Pfade `::papierkorb` / `::dieser-pc`, nie mit echten Pfaden verwechselbar) → Tabs, Verlauf, Sitzung, Breadcrumb funktionieren unverändert; Adress-Aliase: „Papierkorb“, `shell:RecycleBinFolder`, „Dieser PC“, `shell:MyComputerFolder`, Explorer-CLSIDs.
-- `ops::trashview`: Liste mit echtem Dateinamen (Windows-Anzeigenamen ohne Endung → Endung aus `$R…`), gleiche Namen eindeutig („a.txt (2)“), Wiederherstellen verweigert Überschreiben, endgültig löschen, leeren.
-- Sicherheit: in virtuellen Orten liefern `pane_dir`/`selected_paths`/`entry_at` nichts → Einfügen, Neuer Ordner, Drops, Umbenennen können nie auf einem Platzhalter-Pfad landen; nicht erlaubte Befehle melden „Hier nicht möglich“.
-- Befehlsleiste im Papierkorb: Wiederherstellen / Endgültig löschen / Papierkorb leeren; Spalten „Gelöscht am“, „Ursprünglicher Ort“. Dateien auf den Papierkorb ziehen = löschen. Jedes Löschen/Undo aktualisiert offene Papierkorb-Tabs.
-- „Dieser PC“: Laufwerke mit „x GB frei von y GB“, Öffnen → Laufwerkswurzel, „Hoch“ von einer Wurzel → Dieser PC.
-- Tests: core +2, ops +3 (inkl. echter Papierkorb-Durchlauf), E2E Linux **116/116** (neu 55–58c), Windows-E2E erweitert (W15–W17b).
+### M5.6a/b Recycle Bin view + “Dieser PC” (This PC) ✅ (CI run #39, everything green including Windows E2E W15–W17b)
+- `core::places::VirtualPlace` (placeholder paths `::papierkorb` / `::dieser-pc`, never confusable with real paths) → tabs, history, session, breadcrumb work unchanged; address aliases: “Papierkorb”, `shell:RecycleBinFolder`, “Dieser PC”, `shell:MyComputerFolder`, Explorer CLSIDs.
+- `ops::trashview`: list with the real file name (Windows display names without extension → extension from `$R…`), equal names made unique (“a.txt (2)”), restore refuses to overwrite, delete permanently, empty.
+- Safety: in virtual places `pane_dir`/`selected_paths`/`entry_at` return nothing → paste, new folder, drops, rename can never land on a placeholder path; disallowed commands report “Hier nicht möglich” (not possible here).
+- Command bar in the Recycle Bin: Restore / Delete permanently / Empty Recycle Bin; columns “Gelöscht am” (deleted on), “Ursprünglicher Ort” (original location). Dragging files onto the Recycle Bin = delete. Every delete/undo refreshes open Recycle Bin tabs.
+- “Dieser PC”: drives with “x GB frei von y GB” (x GB free of y GB), open → drive root, “Up” from a root → This PC.
+- Tests: core +2, ops +3 (including a real Recycle Bin pass), E2E Linux **116/116** (new 55–58c), Windows E2E extended (W15–W17b).
 
-### Renderer-Vergleich Skia vs. FemtoVG (CI #35, Windows, D-015)
-| | Skia (heute) | FemtoVG |
+### Renderer comparison Skia vs. FemtoVG (CI #35, Windows, D-015)
+| | Skia (today) | FemtoVG |
 |---|---|---|
-| Exe-Größe | 16,5 MB | **9,0 MB** |
-| Bild (Mesa-GL) | Referenz | praktisch gleich; Schrift minimal kräftiger, Icons/Layout identisch |
-| Kaltstart mit OpenGL (Mesa llvmpipe, best of 3) | **982 ms** | 1245 ms (+27 %) |
-| Ohne nutzbares OpenGL, GPU erzwungen | Fallback, 408 ms | Fallback, **225 ms** |
-| Abstürze | keine | keine |
-- Bewertung: Bild gleichwertig, aber auf dem einzigen messbaren GL-Pfad (Software-GL) startet FemtoVG langsamer → **Boss: bleibt bei Skia** (D-016). Vergleichsjob aus der CI entfernt, Skript bleibt. Mesa ist kein echter GPU-Treiber; Entscheidung erst nach Test auf echter Grafikkarte (CI-Artefakt `explorer2-femtovg-test`).
-- Linux-Vergleich (Xvfb/Mesa) bestätigt: Inhalt identisch, nur Text-Glättung unterscheidet sich.
-- Fund: OLE-Drag ohne gedrückte Taste (Loslassen zwischen Ziehschwelle und Drag-Start) hätte beim nächsten Mausbewegen „irgendwo“ abgelegt → Drag startet nur noch bei gedrückter Primärtaste (berücksichtigt vertauschte Tasten).
+| Exe size | 16.5 MB | **9.0 MB** |
+| Picture (Mesa GL) | reference | practically the same; text minimally bolder, icons/layout identical |
+| Cold start with OpenGL (Mesa llvmpipe, best of 3) | **982 ms** | 1245 ms (+27 %) |
+| Without usable OpenGL, GPU forced | fallback, 408 ms | fallback, **225 ms** |
+| Crashes | none | none |
+- Assessment: picture equivalent, but on the only measurable GL path (software GL) FemtoVG starts slower → **Boss: stays with Skia** (D-016). Comparison job removed from CI, the script stays. Mesa is not a real GPU driver; decision only after a test on a real graphics card (CI artifact `explorer2-femtovg-test`).
+- Linux comparison (Xvfb/Mesa) confirms: content identical, only text smoothing differs.
+- Finding: an OLE drag without a pressed button (release between the drag threshold and the drag start) would have dropped “somewhere” on the next mouse move → drag now only starts while the primary button is pressed (takes swapped buttons into account).
 
-## M4 – Dateioperationen
-- **Neue Crate `explorer-ops`** (plattformneutral testbar): `exec` (Job-Engine, synchrones `run` + `spawn` im Hintergrund), `undo`, `simple` (Umbenennen, Neuer Ordner), `names` (Windows-Namensregeln, „ - Kopie“, „ (2)“), `clipboard` (CF_HDROP), `win_copy` (CopyFileExW mit Fortschritt/Abbruch).
-- **Sicherheitsregeln**: Kopie in `.<name>.e2part` + Rename; Verschieben über Laufwerke löscht die Quelle erst nach vollständiger, geflushter Kopie; „Ersetzen“ = alte Datei in den Papierkorb (rückgängig machbar); Abbruch räumt Teil-Dateien weg; Fehler pro Element, Job läuft weiter.
-- **App** (`src/fileops.rs`): Zwischenablage (intern + Windows-System-Clipboard), Jobs + Operations-Panel, Konflikt-/Bestätigungsdialog (modal, Tasten R/S/B/A/Esc bzw. Enter/Esc), Inline-Umbenennen, Neuer Ordner, Undo/Redo im Hintergrund, Drag & Drop (Slint 1.18 `DragArea`/`DropArea`), Befehlsleiste. Nach Einfügen/Umbenennen sind die neuen Elemente markiert.
-- **Tests lokal**: ops 18 Integrationstests (+ Disk-Full mit 1-MiB-tmpfs), app 17 Unit (Tasten, Titel, Fortschrittstext, DnD-Regeln), E2E **100/100** (neu 38–52: Umbenennen inkl. Undo/Redo/Esc/Fehler, Neuer Ordner, Kopieren/Einfügen mit Konflikt „Beide behalten“ und „Ersetzen“ + Undo, Ausschneiden, Entf + Wiederherstellen, Umschalt+Entf mit Dialog, DnD verschieben/Strg-kopieren, 60 000-Dateien-Job mit Panel/Pause/Abbruch/Undo).
+## M4 – File operations
+- **New crate `explorer-ops`** (testable platform-neutrally): `exec` (job engine, synchronous `run` + `spawn` in the background), `undo`, `simple` (rename, new folder), `names` (Windows naming rules, “ - Kopie”, “ (2)”), `clipboard` (CF_HDROP), `win_copy` (CopyFileExW with progress/cancel).
+- **Safety rules**: copy into `.<name>.e2part` + rename; moving across drives deletes the source only after a complete, flushed copy; “Replace” = old file into the Recycle Bin (undoable); cancelling cleans up partial files; errors per item, the job keeps running.
+- **App** (`src/fileops.rs`): clipboard (internal + Windows system clipboard), jobs + operations panel, conflict/confirmation dialog (modal, keys R/S/B/A/Esc or Enter/Esc), inline rename, new folder, undo/redo in the background, drag & drop (Slint 1.18 `DragArea`/`DropArea`), command bar. After paste/rename the new items are selected.
+- **Tests locally**: ops 18 integration tests (+ disk full with a 1 MiB tmpfs), app 17 unit (keys, titles, progress text, DnD rules), E2E **100/100** (new 38–52: rename including undo/redo/Esc/error, new folder, copy/paste with conflict “Beide behalten” (keep both) and “Ersetzen” (replace) + undo, cut, Del + restore, Shift+Del with dialog, DnD move/Ctrl copy, 60,000-file job with panel/pause/cancel/undo).
 
-### CI-Run #26 – alles grün ✅
-- E2E Linux **100/100** (M4-Block 38–52 inkl. DnD, Konflikte, Undo, 60 000-Dateien-Job mit Pause/Abbruch).
-- Windows: ops-Integrationstests 19/19 (inkl. Papierkorb + Wiederherstellen, gesperrte Datei), Clipboard-Interop: Windows (.NET `GetFileDropList`) sieht unsere Dateien inkl. Umlaut, wir lesen Windows-Kopien, Ausschneiden-Flag überlebt.
-- Linux: Disk-Full (1-MiB-tmpfs) → Fehlermeldung, keine Teil-Datei.
-- Windows-UI-Matrix: normale Starts 44–45 ms bis Inhalt, Erststart 636 ms (frische VM), Daten: erste Zeilen 1,3 ms, alle 100k 133–143 ms.
-- Exe 19,7 MB (vorher 17,2) – knapp unter Budget 20 MB → als Schuld vermerkt.
-- Weg dorthin: Run #21 Clippy-1.99-Lint, #22 8.3-Kurznamen, #23 Papierkorb-Anzeigenamen, #24/#25 Clipboard-Test-Cmdlet (s. Funde).
+### CI run #26 – everything green ✅
+- E2E Linux **100/100** (M4 block 38–52 including DnD, conflicts, undo, 60,000-file job with pause/cancel).
+- Windows: ops integration tests 19/19 (including Recycle Bin + restore, locked file), clipboard interop: Windows (.NET `GetFileDropList`) sees our files including an umlaut, we read Windows copies, the cut flag survives.
+- Linux: disk full (1 MiB tmpfs) → error message, no partial file.
+- Windows UI matrix: normal starts 44–45 ms to content, first start 636 ms (fresh VM), data: first rows 1.3 ms, all 100k 133–143 ms.
+- Exe 19.7 MB (previously 17.2) – just under the 20 MB budget → noted as debt.
+- The way there: run #21 Clippy 1.99 lint, #22 8.3 short names, #23 Recycle Bin display names, #24/#25 clipboard test cmdlet (see findings).
 
-### Funde in M4
-- **Bug (Integrationstest, flaky 1/15)**: Undo von „Ersetzen“ legte erst die neue Datei in den Papierkorb und stellte dann den *neuesten* Papierkorb-Eintrag mit gleichem Pfad wieder her – also die gerade gelöschte neue Datei statt der alten. Fix: Papierkorb-Snapshot **vor** dem Undo, Wiederherstellen nur daraus.
-- **Perf**: `fsync` pro kopierter Datei hätte Massenkopien vervielfacht → nur noch beim Verschieben (Quelle wird danach gelöscht).
-- **DnD**: TouchArea als Geschwister über der DragArea schluckt den Mausdruck → TouchArea muss *Kind* der DragArea sein.
-- Mehrfachauswahl wäre beim Ziehen verloren gegangen (Klick bei „down“) → bei bereits markierter Zeile wird der Klick erst beim Loslassen angewendet (Explorer-Verhalten).
-- **CI-Run #21**: neuer Clippy-Lint der CI-Toolchain 1.99 (`chunks_exact_to_as_chunks`) → `as_chunks`, MSRV 1.88; lokal jetzt ebenfalls 1.99.
-- **Bug (CI-Run #22, nur Windows)**: Wiederherstellen aus dem Papierkorb fand nichts, weil unser Pfad den 8.3-Kurznamen `RUNNER~1` enthielt, der Papierkorb aber den Langnamen speichert. Hätte echte Nutzer genauso getroffen (Kurznamen aus `%TEMP%`, Groß-/Kleinschreibung). Fix: Elternordner kanonisieren + auf Windows case-insensitiv vergleichen.
-- **Bug (CI-Run #23, nur Windows)**: Ordner wurden jetzt gefunden, Dateien nicht: Der Papierkorb meldet den *Anzeigenamen*, und der blendet bekannte Endungen aus („weg“ statt „weg.txt“). Der Restore hätte die Datei sogar **ohne Endung** zurückgelegt. Fix: Abgleich über Namensstamm + Endung der `$R…`-Datei, Restore mit echtem Originalnamen.
-- Testdesign: Pause *vor* der Konfliktfrage blockiert den Job schon vor der Frage → Test pausiert jetzt nach der Frage.
+### Findings in M4
+- **Bug (integration test, flaky 1/15)**: undo of “Replace” first put the new file into the Recycle Bin and then restored the *newest* Recycle Bin entry with the same path – i.e. the new file that had just been deleted instead of the old one. Fix: Recycle Bin snapshot **before** the undo, restore only from that.
+- **Perf**: `fsync` per copied file would have multiplied mass copies → now only when moving (the source is deleted afterwards).
+- **DnD**: a TouchArea as a sibling above the DragArea swallows the mouse press → the TouchArea must be a *child* of the DragArea.
+- Multi-selection would have been lost when dragging (click on “down”) → on an already selected row the click is applied only on release (Explorer behaviour).
+- **CI run #21**: new Clippy lint of the CI toolchain 1.99 (`chunks_exact_to_as_chunks`) → `as_chunks`, MSRV 1.88; locally now 1.99 as well.
+- **Bug (CI run #22, Windows only)**: restoring from the Recycle Bin found nothing because our path contained the 8.3 short name `RUNNER~1`, but the Recycle Bin stores the long name. Would have hit real users the same way (short names from `%TEMP%`, case). Fix: canonicalise the parent folder + compare case-insensitively on Windows.
+- **Bug (CI run #23, Windows only)**: folders were found now, files weren't: the Recycle Bin reports the *display name*, and that hides known extensions (“weg” instead of “weg.txt”). The restore would even have put the file back **without its extension**. Fix: match via name stem + extension of the `$R…` file, restore with the real original name.
+- Test design: pausing *before* the conflict question already blocks the job before the question → the test now pauses after the question.
 
-## M3 – Tabs, Split-View, Seitenleiste, Verlauf, Sitzung
-- **Architektur**: `App` → Panes (1–2) → Tabs; jeder Tab eigener Pfad/Auswahl/Loader/Watcher/Verlauf. Hintergrund-Ergebnisse werden per stabiler Tab-ID zugeordnet (Tabs können zwischendurch geschlossen werden) + Generationszähler.
-- **Tabs**: +/Strg+T (gleicher Ordner), ×/Mittelklick/Strg+W, Strg+(Umschalt+)Tab; inaktive Tabs laden erst bei Auswahl; Sortier-/Filterwechsel markiert alle als „stale“, sichtbare laden sofort neu.
-- **Split-View**: „Zwei Ansichten“/Strg+\, F6 wechselt, Klick aktiviert, blaue Akzentlinie = aktive Pane, Tastaturfokus folgt der aktiven Pane.
-- **Verlauf**: ←/→-Buttons, Alt+←/→, Maus-Seitentasten.
-- **Seitenleiste**: Schnellzugriff (Windows Known Folders → auch umgeleitete/OneDrive-Ordner), „Dieser PC“ mit Laufwerken, Füllbalken, „x GB frei von y GB“; Abfrage im Hintergrund, Refresh alle 15 s, keine „Datenträger einlegen“-Dialoge.
-- **Sitzung**: session.ini (entprellt 400 ms + beim Schließen); Start ohne Pfad → Restore inkl. aktiver Pane; Pfad-Argument gewinnt (wie `explorer.exe C:\x`).
+## M3 – Tabs, split view, sidebar, history, session
+- **Architecture**: `App` → panes (1–2) → tabs; every tab has its own path/selection/loader/watcher/history. Background results are assigned via a stable tab ID (tabs can be closed in between) + generation counter.
+- **Tabs**: +/Ctrl+T (same folder), ×/middle-click/Ctrl+W, Ctrl+(Shift+)Tab; inactive tabs load only when selected; a sort/filter change marks all as “stale”, visible ones reload immediately.
+- **Split view**: “Zwei Ansichten” (two views)/Ctrl+\, F6 switches, a click activates, blue accent line = active pane, keyboard focus follows the active pane.
+- **History**: ←/→ buttons, Alt+←/→, mouse side buttons.
+- **Sidebar**: Quick access (Windows Known Folders → also redirected/OneDrive folders), “Dieser PC” (This PC) with drives, fill bars, “x GB frei von y GB”; query in the background, refresh every 15 s, no “insert disk” dialogs.
+- **Session**: session.ini (debounced 400 ms + on close); start without a path → restore including the active pane; a path argument wins (like `explorer.exe C:\x`).
 
-### CI-Run #19 – alles grün ✅
-- E2E Linux 60/60 (Drossel: 6 Refreshes / 3 s).
-- Windows: Places-Test mit echten Known Folders + Laufwerken (C:\ mit Füllstand) grün; Laufwerksabfrage 0,17–0,34 ms (2 Laufwerke).
-- Windows-UI-Matrix: normale Starts 66–69 ms (best 65,5 ms, Budget 300), Erststart 255 ms, Daten: erste Zeilen 0,8–2,2 ms, alle 100k 181–246 ms. (Mesa forciert GPU: 992 ms Kaltstart – reiner Testpfad auf Software-GL, Auto wählt dort korrekt Software.)
-- fs-Bench Windows: Median 1,23 ms / 137 ms.
+### CI run #19 – everything green ✅
+- E2E Linux 60/60 (throttle: 6 refreshes / 3 s).
+- Windows: places test with real Known Folders + drives (C:\ with fill level) green; drive query 0.17–0.34 ms (2 drives).
+- Windows UI matrix: normal starts 66–69 ms (best 65.5 ms, budget 300), first start 255 ms, data: first rows 0.8–2.2 ms, all 100k 181–246 ms. (Mesa forced GPU: 992 ms cold start – purely a test path on software GL, auto correctly picks software there.)
+- fs bench Windows: median 1.23 ms / 137 ms.
 
 ### Tests M3
-- Unit: core 32 (+History, Session, format_usage), fs 24 (+Places: Anzeigenamen, Füllgrad, XDG-Parser, reale Laufwerke), app 13 (+Tasten für Tabs/Pane/Verlauf, Tab-Titel, Crumb-Budget).
-- E2E 60/60 (neu 27–37): Sidebar-Klick, Alt+←/→, Maus-Zurück-Taste, Strg+T + unabhängige Navigation, Strg+Tab, Split an/aus, **Fokus wandert in neue Pane**, F6, Klick aktiviert Pane, Session gespeichert/restauriert (inkl. aktiver Pane), **lazy Laden** restaurierter Tabs, Strg+W, letzter Tab bleibt, Pfad-Argument schlägt Session.
+- Unit: core 32 (+history, session, format_usage), fs 24 (+places: display names, fill level, XDG parser, real drives), app 13 (+keys for tabs/pane/history, tab titles, crumb budget).
+- E2E 60/60 (new 27–37): sidebar click, Alt+←/→, mouse back button, Ctrl+T + independent navigation, Ctrl+Tab, split on/off, **focus moves into the new pane**, F6, a click activates a pane, session saved/restored (including the active pane), **lazy loading** of restored tabs, Ctrl+W, the last tab stays, a path argument beats the session.
 
-### Funde in M3
-- **Bug**: Nach Split blieb der Tastaturfokus in der linken Pane, während die rechte als aktiv galt → F6 „sprang zurück“. Ursache: neue Repeater-Instanz verpasst den Fokus-Auftrag (`changed` feuert nicht bei Init). Fix: Fokus folgt `active` (+ `init`). Per Tasten-Trace (`EXPLORER2_TRACE_KEYS`) nachgewiesen.
-- **Bug**: Restore ignorierte die gespeicherte aktive Pane → behoben, E2E prüft `active_pane=1`.
-- **Bug (eigener Code-Review)**: neue Tabs haben ihren Pfad schon → Breadcrumbs/Watcher wären nie eingerichtet worden → Setup jetzt auch, wenn noch kein Watcher existiert.
-- Shortcuts kamen nicht an, solange keine Liste fokussiert war → Root-FocusScope als Fallback.
-- E2E-Diagnose verbessert: je Block eigenes Log.
-- **Bug (CI-Run #18)**: Refresh-Drossel garantierte den Abstand nur ab *Ende* eines Refreshs – Events während eines laufenden Refreshs starteten sofort einen zweiten (CI: 8 statt ≤ 7 Refreshes/3 s; seit M3 mehr Schreibvorgänge pro Refresh). Fix: Mindestabstand 500 ms ab *Start*, nach Done nur verlängern. Gemessen: kleinster Abstand 501 ms.
+### Findings in M3
+- **Bug**: after a split the keyboard focus stayed in the left pane while the right one counted as active → F6 “jumped back”. Cause: a new repeater instance misses the focus order (`changed` doesn't fire on init). Fix: focus follows `active` (+ `init`). Proven via the key trace (`EXPLORER2_TRACE_KEYS`).
+- **Bug**: restore ignored the saved active pane → fixed, E2E checks `active_pane=1`.
+- **Bug (own code review)**: new tabs already have their path → breadcrumbs/watcher would never have been set up → setup now also runs when no watcher exists yet.
+- Shortcuts didn't arrive while no list was focused → root FocusScope as a fallback.
+- E2E diagnostics improved: an own log per block.
+- **Bug (CI run #18)**: the refresh throttle only guaranteed the gap from the *end* of a refresh – events during a running refresh started a second one immediately (CI: 8 instead of ≤ 7 refreshes/3 s; since M3 more writes per refresh). Fix: minimum gap 500 ms from the *start*, after Done only extend. Measured: smallest gap 501 ms.
 
-## M2 – Details-Ansicht, Auswahl, Tastatur, Öffnen, Breadcrumb
-- **Details-Ansicht**: Spaltenköpfe Name / Änderungsdatum / Typ / Größe, Klick sortiert (▲▼), Breiten ziehbar; Sortierung in settings.ini.
-- **Auswahl** (`core::selection`): Klick / Strg / Umschalt wie Windows-ListView (Strg+Klick setzt Anker auch beim Abwählen), Klick ins Leere hebt auf; bei Auto-Refresh/Umsortieren per Name übernommen.
-- **Tastatur** (`keys::map_key`): Pfeile, Bild↑↓, Pos1/Ende, Strg+A, Strg+Leertaste, Enter, Rücktaste/Alt+↑, F5, Strg+L/Alt+D, Typeahead.
-- **Öffnen**: Ordner navigieren, Dateien per `ShellExecuteW` (Windows) mit Standard-App; Windows-Test führt echte `.cmd` über Standard-Verb aus.
-- **Breadcrumb** (`core::breadcrumb`): Windows-, UNC- und Unix-Pfade, „…“-Kürzung links; Strg+L/Klick ins Leere = Bearbeiten, Esc = Abbruch.
-- Nach „Hoch“ ist der Herkunftsordner markiert (wie Explorer).
+## M2 – Details view, selection, keyboard, open, breadcrumb
+- **Details view**: column headers name / modified date / type / size, a click sorts (▲▼), widths draggable; sorting in settings.ini.
+- **Selection** (`core::selection`): click / Ctrl / Shift like the Windows ListView (Ctrl+click sets the anchor even when deselecting), a click into empty space clears; carried over by name on auto-refresh/re-sorting.
+- **Keyboard** (`keys::map_key`): arrows, PgUp/PgDn, Home/End, Ctrl+A, Ctrl+Space, Enter, Backspace/Alt+↑, F5, Ctrl+L/Alt+D, type-ahead.
+- **Open**: navigate folders, files via `ShellExecuteW` (Windows) with the default app; a Windows test runs a real `.cmd` via the default verb.
+- **Breadcrumb** (`core::breadcrumb`): Windows, UNC and Unix paths, “…” truncation on the left; Ctrl+L/a click into empty space = edit, Esc = cancel.
+- After “Up” the folder we came from is selected (like Explorer).
 
-### CI-Run #16 – alles grün ✅ (Windows)
-| Szenario | Fenster erstellt | Kaltstart bis Inhalt | Hinweis |
+### CI run #16 – everything green ✅ (Windows)
+| Scenario | Window created | Cold start to content | Note |
 |---|---|---|---|
-| Erststart (kein Cache) | 134 ms | **221 ms** | Software sofort, Probe im Hintergrund (34 ms, „gdi generic“) |
-| Normaler Start 1/2/3 (Cache) | ~6,5 ms | **56 / 55 / 56 ms** | best 54,7 ms (Budget 300) |
-| forciert GPU (ohne GPU) | 6,4 ms | 370 ms | Skia-Fallback |
-| forciert Software / Setting aus | ~6,5 ms | 57 / 54 ms | |
-| Mesa auto | 7,4 ms | 151 ms | Hintergrund-Probe erkennt llvmpipe (260 ms, nicht im Startpfad) |
-| Mesa forciert GPU | 7,6 ms | 458 ms | Skia-OpenGL ok |
+| First start (no cache) | 134 ms | **221 ms** | software immediately, probe in the background (34 ms, “gdi generic”) |
+| Normal start 1/2/3 (cache) | ~6.5 ms | **56 / 55 / 56 ms** | best 54.7 ms (budget 300) |
+| forced GPU (without GPU) | 6.4 ms | 370 ms | Skia fallback |
+| forced software / setting off | ~6.5 ms | 57 / 54 ms | |
+| Mesa auto | 7.4 ms | 151 ms | the background probe detects llvmpipe (260 ms, not in the start path) |
+| Mesa forced GPU | 7.6 ms | 458 ms | Skia OpenGL ok |
 
-Daten in allen Szenarien: erste Zeilen 0,8–1,6 ms, alle 100k 162–285 ms. ShellExecute-Test (echte `.cmd` über Standard-Verb) grün. fs-Bench: Median 1,22 ms / 139 ms.
+Data in all scenarios: first rows 0.8–1.6 ms, all 100k 162–285 ms. ShellExecute test (real `.cmd` via the default verb) green. fs bench: median 1.22 ms / 139 ms.
 
 ### Tests M2
-- Unit: core 26 (Auswahl, Typeahead, Breadcrumb, Typ-Sortierung, Settings), app 10 (Tasten, Status, Auswahl-Remap, Öffnen).
-- E2E 37/37 (neu 12–26): Sortierreihenfolgen per Spaltenkopf, Richtungswechsel, Persistenz, Pfeile/Umschalt+Ende/Strg+A, **Auswahlfarbe per Pixel**, Typeahead, Enter öffnet Datei (Stub-Öffner), Enter/Doppelklick öffnet Ordner, Rücktaste markiert Herkunftsordner, Strg+L+Esc, Breadcrumb-Klick.
+- Unit: core 26 (selection, type-ahead, breadcrumb, type sorting, settings), app 10 (keys, status, selection remap, open).
+- E2E 37/37 (new 12–26): sort orders via column header, direction change, persistence, arrows/Shift+End/Ctrl+A, **selection colour by pixel**, type-ahead, Enter opens a file (stub opener), Enter/double-click opens a folder, Backspace selects the folder we came from, Ctrl+L+Esc, breadcrumb click.
 
-### Funde in M2
-- **CI-Run #15 rot (2 Ursachen):**
-  1. E2E [26]: Testfehler – Breadcrumb navigierte korrekt zur Wurzel `/` (kurzer CI-Pfad → kein „…“), Prüfmuster `//*` passte nie → Vorfahren-Prüfung korrigiert (Gegenfälle getestet).
-  2. Windows-Erststart 1666 ms: GPU-Probe **581 ms** (vorher 3–67 ms) + Fenster-Erstellung 755 ms (frische VM). → **Design-Fix**: Probe läuft nie mehr im Startpfad (ohne Cache: sofort Software, Probe im Hintergrund, gilt ab nächstem Start). Neuer Trace „window created“. Budget-Prüfung: normale Starts best-of-3 < 300 ms (hart), Erststart < 1 s (Plausibilität, ausgewiesen).
-- Testerwartung falsch (nicht Code): Strg+Klick setzt den Auswahl-Anker auch beim Abwählen – wie Windows-ListView; Test korrigiert.
-- Vermeintlicher Render-Bug (fokussierte Zeile „ohne“ Auswahlfarbe) war ein Lesefehler auf verkleinertem Screenshot – Pixelmessung zeigte korrekte Farbe; „Fix“ zurückgenommen, Auswahlfarbe jetzt per Pixel im E2E geprüft.
-- Klick auf die Adressleiste traf nach Breadcrumb-Umbau ein Segment → Explorer-Shortcuts Strg+L/Alt+D ergänzt, E2E nutzt sie.
-- Eigenes Gotcha ignoriert (`viewport-y` deprecated) → `content-y`.
+### Findings in M2
+- **CI run #15 red (2 causes):**
+  1. E2E [26]: test bug – the breadcrumb navigated correctly to the root `/` (short CI path → no “…”), the check pattern `//*` never matched → ancestor check corrected (counter-cases tested).
+  2. Windows first start 1666 ms: GPU probe **581 ms** (previously 3–67 ms) + window creation 755 ms (fresh VM). → **Design fix**: the probe never runs in the start path any more (without a cache: software immediately, probe in the background, applies from the next start). New trace “window created”. Budget check: normal starts best-of-3 < 300 ms (hard), first start < 1 s (plausibility, reported).
+- Test expectation wrong (not code): Ctrl+click sets the selection anchor even when deselecting – like the Windows ListView; test corrected.
+- A supposed render bug (focused row “without” selection colour) was a reading error on a scaled-down screenshot – pixel measurement showed the correct colour; the “fix” was reverted, the selection colour is now checked by pixel in E2E.
+- After the breadcrumb rework, a click on the address bar hit a segment → added the Explorer shortcuts Ctrl+L/Alt+D, E2E uses them.
+- Ignored our own gotcha (`viewport-y` deprecated) → `content-y`.
 
-## M1.5 – Renderer-Wahl, Einstellungen, Icon (Boss: Option 2 + Schalter)
-- **GPU-Probe** (`explorer-gpu`, Windows/WGL): verstecktes 1×1-Fenster, Legacy-GL-Kontext, prüft `GL_RENDERER`/`GL_VERSION`/`glCreateShader`. Software-GL (GDI Generic, llvmpipe, Microsoft Basic Render) = unbrauchbar, weil langsamer als unser Software-Renderer.
-- **Entscheidung** (`core::renderer::decide`): Override `EXPLORER2_RENDERER` > Einstellung aus → Software > Probe (gecacht) → Skia-GPU oder Software. `SLINT_BACKEND` gesetzt → Toolkit entscheidet.
-- **Cache**: Ergebnis in `settings.ini` (pro App-Version), Hintergrund-Re-Probe 5 s nach Start (Treiber neu/entfernt → wirkt beim nächsten Start). Erster Start zahlt die Probe einmal.
-- **Einstellungen-Panel**: „Hardwarebeschleunigung verwenden, wenn verfügbar“ + Statuszeile („Aktuell: Software-Rendering (keine geeignete GPU gefunden)“). `settings.ini` atomar geschrieben, tolerant gelesen; „Ausgeblendete“ wird ebenfalls gespeichert.
-- **Icon**: gelber Ordner + blaues Band auf heller Kachel; Exe-Icon (ICO 16–256) + Fenster-Icon.
+## M1.5 – Renderer choice, settings, icon (Boss: option 2 + switch)
+- **GPU probe** (`explorer-gpu`, Windows/WGL): hidden 1×1 window, legacy GL context, checks `GL_RENDERER`/`GL_VERSION`/`glCreateShader`. Software GL (GDI Generic, llvmpipe, Microsoft Basic Render) = unusable, because it's slower than our software renderer.
+- **Decision** (`core::renderer::decide`): override `EXPLORER2_RENDERER` > setting off → software > probe (cached) → Skia GPU or software. `SLINT_BACKEND` set → the toolkit decides.
+- **Cache**: result in `settings.ini` (per app version), background re-probe 5 s after start (driver new/removed → takes effect on the next start). The first start pays the probe once.
+- **Settings panel**: “Hardwarebeschleunigung verwenden, wenn verfügbar” (use hardware acceleration when available) + status line (“Aktuell: Software-Rendering (keine geeignete GPU gefunden)” – currently: software rendering (no suitable GPU found)). `settings.ini` written atomically, read tolerantly; “Ausgeblendete” (hidden items) is saved as well.
+- **Icon**: yellow folder + blue band on a light tile; exe icon (ICO 16–256) + window icon.
 
-### Getestete Umgebungen (lokal, Linux/Xvfb)
-| Umgebung | Ergebnis |
+### Tested environments (locally, Linux/Xvfb)
+| Environment | Result |
 |---|---|
-| ohne GL, auto | Plattform-Default, läuft |
-| ohne GL, forciert GPU | Skia (Fallback), läuft |
-| forciert Software | läuft |
-| Mesa-GL (llvmpipe), auto / forciert GPU | läuft; GPU-Modus lädt nachweislich EGL/Mesa (58–62 Treiberzeilen), Software-Modus 0 |
-| Einstellung aus | Software, Grund „disabled in settings“ |
-| E2E | 20/20 PASS (neu: Panel speichert Setting, Ausgeblendete persistiert, Neustart respektiert Setting, Fenster-Icon gesetzt) |
+| without GL, auto | platform default, runs |
+| without GL, forced GPU | Skia (fallback), runs |
+| forced software | runs |
+| Mesa GL (llvmpipe), auto / forced GPU | runs; GPU mode demonstrably loads EGL/Mesa (58–62 driver lines), software mode 0 |
+| setting off | software, reason “disabled in settings” |
+| E2E | 20/20 PASS (new: panel saves the setting, hidden items persisted, restart respects the setting, window icon set) |
 
-### CI-Run #12 (Windows-Umgebungsmatrix)
-| Szenario | Kaltstart bis Inhalt | Ergebnis |
+### CI run #12 (Windows environment matrix)
+| Scenario | Cold start to content | Result |
 |---|---|---|
-| Auto, erster Start (Probe 3,4 ms → „gdi generic“) | ~50 ms | ✅ Software (vorher 488–679 ms) |
-| Auto, aus Cache + Hintergrund-Re-Probe | 129 ms | ✅ |
-| GPU erzwungen (ohne GPU) | 355 ms | ✅ läuft (Skia-Fallback) |
-| Software erzwungen | 45 ms | ✅ |
-| Einstellung aus | 45 ms | ✅ |
-| Mesa-GL | – | ❌ **Testaufbau**: Mesa 26.2.6 MSVC-Paket enthält kein opengl32.dll (bekanntes Upstream-Problem) → auf MinGW-Paket umgestellt |
+| Auto, first start (probe 3.4 ms → “gdi generic”) | ~50 ms | ✅ software (previously 488–679 ms) |
+| Auto, from cache + background re-probe | 129 ms | ✅ |
+| GPU forced (without GPU) | 355 ms | ✅ runs (Skia fallback) |
+| Software forced | 45 ms | ✅ |
+| Setting off | 45 ms | ✅ |
+| Mesa GL | – | ❌ **test setup**: the Mesa 26.2.6 MSVC package contains no opengl32.dll (known upstream problem) → switched to the MinGW package |
 
-### CI-Run #13 – alles grün ✅
-| Szenario (Windows) | Wahl | Kaltstart bis Inhalt |
+### CI run #13 – everything green ✅
+| Scenario (Windows) | Choice | Cold start to content |
 |---|---|---|
-| ohne GPU, 1. Start (Probe 67 ms) | Software („gdi generic“) | 270 ms |
-| ohne GPU, Cache | Software | **55 ms** |
-| forciert GPU ohne GPU | Skia-Fallback, läuft | 502 ms |
-| forciert Software | Software | 56 ms |
-| Einstellung aus | Software | 59 ms |
-| Mesa, auto | Software (llvmpipe erkannt) | 299 ms |
-| Mesa, forciert GPU | **Skia-OpenGL-Surface ok** (GL-Pfad bewiesen) | 485 ms |
+| without GPU, 1st start (probe 67 ms) | software (“gdi generic”) | 270 ms |
+| without GPU, cache | software | **55 ms** |
+| forced GPU without GPU | Skia fallback, runs | 502 ms |
+| forced software | software | 56 ms |
+| setting off | software | 59 ms |
+| Mesa, auto | software (llvmpipe detected) | 299 ms |
+| Mesa, forced GPU | **Skia OpenGL surface ok** (GL path proven) | 485 ms |
 
-Daten-Budgets in allen Szenarien eingehalten (erste Zeilen 0,8–1,4 ms, alle 100k 151–206 ms). Exe-Icon geprüft (Mittelpixel 255/203/69). Hinweis: Probe kostet beim **ersten** Start je nach Treiber 3–239 ms (danach Cache) – echte GPU-Werte nur auf Boss-PC messbar.
+Data budgets met in all scenarios (first rows 0.8–1.4 ms, all 100k 151–206 ms). Exe icon checked (centre pixel 255/203/69). Note: the probe costs 3–239 ms on the **first** start depending on the driver (cached afterwards) – real GPU values only measurable on Boss's PC.
 
-### Bugs/Funde in M1.5
-- E2E-Klickkoordinate „Ausgeblendete“ hätte nach neuem Button den falschen Knopf getroffen → angepasst (x=880).
-- UI-Statuszeile war englisch → `Reason`-Enum: Englisch für Traces, Deutsch (`status_de`) fürs Panel.
-- Vermeintlich fehlendes Fenster-Icon war ein `xprop`-Anzeigeproblem (Rohdaten: 256×256, gelb) → als E2E-Check [11] abgesichert.
+### Bugs/findings in M1.5
+- The E2E click coordinate for “Ausgeblendete” would have hit the wrong button after the new button → adjusted (x=880).
+- The UI status line was English → `Reason` enum: English for traces, German (`status_de`) for the panel.
+- A supposedly missing window icon was an `xprop` display problem (raw data: 256×256, yellow) → secured as E2E check [11].
 
-## M1 – was gebaut wurde
-- `explorer-fs`: Windows-Fastpath (`FindFirstFileExW` + Large Fetch), portabler std-Pfad, Verbatim-Langpfade, Hintergrund-Loader mit Batches/Abbruch, Watcher mit Debounce.
-- `explorer-core`: Entry mit hidden/system/readonly/is_link, `ViewFilter` (Explorer-Regeln), schnellere natürliche Sortierung, `format_count`.
-- `explorer2`: `nav.rs`-Controller – UI-Thread macht kein I/O, Generationszähler, Auto-Refresh mit adaptiver Drossel, Statusleiste, Fehleranzeige, Rückfall bei gelöschtem Ordner, Toggle „Ausgeblendete“.
+## M1 – what was built
+- `explorer-fs`: Windows fast path (`FindFirstFileExW` + Large Fetch), portable std path, verbatim long paths, background loader with batches/cancel, watcher with debounce.
+- `explorer-core`: entry with hidden/system/readonly/is_link, `ViewFilter` (Explorer rules), faster natural sorting, `format_count`.
+- `explorer2`: `nav.rs` controller – the UI thread does no I/O, generation counter, auto-refresh with adaptive throttle, status bar, error display, fallback when the folder is deleted, toggle “Ausgeblendete” (hidden items).
 
-## Messwerte (Release, 100 000 Einträge)
-| Metrik | Windows (CI-Runner) | Linux (Sandbox) | Budget |
+## Measurements (release, 100,000 entries)
+| Metric | Windows (CI runner) | Linux (sandbox) | Budget |
 |---|---|---|---|
-| Erster Batch (fs-Bench) | **1,3 ms** | ~6 ms | < 100 ms |
-| Voll laden + sortieren (fs-Bench) | **130 ms** | ~250 ms | < 1 s |
-| Sortierung allein | 46 ms | 47 ms (vorher 173 ms) | – |
-| UI: Loader fertig (100k inkl. Format) | 187 ms | 233 ms | < 1 s |
-| UI: erste Zeilen bereit (Loader-Thread) | **0,9 ms** (Default) / 1,1 ms (Software) | 1–1,3 ms | < 100 ms |
-| UI: alle 100k bereit (Loader-Thread) | **140 ms** / 146 ms | 277–296 ms | < 1 s |
-| UI: Kaltstart bis erster Inhalt – Default-Renderer (Skia, GL schlägt fehl → Fallback) | **488 ms** | 26 ms | M8: < 300 ms ❌ |
-| UI: Kaltstart bis erster Inhalt – Software-Renderer | **43 ms** | 37 ms | M8: < 300 ms ✅ |
+| First batch (fs bench) | **1.3 ms** | ~6 ms | < 100 ms |
+| Full load + sort (fs bench) | **130 ms** | ~250 ms | < 1 s |
+| Sorting alone | 46 ms | 47 ms (previously 173 ms) | – |
+| UI: loader done (100k including formatting) | 187 ms | 233 ms | < 1 s |
+| UI: first rows ready (loader thread) | **0.9 ms** (default) / 1.1 ms (software) | 1–1.3 ms | < 100 ms |
+| UI: all 100k ready (loader thread) | **140 ms** / 146 ms | 277–296 ms | < 1 s |
+| UI: cold start to first content – default renderer (Skia, GL fails → fallback) | **488 ms** | 26 ms | M8: < 300 ms ❌ |
+| UI: cold start to first content – software renderer | **43 ms** | 37 ms | M8: < 300 ms ✅ |
 
-**Renderer-Befund (Run #9):** Auf Systemen ohne GPU-OpenGL (CI-Runner, VMs, RDP) kostet der fehlgeschlagene Skia-GL-Versuch ~450 ms Startzeit. → Entscheidung für M2/M8 nötig (Software-Renderer als Default? GL-Fähigkeit vorab prüfen? D3D zuerst?).
+**Renderer finding (run #9):** on systems without GPU OpenGL (CI runners, VMs, RDP) the failed Skia GL attempt costs ~450 ms of start time. → Decision needed for M2/M8 (software renderer as default? check GL capability upfront? D3D first?).
 
-**OS-Stalls auf Windows-CI (Run #8/#9):** Einzelne Läufe brauchen 168–170 ms schon im **rohen** `FindFirstFileExW`-Aufruf (unser Code-Anteil ~0,2 ms) – sporadisch (Run #9: 2 von 6 Läufen), Ursache Fremdlast auf dem Runner (Defender/Indexer nach Massen-Anlage). In Run #8 traf es die Mehrheit → Median kippte. Für Nutzer abgefedert: UI blockiert nie, zeigt „Lädt …“.
+**OS stalls on Windows CI (runs #8/#9):** individual runs take 168–170 ms already in the **raw** `FindFirstFileExW` call (our code's share ~0.2 ms) – sporadic (run #9: 2 of 6 runs), cause: foreign load on the runner (Defender/indexer after mass creation). In run #8 it hit the majority → the median tipped. Cushioned for users: the UI never blocks, shows “Lädt …” (loading …).
 
-**Befund Windows-CI:** Runner hat kein GPU-OpenGL → Slint/Skia meldet „Failed to initialize Skia opengl surface … Falling back“, App läuft trotzdem (Fallback funktioniert = gut für VMs/RDP). Der GL-Versuch kostet Startzeit → TODO: auf Windows D3D zuerst / GL-Versuch vermeiden (M2/M8).
+**Finding Windows CI:** the runner has no GPU OpenGL → Slint/Skia reports “Failed to initialize Skia opengl surface … Falling back”, the app still runs (the fallback works = good for VMs/RDP). The GL attempt costs start time → TODO: on Windows D3D first / avoid the GL attempt (M2/M8).
 
 ## Tests
-- Unit/Integration: 31 Tests (core 7, fs 20, app 4) – grün; fs-Windows-Code per `clippy --target x86_64-pc-windows-msvc` sauber.
-- E2E unter Xvfb (13 Checks, alle PASS): 100k-Ordner, Auto-Refresh, gelöschter Ordner → Elternordner, ungültiger Pfad → Fehler + Adresszeile zurückgesetzt, Toggle Ausgeblendete, Hoch, Adresszeile folgt nach Tippen, Refresh-Drossel, kein Absturz/Panic.
-  - Skript: `scripts/e2e.sh`, läuft in CI als Job `e2e-linux` (Screenshots als Artefakt bei Fehler).
+- Unit/integration: 31 tests (core 7, fs 20, app 4) – green; fs Windows code clean via `clippy --target x86_64-pc-windows-msvc`.
+- E2E under Xvfb (13 checks, all PASS): 100k folder, auto-refresh, deleted folder → parent folder, invalid path → error + address bar reset, toggle hidden items, up, the address bar follows after typing, refresh throttle, no crash/panic.
+  - Script: `scripts/e2e.sh`, runs in CI as job `e2e-linux` (screenshots as an artifact on failure).
 
-## Bugs gefunden & gefixt in M1
-1. **Refresh-Endlosschleife**: Datei, die ständig geschrieben wird (hier: eigenes Trace-Log), löste alle ~100 ms einen kompletten Reload aus → adaptive Drossel (≥ 500 ms, 4× letzte Ladezeit, max 10 s). Gemessen: 30 → 6 Refreshes / 3 s.
-2. **Adresszeile eingefroren**: Einweg-Bindung `text: current-path` wird von Slint gelöscht, sobald der User tippt → danach nie mehr aktualisiert (auch nicht bei Hoch/Doppelklick). Fix: Zwei-Wege-Bindung `<=>`.
-3. Statusleiste „1 Elemente“ → „1 Element“.
-4. Sortierung zu langsam (173 ms / 100k) → allokationsfrei, 47 ms.
-6. **Flaky Perf-Gate**: Median über 5 Läufe kippte bei sporadischen OS-Stalls auf dem Runner (Beweis: rohe OS-Abfrage selbst 168 ms) → best-of-N-Gate, 9 Läufe, Stalls werden gezählt und ausgegeben.
-5. Messfehler: „first paint“ auf Windows (369 ms) enthielt Fenster-/Renderer-Start. 1. Versuch (Marker „event loop running“) war falsch: Run #7 zeigte, dass Slint den Renderer erst **nach** Loop-Start beim ersten Frame initialisiert (GL-Fehlversuch + Fallback blockiert UI-Thread ~490 ms). Rendering-Notifier als Marker ungeeignet (Software-Renderer/Skia-Software-Fallback unterstützen ihn nicht). **Lösung:** Daten-Latenz wird im Loader-Thread gemessen (`data_ready=`), Kaltstart bis Inhalt separat (`at=`); CI vergleicht Default- vs. Software-Renderer.
+## Bugs found & fixed in M1
+1. **Refresh endless loop**: a file that is constantly written (here: our own trace log) triggered a complete reload every ~100 ms → adaptive throttle (≥ 500 ms, 4× the last load time, max 10 s). Measured: 30 → 6 refreshes / 3 s.
+2. **Address bar frozen**: the one-way binding `text: current-path` is dropped by Slint as soon as the user types → never updated afterwards (not even on up/double-click). Fix: two-way binding `<=>`.
+3. Status bar “1 Elemente” → “1 Element” (singular).
+4. Sorting too slow (173 ms / 100k) → allocation-free, 47 ms.
+6. **Flaky perf gate**: the median over 5 runs tipped on sporadic OS stalls on the runner (proof: the raw OS query itself 168 ms) → best-of-N gate, 9 runs, stalls are counted and reported.
+5. Measurement error: “first paint” on Windows (369 ms) included window/renderer start. The 1st attempt (marker “event loop running”) was wrong: run #7 showed that Slint initialises the renderer only **after** the loop starts, at the first frame (GL failed attempt + fallback blocks the UI thread ~490 ms). The rendering notifier is unsuitable as a marker (software renderer/Skia software fallback don't support it). **Solution:** data latency is measured in the loader thread (`data_ready=`), cold start to content separately (`at=`); CI compares the default vs. the software renderer.
 
-## Offen
-- ✅ Run #10 grün. Windows-Bench (9 Läufe): erster Batch best 1,1 ms / **Median 1,17 ms** / Max 1,52 s (OS-Stall); voll+sortiert best 101 ms / **Median 115 ms**; OS-Stalls 2/9 (roh 176–314 ms) – Gate hält stabil.
-- UI-Smoke Run #10: Default-Renderer erste Zeilen 1,3 ms, alle 100k 230 ms, **Kaltstart 679 ms**; Software-Renderer 1,3 ms / 190 ms / **Kaltstart 54 ms**.
-- Offen für M2: **Renderer-Entscheidung** (Boss).
-- Fix im Test selbst: E2E-Regex an neues `at=`-Feld angepasst (lokal 13/13 PASS).
+## Open
+- ✅ Run #10 green. Windows bench (9 runs): first batch best 1.1 ms / **median 1.17 ms** / max 1.52 s (OS stall); full+sorted best 101 ms / **median 115 ms**; OS stalls 2/9 (raw 176–314 ms) – the gate holds stably.
+- UI smoke run #10: default renderer first rows 1.3 ms, all 100k 230 ms, **cold start 679 ms**; software renderer 1.3 ms / 190 ms / **cold start 54 ms**.
+- Open for M2: **renderer decision** (Boss).
+- Fix in the test itself: E2E regex adapted to the new `at=` field (locally 13/13 PASS).
 
-## Nächste Schritte
-1. ✅ M4 abgeschlossen (Run #26) → **Freigabe M5 (Boss)**; davor Exe-Größe prüfen (19,7 MB).
-2. M5: Shell-Integration (Icons/Thumbnails, Kontextmenü, Eigenschaften, Papierkorb, OLE-Drag&Drop mit anderen Apps).
-3. Boss: Artefakt auf echtem PC testen (GPU, Kopieren/Einfügen mit dem echten Explorer).
+## Next steps
+1. ✅ M4 completed (run #26) → **approval of M5 (Boss)**; check the exe size beforehand (19.7 MB).
+2. M5: shell integration (icons/thumbnails, context menu, properties, Recycle Bin, OLE drag & drop with other apps).
+3. Boss: test the artifact on a real PC (GPU, copy/paste with the real Explorer).
