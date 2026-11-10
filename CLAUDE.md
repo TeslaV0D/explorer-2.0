@@ -207,6 +207,7 @@
 - A registry theme written directly (test) sends **no** WM_SETTINGCHANGE → winit notices nothing, our watcher does; winit sets the title bar itself on real system changes → we set it again 400 ms later.
 
 - Slint translations (1.18): language `""` or `"en"` = the source texts (bundle index 0); `select_bundled_translation` works only **after** the first component exists and needs at least one `.po` in the bundle dir (else build error) → `lang/de/` always exists. Plurals in `.slint`: `@tr("{n} item" | "{n} items" % count)`. Placeholders that a translation may reorder must be written `{0}`/`{1}`, not `{}` (the catalog test compares placeholder sets).
+- Windows CI checks text files out with **CRLF** → a test that compares a generated file byte for byte must normalise line endings (CI #138: `lang/explorer2.pot`); catalogs are pinned to LF in `.gitattributes`.
 - Processes that Windows starts (Win+E, folder double-click) do not inherit `EXPLORER2_LANG` from the test → they show the runner's system language; check them via process/trace, not by UI text.
 
 ## References

@@ -20,7 +20,10 @@ const FIX: &str = "run `cargo run -p explorer-i18n --example extract`";
 fn template_is_current() {
     let found = collect(&root()).expect("scanning the sources");
     let want = render_pot(&found);
-    let have = std::fs::read_to_string(root().join("lang/explorer2.pot")).unwrap_or_default();
+    // line endings may be CRLF in a Windows checkout
+    let have = std::fs::read_to_string(root().join("lang/explorer2.pot"))
+        .unwrap_or_default()
+        .replace("\r\n", "\n");
     assert!(have == want, "lang/explorer2.pot is out of date – {FIX}");
 }
 
