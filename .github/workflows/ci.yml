@@ -73,7 +73,7 @@ jobs:
       - name: Benchmark 100k folder (budgets from PLAN-BASICS)
         run: cargo run --release -p explorer-fs --example bench -- --files 100000 --runs 9 --assert
       - name: "Search benchmark: 1 M entries, name queries < 10 ms, index < 100 MB (PLAN-SEARCH)"
-        run: cargo run --release -p explorer-index --example bench -- 1000000 --gate
+        run: cargo run --release -p explorer-index --example index_bench -- 1000000 --gate
       # CI #82: the cold system drive of the Windows VM gave ~1 100 entries/s
       # (C:\ did not finish in 15 min). Measured here, numbers only: cold vs
       # warm (disk) and below-normal vs normal priority + more threads.
