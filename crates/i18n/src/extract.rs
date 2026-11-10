@@ -307,7 +307,10 @@ pub fn collect(root: &Path) -> Result<Found, String> {
     files.sort();
     let mut found = Found::new();
     for f in files {
-        let text = std::fs::read_to_string(&f).map_err(|e| format!("{}: {e}", f.display()))?;
+        // CRLF in a Windows checkout: rustc reads string literals with LF, so must we
+        let text = std::fs::read_to_string(&f)
+            .map_err(|e| format!("{}: {e}", f.display()))?
+            .replace("\r\n", "\n");
         let rel = f
             .strip_prefix(root)
             .unwrap_or(&f)
