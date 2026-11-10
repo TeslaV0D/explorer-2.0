@@ -1673,7 +1673,7 @@ export component MainWindow inherits Window {
                                 if r.first : SectionLabel { height: 26px; vertical-alignment: bottom; text: r.group; }
                                 if r.gid != "location" : HorizontalLayout {
                                     spacing: 8px;
-                                    Text { width: 96px; text: r.key; font-size: Ui.font; color: Theme.d.muted; wrap: word-wrap; }
+                                    Text { width: max(96px, self.min-width); text: r.key; font-size: Ui.font; color: Theme.d.muted; wrap: word-wrap; }
                                     // read-only input: the value can be selected and copied
                                     TextInput {
                                         horizontal-stretch: 1;
