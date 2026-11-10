@@ -253,6 +253,27 @@ sleep 2
 check "[84c] automatic: a system language that is not complete yet (uk) falls back to English" "grep -qF 'language en (setting=\"\" override=None system=[\"uk_UA.UTF-8\"])' $LOG.3"
 kill $PID; wait $PID 2>/dev/null
 
+# ---- L4 language setting: switch live, the restart keeps it
+LOG=$W/trace-85.log
+echo "== [85] language: live switch in the settings + palette"
+LC4=$W/lang-cfg4; mkdir -p $LC4
+env -u LANGUAGE -u LC_ALL -u LC_MESSAGES LANG=C.UTF-8 EXPLORER2_CONFIG_DIR=$LC4 $EXE "$W" > $LOG 2>&1 & PID=$!
+sleep 2
+ui_click "Einstellungen"; sleep 0.8
+check "[85] the language list comes first in the settings, the Windows language preselected" "ui_has 'Sprache · Language' 2 && grep -qF 'language ui=de' $LOG"
+ui_click "Sprache · Language" 2; sleep 0.8
+check "[85a] the list offers the complete languages by their own names" "ui_has 'Deutsch' && ui_has 'English' && ui_has 'Wie Windows (English)'"
+ui_click "English"; sleep 1.5
+check "[85b] picked: switched live (Slint and Rust texts), saved" "grep -qF 'language switched to en' $LOG && ui_has 'Settings' && ui_has 'Recycle Bin' && ! ui_has 'Einstellungen' && ! ui_has 'Papierkorb' && grep -q '^language = en' $LC4/settings.ini"
+check "[85c] the window survives the switch" "kill -0 $PID"
+kill $PID; wait $PID 2>/dev/null
+env -u EXPLORER2_LANG -u LANGUAGE -u LC_ALL -u LC_MESSAGES LANG=C.UTF-8 EXPLORER2_CONFIG_DIR=$LC4 $EXE "$W" > $LOG.2 2>&1 & PID=$!
+sleep 2
+check "[85d] the restart keeps the language" "grep -qF 'language en (setting=\"en\" override=None' $LOG.2 && ui_has 'Settings' && ui_has 'Recycle Bin'"
+focus; xdotool key ctrl+shift+p; sleep 0.4; xdotool type --delay 40 "language deutsch"; sleep 0.5; xdotool key Return; sleep 1.5
+check "[85e] palette command switches back (German)" "grep -qF 'language switched to de' $LOG.2 && ui_has 'Einstellungen' && ui_has 'Papierkorb' && ! ui_has 'Recycle Bin' && grep -q '^language = de' $LC4/settings.ini"
+kill $PID; wait $PID 2>/dev/null
+
 # ---- M4 file operations (own script, runnable alone)
 "$(dirname "$0")/e2e-ops.sh" "$EXE" "$W" || FAIL=1
 # ---- M8.3c endurance (own script, runnable alone)

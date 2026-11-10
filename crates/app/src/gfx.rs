@@ -29,11 +29,6 @@ pub struct Selection {
     pub background: BackgroundProbe,
 }
 
-/// Human-readable status for the settings panel.
-pub fn status_text(sel: &Selection) -> String {
-    explorer_core::renderer::status_text(sel.choice, &sel.reason)
-}
-
 /// `safe`: the last starts died (start guard) → software, no probe.
 pub fn select(safe: bool) -> Selection {
     let t0 = Instant::now();

@@ -1952,6 +1952,18 @@ fn invalidate_all(win: &MainWindow) {
     }
 }
 
+/// Language switched (L4): every Rust-built text again – sidebar, drives,
+/// rows (type names, sizes, dates), status lines, tab titles, Inspector.
+pub fn relabel(win: &MainWindow) {
+    refresh_places(win);
+    invalidate_all(win);
+    let panes = APP.with_borrow(|app| app.panes.len());
+    for pi in 0..panes {
+        sync_pane(pi);
+    }
+    sync_window(win);
+}
+
 // ---------------------------------------------------------------- search (S1.4b)
 
 /// Where a search from this tab looks: a search's own folder, the folder

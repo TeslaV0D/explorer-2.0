@@ -161,6 +161,12 @@ pub fn changed(win: &MainWindow) {
     }
 }
 
+/// Language switched (L4): build the shown facts again.
+pub fn relabel(win: &MainWindow) {
+    ST.with_borrow_mut(|s| s.shown_key = Default::default());
+    changed(win);
+}
+
 /// Results of the background part.
 #[derive(Default)]
 struct Extra {

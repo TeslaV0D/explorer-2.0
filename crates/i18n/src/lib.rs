@@ -123,6 +123,22 @@ pub fn lang(code: &str) -> Option<&'static Lang> {
     LANGS.iter().find(|l| l.code == code)
 }
 
+/// The values the language setting offers (L4): `""` (the Windows language)
+/// first, then every complete language by its own name; a `current` setting
+/// that names a known but incomplete language stays selectable.
+pub fn choices(current: &str) -> Vec<&'static str> {
+    let mut langs: Vec<&'static Lang> = LANGS.iter().filter(|l| l.complete).collect();
+    if let Some(l) = normalize(current).and_then(lang) {
+        if !l.complete {
+            langs.push(l);
+        }
+    }
+    langs.sort_by_key(|l| l.native);
+    std::iter::once("")
+        .chain(langs.into_iter().map(|l| l.code))
+        .collect()
+}
+
 /// Index into [`LANGS`]; starts with the source language.
 static CURRENT: AtomicUsize = AtomicUsize::new(0);
 

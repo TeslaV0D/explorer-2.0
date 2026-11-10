@@ -218,6 +218,9 @@ pub(crate) fn execute(win: &MainWindow, pi: usize, id: &str) {
         "theme-system" => crate::theme::set_choice(win, "system"),
         "theme-light" => crate::theme::set_choice(win, "light"),
         "theme-dark" => crate::theme::set_choice(win, "dark"),
+        "language-system" | "language-en" | "language-de" => {
+            crate::lang::choose_code(win, &id["language-".len()..])
+        }
         "integration-reset" => crate::integration::ask_reset(win),
         "install" => crate::integration::ask_install(win),
         "toggle-folder-open" => crate::integration::toggle_feature(win, "folder-open"),

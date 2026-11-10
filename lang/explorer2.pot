@@ -692,6 +692,22 @@ msgstr ""
 msgid "LOCATION"
 msgstr ""
 
+#: crates/app/ui/main.slint
+msgid "Language"
+msgstr ""
+
+#: crates/core/src/commands.rs
+msgid "Language: Deutsch"
+msgstr ""
+
+#: crates/core/src/commands.rs
+msgid "Language: English"
+msgstr ""
+
+#: crates/core/src/commands.rs
+msgid "Language: System default"
+msgstr ""
+
 #: crates/core/src/view.rs
 msgid "Large icons"
 msgstr ""
@@ -1231,6 +1247,10 @@ msgstr ""
 
 #: crates/app/ui/main.slint
 msgid "System default"
+msgstr ""
+
+#: crates/app/src/lang.rs
+msgid "System default ({0})"
 msgstr ""
 
 #: crates/core/src/renderer.rs

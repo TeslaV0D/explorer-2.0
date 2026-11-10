@@ -238,6 +238,25 @@ pub const ALL: &[Command] = &[
         "",
         Need::Always,
     ),
+    // L4: one per offered language (the native name stays in every language)
+    c(
+        "language-system",
+        tr_noop!("Language: System default"),
+        "",
+        Need::Always,
+    ),
+    c(
+        "language-en",
+        tr_noop!("Language: English"),
+        "",
+        Need::Always,
+    ),
+    c(
+        "language-de",
+        tr_noop!("Language: Deutsch"),
+        "",
+        Need::Always,
+    ),
     c(
         "toggle-folder-open",
         tr_noop!("Toggle: open folders with Explorer 2.0"),
@@ -358,7 +377,12 @@ pub fn rank<'a>(query: &str, recent: &[String], cmds: &'a [Command]) -> Vec<&'a 
     let mut hits: Vec<(i32, usize, &Command)> = cmds
         .iter()
         .enumerate()
-        .filter_map(|(i, c)| fuzzy_score(query, c.title()).map(|s| (s, i, c)))
+        // the English source matches too: findable in a language one cannot read
+        .filter_map(|(i, c)| {
+            fuzzy_score(query, c.title())
+                .max(fuzzy_score(query, c.label))
+                .map(|s| (s, i, c))
+        })
         .collect();
     hits.sort_by(|a, b| {
         let ra = recent_pos(a.2.id).map(|p| 100 - p as i32).unwrap_or(0);
@@ -396,6 +420,21 @@ mod tests {
             assert_eq!(by_id(a.id), Some(a));
         }
         assert_eq!(by_id("gibtsnicht"), None);
+    }
+
+    #[test]
+    fn every_offered_language_has_a_command() {
+        for code in explorer_i18n::choices("") {
+            let id = match code {
+                "" => "language-system".to_string(),
+                c => format!("language-{c}"),
+            };
+            assert!(by_id(&id).is_some(), "no palette command {id}");
+        }
+        assert!(ALL
+            .iter()
+            .filter(|c| c.id.starts_with("language-") && c.id != "language-system")
+            .all(|c| explorer_i18n::lang(&c.id["language-".len()..]).is_some()));
     }
 
     #[test]

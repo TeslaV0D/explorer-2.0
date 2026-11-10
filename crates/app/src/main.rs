@@ -127,6 +127,11 @@ fn main() -> Result<(), slint::PlatformError> {
     let win = MainWindow::new()?;
     nav::trace_line(&format!("window created at={:.1}ms", nav::since_start_ms()));
     lang::apply_ui(language);
+    lang::offer(&win);
+    on!(win, on_set_language, |w, i| lang::choose(
+        &w,
+        i.max(0) as usize
+    ));
     theme::init(&win, settings.theme, settings.system_accent);
     on!(win, on_set_theme, |w, t| theme::set_choice(&w, t.as_str()));
     on!(win, on_settings_opened, |w| {
@@ -149,6 +154,13 @@ fn main() -> Result<(), slint::PlatformError> {
             nav::trace_line(&format!("notice reports={reports} safe={safe}"));
             win.set_notice(text.into());
             win.set_notice_folder(reports > 0);
+            lang::keep(&win, "notice", move |w| {
+                // again after a language switch, as long as it is shown
+                if !w.get_notice().is_empty() {
+                    let text = explorer_core::guard::notice_text(reports, safe, failed);
+                    w.set_notice(text.unwrap_or_default().into());
+                }
+            });
         }
     }
     on!(win, on_notice_open, |w| {
@@ -166,7 +178,13 @@ fn main() -> Result<(), slint::PlatformError> {
         },
     );
     win.set_hw_accel(settings.hardware_acceleration);
-    win.set_renderer_status(gfx::status_text(&renderer).into());
+    {
+        let (choice, reason) = (renderer.choice, renderer.reason.clone());
+        lang::keep(&win, "renderer", move |w| {
+            let text = explorer_core::renderer::status_text(choice, &reason);
+            w.set_renderer_status(text.into())
+        });
+    }
     win.on_toggle_hw_accel({
         let w = win.as_weak();
         move |on| {

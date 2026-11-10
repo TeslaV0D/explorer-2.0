@@ -291,3 +291,27 @@ fn numbers_follow_the_language() {
     assert_eq!(format_integer(1_234_567), "1,234,567");
     assert_eq!(format_decimal(2.75, 1), "2.8");
 }
+
+#[test]
+fn offered_choices() {
+    let complete: Vec<&str> = LANGS
+        .iter()
+        .filter(|l| l.complete)
+        .map(|l| l.code)
+        .collect();
+    let c = choices("");
+    assert_eq!(c[0], "", "the Windows language comes first");
+    assert_eq!(c.len(), complete.len() + 1);
+    let names: Vec<&str> = c[1..].iter().map(|x| lang(x).unwrap().native).collect();
+    let mut sorted = names.clone();
+    sorted.sort();
+    assert_eq!(names, sorted, "sorted by their own names");
+    assert_eq!(choices("de-AT"), c, "a complete language is already there");
+    assert_eq!(choices("bogus"), c);
+    if let Some(l) = LANGS.iter().find(|l| !l.complete) {
+        assert!(
+            choices(l.code).contains(&l.code),
+            "a chosen incomplete language stays"
+        );
+    }
+}

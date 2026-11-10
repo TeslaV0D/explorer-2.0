@@ -1,4 +1,4 @@
-import { Button, ListView, CheckBox, ScrollView, Palette } from "std-widgets.slint";
+import { Button, ComboBox, ListView, CheckBox, ScrollView, Palette } from "std-widgets.slint";
 
 import { Theme, DesignColors, Ui } from "theme.slint";
 import { IconData } from "icons.slint";
@@ -1372,6 +1372,11 @@ export component MainWindow inherits Window {
     in property <string> theme-choice: "system";
     in-out property <bool> opt-system-accent: true;
     callback set-theme(string);
+    // L4 language: entries in their own names ("System default (…)" first),
+    // the index of the setting in use
+    in property <[string]> language-names;
+    in-out property <int> language-index;
+    callback set-language(int);
     // R-001: Windows integration status + one-button reset
     in property <string> integration-status;
     in property <bool> integration-active;
@@ -1954,6 +1959,23 @@ export component MainWindow inherits Window {
             padding: 14px;
             spacing: 8px;
             Text { text: @tr("Settings"); font-size: Ui.font-title; font-weight: 600; color: Theme.d.text; }
+            // first, and with the English word: findable in a language one cannot read
+            lang-head := Text {
+                property <string> word: @tr("Language");
+                text: self.word == "Language" ? self.word : self.word + " · Language";
+                font-size: Ui.font-body; font-weight: 600; color: Theme.d.text;
+            }
+            HorizontalLayout {
+                alignment: start;
+                ComboBox {
+                    width: 240px;
+                    accessible-label: lang-head.text;
+                    model: root.language-names;
+                    current-index <=> root.language-index;
+                    selected => { root.set-language(self.current-index); }
+                }
+            }
+            Rectangle { height: 1px; background: Theme.d.border; }
             CheckBox {
                 text: @tr("Use hardware acceleration when available");
                 checked <=> root.hw-accel;

@@ -176,7 +176,7 @@ fn restart(win: &MainWindow) {
     }
     EPOCH.fetch_add(1, Ordering::SeqCst);
     let old = lock().take();
-    win.set_search_status(tr!("Search index restarting …").into());
+    fixed(win, || tr!("Search index restarting …"));
     let weak = win.as_weak();
     let _ = std::thread::Builder::new()
         .name("index-restart".into())
@@ -249,14 +249,14 @@ pub fn init(win: &MainWindow, enabled: bool) {
     load_history();
     win.set_opt_index_enabled(enabled);
     if env_off() {
-        win.set_search_status(tr!("Search index off (EXPLORER2_INDEX=off).").into());
+        fixed(win, || tr!("Search index off (EXPLORER2_INDEX=off)."));
         return;
     }
     if !enabled {
-        win.set_search_status(off_text().into());
+        fixed(win, off_text);
         return;
     }
-    win.set_search_status(tr!("Search index starting shortly …").into());
+    fixed(win, || tr!("Search index starting shortly …"));
     let delay = std::env::var("EXPLORER2_INDEX_DELAY_MS")
         .ok()
         .and_then(|v| v.parse().ok())
@@ -269,6 +269,27 @@ pub fn init(win: &MainWindow, enabled: bool) {
     });
 }
 
+thread_local! {
+    /// The status text while no drive reports (redone on a language switch).
+    static FIXED: std::cell::Cell<Option<fn() -> &'static str>> = const { std::cell::Cell::new(None) };
+}
+
+fn fixed(win: &MainWindow, text: fn() -> &'static str) {
+    FIXED.set(Some(text));
+    win.set_search_status(text().into());
+}
+
+/// Language switched (L4): the status text again.
+pub fn relabel(win: &MainWindow) {
+    match FIXED.get() {
+        Some(text) => win.set_search_status(text().into()),
+        None => update_ui(win),
+    }
+    if win.get_settings_open() {
+        refresh_drives(win);
+    }
+}
+
 fn off_text() -> &'static str {
     tr!("Search index off: searches only go through the current folder.")
 }
@@ -279,7 +300,7 @@ fn start(win: &MainWindow) {
     LAST.with_borrow_mut(|m| m.clear());
     let settings = crate::config::load();
     let Some(dir) = crate::config::config_dir().map(|d| d.join("index")) else {
-        win.set_search_status(tr!("Search index: no folder for the index files.").into());
+        fixed(win, || tr!("Search index: no folder for the index files."));
         return;
     };
     let exclusions =
@@ -294,9 +315,9 @@ fn start(win: &MainWindow) {
                 crate::nav::trace_line("search: index kept by another window");
                 let _ = slint::invoke_from_event_loop(move || {
                     if let Some(w) = weak.upgrade() {
-                        w.set_search_status(
-                            tr!("The search index is kept by another Explorer 2.0 window.").into(),
-                        );
+                        fixed(&w, || {
+                            tr!("The search index is kept by another Explorer 2.0 window.")
+                        });
                     }
                 });
                 return;
@@ -320,7 +341,7 @@ fn start(win: &MainWindow) {
             notify_ui(weak);
         });
     if spawned.is_err() {
-        win.set_search_status(tr!("The search index could not start.").into());
+        fixed(win, || tr!("The search index could not start."));
     }
 }
 
@@ -357,13 +378,13 @@ pub fn set_enabled(win: &MainWindow, on: bool) {
     }
     if on {
         if lock().is_none() {
-            win.set_search_status(tr!("Search index starting …").into());
+            fixed(win, || tr!("Search index starting …"));
             start(win);
         }
     } else {
         EPOCH.fetch_add(1, Ordering::SeqCst);
         let old = lock().take();
-        win.set_search_status(off_text().into());
+        fixed(win, off_text);
         if let Some(s) = old {
             // stopping saves the index: not on the UI thread
             let _ = std::thread::Builder::new()
@@ -389,14 +410,11 @@ pub fn rescan(win: &MainWindow) {
     });
     crate::nav::trace_line(&format!("search: rescan volumes={n}"));
     if n == 0 {
-        win.set_search_status(
-            if win.get_opt_index_enabled() {
-                tr!("The search index is not running yet.")
-            } else {
-                off_text()
-            }
-            .into(),
-        );
+        if win.get_opt_index_enabled() {
+            fixed(win, || tr!("The search index is not running yet."));
+        } else {
+            fixed(win, off_text);
+        }
     }
 }
 
@@ -463,6 +481,7 @@ fn update_ui(win: &MainWindow) {
     }
     if !lines.is_empty() {
         let text: Vec<String> = lines.iter().map(|(r, s)| status_line(r, s)).collect();
+        FIXED.set(None);
         win.set_search_status(text.join("\n").into());
     }
     // shown results follow the index (new, renamed, deleted files)
