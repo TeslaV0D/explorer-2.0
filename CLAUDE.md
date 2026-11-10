@@ -19,6 +19,7 @@
 | `docs/FIELD-TEST-SEARCH.md` | Instructions for the field test of the search on real Windows (before S2) |
 | `docs/PLAN-REDESIGN.md` | Plan UI/UX redesign (File Pilot style, design only): current-state analysis, design system, stages R0–R10, open decisions |
 | `docs/FIELD-TEST-REDESIGN.md` | Checklist for the field test of the redesign on real Windows (after R10) |
+| `docs/PLAN-I18N.md` | Plan localisation: inventory, technique (`@tr` + bundled `.po`, `tr!` in Rust), stages L0–L6, open decisions |
 
 ## Decisions (decision log)
 | ID | Decision | Status |

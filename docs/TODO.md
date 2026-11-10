@@ -168,7 +168,7 @@ The app UI is German; UI labels are quoted as they appear (with a translation wh
 - [ ] Watch E2E flakes: [49] first drag after the full run ([72c] fixed: installer waits for the running copy, CI #128)
 
 ## Boss wishes (2026-11-08) – for later, not planned yet
-- [ ] **Localisation (i18n)**: translate the UI into further languages (supersedes D-007, e.g. Slint `@tr` + Rust texts)
+- [~] **Localisation (i18n)**: translate the UI into further languages (supersedes D-007, e.g. Slint `@tr` + Rust texts) – plan `docs/PLAN-I18N.md` (2026-11-10), waiting for Boss decisions
   - [ ] Hit meanings exactly, not confusing: terms as in Windows Explorer of the respective language (Recycle Bin, This PC, Quick access, Properties …), glossary per language
   - [ ] Layout robustness when switching: check **all** texts for whether they fit into buttons/menus/columns/dialogs/settings (German/French/Russian long, CJK different font) – shorten, wrap or make widths dynamic; gallery per language + pixel/overflow check in E2E
   - [ ] Language switchable in the settings (default: Windows language), live or with a restart notice
