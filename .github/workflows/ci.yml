@@ -97,7 +97,9 @@ jobs:
         if: runner.os != 'Windows'
         run: cargo run --release -p explorer-search --example drive
   e2e-linux:
-    runs-on: ubuntu-latest
+    # pinned: on ubuntu-26.04 (ubuntu-latest since 2026-11-10) `xdotool key F2`
+    # arrives as Alt+F2 (CI #139/#140) – TODO: move once the tests handle that
+    runs-on: ubuntu-24.04
     needs: test
     # app tests without the search index (own block e2e-search.sh switches it on),
     # in German: the tests click and check German names (D-029)
@@ -107,7 +109,7 @@ jobs:
       - uses: dtolnay/rust-toolchain@stable
       - uses: Swatinem/rust-cache@v2
       - name: UI deps
-        run: sudo apt-get update && sudo apt-get install -y libfontconfig1-dev libxkbcommon-dev libxkbcommon-x11-0 libwayland-dev libx11-dev xvfb xdotool x11-xserver-utils imagemagick libgl1-mesa-dri libegl1 libgl1 x11-utils
+        run: sudo apt-get update && sudo apt-get install -y libfontconfig1-dev libxkbcommon-dev libxkbcommon-x11-0 libwayland-dev libx11-dev xvfb xdotool imagemagick libgl1-mesa-dri libegl1 libgl1 x11-utils
       # the installer test [72] needs explorer2-recover next to the app
       - run: cargo build --release -p explorer2 -p explorer-integrate --bins
       - name: E2E UI test (Xvfb)

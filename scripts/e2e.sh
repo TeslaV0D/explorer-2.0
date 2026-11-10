@@ -230,7 +230,6 @@ check "[37] start path opens a single tab" "grep -qF 'layout panes=1 tabs=[1] sp
 kill $PID; wait $PID 2>/dev/null
 
 # ---- L0 language choice (D-029); own config dirs: quick kills must not trip the start guard
-keymap_note "before [84]"
 LOG=$W/trace-84.log
 echo "== [84] language: override, setting, system language"
 LC1=$W/lang-cfg1; mkdir -p $LC1
@@ -249,7 +248,6 @@ sleep 2
 check "[84c] automatic: a system language that is not complete yet (uk) falls back to English" "grep -qF 'language en (setting=\"\" override=None system=[\"uk_UA.UTF-8\"])' $LOG.3"
 kill $PID; wait $PID 2>/dev/null
 
-keymap_note "after [84]"
 # ---- M4 file operations (own script, runnable alone)
 "$(dirname "$0")/e2e-ops.sh" "$EXE" "$W" || FAIL=1
 # ---- M8.3c endurance (own script, runnable alone)

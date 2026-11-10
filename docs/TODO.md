@@ -125,6 +125,7 @@ The app UI is German; UI labels are quoted as they appear (with a translation wh
 - [x] Renderer decision: option 2 (GPU probe) + setting (D-009)
 - [ ] Measure `NtQueryDirectoryFile` as an alternative to FindFirstFileExW (only if the Windows bench gets tight)
 - [ ] Raise GitHub Actions to Node 24 versions (checkout@v4 → v5 etc., deprecation warning in CI)
+- [ ] Move job `e2e-linux` from `ubuntu-24.04` to 26.04 (`ubuntu-latest` since 2026-11-10): `xdotool key F2` arrives as Alt+F2 there (CI #139/#140) – send F2 another way or work around xdotool, then unpin
 
 - [ ] Real hardware GPU probe only verifiable by a Boss test (CI has no GPU) → test the artifact on your own PC: settings panel shows “GPU-Beschleunigung (<GPU name>)”
 - [ ] Linux: no GPU probe (platform default) – dev platform only, ok
