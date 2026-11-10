@@ -187,9 +187,9 @@ The app UI is German; UI labels are quoted as they appear (with a translation wh
   - [ ] Never break anything: `Folder` (virtual folders, Control Panel, Recycle Bin …) stays with Windows Explorer, fallback to the real Explorer when Explorer 2.0 is missing/crashes; R-001 snapshot test for all new values; Windows E2E per route
 - [ ] **Emergency: Shift + right-click opens the native Windows context menu directly** (instead of our own; including extended verbs like “Copy as path”, Windows behaviour with Shift = extended verbs `CMF_EXTENDEDVERBS`)
 
-## Documentation in English (Boss 2026-11-09) – planned start Thu 12.11. 16:00, brought forward by Boss to Tue 10.11.
-- [~] Rewrite all docs on GitHub in English: `docs/*.md` (PROJECT, PLAN-*, WINDOWS-INTEGRATION, FIELD-TEST-* (formerly PRAXISTEST-*), STATUS, TODO), `THIRD-PARTY.md`, `scripts/release-notes.md` **and `CLAUDE.md`** (Boss 2026-11-09) – content 1:1, no logic change; D-004 changed accordingly
-- [ ] Complete the README (currently 11 lines): what Explorer 2.0 is, features (panes/tabs, search, Inspector, palette, colour schemes), screenshots from the gallery, download/installation (setup/portable, SmartScreen notice), emergency exit/reset (R-001), building from source, tests/CI, project structure, license
+## Documentation in English (Boss 2026-11-09) – planned start Thu 12.11. 16:00, brought forward by Boss, done Tue 10.11.
+- [x] Rewrite all docs on GitHub in English (done 2026-11-10): `docs/*.md` (PROJECT, PLAN-*, WINDOWS-INTEGRATION, FIELD-TEST-* (formerly PRAXISTEST-*), STATUS, TODO), `THIRD-PARTY.md`, `scripts/release-notes.md` **and `CLAUDE.md`** (Boss 2026-11-09) – content 1:1, no logic change; D-004 changed accordingly
+- [x] Complete the README (done 2026-11-10, screenshots in `docs/screenshots/` from the Linux gallery): what Explorer 2.0 is, features (panes/tabs, search, Inspector, palette, colour schemes), screenshots from the gallery, download/installation (setup/portable, SmartScreen notice), emergency exit/reset (R-001), building from source, tests/CI, project structure, license
 
 ## Phase 3 – File action shortcuts (Sweetch style)  *(later, described only)*
 - [ ] Tray helper with radial menu: drag files onto a sector or hotkey (Sweetch: Ctrl+Alt+Space)

@@ -5,7 +5,7 @@
 The app UI is German; UI labels and messages are quoted as they appear (with a translation where it helps).
 
 ## Documentation in English (2026-11-10, Boss: start brought forward from Thu 12.11.)
-- All documentation translated to English, content 1:1 (D-004): `docs/*.md`, `CLAUDE.md`, `THIRD-PARTY.md`, `scripts/release-notes.md` (the next GitHub release gets English notes), README completed.
+- All documentation translated to English, content 1:1 (D-004): `docs/*.md`, `CLAUDE.md`, `THIRD-PARTY.md`, `scripts/release-notes.md` (the next GitHub release gets English notes), README completed with five screenshots from the Linux gallery (`docs/screenshots/`, taken from a neutral path `/home/explorer`).
 - Field-test checklists renamed: `PRAXISTEST-SUCHE.md` → `FIELD-TEST-SEARCH.md`, `PRAXISTEST-REDESIGN.md` → `FIELD-TEST-REDESIGN.md`.
 - No code change; CI ignores doc-only commits (`paths-ignore`).
 

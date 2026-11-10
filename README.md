@@ -4,7 +4,7 @@ A fast, modern, robust replacement for Windows Explorer on Windows 10/11 x64, wr
 
 ![Explorer 2.0 in the dark theme](docs/screenshots/dark-folder.png)
 
-> The user interface is currently **German** (localisation is planned, see `docs/TODO.md`). The screenshots come from the Linux UI gallery (`scripts/gallery.sh`), so the font differs from Windows' Segoe UI.
+> The user interface is currently **German** (localisation is planned, see `docs/TODO.md`). The screenshots come from the Linux UI gallery (`scripts/gallery.sh`), so the font differs from Windows' Segoe UI, and file icons are placeholders there (Windows shows the real shell icons and thumbnails).
 
 ## Features
 
@@ -22,8 +22,8 @@ A fast, modern, robust replacement for Windows Explorer on Windows 10/11 x64, wr
 | Inspector | Two views |
 |---|---|
 | ![Inspector with image preview](docs/screenshots/dark-inspector.png) | ![Split view](docs/screenshots/dark-two-views.png) |
-| **Quick search across all drives** | **Light theme, tile view** |
-| ![Quick search](docs/screenshots/dark-quick-search.png) | ![Tile view in the light theme](docs/screenshots/light-tiles.png) |
+| **Quick search across all drives** | **Light theme, search in a folder** |
+| ![Quick search](docs/screenshots/dark-quick-search.png) | ![Search hits with highlighting in the light theme](docs/screenshots/light-search.png) |
 
 ## Download and installation
 
