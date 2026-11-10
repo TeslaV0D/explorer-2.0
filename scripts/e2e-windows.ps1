@@ -176,9 +176,18 @@ Check "[W10a] right-click shows our menu with 'Weitere Optionen'" { (Last 'conte
 [void](UiClick 'Weitere Optionen')
 # the shell builds its menu (extensions) asynchronously - wait for the real popup menu
 # window (class #32768) before Esc, or the key goes to our window (CI #129)
-$t = [Diagnostics.Stopwatch]::StartNew(); $menuUp = $false
-while ($t.ElapsedMilliseconds -lt 8000) { if ([W]::FindWindow('#32768', $null) -ne [IntPtr]::Zero) { $menuUp = $true; break }; Start-Sleep -Milliseconds 100 }
-Write-Host "shell menu up: $menuUp after $($t.ElapsedMilliseconds) ms"
+$t = [Diagnostics.Stopwatch]::StartNew(); $menuUp = $false; $retried = $false
+while ($t.ElapsedMilliseconds -lt 8000) {
+    if ([W]::FindWindow('#32768', $null) -ne [IntPtr]::Zero) { $menuUp = $true; break }
+    # the runner sometimes loses the click (CI #143: our menu still open, item hovered,
+    # no request in the trace) -> click once more, visibly logged, never silently
+    if (-not $retried -and $t.ElapsedMilliseconds -gt 3000 -and -not (Last 'context menu run more') -and $null -ne (UiBox 'Weitere Optionen')) {
+        Write-Host "NOTE 'Weitere Optionen' click got lost - clicking once more"
+        [void](UiClick 'Weitere Optionen'); $retried = $true
+    }
+    Start-Sleep -Milliseconds 100
+}
+Write-Host "shell menu up: $menuUp after $($t.ElapsedMilliseconds) ms (retried: $retried)"
 Start-Sleep -Milliseconds 300; Shot "w10-menu"
 Keys '{ESC}'; Start-Sleep -Milliseconds 600
 # the result is written after the shell's modal menu loop ended - poll (CI #113: later than 600 ms)

@@ -16,6 +16,7 @@ The app UI is German; UI labels and messages are quoted as they appear (with a t
 - Not translated on purpose: the developer UI kit (`ui/kit.slint`, `EXPLORER2_UI_KIT=1`), product name, file paths.
 - Found for L2: the Inspector compares a group by its German label (`r.group != "ORT"`) → needs a group id; the conflict dialog's letter keys R/S/B/A match the German and the English words, not other languages; the gallery script clicks German names → galleries per language need language-neutral targets (L5).
 - CI #142: everything green except [57c] “empty the trash” – the purge (5 items incl. the 60 000-file job folder) was done (`trash Purge done ok=true`), just later than the fixed 2 s → the test now waits for the done line (max. 10 s). Unrelated timing flake.
+- CI #143: Linux green; Windows W10 red + cascade W11–W22 – the click on “Weitere Optionen” got lost on the runner (screenshot: our menu still open, the item hovered, no `context menu run more` in the trace); the same app code was fully green on Windows in #142. W10 now clicks once more after 3 s when the click demonstrably got lost (logged as NOTE, never silent).
 - Tests: unit `compiled_german_catalog_is_used` (Rust table answers from `lang/de`), E2E [84a] German texts come from the catalog, [84d] `EXPLORER2_LANG=en` shows “Settings”/“Quick access”.
 
 ## Localisation L0 – basics ✅ (CI run #141, 2026-11-10, plan `docs/PLAN-I18N.md`, D-029)
