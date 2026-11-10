@@ -176,12 +176,12 @@ The app UI is German; UI labels are quoted as they appear (with a translation wh
   - [ ] Conflict dialog letter keys (R/S/B/A) per language (today they match German and English only)
   - [ ] R-001-safe relabel of the texts written to Windows (folder verb texts “Öffnen (Explorer 2.0)”, Start menu `.lnk` names + descriptions): written in the language at switch-on time, state/reset must not depend on the text (today fixed German, compared by the journal)
   - [x] L3 English review + gallery in English: language-neutral test targets (`ui-lang-map.py`), English gallery as CI artifact, ~40 texts improved, German unchanged (CI run #147)
-  - [ ] L4 language setting in the UI (own names, live switch, palette)
+  - [x] L4 language setting in the UI: list in own names at the top of the settings (“System default (…)” first), live switch of Slint + Rust texts, palette `language-*`, restart keeps it, E2E [85] (CI pending)
   - [ ] L5 layout robustness: pseudo-locale + overflow check + gallery per language (the gallery clicks German names today → language-neutral targets first)
   - [ ] L6 languages one by one: es, fr, ru, uk, pl, it, zh, ja (glossary per language, native-speaker review of the gallery)
   - [ ] Hit meanings exactly, not confusing: terms as in Windows Explorer of the respective language (Recycle Bin, This PC, Quick access, Properties …), glossary per language
   - [ ] Layout robustness when switching: check **all** texts for whether they fit into buttons/menus/columns/dialogs/settings (German/French/Russian long, CJK different font) – shorten, wrap or make widths dynamic; gallery per language + pixel/overflow check in E2E
-  - [ ] Language switchable in the settings (default: Windows language), live or with a restart notice
+  - [x] Language switchable in the settings (default: Windows language), live (L4)
   - [ ] Numbers/dates/sizes according to the locale; mind font coverage (gotcha: missing glyphs cost start time)
 - [ ] **“New” submenu like Windows**: not only folders but all creation options (text document, shortcut, zipped folder, Word/Excel/… from `HKCR\.<ext>\ShellNew` – `NullFile`/`FileName`/`Data`/`Command`), name directly in rename mode, undo like for New folder
 - [ ] **Autostart with Windows** (opt-in, switch in settings + palette)
