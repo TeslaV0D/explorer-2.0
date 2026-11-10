@@ -170,7 +170,7 @@ The app UI is German; UI labels are quoted as they appear (with a translation wh
 
 ## Boss wishes (2026-11-08) – for later, not planned yet
 - [~] **Localisation (i18n)**: translate the UI into further languages (supersedes D-007) – plan `docs/PLAN-I18N.md`, D-029 (Boss 2026-11-10: de, en, es, fr, ru, uk, pl, it, zh, ja; English source; live switch)
-  - [~] L0 Basics (CI pending): crate `explorer-i18n` (`tr!`/`tr_n!`, plural rules, `.po` reader, build-time tables, `extract` tool, catalog test), setting `language`, Windows/POSIX system language, Slint bundled translations, tests pinned to `de`, E2E [84]
+  - [x] L0 Basics (CI run #141): crate `explorer-i18n` (`tr!`/`tr_n!`, plural rules, `.po` reader, build-time tables, `extract` tool, catalog test), setting `language`, Windows/POSIX system language, Slint bundled translations, tests pinned to `de`, E2E [84]
   - [ ] L1 Slint texts → `@tr` (English source) + `de.po` filled, German UI unchanged
   - [ ] L2 Rust texts → `tr!`/`tr_n!` + `core::locale` (numbers/sizes), `de.po` complete → `de` marked complete
   - [ ] L3 English review + gallery in English

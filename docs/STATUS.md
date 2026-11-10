@@ -9,7 +9,7 @@ The app UI is German; UI labels and messages are quoted as they appear (with a t
 - Field-test checklists renamed: `PRAXISTEST-SUCHE.md` → `FIELD-TEST-SEARCH.md`, `PRAXISTEST-REDESIGN.md` → `FIELD-TEST-REDESIGN.md`.
 - No code change; CI ignores doc-only commits (`paths-ignore`).
 
-## Localisation L0 – basics (2026-11-10, plan `docs/PLAN-I18N.md`, D-029)
+## Localisation L0 – basics ✅ (CI run #141, 2026-11-10, plan `docs/PLAN-I18N.md`, D-029)
 - Boss decisions (D-029): **10 languages** (de, en, es, fr, ru, uk, pl, it, zh Simplified, ja), **English source texts** in the code (German becomes `lang/de/…/explorer2.po`), **live** language switch.
 - New crate **`explorer-i18n`** (no dependencies): `LANGS` (code, own name, plural header, `complete`), `tr!("…")` / `tr_n!(n, "…", "…")` with Slint-style placeholders (`{}`, `{0}`, `{n}`, `{{`), gettext plural rules for all 10 languages (Russian/Ukrainian/Polish three forms, French 0/1 singular, Chinese/Japanese one form), own `.po` reader/writer, `build.rs` compiles the `.po` files into static tables (only translated, non-fuzzy entries). `normalize`/`resolve`: `EXPLORER2_LANG` > setting `language` > first **complete** system language > English; Traditional Chinese is deliberately not mapped to Simplified.
 - Texts are found in the sources (`@tr` in `.slint`, `tr!`/`tr_n!` in Rust, comments/strings skipped); `cargo run -p explorer-i18n --example extract [-- <code>…]` writes `lang/explorer2.pot` and merges every `.po` (keeps translations, adds new texts, drops gone ones). Test `catalogs`: the template is current, every `.po` has the right plural header, no stale texts, placeholders kept, complete languages fully translated, compiled tables = files on disk.
