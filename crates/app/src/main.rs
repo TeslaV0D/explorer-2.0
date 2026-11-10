@@ -11,6 +11,7 @@ mod installer;
 mod instance;
 mod integration;
 mod keys;
+mod lang;
 mod nav;
 mod open;
 mod palette;
@@ -114,6 +115,7 @@ fn main() -> Result<(), slint::PlatformError> {
     // Must run before the first window exists (renderer is chosen per process).
     let renderer = gfx::select(safe);
     let settings = config::load();
+    let language = lang::init(&settings.language);
     let session = if start.is_none() && !safe {
         config::load_session()
     } else {
@@ -122,6 +124,7 @@ fn main() -> Result<(), slint::PlatformError> {
 
     let win = MainWindow::new()?;
     nav::trace_line(&format!("window created at={:.1}ms", nav::since_start_ms()));
+    lang::apply_ui(language);
     theme::init(&win, settings.theme, settings.system_accent);
     on!(win, on_set_theme, |w, t| theme::set_choice(&w, t.as_str()));
     on!(win, on_settings_opened, |w| {

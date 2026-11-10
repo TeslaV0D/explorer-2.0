@@ -17,6 +17,9 @@
 # Linux/Xvfb without a window manager: the window sits at the screen origin.
 UI_DUMP=${UI_DUMP:-${W:-/tmp}/ui-dump.txt}
 export EXPLORER2_UI_DUMP=$UI_DUMP
+# the tests click and check German names (D-029: German is a translation, pinned here;
+# a gallery in another language: EXPLORER2_LANG=fr scripts/gallery.sh …)
+export EXPLORER2_LANG=${EXPLORER2_LANG:-de}
 
 _ui_line() { # label which -> "x y w h" of the chosen element
   awk -F'\t' -v L="$1" -v N="${2:-1}" '

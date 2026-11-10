@@ -1,6 +1,6 @@
 # Plan: localisation (i18n)
 
-As of 2026-11-10 · Boss: “mach die Lokalisation weiter” · supersedes D-007 (UI German hard-coded) once decided.
+As of 2026-11-10 · Boss: “mach die Lokalisation weiter” · decisions in D-029 (supersedes D-007) · **L0 implemented** (local tests green, CI pending), next L1.
 Wish list from 2026-11-08 (`docs/TODO.md`): exact meanings like Windows Explorer in each language, layout robustness, language switchable in the settings (default: Windows language), numbers/dates per locale, mind font coverage.
 
 ## 1. Current state (inventory)
@@ -23,19 +23,19 @@ Wish list from 2026-11-08 (`docs/TODO.md`): exact meanings like Windows Explorer
 ## 3. Stages
 | Stage | Content | Done when |
 |---|---|---|
-| **L0 Basics** | crate `explorer-i18n`, `core::locale`, setting `language` (“” = Windows language via `GetUserDefaultUILanguage`, Linux `LANG`), override `EXPLORER2_LANG`, build step, CI completeness test, pseudo-locale | app unchanged, tests green |
-| **L1 Slint texts** | all `.slint` texts to `@tr`, `.pot` extracted | app looks the same in the source language |
-| **L2 Rust texts** | all user-visible Rust texts to `tr!`/`tr_n!` (commands, status, dialogs, errors, Inspector, search, recovery, setup), formatting via `core::locale` | same |
-| **L3 First translation** | glossary (Windows Explorer terms per language from Microsoft's terminology), complete `.po` | E2E in the new language green |
+| **L0 Basics** | crate `explorer-i18n` (`tr!`/`tr_n!`, own `.po` reader + build-time table, plural rules, catalog check, `extract` tool), setting `language` (“” = Windows UI language via `GetUserPreferredUILanguages`, Linux `LANGUAGE`/`LC_ALL`/`LC_MESSAGES`/`LANG`), override `EXPLORER2_LANG`, Slint bundled translations wired, tests pin `de` | app unchanged, tests green |
+| **L1 Slint texts** | all `.slint` texts to `@tr` with English source, `de.po` filled with today's German texts | German UI pixel-identical, English visible with `EXPLORER2_LANG=en` |
+| **L2 Rust texts** | all user-visible Rust texts to `tr!`/`tr_n!` (commands, status, dialogs, errors, Inspector, search, recovery, setup), formatting via `core::locale`, `de.po` complete | same |
+| **L3 English review** | English source texts reviewed as a product language (Windows Explorer terms), gallery in English | E2E with `en` green |
 | **L4 Language setting** | Settings → “Sprache/Language” (list in each language's own name), live switch, palette command | E2E: switch live, restart keeps it |
-| **L5 Layout robustness** | pseudo-locale + overflow check over all screens, fixes (shorten, wrap, dynamic widths), gallery per language as a CI artifact | no overflow in any language |
+| **L5 Layout robustness** | pseudo-locale (`qps`, generated at build time) + overflow check over all screens, fixes (shorten, wrap, dynamic widths), gallery per language as a CI artifact | no overflow in any language |
 | **L6 More languages** | one language per step, each with glossary + gallery | per language: complete + green |
 
-## 4. Decisions for Boss
-1. **Which languages, in which order?** Recommendation: English first (biggest reach, also the README language), then e.g. French/Spanish/Russian/Polish – depends on who should use it.
-2. **Source language in the code:** *Recommendation: English source texts, German becomes a translation (`de.po`).* That's the standard (every further language is translated from English, matches D-004 “code in English”, translation tools expect it). Cost: every text is touched once and tests pin German. Alternative: keep German as the source and add `en.po` – less churn now, but every further translator needs German.
-3. **Language switch:** *Recommendation: live* (Slint supports it; Rust texts are re-sent). Alternative: “takes effect after a restart” (simpler, less test effort).
-4. **Translation quality:** I translate with a glossary based on the Windows Explorer terms of each language; German and English I can review myself, for other languages a native speaker should look over the gallery (screenshots per language).
+## 4. Decisions (Boss, 2026-11-10 → D-029)
+1. **Languages:** the most widely used – German, English, Spanish, French, Russian, Ukrainian, Polish, Italian, Chinese (Simplified), Japanese; one after another (L6), each with glossary + gallery.
+2. **Source language:** **English** (“nur Englisch”); German becomes `de.po` and must be complete before L1/L2 land, so the app stays German for German users.
+3. **Language switch:** **live**.
+4. **Translation quality:** I translate with a glossary based on the Windows Explorer terms of each language; German and English I review myself, for the other languages a native speaker should look over the gallery.
 
 ## 5. Risks
 - **Exe size/start:** strings ×N languages are small (~50 KB per language); `@tr` costs a lookup per text – measure start and first-start gates.

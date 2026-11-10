@@ -1000,6 +1000,10 @@ dependencies = [
 ]
 
 [[package]]
+name = "explorer-i18n"
+version = "0.1.0"
+
+[[package]]
 name = "explorer-index"
 version = "0.1.0"
 dependencies = [
@@ -1057,6 +1061,7 @@ dependencies = [
  "explorer-core",
  "explorer-fs",
  "explorer-gpu",
+ "explorer-i18n",
  "explorer-index",
  "explorer-integrate",
  "explorer-ops",

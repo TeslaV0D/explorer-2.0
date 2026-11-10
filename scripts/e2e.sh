@@ -229,6 +229,25 @@ sleep 2
 check "[37] start path opens a single tab" "grep -qF 'layout panes=1 tabs=[1] split=false active_pane=0' $LOG && navigated_to '$W/home/Desktop'"
 kill $PID; wait $PID 2>/dev/null
 
+# ---- L0 language choice (D-029); own config dirs: quick kills must not trip the start guard
+LOG=$W/trace-84.log
+echo "== [84] language: override, setting, system language"
+LC1=$W/lang-cfg1; mkdir -p $LC1
+EXPLORER2_CONFIG_DIR=$LC1 $EXE "$W" > $LOG 2>&1 & PID=$!
+sleep 2
+check "[84] tests run pinned to German (EXPLORER2_LANG=de), bundled into the UI" "grep -q 'language de (setting=\"\" override=Some(\"de\")' $LOG && grep -q 'language ui=de$' $LOG"
+kill $PID; wait $PID 2>/dev/null
+LC2=$W/lang-cfg2; mkdir -p $LC2; printf 'language = pl\n' > $LC2/settings.ini
+env -u EXPLORER2_LANG EXPLORER2_CONFIG_DIR=$LC2 $EXE "$W" > $LOG.2 2>&1 & PID=$!
+sleep 2
+check "[84b] the setting picks the language (pl)" "grep -q 'language pl (setting=\"pl\" override=None' $LOG.2"
+kill $PID; wait $PID 2>/dev/null
+LC3=$W/lang-cfg3; mkdir -p $LC3
+env -u EXPLORER2_LANG -u LANGUAGE -u LC_ALL -u LC_MESSAGES LANG=uk_UA.UTF-8 EXPLORER2_CONFIG_DIR=$LC3 $EXE "$W" > $LOG.3 2>&1 & PID=$!
+sleep 2
+check "[84c] automatic: a system language that is not complete yet (uk) falls back to English" "grep -qF 'language en (setting=\"\" override=None system=[\"uk_UA.UTF-8\"])' $LOG.3"
+kill $PID; wait $PID 2>/dev/null
+
 # ---- M4 file operations (own script, runnable alone)
 "$(dirname "$0")/e2e-ops.sh" "$EXE" "$W" || FAIL=1
 # ---- M8.3c endurance (own script, runnable alone)

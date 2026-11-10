@@ -1,0 +1,9 @@
+[package]
+name = "explorer-i18n"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "Localisation: languages, tr!/tr_n!, plural rules, bundled .po catalogs (D-029)"
+build = "build.rs"
+
+[dependencies]
