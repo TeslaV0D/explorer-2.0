@@ -11,6 +11,7 @@ name = "Explorer2-Setup"
 path = "src/main.rs"
 
 [dependencies]
+explorer-i18n = { path = "../i18n" }
 explorer-integrate = { path = "../integrate" }
 
 [target.'cfg(windows)'.dependencies]

@@ -6,12 +6,12 @@ license.workspace = true
 description = "Windows shell adapter (icons, type names, ...) with platform-neutral fallbacks"
 
 [dependencies]
+explorer-i18n = { path = "../i18n" }
 explorer-core = { path = "../core" }
 
 [target.'cfg(windows)'.dependencies]
 windows-sys = { version = "0.60", features = [
     "Win32_Foundation",
-    "Win32_Globalization",
     "Win32_Graphics_Dwm",
     "Win32_Graphics_Gdi",
     "Win32_Security",

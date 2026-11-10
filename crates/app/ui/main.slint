@@ -34,7 +34,8 @@ export struct Crumb { label: string, path: string }
 export struct CtxItem { id: string, label: string, shortcut: string, icon: string, enabled: bool, danger: bool, sep: bool }
 
 // group: heading of its section ("ALLGEMEIN", "DATUM", "ORT"); first: shows the heading
-export struct InfoRow { key: string, value: string, group: string, first: bool }
+// id/gid are fixed (logic), key/group the translated labels (D-029)
+export struct InfoRow { id: string, key: string, value: string, gid: string, group: string, first: bool }
 
 // One entry of the command palette: label, shortcut or path, runnable here.
 // a drive in the settings ("Suche"): indexed or not
@@ -1664,7 +1665,7 @@ export component MainWindow inherits Window {
                                 spacing: 2px;
                                 // group heading before the first fact of each group (no lines per row)
                                 if r.first : SectionLabel { height: 26px; vertical-alignment: bottom; text: r.group; }
-                                if r.group != "ORT" : HorizontalLayout {
+                                if r.gid != "location" : HorizontalLayout {
                                     spacing: 8px;
                                     Text { width: 96px; text: r.key; font-size: Ui.font; color: Theme.d.muted; wrap: word-wrap; }
                                     // read-only input: the value can be selected and copied
@@ -1677,7 +1678,7 @@ export component MainWindow inherits Window {
                                     }
                                 }
                                 // the path: full width, with a copy button
-                                if r.group == "ORT" : HorizontalLayout {
+                                if r.gid == "location" : HorizontalLayout {
                                     spacing: 4px;
                                     path-value := TextInput {
                                         horizontal-stretch: 1;

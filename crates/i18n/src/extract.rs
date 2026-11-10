@@ -99,8 +99,9 @@ fn walk_code(
             continue;
         }
         if c == b'"' {
-            let (_, end) = read_string(text, i, rust).unwrap_or((String::new(), b.len()));
-            i = end;
+            // any other string (byte strings with \x.., …): only find its end;
+            // a strict read here once skipped the rest of a file silently
+            i = skip_string(b, i);
             continue;
         }
         if rust
@@ -146,6 +147,45 @@ fn walk_code(
     Ok(())
 }
 
+/// End of a `"…"` literal starting at `i` (after the closing quote), escapes
+/// skipped as "backslash + next byte" – good for every Rust/Slint string.
+fn skip_string(b: &[u8], i: usize) -> usize {
+    let mut j = i + 1;
+    while j < b.len() {
+        match b[j] {
+            b'\\' => j += 2,
+            b'"' => return j + 1,
+            _ => j += 1,
+        }
+    }
+    b.len()
+}
+
+/// How often a call of ours appears in code lines (not in `//` comments) –
+/// the scanner must find exactly as many, or a text would be lost silently.
+fn raw_calls(text: &str, rust: bool) -> usize {
+    let pats: &[&str] = if rust {
+        &["tr!(", "tr_n!(", "tr_noop!("]
+    } else {
+        &["@tr("]
+    };
+    text.lines()
+        .filter(|l| !l.trim_start().starts_with("//"))
+        .map(|l| {
+            pats.iter()
+                .map(|p| {
+                    l.match_indices(p)
+                        .filter(|(at, _)| {
+                            let before = l[..*at].bytes().last();
+                            !before.is_some_and(|c| is_ident(c) || c == b'!')
+                        })
+                        .count()
+                })
+                .sum::<usize>()
+        })
+        .sum()
+}
+
 fn is_ident(c: u8) -> bool {
     c.is_ascii_alphanumeric() || c == b'_'
 }
@@ -189,15 +229,17 @@ pub fn scan_rust(text: &str) -> Result<Vec<(Msg, usize)>, String> {
         if i > 0 && (is_ident(b[i - 1]) || b[i - 1] == b'!') {
             return Ok(None);
         }
-        let plural = if text[i..].starts_with("tr!(") {
-            false
+        let (plural, open) = if text[i..].starts_with("tr!(") {
+            (false, 4)
+        } else if text[i..].starts_with("tr_noop!(") {
+            (false, 9)
         } else if text[i..].starts_with("tr_n!(") {
-            true
+            (true, 6)
         } else {
             return Ok(None);
         };
         let at = |m: &str| format!("line {}: {m}", line_of(b, i));
-        let mut j = i + if plural { 6 } else { 4 };
+        let mut j = i + open;
         if plural {
             // skip the count expression up to the first top-level comma
             let mut depth = 0i32;
@@ -277,6 +319,14 @@ pub fn collect(root: &Path) -> Result<Found, String> {
             scan_rust(&text)
         }
         .map_err(|e| format!("{rel}: {e}"))?;
+        // every call in the code must have been read (never lose a text silently)
+        let raw = raw_calls(&text, !rel.ends_with(".slint"));
+        if raw != msgs.len() {
+            return Err(format!(
+                "{rel}: read {} of {raw} translation calls – one is not a plain string literal?",
+                msgs.len()
+            ));
+        }
         for (m, _) in msgs {
             let refs = found.entry(m).or_default();
             if !refs.contains(&rel) {

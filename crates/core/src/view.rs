@@ -32,12 +32,14 @@ impl ViewMode {
         Self::ORDER.into_iter().find(|m| m.as_str() == s)
     }
 
-    pub fn label_de(self) -> &'static str {
+    /// Name of the view (current language).
+    pub fn label(self) -> &'static str {
+        use explorer_i18n::tr;
         match self {
-            ViewMode::Details => "Details",
-            ViewMode::Medium => "Mittelgroße Symbole",
-            ViewMode::Large => "Große Symbole",
-            ViewMode::ExtraLarge => "Extra große Symbole",
+            ViewMode::Details => tr!("Details"),
+            ViewMode::Medium => tr!("Medium icons"),
+            ViewMode::Large => tr!("Large icons"),
+            ViewMode::ExtraLarge => tr!("Extra large icons"),
         }
     }
 

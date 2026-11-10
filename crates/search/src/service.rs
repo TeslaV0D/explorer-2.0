@@ -395,7 +395,7 @@ fn maintain(vol: &Volume, i: usize, cfg: &Config, cancel: &AtomicBool, on_change
         {
             Ok((ix, saved))
         }
-        Ok(_) => Err("Index gehört zu einem anderen Ordner".to_string()),
+        Ok(_) => Err(explorer_i18n::tr!("index belongs to another folder").to_string()),
         Err(e) => Err(e.to_string()),
     };
     // the index matches the disk up to this moment (Unix seconds)
@@ -811,12 +811,12 @@ mod tests {
         let other_root = tempfile::tempdir().unwrap();
         let (other, _) = build(other_root.path(), &Walker::new(&ex));
         for (bytes, expect) in [
-            (b"kaputt".to_vec(), "beschädigt"),
+            (b"kaputt".to_vec(), "damaged"),
             (
                 build(&root, &Walker::new(&ex)).0.to_bytes("anderes", 0),
-                "anderen Laufwerk",
+                "another drive",
             ),
-            (other.to_bytes(&tag, 0), "anderen Ordner"),
+            (other.to_bytes(&tag, 0), "another folder"),
         ] {
             std::fs::write(&file, &bytes).unwrap();
             let s = Search::start(

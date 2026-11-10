@@ -2,6 +2,7 @@
 //! identical to the snapshot before", plus every failure mode we can think of.
 
 use super::*;
+// tests see the English source texts (German comes from lang/de, D-029)
 use crate::model::RegData;
 use std::io;
 
@@ -95,9 +96,7 @@ fn apply_then_reset_restores_the_exact_snapshot() {
     // idempotent
     let again = reset(&mut reg, &paths);
     assert_eq!(again.changed(), 0);
-    assert!(again
-        .summary_de()
-        .starts_with("Keine Windows-Integration aktiv"));
+    assert!(again.summary().starts_with("No Windows integration active"));
     assert!(reg.same_content(&before));
 }
 
@@ -148,8 +147,8 @@ fn values_changed_by_others_are_left_alone() {
         .kept
         .iter()
         .any(|k| k.contains(r"shell\open\command\(Standard)")));
-    assert!(r.kept.iter().any(|k| k.contains("nicht leer")));
-    assert!(r.summary_de().contains("von anderer Software geändert"));
+    assert!(r.kept.iter().any(|k| k.contains("not empty")));
+    assert!(r.summary().contains("changed by other software"));
     // what was still ours is back
     assert_eq!(
         reg.get(&KeyPath::hkcu("Environment"), "Path").unwrap(),
@@ -190,7 +189,7 @@ fn without_any_journal_the_sweep_removes_what_is_ours() {
     let st = status(&mut reg, &paths);
     assert_eq!(st.journal, JournalState::Damaged);
     assert_eq!(st.active_points, 2, "Directory verb + Software\\Explorer2");
-    assert!(st.summary_de().contains("beschädigt"));
+    assert!(st.summary().contains("damaged"));
     let r = reset(&mut reg, &paths);
     assert_eq!(r.journal, JournalState::Damaged);
     assert_eq!(r.swept, 2);
@@ -214,7 +213,7 @@ fn apply_refuses_on_a_damaged_journal() {
     let before = reg.clone();
     assert!(apply(&mut reg, &paths, &stage1(EXE))
         .unwrap_err()
-        .contains("beschädigt"));
+        .contains("damaged"));
     assert!(reg.same_content(&before));
 }
 
@@ -311,7 +310,7 @@ fn errors_stay_in_the_journal_for_the_next_try() {
     reg.deny_hklm = true;
     let r = reset(&mut reg, &paths);
     assert!(!r.ok());
-    assert!(r.summary_de().contains("Fehler"));
+    assert!(r.summary().contains("errors"));
     match load(&paths) {
         Loaded::Ok(j) => assert!(!j.is_empty(), "kept for retry"),
         other => panic!("{other:?}"),
@@ -420,7 +419,7 @@ fn status_reports_what_is_active() {
     let mut reg = machine();
     let st = status(&mut reg, &paths);
     assert!(!st.any());
-    assert_eq!(st.summary_de(), "Keine Windows-Integration aktiv.");
+    assert_eq!(st.summary(), "No Windows integration active.");
     apply(&mut reg, &paths, &stage1(EXE)).unwrap();
     let st = status(&mut reg, &paths);
     assert!(st.any());

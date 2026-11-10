@@ -58,6 +58,8 @@ fn placeholders_are_filled() {
 fn source_language_and_macros() {
     set_language("en");
     assert_eq!(tr!("Copy"), "Copy");
+    const LABEL: &str = tr_noop!("Copy");
+    assert_eq!(translate(LABEL), "Copy");
     assert_eq!(tr!("{} selected", 3), "3 selected");
     assert_eq!(tr_n!(1, "{n} item", "{n} items"), "1 item");
     assert_eq!(tr_n!(2usize, "{n} item", "{n} items"), "2 items");
@@ -187,6 +189,7 @@ fn rust_texts_are_found() {
         let g = 'x'; let h: &'static str = tr!("multi \
                  line");
         let i = attr!("not ours");
+        const K: &str = tr_noop!("Ctrl+C");
     "##;
     let found = scan_rust(src).unwrap();
     let ids: Vec<_> = found
@@ -200,7 +203,8 @@ fn rust_texts_are_found() {
             ("{} selected", None),
             ("{n} item", Some("{n} items")),
             ("one {0}", Some("many {0}")),
-            ("multi line", None)
+            ("multi line", None),
+            ("Ctrl+C", None)
         ]
     );
     assert!(scan_rust("tr!(TEXT)").is_err());
@@ -272,4 +276,18 @@ fn compiled_german_catalog_is_used() {
         "Settings",
         "no catalog yet → English"
     );
+}
+
+#[test]
+fn numbers_follow_the_language() {
+    assert_eq!(separators("en"), (',', '.'));
+    assert_eq!(separators("de"), ('.', ','));
+    assert_eq!(separators("fr"), ('\u{a0}', ','));
+    assert_eq!(separators("ja"), (',', '.'));
+    // the formatting functions read the current language; this test binary
+    // only ever uses English there (other tests run in parallel)
+    assert_eq!(format_integer(0), "0");
+    assert_eq!(format_integer(999), "999");
+    assert_eq!(format_integer(1_234_567), "1,234,567");
+    assert_eq!(format_decimal(2.75, 1), "2.8");
 }

@@ -3,6 +3,7 @@
 //! `explorer2-recover` tool (`explorer-integrate`).
 
 use crate::{nav, MainWindow};
+use explorer_i18n::tr;
 use explorer_integrate::features::{self, Feature, State};
 use explorer_integrate::{JournalPaths, MemRegistry, Registry};
 use std::path::{Path, PathBuf};
@@ -72,7 +73,7 @@ pub fn refresh(win: &MainWindow) {
         None => win.set_install_available(false),
     }
     let Some(paths) = JournalPaths::default_paths() else {
-        win.set_integration_status("Konfigurationsordner nicht gefunden.".into());
+        win.set_integration_status(tr!("Configuration folder not found.").into());
         win.set_integration_active(false);
         return;
     };
@@ -98,7 +99,7 @@ pub fn refresh(win: &MainWindow) {
         st.journal,
         states.join(" ")
     ));
-    win.set_integration_status(st.summary_de().into());
+    win.set_integration_status(st.summary().into());
     win.set_integration_active(st.any());
 }
 
@@ -106,7 +107,7 @@ pub fn refresh(win: &MainWindow) {
 pub fn set_feature(win: &MainWindow, id: &str, on: bool) {
     if explorer_integrate::system_registry().is_none() {
         nav::trace_line("integration feature: no registry on this platform");
-        win.set_integration_status("Windows-Integration gibt es nur unter Windows.".into());
+        win.set_integration_status(tr!("Windows integration is only available on Windows.").into());
         win.set_settings_open(true);
         return;
     }
@@ -126,13 +127,10 @@ pub fn set_feature(win: &MainWindow, id: &str, on: bool) {
                     exe.display(),
                     recover
                 ));
-                format!(
-                    "{} – eingeschaltet. Bitte Explorer 2.0 nicht verschieben (sonst vorher zurücksetzen).{}",
-                    f.label_de(),
-                    recover.map_or(String::new(), |r| format!(
-                        " Notfall-Werkzeug: {}",
-                        r.display()
-                    ))
+                tr!(
+                    "{0} – switched on. Please don't move Explorer 2.0 (otherwise reset first).{1}",
+                    f.label(),
+                    recover.map_or(String::new(), |r| tr!(" Emergency tool: {0}", r.display()))
                 )
             }
             Err(e) => {
@@ -154,9 +152,9 @@ pub fn set_feature(win: &MainWindow, id: &str, on: bool) {
         if !r.ok() {
             win.set_error(r.errors.join("; ").into());
         }
-        format!(
-            "{} – ausgeschaltet, Windows-Standard wieder aktiv.",
-            f.label_de()
+        tr!(
+            "{0} – switched off, Windows default active again.",
+            f.label()
         )
     };
     refresh(win);
@@ -244,11 +242,11 @@ pub fn reset(win: &MainWindow) {
         r.journal
     ));
     if !r.ok() {
-        win.set_error(format!("Zurücksetzen unvollständig: {}", r.errors.join("; ")).into());
+        win.set_error(tr!("Reset incomplete: {0}", r.errors.join("; ")).into());
     }
     refresh(win);
     // show the outcome where the button is
-    win.set_integration_status(r.summary_de().into());
+    win.set_integration_status(r.summary().into());
     win.set_settings_open(true);
 }
 
@@ -262,8 +260,8 @@ pub fn ask_install(win: &MainWindow) {
     }
     crate::fileops::confirm_install(
         win,
-        &format!(
-            "{}\n\nDanach läuft Explorer 2.0 aus dem Installationsordner weiter (dieses Fenster schließt sich).",
+        &tr!(
+            "{0}\n\nAfterwards Explorer 2.0 continues from the installation folder (this window closes).",
             win.get_install_status()
         ),
         &win.get_install_button(),

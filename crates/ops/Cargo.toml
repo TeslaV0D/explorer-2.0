@@ -5,6 +5,7 @@ edition.workspace = true
 license.workspace = true
 
 [dependencies]
+explorer-i18n = { path = "../i18n" }
 explorer-core = { path = "../core" }
 trash = "5"
 

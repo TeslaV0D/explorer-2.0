@@ -15,6 +15,9 @@
 
 pub mod extract;
 pub mod po;
+mod system;
+
+pub use system::{init, system_languages};
 
 use std::fmt::{Display, Write as _};
 use std::sync::atomic::{AtomicUsize, Ordering};
@@ -290,6 +293,52 @@ macro_rules! tr {
     };
     ($s:literal, $($a:expr),+ $(,)?) => {
         $crate::format($crate::translate($s), &[$(&$a as &dyn ::std::fmt::Display),+])
+    };
+}
+
+/// Digit-group and decimal separator of a language (like Windows' defaults:
+/// `1,234.5` English, `1.234,5` German/Spanish/Italian, `1 234,5` with a
+/// no-break space for French/Polish/Russian/Ukrainian).
+pub fn separators(code: &str) -> (char, char) {
+    match code {
+        "de" | "es" | "it" => ('.', ','),
+        "fr" | "pl" | "ru" | "uk" => ('\u{a0}', ','),
+        _ => (',', '.'),
+    }
+}
+
+/// `1234567` → `1,234,567` (current language).
+pub fn format_integer(n: u64) -> String {
+    let (group, _) = separators(language());
+    let digits = n.to_string();
+    let mut out = String::with_capacity(digits.len() + digits.len() / 3 * 2);
+    for (i, c) in digits.chars().enumerate() {
+        if i > 0 && (digits.len() - i).is_multiple_of(3) {
+            out.push(group);
+        }
+        out.push(c);
+    }
+    out
+}
+
+/// `v` with `places` decimals and the language's decimal separator (no grouping).
+pub fn format_decimal(v: f64, places: usize) -> String {
+    let (_, dec) = separators(language());
+    let s = format!("{v:.places$}");
+    if dec == '.' {
+        s
+    } else {
+        s.replace('.', &dec.to_string())
+    }
+}
+
+/// Marks a text for translation without translating it (gettext `N_`):
+/// for `const` tables (command names, shortcuts). The literal stays the
+/// English source; translate where it is shown: `explorer_i18n::translate(x)`.
+#[macro_export]
+macro_rules! tr_noop {
+    ($s:literal) => {
+        $s
     };
 }
 

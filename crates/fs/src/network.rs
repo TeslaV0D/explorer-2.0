@@ -96,7 +96,7 @@ pub fn shares(server: &str) -> Result<Vec<Share>, NetError> {
     {
         let _ = server;
         Err(NetError::Other(
-            "Netzwerkfreigaben gibt es nur unter Windows".into(),
+            explorer_i18n::tr!("Network shares are only available on Windows").into(),
         ))
     }
 }
@@ -113,7 +113,7 @@ pub fn connect(server: &str, share: Option<&str>, hwnd: isize) -> Result<(), Str
     #[cfg(not(windows))]
     {
         let _ = (server, share, hwnd);
-        Err("Anmelden gibt es nur unter Windows".into())
+        Err(explorer_i18n::tr!("Signing in is only available on Windows").into())
     }
 }
 
@@ -149,8 +149,8 @@ mod win {
 
     pub fn message(code: u32) -> String {
         match code {
-            53 | 67 | 2250 => "Netzwerkpfad nicht gefunden".into(),
-            c if is_login_error(c) => "Anmeldung erforderlich".into(),
+            53 | 67 | 2250 => explorer_i18n::tr!("Network path not found").into(),
+            c if is_login_error(c) => explorer_i18n::tr!("Sign-in required").into(),
             c => std::io::Error::from_raw_os_error(c as i32).to_string(),
         }
     }
@@ -225,7 +225,7 @@ mod win {
         };
         match rc {
             0 => Ok(()),
-            ERROR_CANCELLED => Err("Anmeldung abgebrochen".into()),
+            ERROR_CANCELLED => Err(explorer_i18n::tr!("Sign-in cancelled").into()),
             c => Err(message(c)),
         }
     }

@@ -24,7 +24,7 @@ pub enum Revert {
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct UndoEntry {
-    /// German label: "Kopieren rückgängig machen" etc.
+    /// What was done, already in the UI language ("Copy", German "Kopieren").
     pub label: String,
     pub reverts: Vec<Revert>,
     /// Some permanently deleted items cannot come back.
@@ -76,7 +76,8 @@ pub struct TrashSnapshot(Result<Vec<trash::TrashItem>, String>);
 impl TrashSnapshot {
     pub fn take() -> Self {
         TrashSnapshot(
-            trash::os_limited::list().map_err(|e| format!("Papierkorb nicht lesbar: {e}")),
+            trash::os_limited::list()
+                .map_err(|e| explorer_i18n::tr!("Recycle Bin not readable: {0}", e)),
         )
     }
 
@@ -99,10 +100,12 @@ impl TrashSnapshot {
             })
             .max_by_key(|(_, i)| i.time_deleted)
             .map(|(n, _)| n)
-            .ok_or_else(|| format!("Im Papierkorb nicht gefunden: {}", original.display()))?;
+            .ok_or_else(|| {
+                explorer_i18n::tr!("Not found in the Recycle Bin: {0}", original.display())
+            })?;
         if original.exists() {
-            return Err(format!(
-                "Am Originalort existiert bereits ein Element: {}",
+            return Err(explorer_i18n::tr!(
+                "An item already exists at the original location: {0}",
                 original.display()
             ));
         }
@@ -113,7 +116,7 @@ impl TrashSnapshot {
             item.name = n.to_os_string();
         }
         trash::os_limited::restore_all([item])
-            .map_err(|e| format!("Wiederherstellen fehlgeschlagen: {e}"))
+            .map_err(|e| explorer_i18n::tr!("Restore failed: {0}", e))
     }
 }
 
@@ -206,8 +209,8 @@ pub fn undo(entry: &UndoEntry) -> Vec<String> {
             }
             Revert::MoveBack { from, to } => {
                 if to.exists() {
-                    Err(format!(
-                        "Zurückverschieben nicht möglich, Ziel existiert: {}",
+                    Err(explorer_i18n::tr!(
+                        "Can't move back, the target exists: {0}",
                         to.display()
                     ))
                 } else {
@@ -219,7 +222,7 @@ pub fn undo(entry: &UndoEntry) -> Vec<String> {
             }
             Revert::RestoreTrashed { original, since } => match snapshot.as_mut() {
                 Some(s) => s.restore(original, *since),
-                None => Err("Papierkorb nicht verfügbar".into()),
+                None => Err(explorer_i18n::tr!("Recycle Bin not available").into()),
             },
         };
         if let Err(e) = res {

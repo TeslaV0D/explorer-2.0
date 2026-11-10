@@ -45,11 +45,17 @@ pub enum LoadError {
 impl std::fmt::Display for LoadError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            LoadError::Missing => f.write_str("kein gespeicherter Index"),
-            LoadError::Outdated(v) => write!(f, "Index aus einer anderen Version ({v})"),
-            LoadError::OtherVolume(t) => write!(f, "Index gehört zu einem anderen Laufwerk ({t})"),
-            LoadError::Damaged(why) => write!(f, "Index beschädigt: {why}"),
-            LoadError::Io(e) => write!(f, "Index nicht lesbar: {e}"),
+            // the reason after "damaged" is a technical detail (English, not translated)
+            LoadError::Missing => f.write_str(explorer_i18n::tr!("no saved index")),
+            LoadError::Outdated(v) => {
+                f.write_str(&explorer_i18n::tr!("index from another version ({0})", v))
+            }
+            LoadError::OtherVolume(t) => f.write_str(&explorer_i18n::tr!(
+                "index belongs to another drive ({0})",
+                t
+            )),
+            LoadError::Damaged(why) => f.write_str(&explorer_i18n::tr!("index damaged: {0}", why)),
+            LoadError::Io(e) => f.write_str(&explorer_i18n::tr!("index not readable: {0}", e)),
         }
     }
 }
@@ -156,7 +162,7 @@ impl<'a> In<'a> {
             .pos
             .checked_add(n)
             .filter(|&e| e <= self.data.len())
-            .ok_or_else(|| damaged("abgeschnitten"))?;
+            .ok_or_else(|| damaged("truncated"))?;
         let s = &self.data[self.pos..end];
         self.pos = end;
         Ok(s)
@@ -174,12 +180,12 @@ impl<'a> In<'a> {
     fn count(&mut self, max: usize) -> Result<usize, LoadError> {
         let n = self.u32()? as usize;
         if n > max {
-            return Err(damaged("Anzahl zu groß"));
+            return Err(damaged("count too large"));
         }
         Ok(n)
     }
     fn u16s(&mut self, n: usize) -> Result<Vec<u16>, LoadError> {
-        let b = self.take(n.checked_mul(2).ok_or_else(|| damaged("Größe"))?)?;
+        let b = self.take(n.checked_mul(2).ok_or_else(|| damaged("size"))?)?;
         Ok(b.as_chunks::<2>()
             .0
             .iter()
@@ -187,7 +193,7 @@ impl<'a> In<'a> {
             .collect())
     }
     fn u32s(&mut self, n: usize) -> Result<Vec<u32>, LoadError> {
-        let b = self.take(n.checked_mul(4).ok_or_else(|| damaged("Größe"))?)?;
+        let b = self.take(n.checked_mul(4).ok_or_else(|| damaged("size"))?)?;
         Ok(b.as_chunks::<4>()
             .0
             .iter()
@@ -195,7 +201,7 @@ impl<'a> In<'a> {
             .collect())
     }
     fn u64s(&mut self, n: usize) -> Result<Vec<u64>, LoadError> {
-        let b = self.take(n.checked_mul(8).ok_or_else(|| damaged("Größe"))?)?;
+        let b = self.take(n.checked_mul(8).ok_or_else(|| damaged("size"))?)?;
         Ok(b.as_chunks::<8>()
             .0
             .iter()
@@ -203,7 +209,7 @@ impl<'a> In<'a> {
             .collect())
     }
     fn blob(&mut self) -> Result<Vec<u8>, LoadError> {
-        let n = usize::try_from(self.u64()?).map_err(|_| damaged("Größe"))?;
+        let n = usize::try_from(self.u64()?).map_err(|_| damaged("size"))?;
         Ok(self.take(n)?.to_vec())
     }
     fn list(&mut self, max: usize) -> Result<Vec<u32>, LoadError> {
@@ -276,7 +282,7 @@ impl Index {
 
     pub fn from_bytes(data: &[u8]) -> Result<(Index, Saved), LoadError> {
         if data.len() < 8 + 4 + 8 || &data[..8] != MAGIC {
-            return Err(damaged("keine Indexdatei"));
+            return Err(damaged("not an index file"));
         }
         let version = u32::from_le_bytes(data[8..12].try_into().unwrap_or_default());
         if version != VERSION {
@@ -284,7 +290,7 @@ impl Index {
         }
         let (body, sum) = data.split_at(data.len() - 8);
         if checksum(body) != u64::from_le_bytes(sum.try_into().unwrap_or_default()) {
-            return Err(damaged("Prüfsumme falsch (abgeschnitten oder verändert)"));
+            return Err(damaged("wrong checksum (truncated or altered)"));
         }
         Index::parse_body(body)
     }
@@ -299,13 +305,13 @@ impl Index {
         };
         let flags_word = r.u32()?;
         let saved_at = r.u64()? as i64;
-        let tag = String::from_utf8(r.blob()?).map_err(|_| damaged("Kennung"))?;
+        let tag = String::from_utf8(r.blob()?).map_err(|_| damaged("volume tag"))?;
         // an entry needs ≥ 26 bytes of columns: bounds the count before allocating
         let max = body.len() / 26 + 1;
         let n = r.count(max)?;
         let ordered = r.u32()? as usize;
-        let ord_end = usize::try_from(r.u64()?).map_err(|_| damaged("Größe"))?;
-        let waste = usize::try_from(r.u64()?).map_err(|_| damaged("Größe"))?;
+        let ord_end = usize::try_from(r.u64()?).map_err(|_| damaged("size"))?;
+        let waste = usize::try_from(r.u64()?).map_err(|_| damaged("size"))?;
         let parent = r.u32s(n)?;
         let name_off = r.u32s(n)?;
         let name_len = r.u16s(n)?;
@@ -322,34 +328,34 @@ impl Index {
         for _ in 0..ext_count {
             let len = u16::from_le_bytes(r.take(2)?.try_into().unwrap_or_default()) as usize;
             ext_names
-                .push(String::from_utf8(r.take(len)?.to_vec()).map_err(|_| damaged("Endung"))?);
+                .push(String::from_utf8(r.take(len)?.to_vec()).map_err(|_| damaged("extension"))?);
         }
         let roots = r.list(n)?;
         let tail = r.list(n)?;
         let ord_off = r.list(n)?;
         if r.pos != body.len() {
-            return Err(damaged("Daten nach dem Ende"));
+            return Err(damaged("data after the end"));
         }
 
         // ---- consistency (any failure = rebuild, never a panic later)
         if flags_word > 1 || ordered > n || ord_off.len() != ordered || ord_end > lowers.len() {
-            return Err(damaged("Kopf"));
+            return Err(damaged("header"));
         }
         if !lowers.is_empty() && lowers[0] != SEP || std::str::from_utf8(&lowers).is_err() {
-            return Err(damaged("Namenspuffer"));
+            return Err(damaged("name buffer"));
         }
-        let names_str = std::str::from_utf8(&names).map_err(|_| damaged("Namen"))?;
+        let names_str = std::str::from_utf8(&names).map_err(|_| damaged("names"))?;
         let mut live = 0usize;
         for i in 0..n {
             // between two separators (ASCII) in a valid UTF-8 buffer = valid text
             let (lo, ll) = (lower_off[i] as usize, lower_len[i] as usize);
             if lo == 0 || lowers.get(lo - 1) != Some(&SEP) || lowers.get(lo + ll) != Some(&SEP) {
-                return Err(damaged(format!("Name {i}")));
+                return Err(damaged(format!("name {i}")));
             }
             match name_off[i] {
                 SAME => {
                     if name_len[i] != lower_len[i] {
-                        return Err(damaged(format!("Name {i}")));
+                        return Err(damaged(format!("name {i}")));
                     }
                 }
                 o => {
@@ -358,25 +364,25 @@ impl Index {
                         || !names_str.is_char_boundary(o)
                         || !names_str.is_char_boundary(end)
                     {
-                        return Err(damaged(format!("Name {i}")));
+                        return Err(damaged(format!("name {i}")));
                     }
                 }
             }
             if parent[i] != NONE && parent[i] as usize >= n {
-                return Err(damaged(format!("Eltern {i}")));
+                return Err(damaged(format!("parent {i}")));
             }
             let e = ext_id[i];
             if e != EXT_NONE && e != EXT_OTHER && e as usize >= ext_names.len() {
-                return Err(damaged(format!("Endung {i}")));
+                return Err(damaged(format!("extension {i}")));
             }
             if flags[i] & !(crate::DIR | GONE | DIRTY) != 0 {
-                return Err(damaged(format!("Flags {i}")));
+                return Err(damaged(format!("flags {i}")));
             }
             if flags[i] & GONE == 0 {
                 live += 1;
                 // a live entry's parent is live (removal takes the subtree)
                 if parent[i] != NONE && flags[parent[i] as usize] & GONE != 0 {
-                    return Err(damaged(format!("Eltern {i}")));
+                    return Err(damaged(format!("parent {i}")));
                 }
             }
         }
@@ -391,7 +397,7 @@ impl Index {
                 cur = parent[cur] as usize;
             }
             if cur != NONE as usize && state[cur] == 1 {
-                return Err(damaged("Kreis in den Ordnern"));
+                return Err(damaged("cycle in the folders"));
             }
             for w in walk.drain(..) {
                 state[w] = 2;
@@ -406,16 +412,16 @@ impl Index {
                 || k > 0 && ord_off[k - 1] >= ord_off[k]
                 || lowers[o - 1] != SEP
             {
-                return Err(damaged("Reihenfolge"));
+                return Err(damaged("order"));
             }
             if flags[k] & DIRTY == 0 && lower_off[k] != ord_off[k] {
-                return Err(damaged("Reihenfolge"));
+                return Err(damaged("order"));
             }
         }
         if roots.iter().chain(&tail).any(|&r| r as usize >= n)
             || roots.iter().any(|&r| parent[r as usize] != NONE)
         {
-            return Err(damaged("Wurzeln"));
+            return Err(damaged("roots"));
         }
         let mut ext_map = std::collections::HashMap::with_capacity(ext_names.len());
         for (k, e) in ext_names.iter().enumerate().skip(1) {

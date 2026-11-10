@@ -93,20 +93,21 @@ pub fn text_preview(b: &[u8], max_lines: usize, max_chars: usize) -> Option<Stri
     Some(out)
 }
 
-/// "Schreibgeschützt, Versteckt, System" (Explorer's attribute names).
-pub fn attributes_de(e: &Entry) -> String {
+/// "Read-only, Hidden, System" (Explorer's attribute names, translated).
+pub fn attributes(e: &Entry) -> String {
+    use explorer_i18n::tr;
     let mut v = Vec::new();
     if e.readonly {
-        v.push("Schreibgeschützt");
+        v.push(tr!("Read-only"));
     }
     if e.hidden {
-        v.push("Versteckt");
+        v.push(tr!("Hidden"));
     }
     if e.system {
-        v.push("System");
+        v.push(tr!("System"));
     }
     if e.is_link {
-        v.push("Verknüpfung/Link");
+        v.push(tr!("Shortcut/link"));
     }
     if v.is_empty() {
         "–".into()
@@ -126,22 +127,22 @@ pub fn totals<'a>(entries: impl IntoIterator<Item = &'a Entry>) -> (usize, usize
     })
 }
 
-/// "3 Dateien, 1 Ordner".
-pub fn count_de(files: usize, folders: usize) -> String {
-    let f = match files {
-        0 => None,
-        1 => Some("1 Datei".to_string()),
-        n => Some(format!("{} Dateien", crate::format_count(n))),
-    };
-    let d = match folders {
-        0 => None,
-        1 => Some("1 Ordner".to_string()),
-        n => Some(format!("{} Ordner", crate::format_count(n))),
-    };
+/// "3 files, 1 folder" ("3 Dateien, 1 Ordner").
+pub fn count_text(files: usize, folders: usize) -> String {
+    use explorer_i18n::{tr, tr_n};
+    let f = (files > 0).then(|| tr_n!(files, "{0} file", "{0} files", crate::format_count(files)));
+    let d = (folders > 0).then(|| {
+        tr_n!(
+            folders,
+            "{0} folder",
+            "{0} folders",
+            crate::format_count(folders)
+        )
+    });
     match (f, d) {
         (Some(f), Some(d)) => format!("{f}, {d}"),
         (Some(x), None) | (None, Some(x)) => x,
-        (None, None) => "leer".into(),
+        (None, None) => tr!("empty").into(),
     }
 }
 
@@ -214,12 +215,13 @@ mod tests {
         let mut ro = e("a", false, 1);
         ro.readonly = true;
         ro.hidden = true;
-        assert_eq!(attributes_de(&ro), "Schreibgeschützt, Versteckt");
-        assert_eq!(attributes_de(&e("b", false, 0)), "–");
+        assert_eq!(attributes(&ro), "Read-only, Hidden");
+        assert_eq!(attributes(&e("b", false, 0)), "–");
         let all = [e("a", false, 10), e("b", false, 5), e("d", true, 4096)];
         assert_eq!(totals(&all), (2, 1, 15), "folder sizes are not counted");
-        assert_eq!(count_de(2, 1), "2 Dateien, 1 Ordner");
-        assert_eq!(count_de(1, 0), "1 Datei");
-        assert_eq!(count_de(0, 0), "leer");
+        assert_eq!(count_text(2, 1), "2 files, 1 folder");
+        assert_eq!(count_text(1, 0), "1 file");
+        assert_eq!(count_text(0, 1234), "1,234 folders");
+        assert_eq!(count_text(0, 0), "empty");
     }
 }

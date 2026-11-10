@@ -1,6 +1,7 @@
 //! Integration tests on real file systems. Data safety is the point here:
 //! every test also checks that nothing was lost or left half-written.
 
+// tests see the English source texts (German comes from lang/de, D-029)
 use explorer_ops::exec::{run, Choice, Conflict, Control, Done, Event, JobSpec, Kind, Report};
 use explorer_ops::simple::{new_folder, rename};
 use explorer_ops::undo::{entry_from_report, undo};
@@ -138,8 +139,8 @@ fn copy_into_same_folder_creates_kopie_names() {
     write(&src, b"x");
     exec(&job(Kind::Copy, &[&src], Some(d.path())), &[]);
     exec(&job(Kind::Copy, &[&src], Some(d.path())), &[]);
-    assert!(d.path().join("Bericht - Kopie.docx").is_file());
-    assert!(d.path().join("Bericht - Kopie (2).docx").is_file());
+    assert!(d.path().join("Bericht - Copy.docx").is_file());
+    assert!(d.path().join("Bericht - Copy (2).docx").is_file());
 }
 
 #[test]
@@ -327,7 +328,7 @@ fn move_into_own_subfolder_is_rejected() {
     let before = tree(d.path());
     let (r, _) = exec(&job(Kind::Move, &[&dir], Some(&dir.join("B"))), &[]);
     assert_eq!(r.errors.len(), 1);
-    assert!(r.errors[0].1.contains("Unterordner"));
+    assert!(r.errors[0].1.contains("subfolder"));
     assert_eq!(tree(d.path()), before, "nothing changed");
     let (r, _) = exec(&job(Kind::Copy, &[&dir], Some(&dir)), &[]);
     assert_eq!(r.errors.len(), 1, "copy into itself rejected too");
@@ -400,7 +401,7 @@ fn rename_rules() {
     let a = d.path().join("a.txt");
     write(&a, b"a");
     write(&d.path().join("b.txt"), b"b");
-    assert!(rename(&a, "b.txt").unwrap_err().contains("bereits"));
+    assert!(rename(&a, "b.txt").unwrap_err().contains("already"));
     assert!(rename(&a, "").is_err());
     let c = rename(&a, "c.txt").unwrap();
     assert_eq!(read(&c), b"a");
@@ -416,8 +417,8 @@ fn rename_rules() {
 #[test]
 fn new_folder_names_are_unique() {
     let d = tmp();
-    assert!(new_folder(d.path()).unwrap().ends_with("Neuer Ordner"));
-    assert!(new_folder(d.path()).unwrap().ends_with("Neuer Ordner (2)"));
+    assert!(new_folder(d.path()).unwrap().ends_with("New folder"));
+    assert!(new_folder(d.path()).unwrap().ends_with("New folder (2)"));
 }
 
 // ---------------------------------------------------------------- async handle
@@ -495,7 +496,7 @@ fn locked_file_is_reported() {
     fs::create_dir(&dst).unwrap();
     let (r, _) = exec(&job(Kind::Copy, &[&locked, &ok], Some(&dst)), &[]);
     assert_eq!(r.errors.len(), 1, "{:?}", r.errors);
-    assert!(r.errors[0].1.contains("anderen Prozess"), "{:?}", r.errors);
+    assert!(r.errors[0].1.contains("another process"), "{:?}", r.errors);
     assert!(dst.join("ok.txt").is_file());
     assert!(!dst.join("locked.txt").exists() && no_partials(&dst));
 }
@@ -514,7 +515,7 @@ fn disk_full_reports_error_and_leaves_no_partial_file() {
     fs::create_dir_all(&dst).unwrap();
     let (r, _) = exec(&job(Kind::Copy, &[&src], Some(&dst)), &[]);
     assert_eq!(r.errors.len(), 1, "{:?}", r.errors);
-    assert!(r.errors[0].1.contains("Speicherplatz"), "{:?}", r.errors);
+    assert!(r.errors[0].1.contains("disk space"), "{:?}", r.errors);
     assert!(!dst.join("big.bin").exists());
     assert!(no_partials(&dst));
     let _ = fs::remove_dir_all(&dst);
@@ -553,7 +554,7 @@ fn trash_view_lists_restores_and_purges() {
     let e = find().unwrap();
     assert!(trashview::restore(std::slice::from_ref(&e))
         .unwrap_err()
-        .contains("existiert bereits"));
+        .contains("already exists"));
     assert_eq!(read(&f), b"neu", "nothing overwritten");
     trashview::purge(std::slice::from_ref(&e)).unwrap();
     assert!(find().is_none(), "purged for good");

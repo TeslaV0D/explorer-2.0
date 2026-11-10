@@ -68,6 +68,8 @@ fn main() -> Result<(), slint::PlatformError> {
     }
     if arg.as_deref() == Some("--install") {
         attach_parent_console();
+        // console output in the user's language too
+        lang::init(&config::load().language);
         let quiet = std::env::args().any(|a| a == "--quiet");
         std::process::exit(installer::cli(quiet));
     }
@@ -143,7 +145,7 @@ fn main() -> Result<(), slint::PlatformError> {
             explorer_core::guard::Verdict::Skip => 0,
         };
         let reports = crash::take_new_reports();
-        if let Some(text) = explorer_core::guard::notice_de(reports, safe, failed) {
+        if let Some(text) = explorer_core::guard::notice_text(reports, safe, failed) {
             nav::trace_line(&format!("notice reports={reports} safe={safe}"));
             win.set_notice(text.into());
             win.set_notice_folder(reports > 0);

@@ -7,6 +7,7 @@ use crate::keys::KeyAction;
 use crate::{nav, MainWindow, PaletteItem};
 use explorer_core::commands::{self, fuzzy_score, push_recent, rank, Need};
 use explorer_core::view::ViewMode;
+use explorer_i18n::tr;
 use slint::{ComponentHandle, Model, ModelRc, VecModel};
 use std::cell::RefCell;
 use std::rc::Rc;
@@ -105,8 +106,8 @@ pub fn query(win: &MainWindow, text: &str) {
         for c in rank(text, &recent, commands::ALL) {
             let ok = enabled(win, pi, c.need);
             items.push(PaletteItem {
-                label: c.label.into(),
-                detail: c.keys.into(),
+                label: c.title().into(),
+                detail: c.shortcut().into(),
                 enabled: ok,
             });
             targets.push((Target::Cmd(c.id), ok));
@@ -138,7 +139,7 @@ pub fn run(win: &MainWindow, index: i32) {
     let Some((cmd, go, ok)) = target else { return };
     if !ok {
         nav::trace_line("palette: command not available here");
-        win.set_error("Hier nicht möglich".into());
+        win.set_error(tr!("Not possible here").into());
         return;
     }
     close(win);

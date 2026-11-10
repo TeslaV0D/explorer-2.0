@@ -57,11 +57,14 @@ impl Feature {
         ALL.into_iter().find(|f| f.id() == s)
     }
 
-    pub fn label_de(self) -> &'static str {
+    /// Name in the settings (current language).
+    pub fn label(self) -> &'static str {
         match self {
-            Feature::FolderOpen => "Ordner mit Explorer 2.0 öffnen",
-            Feature::ContextMenu => "„In Explorer 2.0 öffnen“ im Kontextmenü",
-            Feature::WinE => "Win+E öffnet Explorer 2.0",
+            Feature::FolderOpen => explorer_i18n::tr!("Open folders with Explorer 2.0"),
+            Feature::ContextMenu => {
+                explorer_i18n::tr!("“Open in Explorer 2.0” in the context menu")
+            }
+            Feature::WinE => explorer_i18n::tr!("Win+E opens Explorer 2.0"),
         }
     }
 
@@ -99,6 +102,9 @@ impl Feature {
                 .flat_map(|class| {
                     let shell = classes(&format!(r"{class}\shell"));
                     let verb = shell.child(OPEN_VERB);
+                    // Verb texts are written to the registry and compared by
+                    // `state`/reset (R-001) → fixed, NOT translated (D-029; a
+                    // language-safe relabel is its own TODO).
                     [
                         set(verb.clone(), "", RegData::sz("Öffnen (Explorer 2.0)")),
                         set(

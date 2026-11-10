@@ -3,6 +3,7 @@
 //! journaled through `explorer-integrate` (the reset and the uninstaller
 //! remove it again). Used by `explorer2.exe --install` and the settings.
 
+use explorer_i18n::tr;
 use explorer_integrate::install::{self, InstallPaths, InstallReport};
 use explorer_integrate::{JournalPaths, MemRegistry, Registry};
 use std::path::PathBuf;
@@ -21,9 +22,10 @@ pub fn exe_dir() -> Option<PathBuf> {
 
 /// Install (or update) from the folder of the running exe.
 pub fn install_here() -> Result<(InstallPaths, InstallReport), String> {
-    let ip = InstallPaths::default_paths().ok_or("Installationsordner nicht bestimmbar")?;
-    let jp = JournalPaths::default_paths().ok_or("Konfigurationsordner nicht gefunden")?;
-    let src = exe_dir().ok_or("Programmordner nicht bestimmbar")?;
+    let ip =
+        InstallPaths::default_paths().ok_or(tr!("Installation folder cannot be determined"))?;
+    let jp = JournalPaths::default_paths().ok_or(tr!("Configuration folder not found"))?;
+    let src = exe_dir().ok_or(tr!("Program folder cannot be determined"))?;
     let mut reg = registry();
     let r = install::install(
         reg.as_mut(),
@@ -64,14 +66,14 @@ pub fn cli(quiet: bool) -> i32 {
     };
     match install_here() {
         Ok((ip, r)) => {
-            out(&format!(
-                "Explorer 2.0 installiert: {} ({} Verknüpfungen im Startmenü{})",
+            out(&tr!(
+                "Explorer 2.0 installed: {0} ({1} Start menu shortcuts{2})",
                 r.program_dir.display(),
                 r.shortcuts,
                 if r.repointed.is_empty() {
                     String::new()
                 } else {
-                    format!(", umgestellt: {}", r.repointed.join(", "))
+                    tr!(", redirected: {0}", r.repointed.join(", "))
                 }
             ));
             if !quiet {
@@ -82,7 +84,7 @@ pub fn cli(quiet: bool) -> i32 {
             0
         }
         Err(e) => {
-            out(&format!("Installation fehlgeschlagen: {e}"));
+            out(&tr!("Installation failed: {0}", e));
             1
         }
     }
@@ -97,25 +99,28 @@ pub fn describe() -> Option<(String, String)> {
     let version = env!("CARGO_PKG_VERSION");
     Some(match (is_installed(), running_installed()) {
         (true, true) => (
-            format!(
-                "Installiert (Version {version}) in {}. Deinstallieren über „Apps & Features“ oder das Startmenü.",
+            tr!(
+                "Installed (version {0}) in {1}. Uninstall via “Apps & Features” or the Start menu.",
+                version,
                 ip.program_dir.display()
             ),
             String::new(),
         ),
         (true, false) => (
-            format!(
-                "Installiert in {}; diese Kopie läuft aus {here}.",
-                ip.program_dir.display()
+            tr!(
+                "Installed in {0}; this copy runs from {1}.",
+                ip.program_dir.display(),
+                here
             ),
-            "Installation mit dieser Kopie aktualisieren".into(),
+            tr!("Update the installation with this copy").into(),
         ),
         (false, _) => (
-            format!(
-                "Nicht installiert – läuft aus {here}. Installieren legt Explorer 2.0 fest nach {} (ohne Administratorrechte) und ins Startmenü.",
+            tr!(
+                "Not installed – runs from {0}. Installing puts Explorer 2.0 permanently into {1} (without administrator rights) and into the Start menu.",
+                here,
                 ip.program_dir.display()
             ),
-            "Installieren".into(),
+            tr!("Install").into(),
         ),
     })
 }
@@ -132,7 +137,7 @@ fn continue_in(win: &crate::MainWindow, app: std::path::PathBuf, attempt: u32) {
     {
         Ok(c) => c,
         Err(e) => {
-            win.set_error(format!("Installiert, Start fehlgeschlagen: {e}").into());
+            win.set_error(tr!("Installed, but starting failed: {0}", e).into());
             return;
         }
     };
@@ -157,9 +162,14 @@ fn continue_in(win: &crate::MainWindow, app: std::path::PathBuf, attempt: u32) {
                 crate::nav::trace_line(&format!(
                     "install: the installed copy ended at once ({status})"
                 ));
-                w.set_error("Installiert, aber die installierte Kopie startete nicht – dieses Fenster bleibt offen.".into());
+                w.set_error(
+                    tr!(
+                        "Installed, but the installed copy did not start – this window stays open."
+                    )
+                    .into(),
+                );
             }
-            Err(e) => w.set_error(format!("Installiert, Start nicht prüfbar: {e}").into()),
+            Err(e) => w.set_error(tr!("Installed, the start could not be checked: {0}", e).into()),
         }
     });
 }
@@ -184,7 +194,7 @@ pub fn install_and_restart(win: &crate::MainWindow) {
         }
         Err(e) => {
             crate::nav::trace_line(&format!("install failed: {e}"));
-            win.set_error(format!("Installation fehlgeschlagen: {e}").into());
+            win.set_error(tr!("Installation failed: {0}", e).into());
         }
     }
 }

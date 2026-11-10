@@ -7,9 +7,7 @@
 
 use crate::config;
 use crate::nav::{since_start_ms, trace_line};
-use explorer_core::renderer::{
-    decide, status_de, ProbeResult, Reason, RendererChoice, RendererOverride,
-};
+use explorer_core::renderer::{decide, ProbeResult, Reason, RendererChoice, RendererOverride};
 use explorer_core::settings::GpuProbeCache;
 use std::time::{Duration, Instant};
 
@@ -33,7 +31,7 @@ pub struct Selection {
 
 /// Human-readable status for the settings panel.
 pub fn status_text(sel: &Selection) -> String {
-    status_de(sel.choice, &sel.reason)
+    explorer_core::renderer::status_text(sel.choice, &sel.reason)
 }
 
 /// `safe`: the last starts died (start guard) → software, no probe.

@@ -10,7 +10,7 @@ pub mod network;
 pub mod path;
 pub mod places;
 mod stats;
-pub use stats::{dir_stats, DirStats};
+pub use stats::{dir_stats, DirStats, MAX_ENTRIES};
 #[cfg(not(windows))]
 mod portable;
 mod watch;
@@ -71,10 +71,10 @@ impl From<io::Error> for FsError {
             _ => FsErrorKind::Other,
         };
         let message = match kind {
-            FsErrorKind::NotFound => "Ordner nicht gefunden".to_string(),
-            FsErrorKind::PermissionDenied => "Zugriff verweigert".to_string(),
-            FsErrorKind::NotADirectory => "Kein Ordner".to_string(),
-            FsErrorKind::LoginRequired => "Anmeldung erforderlich".to_string(),
+            FsErrorKind::NotFound => explorer_i18n::tr!("Folder not found").to_string(),
+            FsErrorKind::PermissionDenied => explorer_i18n::tr!("Access denied").to_string(),
+            FsErrorKind::NotADirectory => explorer_i18n::tr!("Not a folder").to_string(),
+            FsErrorKind::LoginRequired => explorer_i18n::tr!("Sign-in required").to_string(),
             FsErrorKind::Other => e.to_string(),
         };
         FsError { kind, message }

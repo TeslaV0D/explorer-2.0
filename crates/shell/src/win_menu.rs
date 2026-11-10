@@ -309,11 +309,14 @@ pub fn properties(hwnd: isize, items: &[PathBuf]) -> Result<(), String> {
             if ok.as_bool() {
                 Ok(())
             } else {
-                Err(format!("Eigenschaften nicht verfügbar: {}", one.display()))
+                Err(explorer_i18n::tr!(
+                    "Properties not available: {0}",
+                    one.display()
+                ))
             }
         }
         many => {
-            let dir = many[0].parent().ok_or("kein Ordner")?;
+            let dir = many[0].parent().ok_or(explorer_i18n::tr!("Not a folder"))?;
             let e = |e: windows::core::Error| e.message();
             // SAFETY: as in context_menu.
             unsafe {

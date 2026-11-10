@@ -9,6 +9,7 @@ use crate::nav::{self, trace_line as trace};
 use crate::{CtxItem, JobRow, MainWindow};
 use explorer_core::places::VirtualPlace;
 use explorer_core::{format_local, format_size};
+use explorer_i18n::{tr, tr_n};
 use explorer_ops::clipboard::{self, ClipFiles};
 use explorer_ops::exec::{
     Choice, Conflict, Done, Event, JobHandle, JobSpec, Kind, Progress, Report,
@@ -63,7 +64,7 @@ pub fn confirm_integration_reset(win: &MainWindow, text: &str) {
     OPS.with_borrow_mut(|o| o.confirm = Some(Confirm::IntegrationReset));
     win.set_settings_open(false);
     win.set_confirm_text(text.into());
-    win.set_confirm_ok("Zurücksetzen".into());
+    win.set_confirm_ok(tr!("Reset").into());
     win.set_confirm_open(true);
     trace("confirm integration reset");
 }
@@ -115,13 +116,13 @@ fn sync_flags(win: &MainWindow) {
 
 fn count_text(paths: &[PathBuf]) -> String {
     match paths {
-        [one] => format!(
-            "„{}“",
+        [one] => tr!(
+            "“{0}”",
             one.file_name()
                 .map(|n| n.to_string_lossy().into_owned())
                 .unwrap_or_else(|| one.display().to_string())
         ),
-        many => format!("{} Elemente", many.len()),
+        many => tr_n!(many.len(), "{n} item", "{n} items"),
     }
 }
 
@@ -135,34 +136,39 @@ pub fn job_title(spec: &JobSpec) -> String {
     let what = count_text(&spec.sources);
     let dest = spec.dest.as_deref().map(dir_name).unwrap_or_default();
     match spec.kind {
-        Kind::Copy => format!("Kopiere {what} nach „{dest}“"),
-        Kind::Move => format!("Verschiebe {what} nach „{dest}“"),
-        Kind::Trash => format!("Verschiebe {what} in den Papierkorb"),
-        Kind::DeletePermanent => format!("Lösche {what} endgültig"),
+        Kind::Copy => tr!("Copying {0} to “{1}”", what, dest),
+        Kind::Move => tr!("Moving {0} to “{1}”", what, dest),
+        Kind::Trash => tr!("Moving {0} to the Recycle Bin", what),
+        Kind::DeletePermanent => tr!("Deleting {0} permanently", what),
     }
 }
 
 fn eta_text(secs: f64) -> String {
     let s = secs.ceil() as u64;
     if s < 60 {
-        format!("noch {s} s")
+        tr!("{0} s left", s)
     } else if s < 3600 {
-        format!("noch {} min", s.div_ceil(60))
+        tr!("{0} min left", s.div_ceil(60))
     } else {
-        format!("noch {} h {} min", s / 3600, (s % 3600) / 60)
+        tr!("{0} h {1} min left", s / 3600, (s % 3600) / 60)
     }
 }
 
 /// "12,3 MB von 100 MB · 25 MB/s · noch 4 s" (pure, tested).
 pub fn job_detail(p: &Progress, elapsed: Duration, paused: bool) -> String {
     if paused {
-        return "Angehalten".into();
+        return tr!("Paused").into();
     }
     if p.total_bytes == 0 {
-        return format!("{} von {} Elementen", p.done_items, p.total_items);
+        return tr_n!(
+            p.total_items,
+            "{0} of {n} item",
+            "{0} of {n} items",
+            p.done_items
+        );
     }
-    let mut s = format!(
-        "{} von {}",
+    let mut s = tr!(
+        "{0} of {1}",
         format_size(p.done_bytes),
         format_size(p.total_bytes)
     );
@@ -226,7 +232,7 @@ pub fn command(win: &MainWindow, pi: usize, cmd: &str) {
                         sources: paths,
                         dest: None,
                     },
-                    "Löschen",
+                    "delete",
                     false,
                 );
             }
@@ -237,18 +243,19 @@ pub fn command(win: &MainWindow, pi: usize, cmd: &str) {
                 return;
             }
             let text = match paths.as_slice() {
-                [_] => format!(
-                    "{} endgültig löschen?\nDas kann nicht rückgängig gemacht werden.",
+                [_] => tr!(
+                    "Delete {0} permanently?\nThis can't be undone.",
                     count_text(&paths)
                 ),
-                _ => format!(
-                    "Diese {} Elemente endgültig löschen?\nDas kann nicht rückgängig gemacht werden.",
-                    paths.len()
+                _ => tr_n!(
+                    paths.len(),
+                    "Delete this {n} item permanently?\nThis can't be undone.",
+                    "Delete these {n} items permanently?\nThis can't be undone."
                 ),
             };
             OPS.with_borrow_mut(|o| o.confirm = Some(Confirm::DeletePermanent(paths)));
             win.set_confirm_text(text.into());
-            win.set_confirm_ok("Endgültig löschen".into());
+            win.set_confirm_ok(tr!("Delete permanently").into());
             win.set_confirm_open(true);
         }
         "rename" => {
@@ -345,9 +352,9 @@ fn paste(win: &MainWindow, pi: usize) {
         sync_flags(win);
     }
     let (kind, label) = if clip.cut {
-        (Kind::Move, "Verschieben")
+        (Kind::Move, "move")
     } else {
-        (Kind::Copy, "Kopieren")
+        (Kind::Copy, "copy")
     };
     start_job(
         win,
@@ -376,13 +383,14 @@ fn place_command(win: &MainWindow, pi: usize, place: VirtualPlace, cmd: &str) {
             let items = nav::selected_trash(pi);
             if !items.is_empty() {
                 let text = match items.as_slice() {
-                    [one] => format!(
-                        "„{}“ endgültig löschen?\nDas kann nicht rückgängig gemacht werden.",
+                    [one] => tr!(
+                        "Delete “{0}” permanently?\nThis can't be undone.",
                         one.entry.name
                     ),
-                    many => format!(
-                        "Diese {} Elemente endgültig löschen?\nDas kann nicht rückgängig gemacht werden.",
-                        many.len()
+                    many => tr_n!(
+                        many.len(),
+                        "Delete this {n} item permanently?\nThis can't be undone.",
+                        "Delete these {n} items permanently?\nThis can't be undone."
                     ),
                 };
                 ask_purge(win, text, items);
@@ -391,12 +399,13 @@ fn place_command(win: &MainWindow, pi: usize, place: VirtualPlace, cmd: &str) {
         (VirtualPlace::Trash, "empty-trash") => {
             let items = nav::all_trash(pi);
             if items.is_empty() {
-                win.set_error("Der Papierkorb ist leer.".into());
+                win.set_error(tr!("The Recycle Bin is empty.").into());
                 return;
             }
-            let text = format!(
-                "Alle {} Elemente im Papierkorb endgültig löschen?\nDas kann nicht rückgängig gemacht werden.",
-                items.len()
+            let text = tr_n!(
+                items.len(),
+                "Permanently delete the {n} item in the Recycle Bin?\nThis can't be undone.",
+                "Permanently delete all {n} items in the Recycle Bin?\nThis can't be undone."
             );
             ask_purge(win, text, items);
         }
@@ -408,7 +417,7 @@ fn place_command(win: &MainWindow, pi: usize, place: VirtualPlace, cmd: &str) {
                 "command {other} not available in {}",
                 place.label()
             ));
-            win.set_error(format!("Hier nicht möglich ({}).", place.label()).into());
+            win.set_error(tr!("Not possible here ({0}).", place.label()).into());
         }
     }
 }
@@ -416,7 +425,7 @@ fn place_command(win: &MainWindow, pi: usize, place: VirtualPlace, cmd: &str) {
 fn ask_purge(win: &MainWindow, text: String, items: Vec<explorer_ops::trashview::TrashEntry>) {
     OPS.with_borrow_mut(|o| o.confirm = Some(Confirm::PurgeTrash(items)));
     win.set_confirm_text(text.into());
-    win.set_confirm_ok("Endgültig löschen".into());
+    win.set_confirm_ok(tr!("Delete permanently").into());
     win.set_confirm_open(true);
 }
 
@@ -476,7 +485,7 @@ fn trash_paths(win: &MainWindow, paths: Vec<PathBuf>) {
                 sources: paths,
                 dest: None,
             },
-            "Löschen",
+            "delete",
             false,
         );
     }
@@ -584,34 +593,40 @@ fn separator() -> CtxItem {
 fn menu_entries(on_items: bool, n: usize, can_paste: bool) -> Vec<CtxItem> {
     let mut v = if on_items {
         vec![
-            entry("open", "Öffnen", "Eingabe", "open", true),
+            entry("open", tr!("Open"), tr!("Enter"), "open", true),
             separator(),
-            entry("cut", "Ausschneiden", "Strg+X", "cut", true),
-            entry("copy", "Kopieren", "Strg+C", "copy", true),
-            entry("paste", "Einfügen", "Strg+V", "paste", can_paste),
-            entry("rename", "Umbenennen", "F2", "rename", n == 1),
-            entry("delete", "Löschen", "Entf", "delete", true),
+            entry("cut", tr!("Cut"), tr!("Ctrl+X"), "cut", true),
+            entry("copy", tr!("Copy"), tr!("Ctrl+C"), "copy", true),
+            entry("paste", tr!("Paste"), tr!("Ctrl+V"), "paste", can_paste),
+            entry("rename", tr!("Rename"), "F2", "rename", n == 1),
+            entry("delete", tr!("Delete"), tr!("Del"), "delete", true),
             separator(),
-            entry("properties", "Eigenschaften", "Alt+Eingabe", "info", true),
+            entry(
+                "properties",
+                tr!("Properties"),
+                tr!("Alt+Enter"),
+                "info",
+                true,
+            ),
         ]
     } else {
         vec![
             entry(
                 "new-folder",
-                "Neuer Ordner",
-                "Strg+Umschalt+N",
+                tr!("New folder"),
+                tr!("Ctrl+Shift+N"),
                 "new-folder",
                 true,
             ),
-            entry("paste", "Einfügen", "Strg+V", "paste", can_paste),
-            entry("refresh", "Aktualisieren", "F5", "refresh", true),
+            entry("paste", tr!("Paste"), tr!("Ctrl+V"), "paste", can_paste),
+            entry("refresh", tr!("Refresh"), "F5", "refresh", true),
             separator(),
-            entry("folder-properties", "Eigenschaften", "", "info", true),
+            entry("folder-properties", tr!("Properties"), "", "info", true),
         ]
     };
     if explorer_shell::SHELL_SUPPORTED {
         v.push(separator());
-        v.push(entry("more", "Weitere Optionen", "", "more", true));
+        v.push(entry("more", tr!("More options"), "", "more", true));
     }
     v
 }
@@ -700,7 +715,7 @@ fn show_menu_now(win: &MainWindow, pi: usize, dir: PathBuf, items: Vec<PathBuf>,
             // the watcher catches it too, this makes it immediate
             nav::refresh_dirs(win, &[dir], &[], None);
         }
-        MenuOutcome::Failed(e) => win.set_error(format!("Kontextmenü: {e}").into()),
+        MenuOutcome::Failed(e) => win.set_error(tr!("Context menu: {0}", e).into()),
         MenuOutcome::Dismissed => {}
     }
     nav::focus_pane(pi);
@@ -819,8 +834,8 @@ pub fn drop_files(
         dest.display()
     ));
     let (kind, label) = match action {
-        1 => (Kind::Copy, "Kopieren"),
-        2 => (Kind::Move, "Verschieben"),
+        1 => (Kind::Copy, "copy"),
+        2 => (Kind::Move, "move"),
         _ => return 0,
     };
     start_job(
@@ -874,9 +889,9 @@ pub fn ole_drop(
             dest.display()
         ));
         let (kind, label) = if copy {
-            (Kind::Copy, "Kopieren")
+            (Kind::Copy, "copy")
         } else {
-            (Kind::Move, "Verschieben")
+            (Kind::Move, "move")
         };
         start_job(
             win,
@@ -949,7 +964,7 @@ pub fn rename_commit(win: &MainWindow, pi: usize, text: &str) {
             push_undo(
                 win,
                 entry_from_report(
-                    "Umbenennen",
+                    "rename",
                     &report,
                     Some(Redo::Rename {
                         from: r.path.clone(),
@@ -1004,7 +1019,7 @@ fn new_folder(win: &MainWindow, pi: usize) {
             };
             push_undo(
                 win,
-                entry_from_report("Neuer Ordner", &report, Some(Redo::NewFolder(p.clone()))),
+                entry_from_report("new-folder", &report, Some(Redo::NewFolder(p.clone()))),
                 false,
             );
             let name = dir_name(&p);
@@ -1128,13 +1143,17 @@ fn finish_job(win: &MainWindow, job: Job, r: Report) {
     );
     if let Some((p, e)) = r.errors.first() {
         let more = if r.errors.len() > 1 {
-            format!(" (+{} weitere Fehler)", r.errors.len() - 1)
+            tr_n!(
+                r.errors.len() - 1,
+                " (+{n} more error)",
+                " (+{n} more errors)"
+            )
         } else {
             String::new()
         };
         win.set_error(format!("{e}: {}{more}", p.display()).into());
     } else if r.cancelled {
-        win.set_error("Vorgang abgebrochen.".into());
+        win.set_error(tr!("Operation cancelled.").into());
     }
     if job.spec.kind == Kind::Move {
         nav::set_cut(&[]);
@@ -1200,21 +1219,21 @@ fn show_next_conflict(win: &MainWindow) {
             .map(|d| format_local(d.as_secs() as i64))
             .unwrap_or_default();
         if is_dir {
-            format!("Ordner · {date}")
+            tr!("Folder · {0}", date)
         } else {
             format!("{} · {date}", format_size(size))
         }
     };
     let dirs = c.source_is_dir && c.target_is_dir;
     let title = if dirs {
-        format!("Der Ordner „{name}“ ist im Ziel bereits vorhanden.")
+        tr!("The destination already has a folder named “{0}”.", name)
     } else {
-        format!("Im Ziel ist bereits ein Element namens „{name}“ vorhanden.")
+        tr!("The destination already has an item named “{0}”.", name)
     };
     win.set_conflict_title(title.into());
     win.set_conflict_source(
-        format!(
-            "Neu: {} (aus {})",
+        tr!(
+            "New: {0} (from {1})",
             info(c.source_size, c.source_mtime, c.source_is_dir),
             c.source
                 .parent()
@@ -1224,8 +1243,8 @@ fn show_next_conflict(win: &MainWindow) {
         .into(),
     );
     win.set_conflict_target(
-        format!(
-            "Vorhanden: {}",
+        tr!(
+            "Existing: {0}",
             info(c.target_size, c.target_mtime, c.target_is_dir)
         )
         .into(),
@@ -1271,7 +1290,7 @@ pub fn confirm_answer(win: &MainWindow, ok: bool) {
                 sources: paths,
                 dest: None,
             },
-            "Löschen",
+            "delete",
             false,
         ),
         (true, Some(Confirm::PurgeTrash(items))) => trash_action(win, TrashAction::Purge, items),
@@ -1379,7 +1398,7 @@ fn run_undo(win: &MainWindow) {
             ));
             if let Some(w) = weak.upgrade() {
                 if let Some(e) = errors.first() {
-                    w.set_error(format!("Rückgängig: {e}").into());
+                    w.set_error(tr!("Undo: {0}", e).into());
                 }
                 let mut dirs = revert_dirs(&entry);
                 dirs.push(VirtualPlace::Trash.path()); // undo moves things in/out of the trash
@@ -1400,12 +1419,13 @@ fn run_redo(win: &MainWindow) {
     });
     let Some(entry) = entry else { return };
     trace(&format!("redo {}", entry.label));
+    // labels are identifiers (traces/redo), never shown → not translated
     let label: &'static str = match entry.label.as_str() {
-        "Kopieren" => "Kopieren",
-        "Verschieben" => "Verschieben",
-        "Umbenennen" => "Umbenennen",
-        "Neuer Ordner" => "Neuer Ordner",
-        _ => "Löschen",
+        "copy" => "copy",
+        "move" => "move",
+        "rename" => "rename",
+        "new-folder" => "new-folder",
+        _ => "delete",
     };
     match entry.redo {
         Some(Redo::Job(spec)) => start_job(win, spec, label, true),
@@ -1441,7 +1461,7 @@ fn run_redo(win: &MainWindow) {
                         );
                     }
                 }
-                Err(e) => win.set_error(format!("Wiederholen: {e}").into()),
+                Err(e) => win.set_error(tr!("Redo: {0}", e).into()),
             }
         }
         Some(Redo::NewFolder(p)) => match std::fs::create_dir(&p) {
@@ -1464,7 +1484,7 @@ fn run_redo(win: &MainWindow) {
                     );
                 }
             }
-            Err(e) => win.set_error(format!("Wiederholen: {e}").into()),
+            Err(e) => win.set_error(tr!("Redo: {0}", e).into()),
         },
         None => {}
     }
@@ -1474,6 +1494,7 @@ fn run_redo(win: &MainWindow) {
 #[cfg(test)]
 mod tests {
     use super::*;
+    // tests see the English source texts (German comes from lang/de, D-029)
 
     #[test]
     fn drop_rules() {
@@ -1528,19 +1549,16 @@ mod tests {
         };
         assert_eq!(
             job_title(&spec(Kind::Copy, 1)),
-            "Kopiere „f0.txt“ nach „Ziel“"
+            "Copying “f0.txt” to “Ziel”"
         );
-        assert_eq!(
-            job_title(&spec(Kind::Move, 3)),
-            "Verschiebe 3 Elemente nach „Ziel“"
-        );
+        assert_eq!(job_title(&spec(Kind::Move, 3)), "Moving 3 items to “Ziel”");
         assert_eq!(
             job_title(&spec(Kind::Trash, 2)),
-            "Verschiebe 2 Elemente in den Papierkorb"
+            "Moving 2 items to the Recycle Bin"
         );
         assert_eq!(
             job_title(&spec(Kind::DeletePermanent, 1)),
-            "Lösche „f0.txt“ endgültig"
+            "Deleting “f0.txt” permanently"
         );
     }
 
@@ -1554,20 +1572,17 @@ mod tests {
             ..Default::default()
         };
         let d = job_detail(&p, Duration::from_secs(2), false);
-        assert!(d.starts_with("50 MB von 100 MB"), "{d}");
+        assert!(d.starts_with("50 MB of 100 MB"), "{d}");
         assert!(d.contains("25 MB/s"), "{d}");
-        assert!(d.ends_with("noch 2 s"), "{d}");
-        assert_eq!(job_detail(&p, Duration::from_secs(2), true), "Angehalten");
+        assert!(d.ends_with("2 s left"), "{d}");
+        assert_eq!(job_detail(&p, Duration::from_secs(2), true), "Paused");
         let items = Progress {
             done_items: 3,
             total_items: 10,
             ..Default::default()
         };
-        assert_eq!(
-            job_detail(&items, Duration::ZERO, false),
-            "3 von 10 Elementen"
-        );
-        assert_eq!(eta_text(125.0), "noch 3 min");
-        assert_eq!(eta_text(3700.0), "noch 1 h 1 min");
+        assert_eq!(job_detail(&items, Duration::ZERO, false), "3 of 10 items");
+        assert_eq!(eta_text(125.0), "3 min left");
+        assert_eq!(eta_text(3700.0), "1 h 1 min left");
     }
 }

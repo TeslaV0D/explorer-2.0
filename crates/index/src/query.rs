@@ -469,14 +469,14 @@ fn parse_term(
             rest = "";
         } else if let Some(r) = strip_prefix_ci(rest, "size:") {
             let (lo, hi) = parse_size(&unquote(r))
-                .ok_or_else(|| ParseError(format!("Größe nicht verstanden: {r}")))?;
+                .ok_or_else(|| ParseError(explorer_i18n::tr!("size not understood: {0}", r)))?;
             terms.push(Term::Size(lo, hi));
             rest = "";
         } else if let Some(r) =
             strip_prefix_ci(rest, "dm:").or_else(|| strip_prefix_ci(rest, "datemodified:"))
         {
             let (lo, hi) = parse_date(&unquote(r), now)
-                .ok_or_else(|| ParseError(format!("Datum nicht verstanden: {r}")))?;
+                .ok_or_else(|| ParseError(explorer_i18n::tr!("date not understood: {0}", r)))?;
             terms.push(Term::Date(lo, hi));
             rest = "";
         } else if let Some(r) = strip_prefix_ci(rest, "regex:") {
@@ -485,7 +485,9 @@ fn parse_term(
                 .case_insensitive(!case)
                 .size_limit(1 << 20)
                 .build()
-                .map_err(|e| ParseError(format!("Regulärer Ausdruck ungültig: {e}")))?;
+                .map_err(|e| {
+                    ParseError(explorer_i18n::tr!("invalid regular expression: {0}", e))
+                })?;
             let needles = if path || case {
                 None
             } else {

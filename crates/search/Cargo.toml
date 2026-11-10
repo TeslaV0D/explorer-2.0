@@ -6,6 +6,7 @@ license.workspace = true
 description = "Builds, refreshes and live-updates the search index (Phase 2 S1.3)"
 
 [dependencies]
+explorer-i18n = { path = "../i18n" }
 explorer-core = { path = "../core" }
 explorer-fs = { path = "../fs" }
 explorer-index = { path = "../index" }

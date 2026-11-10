@@ -124,14 +124,14 @@ pub fn extension(name: &str) -> &str {
     }
 }
 
-/// Explorer-like type label until real shell type names arrive (M5).
+/// Explorer-like type label where the shell has none (Linux, unknown types).
 pub fn type_label(e: &Entry) -> String {
     if e.is_dir() {
-        return "Dateiordner".to_string();
+        return explorer_i18n::tr!("File folder").to_string();
     }
     match extension(&e.name) {
-        "" => "Datei".to_string(),
-        ext => format!("{}-Datei", ext.to_uppercase()),
+        "" => explorer_i18n::tr!("File").to_string(),
+        ext => explorer_i18n::tr!("{} File", ext.to_uppercase()),
     }
 }
 
@@ -264,7 +264,7 @@ pub fn sort_entries_with_type_names(
     entries.extend(keyed.into_iter().map(|(_, e)| e));
 }
 
-/// Human-readable size, Explorer-style in the list ("1 KB", "3,4 MB" uses '.').
+/// Human-readable size, Explorer-style ("1 KB", "3.4 MB" / German "3,4 MB").
 pub fn format_size(bytes: u64) -> String {
     const UNITS: [&str; 5] = ["B", "KB", "MB", "GB", "TB"];
     if bytes < 1024 {
@@ -279,26 +279,18 @@ pub fn format_size(bytes: u64) -> String {
     if v >= 100.0 || (v - v.round()).abs() < 0.05 {
         format!("{:.0} {}", v, UNITS[i])
     } else {
-        format!("{:.1} {}", v, UNITS[i])
+        format!("{} {}", explorer_i18n::format_decimal(v, 1), UNITS[i])
     }
 }
 
-/// Drive usage line like Explorer: "120 GB frei von 512 GB".
+/// Drive usage line like Explorer: "120 GB free of 512 GB".
 pub fn format_usage(free: u64, total: u64) -> String {
-    format!("{} frei von {}", format_size(free), format_size(total))
+    explorer_i18n::tr!("{0} free of {1}", format_size(free), format_size(total))
 }
 
-/// Thousands separator, German style: 100000 -> "100.000".
+/// Thousands separator of the current language: 100000 -> "100,000" ("100.000" in German).
 pub fn format_count(n: usize) -> String {
-    let digits = n.to_string();
-    let mut out = String::with_capacity(digits.len() + digits.len() / 3);
-    for (i, c) in digits.chars().enumerate() {
-        if i > 0 && (digits.len() - i).is_multiple_of(3) {
-            out.push('.');
-        }
-        out.push(c);
-    }
-    out
+    explorer_i18n::format_integer(n as u64)
 }
 
 /// "YYYY-MM-DD HH:MM" in UTC from Unix seconds (local time zone handling comes with the Windows adapter).
@@ -451,9 +443,9 @@ mod tests {
         assert_eq!(extension("archive.tar.gz"), "gz");
         assert_eq!(extension("noext"), "");
         assert_eq!(extension("trailingdot."), "");
-        assert_eq!(type_label(&e("x.txt", EntryKind::File, 0)), "TXT-Datei");
-        assert_eq!(type_label(&e("Makefile", EntryKind::File, 0)), "Datei");
-        assert_eq!(type_label(&e("src", EntryKind::Dir, 0)), "Dateiordner");
+        assert_eq!(type_label(&e("x.txt", EntryKind::File, 0)), "TXT File");
+        assert_eq!(type_label(&e("Makefile", EntryKind::File, 0)), "File");
+        assert_eq!(type_label(&e("src", EntryKind::Dir, 0)), "File folder");
         let mut v = vec![
             e("b.txt", EntryKind::File, 0),
             e("a.png", EntryKind::File, 0),
@@ -500,7 +492,7 @@ mod tests {
         assert_eq!(format_size(0), "0 B");
         assert_eq!(format_size(1023), "1023 B");
         assert_eq!(format_size(1024), "1 KB");
-        assert_eq!(format_size(1536), "1.5 KB");
+        assert_eq!(format_size(1536), "1.5 KB"); // tests: English source language
         assert_eq!(format_size(5 * 1024 * 1024), "5 MB");
         assert!(format_size(u64::MAX).ends_with("TB"));
     }
@@ -509,7 +501,7 @@ mod tests {
     fn usage_formatting() {
         assert_eq!(
             format_usage(120 * 1024 * 1024 * 1024, 512 * 1024 * 1024 * 1024),
-            "120 GB frei von 512 GB"
+            "120 GB free of 512 GB"
         );
     }
 
@@ -517,9 +509,9 @@ mod tests {
     fn count_formatting() {
         assert_eq!(format_count(0), "0");
         assert_eq!(format_count(999), "999");
-        assert_eq!(format_count(1000), "1.000");
-        assert_eq!(format_count(100_000), "100.000");
-        assert_eq!(format_count(1_234_567), "1.234.567");
+        assert_eq!(format_count(1000), "1,000");
+        assert_eq!(format_count(100_000), "100,000");
+        assert_eq!(format_count(1_234_567), "1,234,567");
     }
 
     #[test]

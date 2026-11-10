@@ -7,3 +7,6 @@ description = "Localisation: languages, tr!/tr_n!, plural rules, bundled .po cat
 build = "build.rs"
 
 [dependencies]
+
+[target.'cfg(windows)'.dependencies]
+windows-sys = { version = "0.60", features = ["Win32_Globalization"] }

@@ -91,19 +91,31 @@ impl VirtualPlace {
         }
     }
 
-    /// Name shown in the tab, breadcrumb and sidebar.
+    /// Name shown in the tab, breadcrumb and sidebar (current language).
     pub fn label(self) -> &'static str {
+        use explorer_i18n::tr;
         match self {
-            VirtualPlace::Trash => "Papierkorb",
-            VirtualPlace::ThisPc => "Dieser PC",
-            VirtualPlace::Libraries => "Bibliotheken",
+            VirtualPlace::Trash => tr!("Recycle Bin"),
+            VirtualPlace::ThisPc => tr!("This PC"),
+            VirtualPlace::Libraries => tr!("Libraries"),
         }
     }
 
-    /// Address bar input → place: the German/English names and the Windows
-    /// shell aliases Explorer understands (case-insensitive).
+    /// Address bar input → place: the name in the current language, the
+    /// German/English names and the Windows shell aliases Explorer understands
+    /// (case-insensitive).
     pub fn from_input(s: &str) -> Option<VirtualPlace> {
         let t = s.trim().trim_end_matches(['\\', '/']).to_lowercase();
+        if let Some(v) = [
+            VirtualPlace::Trash,
+            VirtualPlace::ThisPc,
+            VirtualPlace::Libraries,
+        ]
+        .into_iter()
+        .find(|v| v.label().to_lowercase() == t)
+        {
+            return Some(v);
+        }
         match t.as_str() {
             "::papierkorb"
             | "papierkorb"
@@ -128,9 +140,12 @@ impl VirtualPlace {
     /// Column headers in this place: (date column, type column).
     pub fn columns(self) -> (&'static str, &'static str) {
         match self {
-            VirtualPlace::Trash => ("Gelöscht am", "Ursprünglicher Ort"),
-            VirtualPlace::ThisPc => ("", "Speicherplatz"),
-            VirtualPlace::Libraries => ("", "Ordner"),
+            VirtualPlace::Trash => (
+                explorer_i18n::tr!("Date deleted"),
+                explorer_i18n::tr!("Original location"),
+            ),
+            VirtualPlace::ThisPc => ("", explorer_i18n::tr!("Storage")),
+            VirtualPlace::Libraries => ("", explorer_i18n::tr!("Folder")),
         }
     }
 }

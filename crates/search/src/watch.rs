@@ -148,7 +148,9 @@ pub struct TreeWatcher {
 pub fn watch_tree(root: &Path, pending: Arc<Pending>) -> notify::Result<TreeWatcher> {
     let mut watcher =
         notify::recommended_watcher(move |res: notify::Result<notify::Event>| match res {
-            Ok(ev) if ev.need_rescan() => pending.lost("zu viele Änderungen auf einmal".into()),
+            Ok(ev) if ev.need_rescan() => {
+                pending.lost(explorer_i18n::tr!("too many changes at once").into())
+            }
             Ok(ev) => {
                 if !ev.paths.is_empty() {
                     pending.push(ev.paths);
@@ -165,11 +167,12 @@ pub fn watch_tree(root: &Path, pending: Arc<Pending>) -> notify::Result<TreeWatc
 /// A watcher error in words for the status line.
 pub fn describe(e: &notify::Error) -> String {
     match &e.kind {
-        notify::ErrorKind::MaxFilesWatch => "zu viele Ordner für die Linux-Überwachung \
-             (fs.inotify.max_user_watches erhöhen)"
-            .into(),
-        notify::ErrorKind::PathNotFound => "Ordner nicht gefunden".into(),
-        notify::ErrorKind::Io(io) => format!("Ein-/Ausgabefehler: {io}"),
+        notify::ErrorKind::MaxFilesWatch => explorer_i18n::tr!(
+            "too many folders for the Linux watcher (raise fs.inotify.max_user_watches)"
+        )
+        .into(),
+        notify::ErrorKind::PathNotFound => explorer_i18n::tr!("Folder not found").into(),
+        notify::ErrorKind::Io(io) => explorer_i18n::tr!("input/output error: {0}", io),
         notify::ErrorKind::Generic(s) => s.clone(),
         other => format!("{other:?}"),
     }
