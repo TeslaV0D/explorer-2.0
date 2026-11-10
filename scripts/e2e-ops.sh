@@ -198,7 +198,11 @@ check "[57a] the current place carries the accent mark (redesign R3: $MKP)" "[ '
 xdotool type --delay 40 "y.txt"; sleep 0.4; xdotool key Delete; sleep 0.6
 xdotool key Return; sleep 1.5
 check "[57b] Del in the trash = delete for good (after confirmation)" "last 'trash Purge done' | grep -q 'ok=true' && ! ls $TRASH | grep -qx y.txt && [ ! -e '$T/y.txt' ]"
-ui_action "Papierkorb leeren"; sleep 0.6; xdotool key Return; sleep 2
+# wait for the purge to finish instead of a fixed time (CI #142: 5 items incl. the
+# 60 000-file job folder took longer than 2 s)
+PURGED=$(grep -c 'trash Purge done' $LOG)
+ui_action "Papierkorb leeren"; sleep 0.6; xdotool key Return
+for i in $(seq 1 100); do [ "$(grep -c 'trash Purge done' $LOG)" -gt "$PURGED" ] && break; sleep 0.1; done; sleep 0.3
 check "[57c] empty the trash" "[ -z \"\$(ls -A $TRASH 2>/dev/null)\" ]"
 ui_click "Dieser PC"; sleep 1.5   # sidebar heading
 check "[58] 'Dieser PC' lists the drives" "last 'navigate tab' | grep -q ' ::dieser-pc ' && last 'done tab' | grep -qE 'total=[1-9]'"

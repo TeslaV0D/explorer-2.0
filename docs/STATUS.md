@@ -9,12 +9,13 @@ The app UI is German; UI labels and messages are quoted as they appear (with a t
 - Field-test checklists renamed: `PRAXISTEST-SUCHE.md` → `FIELD-TEST-SEARCH.md`, `PRAXISTEST-REDESIGN.md` → `FIELD-TEST-REDESIGN.md`.
 - No code change; CI ignores doc-only commits (`paths-ignore`).
 
-## Localisation L1 – Slint texts (2026-11-10, CI pending)
+## Localisation L1 – Slint texts (2026-11-10)
 - All 89 UI texts of `ui/main.slint` are now `@tr("English")` (Windows Explorer terms, US spelling like Windows: “Color scheme”, “Date modified”, “Empty Recycle Bin”, “Show protected operating system files” …); shortcuts are texts too (`Ctrl+Shift+N` ↔ `Strg+Umschalt+N`, `Del` ↔ `Entf`). Identifiers (`command("…")`, `== "trash"`, theme ids, sort keys) stay untouched.
 - `lang/de/…/explorer2.po` holds exactly the German texts the UI had before → **German UI unchanged** (gallery checked by eye); `de` is marked **complete** from now on, so the catalog test makes every new text bring its German translation, and German Windows users get German automatically.
 - `EXPLORER2_LANG=en` shows the English source texts for everything that comes from Slint; texts built in Rust (column headers, status bar, menus, dialogs, Inspector facts) follow in L2.
 - Not translated on purpose: the developer UI kit (`ui/kit.slint`, `EXPLORER2_UI_KIT=1`), product name, file paths.
 - Found for L2: the Inspector compares a group by its German label (`r.group != "ORT"`) → needs a group id; the conflict dialog's letter keys R/S/B/A match the German and the English words, not other languages; the gallery script clicks German names → galleries per language need language-neutral targets (L5).
+- CI #142: everything green except [57c] “empty the trash” – the purge (5 items incl. the 60 000-file job folder) was done (`trash Purge done ok=true`), just later than the fixed 2 s → the test now waits for the done line (max. 10 s). Unrelated timing flake.
 - Tests: unit `compiled_german_catalog_is_used` (Rust table answers from `lang/de`), E2E [84a] German texts come from the catalog, [84d] `EXPLORER2_LANG=en` shows “Settings”/“Quick access”.
 
 ## Localisation L0 – basics ✅ (CI run #141, 2026-11-10, plan `docs/PLAN-I18N.md`, D-029)
