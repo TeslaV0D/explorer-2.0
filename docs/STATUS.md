@@ -9,12 +9,13 @@ The app UI is German; UI labels and messages are quoted as they appear (with a t
 - Field-test checklists renamed: `PRAXISTEST-SUCHE.md` → `FIELD-TEST-SEARCH.md`, `PRAXISTEST-REDESIGN.md` → `FIELD-TEST-REDESIGN.md`.
 - No code change; CI ignores doc-only commits (`paths-ignore`).
 
-## Localisation L4 – language setting ✅ (CI pending, 2026-11-10)
+## Localisation L4 – language setting ✅ (CI run #149, 2026-11-10)
 - **Settings → “Sprache · Language”** at the top of the panel (the heading carries the English word whenever the UI is not English: findable in a language one cannot read). A `ComboBox` lists “System default (<language Windows would pick>)” first, then every **complete** language in its own name, sorted (`explorer_i18n::choices`; a chosen but incomplete language stays selectable). Today: Deutsch, English.
 - **Live switch** (`lang::choose` → `lang::switch`): `explorer_i18n::set_language` + `slint::select_bundled_translation`, then every Rust-built text again – sidebar + drives, visible tabs reloaded (status line, type names, sizes, dates), tab titles, Inspector (`inspector::relabel`), search status (`search::relabel`: fixed texts are kept as `fn` pointers, the per-drive lines are rebuilt), integration/install status, and texts set once at start (renderer status, crash notice while shown) via **`lang::keep(win, key, f)`**. Menus, palette, quick search and dialogs build their texts when opened.
 - A choice made in the UI wins over `EXPLORER2_LANG` for this run (the override only picks the start language); it is saved as `language = <code>` (`""` = System default) and used at the next start.
 - **Palette**: “Language: System default/English/Deutsch” (`language-system`/`-en`/`-de`; a test demands a command for every offered language). The palette now also matches the **English source** of every command, so “language” works in every UI language.
 - E2E [85]: open settings → list shows Deutsch/English/“Wie Windows (English)” → pick English → Slint and Rust texts English (“Settings”, “Recycle Bin”), saved → restart without override stays English → palette “language deutsch” switches back live, saved.
+- CI #148 was red before any test ran: the examples `bench` of `explorer-fs` and `explorer-index` share `target/debug/examples/bench.exe`, and the Windows linker failed on the locked file (LNK1104; Cargo had warned about the collision for a while) → the index benchmark is now `index_bench`. CI #149 fully green, Linux E2E locally 287/287.
 
 ## Localisation L3 – English review + gallery ✅ (CI run #147, 2026-11-10)
 - **Language-neutral test targets**: the UI scripts keep clicking German names; with `EXPLORER2_LANG=<code>` `scripts/ui-lib.sh` looks each name up first (`scripts/ui-lang-map.py`: German → English source via `lang/de`, → target via `lang/<code>`; 275 names). The gallery now runs in any language: CI artifact **`ui-gallery-linux-en`** next to `ui-gallery-linux`.

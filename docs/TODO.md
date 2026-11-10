@@ -176,7 +176,7 @@ The app UI is German; UI labels are quoted as they appear (with a translation wh
   - [ ] Conflict dialog letter keys (R/S/B/A) per language (today they match German and English only)
   - [ ] R-001-safe relabel of the texts written to Windows (folder verb texts “Öffnen (Explorer 2.0)”, Start menu `.lnk` names + descriptions): written in the language at switch-on time, state/reset must not depend on the text (today fixed German, compared by the journal)
   - [x] L3 English review + gallery in English: language-neutral test targets (`ui-lang-map.py`), English gallery as CI artifact, ~40 texts improved, German unchanged (CI run #147)
-  - [x] L4 language setting in the UI: list in own names at the top of the settings (“System default (…)” first), live switch of Slint + Rust texts, palette `language-*`, restart keeps it, E2E [85] (CI pending)
+  - [x] L4 language setting in the UI: list in own names at the top of the settings (“System default (…)” first), live switch of Slint + Rust texts, palette `language-*`, restart keeps it, E2E [85] (CI run #149)
   - [ ] L5 layout robustness: pseudo-locale + overflow check + gallery per language (the gallery clicks German names today → language-neutral targets first)
   - [ ] L6 languages one by one: es, fr, ru, uk, pl, it, zh, ja (glossary per language, native-speaker review of the gallery)
   - [ ] Hit meanings exactly, not confusing: terms as in Windows Explorer of the respective language (Recycle Bin, This PC, Quick access, Properties …), glossary per language
