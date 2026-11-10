@@ -1969,7 +1969,7 @@ fn search_scope(t: &Tab) -> Option<PathBuf> {
 fn search_scope_label(t: &Tab) -> String {
     match search_scope(t) {
         Some(s) => tr!(
-            "Search in {0}",
+            "Search {0}",
             s.file_name()
                 .map(|n| n.to_string_lossy().into_owned())
                 .unwrap_or_else(|| s.to_string_lossy().into_owned())
@@ -2173,7 +2173,7 @@ pub fn resolve_input(s: &str) -> Result<PathBuf, String> {
         Ok(None) => Ok(PathBuf::from(t)),
         Ok(Some((f, sub))) => explorer_fs::places::known_folder_path(f)
             .map(|p| if sub.is_empty() { p } else { p.join(sub) })
-            .ok_or_else(|| tr!("This place does not exist here: {0}", t)),
+            .ok_or_else(|| tr!("This location doesn't exist on this system: {0}", t)),
         Err(name) => Err(tr!("Unknown shell location: shell:{0}", name)),
     }
 }
@@ -3402,7 +3402,7 @@ mod tests {
             assert!(resolve_input("shell:Fonts").is_ok());
             assert!(resolve_input("shell:CommonStartup")
                 .unwrap_err()
-                .contains("does not exist"));
+                .contains("doesn't exist"));
         }
         assert_eq!(
             resolve_input("Papierkorb").unwrap(),

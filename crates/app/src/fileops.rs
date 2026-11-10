@@ -417,7 +417,7 @@ fn place_command(win: &MainWindow, pi: usize, place: VirtualPlace, cmd: &str) {
                 "command {other} not available in {}",
                 place.label()
             ));
-            win.set_error(tr!("Not possible here ({0}).", place.label()).into());
+            win.set_error(tr!("Not available here ({0}).", place.label()).into());
         }
     }
 }
@@ -626,7 +626,7 @@ fn menu_entries(on_items: bool, n: usize, can_paste: bool) -> Vec<CtxItem> {
     };
     if explorer_shell::SHELL_SUPPORTED {
         v.push(separator());
-        v.push(entry("more", tr!("More options"), "", "more", true));
+        v.push(entry("more", tr!("Show more options"), "", "more", true));
     }
     v
 }

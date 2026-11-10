@@ -107,7 +107,7 @@ pub fn attributes(e: &Entry) -> String {
         v.push(tr!("System"));
     }
     if e.is_link {
-        v.push(tr!("Shortcut/link"));
+        v.push(tr!("Shortcut or link"));
     }
     if v.is_empty() {
         "–".into()

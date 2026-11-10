@@ -175,7 +175,7 @@ The app UI is German; UI labels are quoted as they appear (with a translation wh
   - [x] L2 Rust texts → `tr!`/`tr_n!` + numbers per language; 411 texts, `de` complete; Inspector + job labels by id (CI run #146)
   - [ ] Conflict dialog letter keys (R/S/B/A) per language (today they match German and English only)
   - [ ] R-001-safe relabel of the texts written to Windows (folder verb texts “Öffnen (Explorer 2.0)”, Start menu `.lnk` names + descriptions): written in the language at switch-on time, state/reset must not depend on the text (today fixed German, compared by the journal)
-  - [ ] L3 English review + gallery in English
+  - [~] L3 English review + gallery in English: language-neutral test targets (`ui-lang-map.py`), English gallery as CI artifact, ~40 texts improved, German unchanged (CI pending)
   - [ ] L4 language setting in the UI (own names, live switch, palette)
   - [ ] L5 layout robustness: pseudo-locale + overflow check + gallery per language (the gallery clicks German names today → language-neutral targets first)
   - [ ] L6 languages one by one: es, fr, ru, uk, pl, it, zh, ja (glossary per language, native-speaker review of the gallery)

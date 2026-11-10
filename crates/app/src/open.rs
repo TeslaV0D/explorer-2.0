@@ -27,7 +27,7 @@ pub fn open_path(path: &Path) -> Result<(), String> {
     if r as isize > 32 {
         Ok(())
     } else {
-        Err(tr!("Opening failed (code {0})", r as isize))
+        Err(tr!("Couldn't open (code {0})", r as isize))
     }
 }
 
@@ -42,7 +42,7 @@ pub fn open_path(path: &Path) -> Result<(), String> {
         .stderr(std::process::Stdio::null())
         .spawn()
         .map(|_| ())
-        .map_err(|e| tr!("Opening failed ({0}): {1}", cmd, e))
+        .map_err(|e| tr!("Couldn't open ({0}): {1}", cmd, e))
 }
 
 #[cfg(test)]

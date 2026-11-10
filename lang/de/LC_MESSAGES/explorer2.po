@@ -12,7 +12,7 @@ msgid "  error: {0}"
 msgstr "  Fehler: {0}"
 
 #: crates/integrate/src/bin/explorer2-recover.rs
-msgid "  left as it is: {0}"
+msgid "  left unchanged: {0}"
 msgstr "  belassen: {0}"
 
 #: crates/app/src/fileops.rs
@@ -184,7 +184,7 @@ msgid "Color scheme: Light"
 msgstr "Farbschema: Hell"
 
 #: crates/core/src/commands.rs
-msgid "Color scheme: Like Windows"
+msgid "Color scheme: System default"
 msgstr "Farbschema: Wie Windows"
 
 #: crates/app/ui/main.slint
@@ -233,6 +233,14 @@ msgstr "Kopiere {0} nach „{1}“"
 #: crates/ops/src/exec.rs
 msgid "Couldn't move the existing item to the Recycle Bin: {0}"
 msgstr "Konnte das vorhandene Element nicht in den Papierkorb verschieben: {0}"
+
+#: crates/app/src/open.rs
+msgid "Couldn't open (code {0})"
+msgstr "Öffnen fehlgeschlagen (Code {0})"
+
+#: crates/app/src/open.rs
+msgid "Couldn't open ({0}): {1}"
+msgstr "Öffnen fehlgeschlagen ({0}): {1}"
 
 #: crates/app/src/inspector.rs
 msgid "Created"
@@ -375,7 +383,7 @@ msgid "Delete"
 msgstr "Löschen"
 
 #: crates/core/src/commands.rs
-msgid "Delete (Recycle Bin)"
+msgid "Delete (to Recycle Bin)"
 msgstr "Löschen (Papierkorb)"
 
 #: crates/app/src/fileops.rs
@@ -434,10 +442,6 @@ msgstr "Desktop"
 #: crates/core/src/view.rs
 msgid "Details"
 msgstr "Details"
-
-#: crates/core/src/commands.rs
-msgid "Details pane on/off"
-msgstr "Details-Bereich ein/aus"
 
 #: crates/app/src/inspector.rs
 msgid "Dimensions"
@@ -515,7 +519,7 @@ msgstr "Explorer 2.0 wurde entfernt. Ihre Einstellungen bleiben in %APPDATA%\\Ex
 msgid ""
 "Explorer 2.0 {0} is installed.\n"
 "\n"
-"You find it in the Start menu under “Explorer 2.0”. To uninstall, use “Settings → Apps” or the Start menu entry “Explorer 2.0 – Windows-Standard wiederherstellen”.\n"
+"You'll find it in the Start menu under “Explorer 2.0”. To uninstall, use “Settings → Apps” or the Start menu entry “Explorer 2.0 – Windows-Standard wiederherstellen”.\n"
 "\n"
 "Start it now?"
 msgstr ""
@@ -570,10 +574,6 @@ msgstr "Datei"
 msgid "File folder"
 msgstr "Dateiordner"
 
-#: crates/core/src/commands.rs
-msgid "File name extensions on/off"
-msgstr "Dateinamenerweiterungen ein/aus"
-
 #: crates/fs/src/places.rs
 msgid "File system"
 msgstr "Dateisystem"
@@ -614,13 +614,13 @@ msgstr "GPU-Beschleunigung"
 msgid "GPU check running in the background – applies from the next start"
 msgstr "GPU-Prüfung läuft im Hintergrund – gilt ab dem nächsten Start"
 
+#: crates/core/src/commands.rs
+msgid "Go to parent folder"
+msgstr "Übergeordneter Ordner"
+
 #: crates/core/src/inspect.rs
 msgid "Hidden"
 msgstr "Versteckt"
-
-#: crates/core/src/commands.rs
-msgid "Hidden items on/off"
-msgstr "Ausgeblendete Elemente ein/aus"
 
 #: crates/fs/src/places.rs
 msgid "Home"
@@ -635,7 +635,7 @@ msgid "Icons"
 msgstr "Symbole"
 
 #: crates/app/ui/main.slint
-msgid "Index drives for the search"
+msgid "Index drives for search"
 msgstr "Laufwerke für die Suche indexieren"
 
 #: crates/app/ui/main.slint
@@ -680,7 +680,7 @@ msgid "Installed (version {0}) in {1}. Uninstall via “Apps & Features” or th
 msgstr "Installiert (Version {0}) in {1}. Deinstallieren über „Apps & Features“ oder das Startmenü."
 
 #: crates/app/src/installer.rs
-msgid "Installed in {0}; this copy runs from {1}."
+msgid "Installed in {0}; this copy is running from {1}."
 msgstr "Installiert in {0}; diese Kopie läuft aus {1}."
 
 #: crates/app/src/installer.rs
@@ -693,7 +693,7 @@ msgid "Installed, but the installed copy did not start – this window stays ope
 msgstr "Installiert, aber die installierte Kopie startete nicht – dieses Fenster bleibt offen."
 
 #: crates/app/src/installer.rs
-msgid "Installed, the start could not be checked: {0}"
+msgid "Installed, but the start could not be checked: {0}"
 msgstr "Installiert, Start nicht prüfbar: {0}"
 
 #: crates/setup/src/main.rs
@@ -740,10 +740,6 @@ msgstr "Bibliothek nicht gefunden: {0}"
 msgid "Light"
 msgstr "Hell"
 
-#: crates/app/ui/main.slint
-msgid "Like Windows"
-msgstr "Wie Windows"
-
 #: crates/app/src/nav.rs
 msgid "Loading …"
 msgstr "Lädt …"
@@ -771,10 +767,6 @@ msgstr "Geändert"
 #: crates/app/ui/main.slint
 msgid "More"
 msgstr "Mehr"
-
-#: crates/app/src/fileops.rs
-msgid "More options"
-msgstr "Weitere Optionen"
 
 #: crates/app/src/fileops.rs
 msgid "Moving {0} to the Recycle Bin"
@@ -833,11 +825,11 @@ msgid "No Windows integration active."
 msgstr "Keine Windows-Integration aktiv."
 
 #: crates/integrate/src/bin/explorer2-recover.rs
-msgid "No console to ask – please start with --quiet."
+msgid "No console to ask – start it with --quiet."
 msgstr "Keine Konsole für die Nachfrage – bitte mit --quiet starten."
 
 #: crates/integrate/src/bin/explorer2-recover.rs
-msgid "No console to ask – please start with --yes."
+msgid "No console to ask – start it with --yes."
 msgstr "Keine Konsole für die Nachfrage – bitte mit --yes starten."
 
 #: crates/app/src/nav.rs
@@ -848,6 +840,14 @@ msgstr "Keine Treffer"
 #: crates/shell/src/win_menu.rs
 msgid "Not a folder"
 msgstr "Kein Ordner"
+
+#: crates/app/src/palette.rs
+msgid "Not available here"
+msgstr "Hier nicht möglich"
+
+#: crates/app/src/fileops.rs
+msgid "Not available here ({0})."
+msgstr "Hier nicht möglich ({0})."
 
 #: crates/ops/src/exec.rs
 msgid "Not enough disk space"
@@ -863,16 +863,8 @@ msgid "Not found in the Recycle Bin: {0}"
 msgstr "Im Papierkorb nicht gefunden: {0}"
 
 #: crates/app/src/installer.rs
-msgid "Not installed – runs from {0}. Installing puts Explorer 2.0 permanently into {1} (without administrator rights) and into the Start menu."
+msgid "Not installed – running from {0}. Installing copies Explorer 2.0 to {1} (no administrator rights needed) and adds it to the Start menu."
 msgstr "Nicht installiert – läuft aus {0}. Installieren legt Explorer 2.0 fest nach {1} (ohne Administratorrechte) und ins Startmenü."
-
-#: crates/app/src/palette.rs
-msgid "Not possible here"
-msgstr "Hier nicht möglich"
-
-#: crates/app/src/fileops.rs
-msgid "Not possible here ({0})."
-msgstr "Hier nicht möglich ({0})."
 
 #: crates/app/src/inspector.rs
 msgid "Not readable"
@@ -909,12 +901,8 @@ msgid "Open This PC"
 msgstr "Dieser PC öffnen"
 
 #: crates/app/ui/main.slint
-msgid "Open folders in the open window (as a new tab)"
+msgid "Open folders in the running window (as a new tab)"
 msgstr "Ordner im offenen Fenster öffnen (als neuen Tab)"
-
-#: crates/core/src/commands.rs
-msgid "Open folders in the open window (new tab) on/off"
-msgstr "Ordner im offenen Fenster öffnen (neuer Tab) ein/aus"
 
 #: crates/integrate/src/features.rs
 msgid "Open folders with Explorer 2.0"
@@ -924,18 +912,6 @@ msgstr "Ordner mit Explorer 2.0 öffnen"
 msgid "Open folders with Explorer 2.0 (double-click, “Open folder”)"
 msgstr "Ordner mit Explorer 2.0 öffnen (Doppelklick, „Ordner öffnen“)"
 
-#: crates/core/src/commands.rs
-msgid "Open folders with Explorer 2.0 on/off"
-msgstr "Ordner mit Explorer 2.0 öffnen ein/aus"
-
-#: crates/app/src/open.rs
-msgid "Opening failed (code {0})"
-msgstr "Öffnen fehlgeschlagen (Code {0})"
-
-#: crates/app/src/open.rs
-msgid "Opening failed ({0}): {1}"
-msgstr "Öffnen fehlgeschlagen ({0}): {1}"
-
 #: crates/app/src/fileops.rs
 msgid "Operation cancelled."
 msgstr "Vorgang abgebrochen."
@@ -943,10 +919,6 @@ msgstr "Vorgang abgebrochen."
 #: crates/core/src/places.rs
 msgid "Original location"
 msgstr "Ursprünglicher Ort"
-
-#: crates/core/src/commands.rs
-msgid "Parent folder"
-msgstr "Übergeordneter Ordner"
 
 #: crates/app/src/fileops.rs
 #: crates/app/ui/main.slint
@@ -1010,11 +982,11 @@ msgid "Quick access"
 msgstr "Schnellzugriff"
 
 #: crates/core/src/commands.rs
-msgid "Re-sync the search index with the disk"
+msgid "Re-sync search index with disk"
 msgstr "Suchindex neu mit der Platte abgleichen"
 
 #: crates/app/ui/main.slint
-msgid "Re-sync with the disk"
+msgid "Re-sync with disk"
 msgstr "Neu mit der Platte abgleichen"
 
 #: crates/core/src/inspect.rs
@@ -1101,7 +1073,7 @@ msgid "Resume"
 msgstr "Fortsetzen"
 
 #: crates/core/src/guard.rs
-msgid "Safe start: the last {0} starts were aborted – so software rendering and no restored session. If it stays stable, Explorer 2.0 starts normally again next time."
+msgid "Safe start: the last {0} starts were aborted, so Explorer 2.0 uses software rendering and does not restore the session. If it runs stably, the next start is normal again."
 msgstr "Sicherer Start: die letzten {0} Starts sind abgebrochen – daher Software-Darstellung und keine wiederhergestellte Sitzung. Bleibt es stabil, startet Explorer 2.0 beim nächsten Mal wieder normal."
 
 #: crates/app/ui/main.slint
@@ -1122,24 +1094,16 @@ msgid "Search all drives …"
 msgstr "Alle Laufwerke durchsuchen …"
 
 #: crates/app/ui/main.slint
-msgid "Search commands …   (> jumps to places)"
+msgid "Search commands …   (type > for places)"
 msgstr "Befehl suchen …   (> springt zu Orten)"
-
-#: crates/app/src/nav.rs
-msgid "Search in {0}"
-msgstr "Suchen in {0}"
 
 #: crates/app/src/search.rs
 msgid "Search index off (EXPLORER2_INDEX=off)."
 msgstr "Suchindex aus (EXPLORER2_INDEX=off)."
 
 #: crates/app/src/search.rs
-msgid "Search index off: the search then only walks the current folder."
+msgid "Search index off: searches only go through the current folder."
 msgstr "Suchindex aus: die Suche durchsucht dann nur den aktuellen Ordner."
-
-#: crates/core/src/commands.rs
-msgid "Search index on/off"
-msgstr "Suchindex ein/aus"
 
 #: crates/app/src/search.rs
 msgid "Search index restarting …"
@@ -1156,6 +1120,10 @@ msgstr "Suchindex startet …"
 #: crates/app/src/search.rs
 msgid "Search index: no folder for the index files."
 msgstr "Suchindex: kein Ordner für die Indexdateien."
+
+#: crates/app/src/nav.rs
+msgid "Search {0}"
+msgstr "Suchen in {0}"
 
 #: crates/app/src/nav.rs
 msgid "Search “{0}”"
@@ -1192,7 +1160,7 @@ msgid "Shift+F10"
 msgstr "Umschalt+F10"
 
 #: crates/core/src/inspect.rs
-msgid "Shortcut/link"
+msgid "Shortcut or link"
 msgstr "Verknüpfung/Link"
 
 #: crates/app/ui/main.slint
@@ -1202,6 +1170,10 @@ msgstr "Dateinamenerweiterungen anzeigen"
 #: crates/app/ui/main.slint
 msgid "Show hidden items"
 msgstr "Ausgeblendete Elemente anzeigen"
+
+#: crates/app/src/fileops.rs
+msgid "Show more options"
+msgstr "Weitere Optionen"
 
 #: crates/app/ui/main.slint
 msgid "Show protected operating system files"
@@ -1288,6 +1260,10 @@ msgstr "Zur anderen Ansicht wechseln"
 #: crates/core/src/inspect.rs
 msgid "System"
 msgstr "System"
+
+#: crates/app/ui/main.slint
+msgid "System default"
+msgstr "Wie Windows"
 
 #: crates/core/src/renderer.rs
 msgid "System default renderer"
@@ -1379,12 +1355,48 @@ msgid "This PC"
 msgstr "Dieser PC"
 
 #: crates/app/src/nav.rs
-msgid "This place does not exist here: {0}"
+msgid "This location doesn't exist on this system: {0}"
 msgstr "Diesen Ort gibt es hier nicht: {0}"
 
 #: crates/setup/src/main.rs
 msgid "This setup was built without the program files."
 msgstr "Dieses Setup wurde ohne Programmdateien gebaut."
+
+#: crates/core/src/commands.rs
+msgid "Toggle details pane"
+msgstr "Details-Bereich ein/aus"
+
+#: crates/core/src/commands.rs
+msgid "Toggle file name extensions"
+msgstr "Dateinamenerweiterungen ein/aus"
+
+#: crates/core/src/commands.rs
+msgid "Toggle hidden items"
+msgstr "Ausgeblendete Elemente ein/aus"
+
+#: crates/core/src/commands.rs
+msgid "Toggle search index"
+msgstr "Suchindex ein/aus"
+
+#: crates/core/src/commands.rs
+msgid "Toggle two views"
+msgstr "Zwei Ansichten ein/aus"
+
+#: crates/core/src/commands.rs
+msgid "Toggle: Win+E opens Explorer 2.0"
+msgstr "Win+E öffnet Explorer 2.0 ein/aus"
+
+#: crates/core/src/commands.rs
+msgid "Toggle: open folders in the running window (new tab)"
+msgstr "Ordner im offenen Fenster öffnen (neuer Tab) ein/aus"
+
+#: crates/core/src/commands.rs
+msgid "Toggle: open folders with Explorer 2.0"
+msgstr "Ordner mit Explorer 2.0 öffnen ein/aus"
+
+#: crates/core/src/commands.rs
+msgid "Toggle: “Open in Explorer 2.0” in the context menu"
+msgstr "„In Explorer 2.0 öffnen“ im Kontextmenü ein/aus"
 
 #: crates/app/src/inspector.rs
 msgid "Total"
@@ -1397,10 +1409,6 @@ msgstr "Gesamtgröße"
 #: crates/app/ui/main.slint
 msgid "Two views"
 msgstr "Zwei Ansichten"
-
-#: crates/core/src/commands.rs
-msgid "Two views on/off"
-msgstr "Zwei Ansichten ein/aus"
 
 #: crates/app/src/nav.rs
 #: crates/app/ui/main.slint
@@ -1481,10 +1489,6 @@ msgstr "Ansicht: Mittelgroße Symbole"
 #: crates/integrate/src/features.rs
 msgid "Win+E opens Explorer 2.0"
 msgstr "Win+E öffnet Explorer 2.0"
-
-#: crates/core/src/commands.rs
-msgid "Win+E opens Explorer 2.0 on/off"
-msgstr "Win+E öffnet Explorer 2.0 ein/aus"
 
 #: crates/integrate/src/lib.rs
 msgid "Windows default restored: {0} values/files, {1} keys removed{2}."
@@ -1626,7 +1630,7 @@ msgid ""
 "\n"
 "Target: {1}\n"
 "\n"
-"Without administrator rights; a Start menu entry and “Apps & Features” are created. You switch on Windows integrations (open folders, Win+E) yourself afterwards in the settings – undoable at any time with one button."
+"No administrator rights needed; a Start menu entry and an “Apps & Features” entry are created. Windows integrations (open folders, Win+E) can be switched on afterwards in the settings – undoable at any time with one button."
 msgstr ""
 "{0}\n"
 "\n"
@@ -1659,7 +1663,7 @@ msgid "{0} cannot be started: {1}"
 msgstr "{0} nicht startbar: {1}"
 
 #: crates/integrate/src/lib.rs
-msgid "{0} changed by other software – left as they are."
+msgid "{0} changed by other software – left unchanged."
 msgstr "{0} von anderer Software geändert – belassen."
 
 #: crates/integrate/src/install.rs
@@ -1753,7 +1757,7 @@ msgid "{0} s left"
 msgstr "noch {0} s"
 
 #: crates/app/src/quick.rs
-msgid "{0} · Enter takes an earlier search"
+msgid "{0} · Enter picks an earlier search"
 msgstr "{0} · Enter übernimmt eine frühere Suche"
 
 #: crates/app/src/inspector.rs
@@ -1761,11 +1765,11 @@ msgid "{0} × {1} pixels"
 msgstr "{0} × {1} Pixel"
 
 #: crates/app/src/integration.rs
-msgid "{0} – switched off, Windows default active again."
+msgid "{0} – off, the Windows default is active again."
 msgstr "{0} – ausgeschaltet, Windows-Standard wieder aktiv."
 
 #: crates/app/src/integration.rs
-msgid "{0} – switched on. Please don't move Explorer 2.0 (otherwise reset first).{1}"
+msgid "{0} – on. Please don't move Explorer 2.0 (reset first if you need to).{1}"
 msgstr "{0} – eingeschaltet. Bitte Explorer 2.0 nicht verschieben (sonst vorher zurücksetzen).{1}"
 
 #: crates/app/src/quick.rs
@@ -1830,10 +1834,6 @@ msgstr "„.“ und „..“ sind als Name nicht erlaubt."
 #: crates/integrate/src/features.rs
 msgid "“Open in Explorer 2.0” in the context menu"
 msgstr "„In Explorer 2.0 öffnen“ im Kontextmenü"
-
-#: crates/core/src/commands.rs
-msgid "“Open in Explorer 2.0” in the context menu on/off"
-msgstr "„In Explorer 2.0 öffnen“ im Kontextmenü ein/aus"
 
 #: crates/app/src/fileops.rs
 #: crates/ops/src/names.rs

@@ -144,7 +144,7 @@ pub fn notice_text(new_reports: usize, safe_mode: bool, failed: u32) -> Option<S
     };
     let safe = safe_mode.then(|| {
         tr!(
-            "Safe start: the last {0} starts were aborted – so software rendering and no restored session. If it stays stable, Explorer 2.0 starts normally again next time.",
+            "Safe start: the last {0} starts were aborted, so Explorer 2.0 uses software rendering and does not restore the session. If it runs stably, the next start is normal again.",
             failed
         )
     });

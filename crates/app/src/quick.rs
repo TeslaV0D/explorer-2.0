@@ -94,7 +94,7 @@ fn show_recent(win: &MainWindow) {
     let summary = index_summary(win);
     win.set_qs_footer(
         if any {
-            tr!("{0} · Enter takes an earlier search", summary)
+            tr!("{0} · Enter picks an earlier search", summary)
         } else {
             summary
         }

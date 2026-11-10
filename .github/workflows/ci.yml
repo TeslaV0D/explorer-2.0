@@ -137,6 +137,16 @@ jobs:
         with:
           name: ui-gallery-linux
           path: ${{ runner.temp }}/gallery/*.png
+      # localisation L3: the same screens in English (UI names translated via the catalogs)
+      - name: UI gallery in English
+        if: always()
+        run: EXPLORER2_LANG=en xvfb-run -a -s "-screen 0 1280x800x24" scripts/gallery.sh "$PWD/target/release/explorer2" "$RUNNER_TEMP/gallery-en"
+      - name: Upload UI gallery in English
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ui-gallery-linux-en
+          path: ${{ runner.temp }}/gallery-en/*.png
       - name: Upload screenshots on failure
         if: failure()
         uses: actions/upload-artifact@v4

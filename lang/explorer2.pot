@@ -10,7 +10,7 @@ msgid "  error: {0}"
 msgstr ""
 
 #: crates/integrate/src/bin/explorer2-recover.rs
-msgid "  left as it is: {0}"
+msgid "  left unchanged: {0}"
 msgstr ""
 
 #: crates/app/src/fileops.rs
@@ -182,7 +182,7 @@ msgid "Color scheme: Light"
 msgstr ""
 
 #: crates/core/src/commands.rs
-msgid "Color scheme: Like Windows"
+msgid "Color scheme: System default"
 msgstr ""
 
 #: crates/app/ui/main.slint
@@ -230,6 +230,14 @@ msgstr ""
 
 #: crates/ops/src/exec.rs
 msgid "Couldn't move the existing item to the Recycle Bin: {0}"
+msgstr ""
+
+#: crates/app/src/open.rs
+msgid "Couldn't open (code {0})"
+msgstr ""
+
+#: crates/app/src/open.rs
+msgid "Couldn't open ({0}): {1}"
 msgstr ""
 
 #: crates/app/src/inspector.rs
@@ -373,7 +381,7 @@ msgid "Delete"
 msgstr ""
 
 #: crates/core/src/commands.rs
-msgid "Delete (Recycle Bin)"
+msgid "Delete (to Recycle Bin)"
 msgstr ""
 
 #: crates/app/src/fileops.rs
@@ -423,10 +431,6 @@ msgstr ""
 #: crates/app/ui/main.slint
 #: crates/core/src/view.rs
 msgid "Details"
-msgstr ""
-
-#: crates/core/src/commands.rs
-msgid "Details pane on/off"
 msgstr ""
 
 #: crates/app/src/inspector.rs
@@ -505,7 +509,7 @@ msgstr ""
 msgid ""
 "Explorer 2.0 {0} is installed.\n"
 "\n"
-"You find it in the Start menu under “Explorer 2.0”. To uninstall, use “Settings → Apps” or the Start menu entry “Explorer 2.0 – Windows-Standard wiederherstellen”.\n"
+"You'll find it in the Start menu under “Explorer 2.0”. To uninstall, use “Settings → Apps” or the Start menu entry “Explorer 2.0 – Windows-Standard wiederherstellen”.\n"
 "\n"
 "Start it now?"
 msgstr ""
@@ -540,10 +544,6 @@ msgstr ""
 
 #: crates/core/src/lib.rs
 msgid "File folder"
-msgstr ""
-
-#: crates/core/src/commands.rs
-msgid "File name extensions on/off"
 msgstr ""
 
 #: crates/fs/src/places.rs
@@ -586,12 +586,12 @@ msgstr ""
 msgid "GPU check running in the background – applies from the next start"
 msgstr ""
 
-#: crates/core/src/inspect.rs
-msgid "Hidden"
+#: crates/core/src/commands.rs
+msgid "Go to parent folder"
 msgstr ""
 
-#: crates/core/src/commands.rs
-msgid "Hidden items on/off"
+#: crates/core/src/inspect.rs
+msgid "Hidden"
 msgstr ""
 
 #: crates/fs/src/places.rs
@@ -607,7 +607,7 @@ msgid "Icons"
 msgstr ""
 
 #: crates/app/ui/main.slint
-msgid "Index drives for the search"
+msgid "Index drives for search"
 msgstr ""
 
 #: crates/app/ui/main.slint
@@ -652,7 +652,7 @@ msgid "Installed (version {0}) in {1}. Uninstall via “Apps & Features” or th
 msgstr ""
 
 #: crates/app/src/installer.rs
-msgid "Installed in {0}; this copy runs from {1}."
+msgid "Installed in {0}; this copy is running from {1}."
 msgstr ""
 
 #: crates/app/src/installer.rs
@@ -665,7 +665,7 @@ msgid "Installed, but the installed copy did not start – this window stays ope
 msgstr ""
 
 #: crates/app/src/installer.rs
-msgid "Installed, the start could not be checked: {0}"
+msgid "Installed, but the start could not be checked: {0}"
 msgstr ""
 
 #: crates/setup/src/main.rs
@@ -712,10 +712,6 @@ msgstr ""
 msgid "Light"
 msgstr ""
 
-#: crates/app/ui/main.slint
-msgid "Like Windows"
-msgstr ""
-
 #: crates/app/src/nav.rs
 msgid "Loading …"
 msgstr ""
@@ -742,10 +738,6 @@ msgstr ""
 
 #: crates/app/ui/main.slint
 msgid "More"
-msgstr ""
-
-#: crates/app/src/fileops.rs
-msgid "More options"
 msgstr ""
 
 #: crates/app/src/fileops.rs
@@ -805,11 +797,11 @@ msgid "No Windows integration active."
 msgstr ""
 
 #: crates/integrate/src/bin/explorer2-recover.rs
-msgid "No console to ask – please start with --quiet."
+msgid "No console to ask – start it with --quiet."
 msgstr ""
 
 #: crates/integrate/src/bin/explorer2-recover.rs
-msgid "No console to ask – please start with --yes."
+msgid "No console to ask – start it with --yes."
 msgstr ""
 
 #: crates/app/src/nav.rs
@@ -819,6 +811,14 @@ msgstr ""
 #: crates/fs/src/lib.rs
 #: crates/shell/src/win_menu.rs
 msgid "Not a folder"
+msgstr ""
+
+#: crates/app/src/palette.rs
+msgid "Not available here"
+msgstr ""
+
+#: crates/app/src/fileops.rs
+msgid "Not available here ({0})."
 msgstr ""
 
 #: crates/ops/src/exec.rs
@@ -835,15 +835,7 @@ msgid "Not found in the Recycle Bin: {0}"
 msgstr ""
 
 #: crates/app/src/installer.rs
-msgid "Not installed – runs from {0}. Installing puts Explorer 2.0 permanently into {1} (without administrator rights) and into the Start menu."
-msgstr ""
-
-#: crates/app/src/palette.rs
-msgid "Not possible here"
-msgstr ""
-
-#: crates/app/src/fileops.rs
-msgid "Not possible here ({0})."
+msgid "Not installed – running from {0}. Installing copies Explorer 2.0 to {1} (no administrator rights needed) and adds it to the Start menu."
 msgstr ""
 
 #: crates/app/src/inspector.rs
@@ -881,11 +873,7 @@ msgid "Open This PC"
 msgstr ""
 
 #: crates/app/ui/main.slint
-msgid "Open folders in the open window (as a new tab)"
-msgstr ""
-
-#: crates/core/src/commands.rs
-msgid "Open folders in the open window (new tab) on/off"
+msgid "Open folders in the running window (as a new tab)"
 msgstr ""
 
 #: crates/integrate/src/features.rs
@@ -896,28 +884,12 @@ msgstr ""
 msgid "Open folders with Explorer 2.0 (double-click, “Open folder”)"
 msgstr ""
 
-#: crates/core/src/commands.rs
-msgid "Open folders with Explorer 2.0 on/off"
-msgstr ""
-
-#: crates/app/src/open.rs
-msgid "Opening failed (code {0})"
-msgstr ""
-
-#: crates/app/src/open.rs
-msgid "Opening failed ({0}): {1}"
-msgstr ""
-
 #: crates/app/src/fileops.rs
 msgid "Operation cancelled."
 msgstr ""
 
 #: crates/core/src/places.rs
 msgid "Original location"
-msgstr ""
-
-#: crates/core/src/commands.rs
-msgid "Parent folder"
 msgstr ""
 
 #: crates/app/src/fileops.rs
@@ -978,11 +950,11 @@ msgid "Quick access"
 msgstr ""
 
 #: crates/core/src/commands.rs
-msgid "Re-sync the search index with the disk"
+msgid "Re-sync search index with disk"
 msgstr ""
 
 #: crates/app/ui/main.slint
-msgid "Re-sync with the disk"
+msgid "Re-sync with disk"
 msgstr ""
 
 #: crates/core/src/inspect.rs
@@ -1069,7 +1041,7 @@ msgid "Resume"
 msgstr ""
 
 #: crates/core/src/guard.rs
-msgid "Safe start: the last {0} starts were aborted – so software rendering and no restored session. If it stays stable, Explorer 2.0 starts normally again next time."
+msgid "Safe start: the last {0} starts were aborted, so Explorer 2.0 uses software rendering and does not restore the session. If it runs stably, the next start is normal again."
 msgstr ""
 
 #: crates/app/ui/main.slint
@@ -1090,11 +1062,7 @@ msgid "Search all drives …"
 msgstr ""
 
 #: crates/app/ui/main.slint
-msgid "Search commands …   (> jumps to places)"
-msgstr ""
-
-#: crates/app/src/nav.rs
-msgid "Search in {0}"
+msgid "Search commands …   (type > for places)"
 msgstr ""
 
 #: crates/app/src/search.rs
@@ -1102,11 +1070,7 @@ msgid "Search index off (EXPLORER2_INDEX=off)."
 msgstr ""
 
 #: crates/app/src/search.rs
-msgid "Search index off: the search then only walks the current folder."
-msgstr ""
-
-#: crates/core/src/commands.rs
-msgid "Search index on/off"
+msgid "Search index off: searches only go through the current folder."
 msgstr ""
 
 #: crates/app/src/search.rs
@@ -1123,6 +1087,10 @@ msgstr ""
 
 #: crates/app/src/search.rs
 msgid "Search index: no folder for the index files."
+msgstr ""
+
+#: crates/app/src/nav.rs
+msgid "Search {0}"
 msgstr ""
 
 #: crates/app/src/nav.rs
@@ -1160,7 +1128,7 @@ msgid "Shift+F10"
 msgstr ""
 
 #: crates/core/src/inspect.rs
-msgid "Shortcut/link"
+msgid "Shortcut or link"
 msgstr ""
 
 #: crates/app/ui/main.slint
@@ -1169,6 +1137,10 @@ msgstr ""
 
 #: crates/app/ui/main.slint
 msgid "Show hidden items"
+msgstr ""
+
+#: crates/app/src/fileops.rs
+msgid "Show more options"
 msgstr ""
 
 #: crates/app/ui/main.slint
@@ -1255,6 +1227,10 @@ msgstr ""
 
 #: crates/core/src/inspect.rs
 msgid "System"
+msgstr ""
+
+#: crates/app/ui/main.slint
+msgid "System default"
 msgstr ""
 
 #: crates/core/src/renderer.rs
@@ -1347,11 +1323,47 @@ msgid "This PC"
 msgstr ""
 
 #: crates/app/src/nav.rs
-msgid "This place does not exist here: {0}"
+msgid "This location doesn't exist on this system: {0}"
 msgstr ""
 
 #: crates/setup/src/main.rs
 msgid "This setup was built without the program files."
+msgstr ""
+
+#: crates/core/src/commands.rs
+msgid "Toggle details pane"
+msgstr ""
+
+#: crates/core/src/commands.rs
+msgid "Toggle file name extensions"
+msgstr ""
+
+#: crates/core/src/commands.rs
+msgid "Toggle hidden items"
+msgstr ""
+
+#: crates/core/src/commands.rs
+msgid "Toggle search index"
+msgstr ""
+
+#: crates/core/src/commands.rs
+msgid "Toggle two views"
+msgstr ""
+
+#: crates/core/src/commands.rs
+msgid "Toggle: Win+E opens Explorer 2.0"
+msgstr ""
+
+#: crates/core/src/commands.rs
+msgid "Toggle: open folders in the running window (new tab)"
+msgstr ""
+
+#: crates/core/src/commands.rs
+msgid "Toggle: open folders with Explorer 2.0"
+msgstr ""
+
+#: crates/core/src/commands.rs
+msgid "Toggle: “Open in Explorer 2.0” in the context menu"
 msgstr ""
 
 #: crates/app/src/inspector.rs
@@ -1364,10 +1376,6 @@ msgstr ""
 
 #: crates/app/ui/main.slint
 msgid "Two views"
-msgstr ""
-
-#: crates/core/src/commands.rs
-msgid "Two views on/off"
 msgstr ""
 
 #: crates/app/src/nav.rs
@@ -1448,10 +1456,6 @@ msgstr ""
 #: crates/app/ui/main.slint
 #: crates/integrate/src/features.rs
 msgid "Win+E opens Explorer 2.0"
-msgstr ""
-
-#: crates/core/src/commands.rs
-msgid "Win+E opens Explorer 2.0 on/off"
 msgstr ""
 
 #: crates/integrate/src/lib.rs
@@ -1591,7 +1595,7 @@ msgid ""
 "\n"
 "Target: {1}\n"
 "\n"
-"Without administrator rights; a Start menu entry and “Apps & Features” are created. You switch on Windows integrations (open folders, Win+E) yourself afterwards in the settings – undoable at any time with one button."
+"No administrator rights needed; a Start menu entry and an “Apps & Features” entry are created. Windows integrations (open folders, Win+E) can be switched on afterwards in the settings – undoable at any time with one button."
 msgstr ""
 
 #: crates/integrate/src/lib.rs
@@ -1619,7 +1623,7 @@ msgid "{0} cannot be started: {1}"
 msgstr ""
 
 #: crates/integrate/src/lib.rs
-msgid "{0} changed by other software – left as they are."
+msgid "{0} changed by other software – left unchanged."
 msgstr ""
 
 #: crates/integrate/src/install.rs
@@ -1713,7 +1717,7 @@ msgid "{0} s left"
 msgstr ""
 
 #: crates/app/src/quick.rs
-msgid "{0} · Enter takes an earlier search"
+msgid "{0} · Enter picks an earlier search"
 msgstr ""
 
 #: crates/app/src/inspector.rs
@@ -1721,11 +1725,11 @@ msgid "{0} × {1} pixels"
 msgstr ""
 
 #: crates/app/src/integration.rs
-msgid "{0} – switched off, Windows default active again."
+msgid "{0} – off, the Windows default is active again."
 msgstr ""
 
 #: crates/app/src/integration.rs
-msgid "{0} – switched on. Please don't move Explorer 2.0 (otherwise reset first).{1}"
+msgid "{0} – on. Please don't move Explorer 2.0 (reset first if you need to).{1}"
 msgstr ""
 
 #: crates/app/src/quick.rs
@@ -1789,10 +1793,6 @@ msgstr ""
 #: crates/app/ui/main.slint
 #: crates/integrate/src/features.rs
 msgid "“Open in Explorer 2.0” in the context menu"
-msgstr ""
-
-#: crates/core/src/commands.rs
-msgid "“Open in Explorer 2.0” in the context menu on/off"
 msgstr ""
 
 #: crates/app/src/fileops.rs

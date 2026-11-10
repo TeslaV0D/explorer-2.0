@@ -185,7 +185,7 @@ impl ResetReport {
         if !self.kept.is_empty() {
             s.push(' ');
             s.push_str(&explorer_i18n::tr!(
-                "{0} changed by other software – left as they are.",
+                "{0} changed by other software – left unchanged.",
                 self.kept.len()
             ));
         }

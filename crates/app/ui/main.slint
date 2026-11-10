@@ -1096,7 +1096,7 @@ component CommandPalette inherits Rectangle {
     in property <[PaletteItem]> items;
     in-out property <int> sel;
     // the quick search (S1.4c) uses the same box: own hint, status line, empty text
-    in property <string> hint: @tr("Search commands …   (> jumps to places)");
+    in property <string> hint: @tr("Search commands …   (type > for places)");
     in property <string> footer;
     in property <string> empty-text: @tr("Nothing found");
     // put a text into the field and search it (recent searches)
@@ -1993,7 +1993,7 @@ export component MainWindow inherits Window {
                     width: theme-row.preferred-width; height: 28px;
                     theme-row := HorizontalLayout {
                         padding: 2px; spacing: 2px;
-                        for t in [{ id: "system", label: @tr("Like Windows") }, { id: "light", label: @tr("Light") }, { id: "dark", label: @tr("Dark") }] : Rectangle {
+                        for t in [{ id: "system", label: @tr("System default") }, { id: "light", label: @tr("Light") }, { id: "dark", label: @tr("Dark") }] : Rectangle {
                             width: theme-text.preferred-width + 20px;
                             border-radius: 3px;
                             background: root.theme-choice == t.id ? Theme.d.selected : (theme-ta.has-hover ? Theme.d.hover : transparent);
@@ -2028,7 +2028,7 @@ export component MainWindow inherits Window {
                 toggled => { root.integration-feature("win-e", self.checked); }
             }
             if root.integration-available : CheckBox {
-                text: @tr("Open folders in the open window (as a new tab)");
+                text: @tr("Open folders in the running window (as a new tab)");
                 checked <=> root.opt-single-instance;
                 toggled => { root.set-option("single_instance", self.checked); }
             }
@@ -2044,7 +2044,7 @@ export component MainWindow inherits Window {
             Rectangle { height: 1px; background: Theme.d.border; }
             Text { text: @tr("Search"); font-size: Ui.font-body; font-weight: 600; color: Theme.d.text; }
             CheckBox {
-                text: @tr("Index drives for the search");
+                text: @tr("Index drives for search");
                 checked <=> root.opt-index-enabled;
                 toggled => { root.set-option("index_enabled", self.checked); }
             }
@@ -2060,7 +2060,7 @@ export component MainWindow inherits Window {
             Text { text: root.search-status; font-size: Ui.font-small; color: Theme.d.muted; wrap: word-wrap; }
             if root.opt-index-enabled : HorizontalLayout {
                 alignment: start;
-                Button { text: @tr("Re-sync with the disk"); clicked => { root.search-rescan(); } }
+                Button { text: @tr("Re-sync with disk"); clicked => { root.search-rescan(); } }
             }
             if root.install-available : Rectangle { height: 1px; background: Theme.d.border; }
             if root.install-available : Text { text: @tr("Installation"); font-size: Ui.font-body; font-weight: 600; color: Theme.d.text; }

@@ -87,7 +87,7 @@ fn run(quiet: bool) -> i32 {
     }
     if !quiet
         && ui::ask(&explorer_i18n::tr!(
-            "Explorer 2.0 {0} is installed.\n\nYou find it in the Start menu under “Explorer 2.0”. To uninstall, use “Settings → Apps” or the Start menu entry “Explorer 2.0 – Windows-Standard wiederherstellen”.\n\nStart it now?",
+            "Explorer 2.0 {0} is installed.\n\nYou'll find it in the Start menu under “Explorer 2.0”. To uninstall, use “Settings → Apps” or the Start menu entry “Explorer 2.0 – Windows-Standard wiederherstellen”.\n\nStart it now?",
             VERSION
         ))
     {
@@ -112,7 +112,7 @@ fn question(paths: &InstallPaths) -> String {
         explorer_i18n::tr!("Install Explorer 2.0 {0} for this user?", VERSION)
     };
     explorer_i18n::tr!(
-        "{0}\n\nTarget: {1}\n\nWithout administrator rights; a Start menu entry and “Apps & Features” are created. You switch on Windows integrations (open folders, Win+E) yourself afterwards in the settings – undoable at any time with one button.",
+        "{0}\n\nTarget: {1}\n\nNo administrator rights needed; a Start menu entry and an “Apps & Features” entry are created. Windows integrations (open folders, Win+E) can be switched on afterwards in the settings – undoable at any time with one button.",
         what,
         paths.program_dir.display()
     )

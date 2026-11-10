@@ -128,7 +128,7 @@ pub fn set_feature(win: &MainWindow, id: &str, on: bool) {
                     recover
                 ));
                 tr!(
-                    "{0} – switched on. Please don't move Explorer 2.0 (otherwise reset first).{1}",
+                    "{0} – on. Please don't move Explorer 2.0 (reset first if you need to).{1}",
                     f.label(),
                     recover.map_or(String::new(), |r| tr!(" Emergency tool: {0}", r.display()))
                 )
@@ -152,10 +152,7 @@ pub fn set_feature(win: &MainWindow, id: &str, on: bool) {
         if !r.ok() {
             win.set_error(r.errors.join("; ").into());
         }
-        tr!(
-            "{0} – switched off, Windows default active again.",
-            f.label()
-        )
+        tr!("{0} – off, the Windows default is active again.", f.label())
     };
     refresh(win);
     win.set_integration_status(msg.into());

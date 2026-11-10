@@ -20,9 +20,19 @@ export EXPLORER2_UI_DUMP=$UI_DUMP
 # the tests click and check German names (D-029: German is a translation, pinned here;
 # a gallery in another language: EXPLORER2_LANG=fr scripts/gallery.sh …)
 export EXPLORER2_LANG=${EXPLORER2_LANG:-de}
+# other languages (L3): the German names are looked up in the catalogs first
+UI_LANG_MAP=""
+if [ "$EXPLORER2_LANG" != de ]; then
+  UI_LANG_MAP=$(mktemp)
+  python3 -I "$(dirname "${BASH_SOURCE[0]}")/ui-lang-map.py" "$(dirname "${BASH_SOURCE[0]}")/.." "$EXPLORER2_LANG" > "$UI_LANG_MAP"
+fi
+ui_name() { # German UI name -> the name in the current language (unchanged if not a UI text)
+  if [ -z "$UI_LANG_MAP" ]; then printf '%s' "$1"; return; fi
+  awk -F'\t' -v L="$1" '$1==L { print $2; f=1; exit } END { if (!f) printf "%s", L }' "$UI_LANG_MAP"
+}
 
 _ui_line() { # label which -> "x y w h" of the chosen element
-  awk -F'\t' -v L="$1" -v N="${2:-1}" '
+  awk -F'\t' -v L="$(ui_name "$1")" -v N="${2:-1}" '
     NR==1 { split($0, w, " "); wx=w[2]; wy=w[3]; s=w[4]; next }
     $1==L { n++; x[n]=$2; y[n]=$3; ww[n]=$4; hh[n]=$5 }
     END {
@@ -59,7 +69,7 @@ ui_click() { # label [which] [button]
 
 ui_click_after() { # label -> clicks the element drawn right after it (e.g. the first breadcrumb)
   local xy=""
-  xy=$(awk -F'\t' -v L="$1" '
+  xy=$(awk -F'\t' -v L="$(ui_name "$1")" '
     NR==1 { split($0, w, " "); wx=w[2]; wy=w[3]; s=w[4]; next }
     hit { printf "%d %d\n", wx + ($2 + $4/2)*s, wy + ($3 + $5/2)*s; exit }
     $1==L { hit=1 }' "$UI_DUMP" 2>/dev/null)

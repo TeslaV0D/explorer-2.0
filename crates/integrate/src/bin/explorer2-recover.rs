@@ -74,7 +74,7 @@ fn ask(question: &str) -> Option<bool> {
 fn report(r: &ResetReport) {
     out(&r.summary());
     for k in &r.kept {
-        out(&explorer_i18n::tr!("  left as it is: {0}", k));
+        out(&explorer_i18n::tr!("  left unchanged: {0}", k));
     }
     for e in &r.errors {
         out(&explorer_i18n::tr!("  error: {0}", e));
@@ -140,7 +140,7 @@ fn main() {
                     }
                     None => {
                         out(explorer_i18n::tr!(
-                            "No console to ask – please start with --yes."
+                            "No console to ask – start it with --yes."
                         ));
                         std::process::exit(2);
                     }
@@ -172,7 +172,7 @@ fn main() {
                     }
                     None => {
                         out(explorer_i18n::tr!(
-                            "No console to ask – please start with --quiet."
+                            "No console to ask – start it with --quiet."
                         ));
                         std::process::exit(2);
                     }

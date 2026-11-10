@@ -108,7 +108,7 @@ pub fn describe() -> Option<(String, String)> {
         ),
         (true, false) => (
             tr!(
-                "Installed in {0}; this copy runs from {1}.",
+                "Installed in {0}; this copy is running from {1}.",
                 ip.program_dir.display(),
                 here
             ),
@@ -116,7 +116,7 @@ pub fn describe() -> Option<(String, String)> {
         ),
         (false, _) => (
             tr!(
-                "Not installed – runs from {0}. Installing puts Explorer 2.0 permanently into {1} (without administrator rights) and into the Start menu.",
+                "Not installed – running from {0}. Installing copies Explorer 2.0 to {1} (no administrator rights needed) and adds it to the Start menu.",
                 here,
                 ip.program_dir.display()
             ),
@@ -169,7 +169,9 @@ fn continue_in(win: &crate::MainWindow, app: std::path::PathBuf, attempt: u32) {
                     .into(),
                 );
             }
-            Err(e) => w.set_error(tr!("Installed, the start could not be checked: {0}", e).into()),
+            Err(e) => {
+                w.set_error(tr!("Installed, but the start could not be checked: {0}", e).into())
+            }
         }
     });
 }

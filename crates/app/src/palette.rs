@@ -139,7 +139,7 @@ pub fn run(win: &MainWindow, index: i32) {
     let Some((cmd, go, ok)) = target else { return };
     if !ok {
         nav::trace_line("palette: command not available here");
-        win.set_error(tr!("Not possible here").into());
+        win.set_error(tr!("Not available here").into());
         return;
     }
     close(win);

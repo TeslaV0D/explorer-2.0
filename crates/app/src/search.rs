@@ -270,7 +270,7 @@ pub fn init(win: &MainWindow, enabled: bool) {
 }
 
 fn off_text() -> &'static str {
-    tr!("Search index off: the search then only walks the current folder.")
+    tr!("Search index off: searches only go through the current folder.")
 }
 
 fn start(win: &MainWindow) {
