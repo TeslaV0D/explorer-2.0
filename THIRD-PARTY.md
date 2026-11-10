@@ -1,8 +1,8 @@
-# Fremdkomponenten (Third-Party)
+# Third-party components
 
 ## Lucide Icons (v1.70.0)
 
-Die Linien-Icons der Oberfläche (`crates/app/ui/icons.slint`, erzeugt mit `scripts/make-ui-icons.py`) stammen aus [Lucide](https://lucide.dev), Paket `lucide-static`. Lizenz (unverändert übernommen):
+The line icons of the user interface (`crates/app/ui/icons.slint`, generated with `scripts/make-ui-icons.py`) come from [Lucide](https://lucide.dev), package `lucide-static`. License (reproduced unchanged):
 
 ```text
 ISC License
