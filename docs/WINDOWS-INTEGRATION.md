@@ -1,75 +1,75 @@
-# Windows-Integration – Explorer systemweit ersetzen
+# Windows integration – replacing Explorer system-wide
 
-> Status: **Recherche/Plan.** Aussagen mit ⚠️ sind aus Erfahrungswissen/Praxis anderer Explorer-Alternativen (Explorer++, Directory Opus, Files, Total Commander) abgeleitet und **müssen auf echtem Windows 10/11 verifiziert werden** (in der Dev-Sandbox nicht testbar).
+> Status: **research/plan.** Statements marked ⚠️ are derived from practical experience of other Explorer alternatives (Explorer++, Directory Opus, Files, Total Commander) and **must be verified on real Windows 10/11** (not testable in the dev sandbox).
 
-Es gibt **keine** offizielle „Default File Manager“-Einstellung in Windows. Ersatz = mehrere Einstiegspunkte einzeln übernehmen. Stufen von sicher → riskant:
+Windows has **no** official “default file manager” setting. Replacement = taking over several entry points one by one. Stages from safe → risky:
 
-## Stufe 1 – Ordner-Verben in der Registry (sicher, reversibel, HKCU)
-> **Umsetzung M7.1 (D-021):** nicht `open` überschreiben, sondern eigenes Verb `explorer2open` unter `HKCU\Software\Classes\{Directory,Drive}\shell` + dort Standard-Verb (`@`) = `explorer2open` (Windows liefert `none` → fällt sonst auf `Folder` = Explorer durch). **`Folder` bleibt unangetastet** (öffnet auch Systemsteuerung, Papierkorb …). Kontextmenü: eigenes Verb `explorer2` (Directory `%1`, Directory\Background `%V`, Drive `%1`). Alles über `explorer-integrate` (Journal, Manifest, Reset).
+## Stage 1 – folder verbs in the registry (safe, reversible, HKCU)
+> **Implementation M7.1 (D-021):** do not overwrite `open`, but add our own verb `explorer2open` under `HKCU\Software\Classes\{Directory,Drive}\shell` + set the default verb (`@`) there to `explorer2open` (Windows ships `none` → otherwise falls through to `Folder` = Explorer). **`Folder` stays untouched** (it also opens Control Panel, Recycle Bin …). Context menu: own verb `explorer2` (Directory `%1`, Directory\Background `%V`, Drive `%1`). Everything via `explorer-integrate` (journal, manifest, reset).
 
-Wenn irgendeine App einen Ordner „öffnet“ (`ShellExecute`, „Ordner öffnen“ in Browsern/IDEs, Doppelklick auf Ordner-Verknüpfung), löst Windows das Verb `open` auf `Folder`/`Directory`/`Drive` auf.
+When any app “opens” a folder (`ShellExecute`, “Open folder” in browsers/IDEs, double-click on a folder shortcut), Windows resolves the verb `open` on `Folder`/`Directory`/`Drive`.
 - `HKCU\Software\Classes\Directory\shell\open\command` → `"explorer2.exe" "%1"`
-- `HKCU\Software\Classes\Folder\shell\open\command` → dito, plus leerer Wert `DelegateExecute` (ohne ihn greift der Standard-Handler weiter) ⚠️
-- Analog `Drive\shell\open\command`; Shell-Verb `explore` ebenfalls belegen.
-- Per-User (HKCU) → keine Admin-Rechte; Deinstallation = Schlüssel löschen.
-- Zusätzlich eigene Einträge „In Explorer 2.0 öffnen“ im Kontextmenü (`Directory\Background\shell`) – harmlos als Fallback.
+- `HKCU\Software\Classes\Folder\shell\open\command` → the same, plus an empty `DelegateExecute` value (without it the default handler keeps taking effect) ⚠️
+- Likewise `Drive\shell\open\command`; also take over the shell verb `explore`.
+- Per user (HKCU) → no admin rights; uninstall = delete the keys.
+- Additionally our own entries “Open in Explorer 2.0” in the context menu (`Directory\Background\shell`) – harmless as a fallback.
 
-## Stufe 2 – Win+E und „Dieser PC“ ⚠️
-> **Umsetzung M7.2:** Registry-Weg (CLSID-Verb `opennewwindow` + leerer `DelegateExecute`), kein Tastatur-Hook. Feature `win-e` in `explorer-integrate`.
+## Stage 2 – Win+E and “This PC” ⚠️
+> **Implementation M7.2:** registry route (CLSID verb `opennewwindow` + empty `DelegateExecute`), no keyboard hook. Feature `win-e` in `explorer-integrate`.
 
-- Win+E startet über den Shell-Hotkey ein „Computer“-Fenster. Bekannter Registry-Weg: `HKCU\Software\Classes\CLSID\{52205FD8-5DFB-447D-801A-D0B52F2E83E1}\shell\opennewwindow\command` mit eigenem Befehl (+ leerer `DelegateExecute`).
-- Alternative/Fallback: Low-Level-Keyboard-Hook (`WH_KEYBOARD_LL`) in unserem Hintergrundprozess, der Win+E abfängt und verschluckt. Nachteil: Hook muss laufen (Autostart/Tray), Antivirus-Sensibilität.
-- Entscheidung später per Praxistest, welcher Weg auf Win10/Win11 stabil ist.
+- Win+E starts a “Computer” window through the shell hotkey. Known registry route: `HKCU\Software\Classes\CLSID\{52205FD8-5DFB-447D-801A-D0B52F2E83E1}\shell\opennewwindow\command` with our own command (+ empty `DelegateExecute`).
+- Alternative/fallback: low-level keyboard hook (`WH_KEYBOARD_LL`) in our background process that intercepts and swallows Win+E. Drawback: the hook has to run (autostart/tray), antivirus sensitivity.
+- Decision later by field test which route is stable on Win10/Win11.
 
-## Stufe 3 – `explorer.exe`-Aufrufe (`/select,`, `/e,`, `explorer.exe C:\x`) ⚠️
-Viele Apps rufen direkt `explorer.exe /select,"C:\file"` auf („Im Ordner anzeigen“, Browser-Downloads, Teams, VS Code …). Das umgeht Stufe 1.
-- Optionen: (a) **Image File Execution Options** (`HKLM\...\Image File Execution Options\explorer.exe` → `Debugger` = unser Proxy). Proxy leitet Aufrufe mit Pfad-Argumenten an uns um und startet bei **Shell-Start / ohne Argumente** den echten Explorer (ein Debugger, der dasselbe Image selbst startet, wird nicht erneut umgeleitet). (b) Dateisystem-/Dienst-Hooks → abzulehnen.
-- **Hohes Risiko** (explorer.exe ist zugleich Desktop/Taskleiste/Startmenü; Bug = kaputte Shell). Daher: opt-in, Admin nötig (HKLM), **Safe-Mode-/Recovery-Tool** (`explorer2-recover.exe`, Wiederherstellung per Registry-Skript, Boot-Fallback-Ordner), strenge Allowlist der Argumentmuster, Tests in VM mit Snapshot.
+## Stage 3 – `explorer.exe` invocations (`/select,`, `/e,`, `explorer.exe C:\x`) ⚠️
+Many apps call `explorer.exe /select,"C:\file"` directly (“Show in folder”, browser downloads, Teams, VS Code …). This bypasses stage 1.
+- Options: (a) **Image File Execution Options** (`HKLM\...\Image File Execution Options\explorer.exe` → `Debugger` = our proxy). The proxy redirects invocations with path arguments to us and starts the real Explorer on **shell start / without arguments** (a debugger that starts the same image itself is not redirected again). (b) File-system/service hooks → to be rejected.
+- **High risk** (explorer.exe is also desktop/taskbar/Start menu; bug = broken shell). Therefore: opt-in, admin needed (HKLM), **Safe Mode/recovery tool** (`explorer2-recover.exe`, restore via registry script, boot fallback folder), strict allowlist of argument patterns, tests in a VM with snapshots.
 
-## Stufe 4 – Datei-Dialoge (Öffnen/Speichern)
-Common Item Dialog (`IFileOpenDialog`) wird **in-process** in der jeweiligen App gehostet; nicht ersetzbar ohne Injection. Realistisch: Dialoge bleiben Windows-nativ (**bewusste Grenze**), evtl. später DLL-Extension/Hook als freiwilliges Add-on („Pfad im Dialog nach Explorer 2.0 springen“, Quick-Switch à la Listary/Dopus). Nicht in Phase 1.
+## Stage 4 – file dialogs (Open/Save)
+The Common Item Dialog (`IFileOpenDialog`) is hosted **in-process** in each app; not replaceable without injection. Realistically: dialogs stay Windows-native (**deliberate limit**), maybe later a DLL extension/hook as a voluntary add-on (“jump to the Explorer 2.0 path in the dialog”, quick switch à la Listary/Dopus). Not in Phase 1.
 
-## Stufe 5 – Taskleiste, Startmenü, Desktop-Icons
-Gehören zur Shell (`explorer.exe`). Kein Ersatz geplant; wir bleiben Dateimanager, nicht Shell-Replacement. (Optional: Desktop-Ordner im Dateimanager voll nutzbar.)
+## Stage 5 – taskbar, Start menu, desktop icons
+These belong to the shell (`explorer.exe`). No replacement planned; we remain a file manager, not a shell replacement. (Optional: desktop folder fully usable in the file manager.)
 
-## Weitere Integrationspunkte
-| Thema | Ansatz |
+## Further integration points
+| Topic | Approach |
 |---|---|
-| **Kontextmenü hosten** | `IShellFolder::GetUIObjectOf` → `IContextMenu` (+ `IContextMenu2/3`), Einträge Dritter laufen so mit; Win11-Einträge (`IExplorerCommand`) über Verb-Registry bzw. Sparse-Package ⚠️ |
-| **Eigene Kontextmenü-Einträge in Win11** | `IExplorerCommand` + Sparse-MSIX (Package-Identity) für Top-Level-Menü; sonst „Weitere Optionen“ |
-| **Dateioperationen** | `IFileOperation` (Papierkorb, UAC, Konflikte, Undo-konform) |
-| **Icons / Thumbnails** | `SHGetFileInfo`/`IShellItemImageFactory`, Overlay-Handler (`IShellIconOverlayIdentifier`) |
-| **Eigenschaften** | `SHObjectProperties`, `IPropertyStore`, Spalten via `PKEY_*` |
-| **Vorschau** | `IPreviewHandler` hosten (Office/PDF-Vorschauhandler) |
-| **Drag&Drop / Clipboard** | `IDropTarget`, `IDataObject`, `CF_HDROP`, `Preferred DropEffect`, `CFSTR_SHELLIDLIST` |
-| **Virtuelle Ordner** | Shell-Namespace/PIDLs (This PC, Papierkorb, Netzwerk, Libraries, Control Panel) |
-| **Cloud-Platzhalter** | OneDrive/Cloud-Files-API Attribute (`RECALL_ON_DATA_ACCESS`) respektieren, nie unbeabsichtigt hydratisieren |
-| **Langpfade/DPI** | Manifest: `longPathAware`, `PerMonitorV2`, `supportedOS` |
-| **Single-Instance** | Named Mutex + Named Pipe, Autostart-Daemon → warmer Start |
-| **Jump List / Taskleiste** | `ICustomDestinationList`, AppUserModelID |
-| **„Öffnen mit“/Dateizuordnung** | Wir sind Ordner-Handler, *nicht* Standard-App für Dateitypen. `UserChoice` ist hash-geschützt → nicht umgehen. |
+| **Hosting the context menu** | `IShellFolder::GetUIObjectOf` → `IContextMenu` (+ `IContextMenu2/3`), third-party entries come along this way; Win11 entries (`IExplorerCommand`) via verb registry or sparse package ⚠️ |
+| **Own context menu entries in Win11** | `IExplorerCommand` + sparse MSIX (package identity) for the top-level menu; otherwise “Show more options” |
+| **File operations** | `IFileOperation` (Recycle Bin, UAC, conflicts, undo-compatible) |
+| **Icons / thumbnails** | `SHGetFileInfo`/`IShellItemImageFactory`, overlay handlers (`IShellIconOverlayIdentifier`) |
+| **Properties** | `SHObjectProperties`, `IPropertyStore`, columns via `PKEY_*` |
+| **Preview** | Host `IPreviewHandler` (Office/PDF preview handlers) |
+| **Drag & drop / clipboard** | `IDropTarget`, `IDataObject`, `CF_HDROP`, `Preferred DropEffect`, `CFSTR_SHELLIDLIST` |
+| **Virtual folders** | Shell namespace/PIDLs (This PC, Recycle Bin, Network, Libraries, Control Panel) |
+| **Cloud placeholders** | Respect OneDrive/Cloud Files API attributes (`RECALL_ON_DATA_ACCESS`), never hydrate unintentionally |
+| **Long paths/DPI** | Manifest: `longPathAware`, `PerMonitorV2`, `supportedOS` |
+| **Single instance** | Named mutex + named pipe, autostart daemon → warm start |
+| **Jump list / taskbar** | `ICustomDestinationList`, AppUserModelID |
+| **“Open with”/file association** | We are the folder handler, *not* the default app for file types. `UserChoice` is hash-protected → do not bypass. |
 
-## R-001: Ein-Knopf-Reset (harte Anforderung, Boss)
-> **Umgesetzt** (2026-11-05, Crate `explorer-integrate`, D-020): Journal, App-Knopf, `explorer2-recover.exe`, CI-Snapshot-Test inkl. „Journal fehlt/beschädigt“. Offen bis M7/M8: `.reg`/PowerShell-Fallback-Skript, Startmenü-Eintrag, Deinstallation, Selbstheilung (Stufe 3), HKLM-Kopie in `%ProgramData%` (Spiegel liegt aktuell in `%LOCALAPPDATA%`). **Regel für M7:** jede neue Integration nur über `apply()` und ihre Stellen in `manifest::points()` eintragen.
+## R-001: one-button reset (hard requirement, Boss)
+> **Implemented** (2026-11-05, crate `explorer-integrate`, D-020): journal, app button, `explorer2-recover.exe`, CI snapshot test including “journal missing/damaged”. Open until M7/M8: `.reg`/PowerShell fallback script, Start menu entry, uninstall, self-healing (stage 3), HKLM copy in `%ProgramData%` (the mirror currently lives in `%LOCALAPPDATA%`). **Rule for M7:** every new integration only via `apply()` and register its locations in `manifest::points()`.
 
-Lehre aus File Pilot: Nach einem Fehler half dort nur eine Windows-Neuinstallation. Das darf bei uns **nie** passieren.
-- **Journal**: Vor jeder Änderung (Registry-Schlüssel/-Werte, IFEO, Win+E-Verb, Kontextmenü, Autostart, Umgebungsvariablen/PATH, Verknüpfungen, Dateizuordnungen, Hotkey-Hooks) wird der **Originalzustand** (Wert, Typ, „existierte nicht“) in ein Journal geschrieben (`%APPDATA%\Explorer2\integration-journal.json` + Kopie in `%ProgramData%` für HKLM-Teile).
-- **Reset-Knopf in der App** („Alle Windows-Integrationen zurücksetzen“): spielt das Journal rückwärts ab, entfernt alle eigenen Schlüssel, startet ggf. `explorer.exe` neu.
-- **Eigenständiges Recovery-Tool** `explorer2-recover.exe` (keine UI-/GPU-Abhängigkeit, Konsole): funktioniert, wenn die App nicht startet, auch im Abgesicherten Modus; zusätzlich mitgeliefertes `.reg`/PowerShell-Fallback-Skript und Startmenü-Eintrag „Explorer 2.0 – Windows-Standard wiederherstellen“.
-- **Selbstheilung**: Startet `explorer.exe`-Proxy (Stufe 3) mehrfach nicht sauber → automatisch auf Windows-Standard zurückfallen.
-- **Deinstallation** ruft denselben Reset auf.
-- **Pflicht-Test in CI (Windows-Runner/VM)**: Snapshot (Registry-Bereiche, Umgebung) → alle Integrationen an → Reset → Snapshot muss **identisch** sein; dazu Test „Journal fehlt/beschädigt“ → Reset nutzt bekannte Standardwerte.
+Lesson from File Pilot: after a failure, only a Windows reinstall helped there. That must **never** happen with us.
+- **Journal**: before every change (registry keys/values, IFEO, Win+E verb, context menu, autostart, environment variables/PATH, shortcuts, file associations, hotkey hooks) the **original state** (value, type, “did not exist”) is written to a journal (`%APPDATA%\Explorer2\integration-journal.json` + a copy in `%ProgramData%` for HKLM parts).
+- **Reset button in the app** (“Alle Windows-Integrationen zurücksetzen” – reset all Windows integrations): replays the journal backwards, removes all our own keys, restarts `explorer.exe` if needed.
+- **Standalone recovery tool** `explorer2-recover.exe` (no UI/GPU dependency, console): works when the app does not start, also in Safe Mode; additionally a bundled `.reg`/PowerShell fallback script and a Start menu entry “Explorer 2.0 – Windows-Standard wiederherstellen” (restore Windows default).
+- **Self-healing**: if the `explorer.exe` proxy (stage 3) fails to start cleanly several times → automatically fall back to the Windows default.
+- **Uninstall** calls the same reset.
+- **Mandatory test in CI (Windows runner/VM)**: snapshot (registry areas, environment) → all integrations on → reset → snapshot must be **identical**; plus the test “journal missing/damaged” → reset uses known default values.
 
-## Installation & Sicherheit
-> **Umsetzung M8 (D-023):** eigener Installer in Rust statt Inno Setup/MSIX – pro Benutzer (`%LOCALAPPDATA%\Programs\Explorer2`), Startmenü + Apps & Features über das Integrations-Journal, Deinstallation = R-001-Reset + Programmordner. HKLM/Admin nur, falls M7.3 später kommt.
+## Installation & security
+> **Implementation M8 (D-023):** own installer in Rust instead of Inno Setup/MSIX – per user (`%LOCALAPPDATA%\Programs\Explorer2`), Start menu + Apps & Features via the integration journal, uninstall = R-001 reset + program folder. HKLM/admin only if M7.3 comes later.
 
-- Installer (Inno Setup/WiX) **und** Portable-Modus; HKCU-first, HKLM nur für Stufe 3 (separat bestätigt).
-- **Jede Änderung protokollieren + Rückbau-Funktion** („Alles auf Windows-Standard zurücksetzen“ in Settings und als Standalone-Recovery).
-- Kein Kernel-Treiber, keine DLL-Injection in Fremdprozesse in Phase 1.
-- Code-Signing später nötig (SmartScreen/AV-Akzeptanz).
+- Installer (Inno Setup/WiX) **and** portable mode; HKCU first, HKLM only for stage 3 (confirmed separately).
+- **Log every change + rollback function** (“reset everything to the Windows default” in the settings and as standalone recovery).
+- No kernel driver, no DLL injection into foreign processes in Phase 1.
+- Code signing needed later (SmartScreen/AV acceptance).
 
-## Offene Verifikationspunkte (auf Windows testen)
-1. Greift `Folder\shell\open\command` + `DelegateExecute` auf Win11 24H2/25H2 wie erwartet?
-2. Win+E-Umleitung per CLSID-Verb vs. Keyboard-Hook – welcher ist stabil?
-3. IFEO-Proxy: Verhalten bei Shell-Neustart, `explorer.exe /factory`, Taskleisten-Pins.
-4. Win11-Top-Level-Kontextmenü: Sparse-Package-Aufwand vs. Nutzen.
+## Open verification points (test on Windows)
+1. Does `Folder\shell\open\command` + `DelegateExecute` work as expected on Win11 24H2/25H2?
+2. Win+E redirection via CLSID verb vs. keyboard hook – which one is stable?
+3. IFEO proxy: behaviour on shell restart, `explorer.exe /factory`, taskbar pins.
+4. Win11 top-level context menu: sparse package effort vs. benefit.

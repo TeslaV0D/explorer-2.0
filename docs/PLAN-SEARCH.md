@@ -1,29 +1,29 @@
-# Phase 2 – Systemweite Sofortsuche (Everything-Stil)
+# Phase 2 – System-wide instant search (Everything style)
 
-Stand: 2026-11-05 · Boss-Entscheidungen: **Index stufenweise** (D-024), **Suchfeld pro Tab + globale Schnellsuche** (D-025).
+As of: 2026-11-05 · Boss decisions: **index in stages** (D-024), **search field per tab + global quick search** (D-025).
 
-## Ziele (messbar)
-| Ziel | Budget |
+## Goals (measurable)
+| Goal | Budget |
 |---|---|
-| Suche beim Tippen über ~1 Mio Einträge | **< 10 ms** pro Anfrage (best-of-N, CI-Benchmark mit synthetischem Index) |
-| Speicher für ~1 Mio Einträge | **< 100 MB** (Namen + Baum + Größe + Datum) |
-| Erstindex ohne Admin (Verzeichnis-Durchlauf, NTFS-SSD) | 1 Mio Einträge **< 2 min**, im Hintergrund, App sofort benutzbar |
-| Start mit gespeichertem Index | Index geladen **< 1 s**, danach Abgleich im Hintergrund |
-| Live-Updates (Datei angelegt/umbenannt/gelöscht) | sichtbar **< 1 s** |
+| Search-as-you-type over ~1 M entries | **< 10 ms** per query (best-of-N, CI benchmark with a synthetic index) |
+| Memory for ~1 M entries | **< 100 MB** (names + tree + size + date) |
+| Initial index without admin (directory walk, NTFS SSD) | 1 M entries **< 2 min**, in the background, app usable immediately |
+| Start with a saved index | index loaded **< 1 s**, then reconciliation in the background |
+| Live updates (file created/renamed/deleted) | visible **< 1 s** |
 
-## Stufe S1 – ohne Admin (jetzt)
-- **S1.1 Index-Kern** (neue Crate `explorer-index`, plattformneutral, voll unter Linux testbar):
-  kompakte Struktur (Namen in einem Byte-Arena-Puffer, Knoten = Elternindex + Namensbereich + Größe + Änderungsdatum + Flags), Pfad über die Elternkette, Kleinschreib-Kopie der Namen für schnelles Matching, Einfügen/Löschen/Umbenennen für Live-Updates.
-  **Abfragesprache** (Everything-Teilmenge): Wörter = UND, `|` = ODER, `!` = NICHT, `"…"` Phrase, `*`/`?` Platzhalter, `ext:jpg;png`, `size:>10mb`, `dm:today|yesterday|2026-11-05|>2026-01`, `file:`/`folder:`, `path:` (Treffer im ganzen Pfad), `regex:`. Parallele Suche über Blöcke (std-Threads), Ergebnisse sortierbar (Name, Pfad, Größe, Datum).
-  Tests + Zufallsdaten-Tests (Parser) + Benchmark 1 Mio synthetische Einträge (CI-Gate).
-- **S1.2 Persistenz**: Binärdatei pro Laufwerk in `%LOCALAPPDATA%\Explorer2\index\` (Kopf mit Version + Volume-ID + Prüfsumme, atomar geschrieben, beschädigt = neu bauen, nie Absturz), Ausschlusslisten in den Einstellungen.
-- **S1.3 Aufbau + Live**: paralleler Durchlauf je Laufwerk (FindFirstFileExW Large Fetch, D-005; Arbeits-Queue über N Threads, niedrige Priorität), Fortschritt; Live-Änderungen über rekursives `ReadDirectoryChangesW` auf den Laufwerkswurzeln (Puffer-Überlauf → Teil-Rescan des Ordners); beim Start mit gespeichertem Index Abgleich über Ordner-Änderungszeiten (nur geänderte Ordner neu lesen). Netz/USB optional + abschaltbar.
-  - Umsetzung (`explorer-search`): Dienst mit einem Pflege-Thread pro Laufwerk. Schreiben nur in Scheiben ≤ 15 ms; neu ordnen und speichern unter der Lese-Sperre. Ids gelten pro Generation. Gespeichert wird nur ein exakter Stand (abgeschnittene Änderung → alte Datei bleibt). Gespeicherter Index → erst durchsuchbar, dann Watcher, dann Abgleich. Überlauf → Abgleich des Laufwerks mit `since` = letzter exakter Moment.
-- **S1.4 UI**: Suchfeld in jedem Tab (Strg+F / F3) – sucht ab dem aktuellen Ordner, Treffer als virtueller Ort im Tab mit **allen** Dateifunktionen (Öffnen, Kopieren, Löschen, Umbenennen, Kontextmenü, Inspector) und Spalte „Ordner“; globale Schnellsuche (Strg+Umschalt+F in der App, Overlay wie die Palette) über alle Laufwerke. Status „Index: n Einträge, aktuell / wird aufgebaut x %“.
-- **S1.5 Feinschliff**: Treffer-Hervorhebung, Sortierung per Spaltenkopf, Verlauf der Suchen, Linux-E2E + Windows-CI (echter Baum, Live-Update, Persistenz, Neustart).
+## Stage S1 – without admin (now)
+- **S1.1 Index core** (new crate `explorer-index`, platform-neutral, fully testable on Linux):
+  compact structure (names in one byte-arena buffer, node = parent index + name range + size + modification date + flags), path via the parent chain, lower-case copy of the names for fast matching, insert/delete/rename for live updates.
+  **Query language** (Everything subset): words = AND, `|` = OR, `!` = NOT, `"…"` phrase, `*`/`?` wildcards, `ext:jpg;png`, `size:>10mb`, `dm:today|yesterday|2026-11-05|>2026-01`, `file:`/`folder:`, `path:` (match against the whole path), `regex:`. Parallel search over blocks (std threads), results sortable (name, path, size, date).
+  Tests + random-data tests (parser) + benchmark with 1 M synthetic entries (CI gate).
+- **S1.2 Persistence**: one binary file per drive in `%LOCALAPPDATA%\Explorer2\index\` (header with version + volume ID + checksum, written atomically, damaged = rebuild, never a crash), exclusion lists in the settings.
+- **S1.3 Build + live**: parallel walk per drive (FindFirstFileExW Large Fetch, D-005; work queue over N threads, low priority), progress; live changes via recursive `ReadDirectoryChangesW` on the drive roots (buffer overflow → partial rescan of the folder); on start with a saved index, reconciliation via folder modification times (re-read only changed folders). Network/USB optional + can be switched off.
+  - Implementation (`explorer-search`): service with one maintenance thread per drive. Writes only in slices ≤ 15 ms; reorder and save under the read lock. Ids are valid per generation. Only an exact state is saved (truncated change → the old file stays). Saved index → searchable first, then watcher, then reconciliation. Overflow → reconcile the drive with `since` = last exact moment.
+- **S1.4 UI**: search field in every tab (Ctrl+F / F3) – searches from the current folder, hits as a virtual place in the tab with **all** file functions (open, copy, delete, rename, context menu, Inspector) and a “Folder” column; global quick search (Ctrl+Shift+F in the app, overlay like the palette) across all drives. Status “Index: n entries, up to date / building x %”.
+- **S1.5 Polish**: hit highlighting, sorting via column header, search history, Linux E2E + Windows CI (real tree, live update, persistence, restart).
 
-## Stufe S2 – optional, mit Admin (später, eigene Entscheidung)
-NTFS-MFT-Scan + USN-Journal über einen kleinen Dienst (einmal Admin, opt-in). Pflicht vorher: R-001-Erweiterung für Dienste (Registrierung im Journal, Recovery entfernt den Dienst, auch im abgesicherten Modus). Erst nach Praxistest von S1.
+## Stage S2 – optional, with admin (later, separate decision)
+NTFS MFT scan + USN journal via a small service (admin once, opt-in). Mandatory beforehand: R-001 extension for services (registration in the journal, recovery removes the service, also in Safe Mode). Only after the field test of S1.
 
-## Nicht in Phase 2
-Inhaltssuche (Volltext), systemweiter Hotkey außerhalb der App (wäre eine Integration → R-001, später).
+## Not in Phase 2
+Content search (full text), system-wide hotkey outside the app (would be an integration → R-001, later).

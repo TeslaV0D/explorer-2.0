@@ -1,200 +1,202 @@
 # TO-DO
 
-Legende: `[ ]` offen · `[~]` in Arbeit · `[x]` erledigt · Prio P0/P1/P2
+Legend: `[ ]` open · `[~]` in progress · `[x]` done · priority P0/P1/P2
 
-## Jetzt (Planung)
-- [x] Projektstruktur + Doku-Dateien anlegen (CLAUDE.md, PROJECT, PLAN-BASICS, WINDOWS-INTEGRATION, TODO, STATUS)
-- [x] Referenzen recherchiert (File Pilot, Sweetch, Everything)
-- [x] D-001 entschieden: Rust + Slint
-- [ ] Phase-1-Plan von Boss abnehmen lassen / anpassen (läuft implizit weiter, Anpassungen jederzeit)
+The app UI is German; UI labels are quoted as they appear (with a translation where it helps).
 
-## Phase 1 – Basis (Details: `PLAN-BASICS.md`)
-- [x] M0 Repo-Setup: Cargo-Workspace, CI (Windows+Linux, fmt/clippy/test, Release-Build + Exe-Smoke-Test), Skelett-Fenster, Windows-Manifest (PerMonitorV2, longPathAware, UTF-8) – **abgeschlossen 2026-11-03, CI-Run #3 grün**
-- [x] M1 fs-Kern – **abgeschlossen 2026-11-03, CI-Run #10 komplett grün**
-  - [x] Windows-Fastpath `FindFirstFileExW` (`FindExInfoBasic` + `LARGE_FETCH`), Attribute aus Find-Daten (hidden/system/readonly/Link), Cloud-Platzhalter ≠ Link
-  - [x] Langpfade via `\?\`-Verbatim (inkl. UNC, `.`/`..`-Normalisierung), FILETIME→Unix
-  - [x] Portabler Pfad (std) für Linux/Tests, Symlinks/Dangling-Links
-  - [x] Hintergrund-Loader: Batches (256 zuerst, dann 8192), Abbruch, Fehlerklassen (NotFound/Zugriff verweigert/Kein Ordner)
-  - [x] Watcher (`notify`: ReadDirectoryChangesW/inotify) + Debounce (100 ms ruhig / max 500 ms) + adaptive Refresh-Drossel (≥500 ms, 4× Ladezeit, max 10 s)
-  - [x] Explorer-Sichtbarkeitsregeln (Ausgeblendete / geschützte Systemdateien) + Toggle „Ausgeblendete“
-  - [x] Natürliche Sortierung allokationsfrei (100k: 173 → 47 ms), deterministisch bei „gleichen“ Namen
-  - [x] UI: Laden nie im UI-Thread, Generationszähler gegen veraltete Ergebnisse, Statusleiste, Fehleranzeige, Rückfall auf Elternordner wenn aktueller Ordner verschwindet
-  - [x] Benchmark-Tool (`cargo run --release -p explorer-fs --example bench -- --assert`) + CI-Budgets
-  - [x] E2E-Test unter Xvfb (13 Checks): `scripts/e2e.sh`, läuft als CI-Job `e2e-linux`
-  - [x] CI grün inkl. Windows-Benchmark + Windows-UI-Smoke-Test (Run #6)
-  - [x] CI grün mit getrennter Start-/Daten-Messung (Run #9: Daten 0,9 ms / 140 ms auf Windows)
-  - [x] CI grün mit stabilem Bench-Gate (best-of-9, Run #10: Median 1,17 ms / 115 ms, OS-Stalls 2/9 abgefangen)
-- [x] M1.5 Renderer-Wahl + Einstellungen + Icon – **abgeschlossen 2026-11-03, CI-Run #13 grün**
-  - [x] GPU-Probe (WGL) + Klassifizierung (Software-GL = unbrauchbar), Cache in settings.ini, Hintergrund-Re-Probe
-  - [x] Einstellung „Hardwarebeschleunigung verwenden, wenn verfügbar“ (Panel „Einstellungen“), wirkt beim nächsten Start
-  - [x] settings.ini (atomar, tolerant), „Ausgeblendete“ wird gespeichert
-  - [x] App-Icon (SVG → ICO/PNG), Exe-Icon + Fenster-Icon
-  - [x] Linux lokal: 6 Umgebungen (ohne GL, Mesa-GL, forciert GPU/Software, Setting aus) + E2E 20/20
-  - [x] CI: Windows-Umgebungsmatrix (7 Szenarien) + Linux-GL-Check + Exe-Icon-Check grün (Run #13)
-- [x] M2 UI-Shell – **abgeschlossen 2026-11-03, CI-Run #16 grün**
-  - [x] Details-Ansicht: Spalten Name / Änderungsdatum / Typ / Größe, Klick sortiert (▲▼, 2. Klick dreht), Spaltenbreiten ziehbar, Sortierung gespeichert
-  - [x] Typ-Spalte („Dateiordner“, „PNG-Datei“, „Datei“) + Sortierung nach Typ (echte Shell-Typnamen in M5)
-  - [x] Auswahl wie Explorer: Klick, Strg+Klick, Umschalt+Klick, Klick ins Leere hebt auf; Auswahl bleibt bei Auto-Refresh/Umsortieren erhalten (per Name)
-  - [x] Tastatur: Pfeile, Bild↑↓, Pos1/Ende (+Umschalt/Strg), Strg+A, Strg+Leertaste, Enter, Rücktaste/Alt+↑, F5, Strg+L/Alt+D, Typeahead (inkl. Buchstaben-Zyklus)
-  - [x] Öffnen: Doppelklick/Enter → Ordner navigieren, Dateien mit Standard-App (ShellExecuteW), mehrere Dateien (max. 20)
-  - [x] Breadcrumb-Adressleiste (klickbare Segmente, „…“-Kürzung, Klick ins Leere/Strg+L = Bearbeiten, Esc = zurück)
-  - [x] Nach „Hoch“ ist der Herkunftsordner markiert; Liste hat beim Start Tastaturfokus
-  - [x] CI grün (inkl. Windows-ShellExecute-Test, Run #16)
-- [ ] M2-Rest/Politur (später): Spaltenbreiten speichern, Spalten ein/ausblenden, Ansichten Liste/Symbole/Kacheln (Plan 4.2), Gruppieren
-- [x] M3 Tabs, Split-View, Sidebar, Verlauf, Session-Restore – **abgeschlossen 2026-11-03, CI-Run #19 grün**
-  - [x] Tabs pro Pane: neu (+ / Strg+T, gleicher Ordner), schließen (× / Mittelklick / Strg+W, letzter Tab bleibt), wechseln (Klick / Strg+Tab / Strg+Umschalt+Tab)
-  - [x] Split-View (Button „Zwei Ansichten“ / Strg+\), F6 wechselt Pane, Klick aktiviert, Tastaturfokus folgt aktiver Pane; letzter Tab rechts schließen = Split aus
-  - [x] Verlauf je Tab: ← → Buttons, Alt+←/→, Maus-Seitentasten; „Zurück zum Elternordner“ markiert Herkunftsordner
-  - [x] Seitenleiste: Schnellzugriff (Known Folders/XDG), Laufwerke mit Name, Füllbalken (rot > 90 %), „x GB frei von y GB“, Refresh alle 15 s im Hintergrund
-  - [x] Sitzung: Panes, Tabs, aktive Tabs/Pane, Split in session.ini; Restore beim Start ohne Pfad-Argument; nur sichtbare Tabs laden sofort (lazy); fehlende Ordner → nächster existierender Elternordner
-  - [x] CI grün (Run #19)
-- [ ] M3-Rest/Politur (später): Tabs per Drag umsortieren/abreißen, Pane-Trenner ziehbar, Sidebar: Netzwerk/Papierkorb/Favoriten anheften, Mittelklick in Sidebar = neuer Tab, Laufwerks-Änderungen per WM_DEVICECHANGE statt Polling
-- [x] M4 Dateioperationen – **abgeschlossen 2026-11-03, CI-Run #26 grün**
-  - [x] Crate `explorer-ops`: Jobs Kopieren/Verschieben/Papierkorb/Endgültig löschen im Hintergrund (Fortschritt, Pause, Abbruch), Konflikte (Ersetzen/Zusammenführen, Überspringen, Beide behalten, Abbrechen, „für alle“)
-  - [x] Datensicherheit: Temp-Datei + Rename, Quelle bei Verschieben über Laufwerke erst nach vollständiger + geflushter Kopie löschen, „Ersetzen“ legt Alt-Datei in den Papierkorb, Abbruch hinterlässt keine Teil-Dateien, Fehler pro Element (Job läuft weiter)
-  - [x] Undo/Redo (Strg+Z/Strg+Y, max. 50): Kopie → Papierkorb, Verschieben/Umbenennen → zurück, Papierkorb → wiederherstellen (Snapshot vor dem Undo), endgültig gelöscht = nicht rückgängig
-  - [x] Zwischenablage Strg+C/X/V (+ Strg/Umschalt+Einfg), Windows-kompatibel (CF_HDROP + Preferred DropEffect, Austausch mit Explorer), Ausschneiden blendet Einträge halb aus, Esc hebt auf, Cut wird nur einmal eingefügt
-  - [x] Entf → Papierkorb, Umschalt+Entf → Bestätigungsdialog → endgültig
-  - [x] F2 Inline-Umbenennen (Name ohne Endung markiert), Esc bricht ab, ungültig/vorhanden → Fehlermeldung + Editor bleibt offen; Strg+Umschalt+N „Neuer Ordner“ + sofort Umbenennen
-  - [x] Befehlsleiste (Neuer Ordner, Ausschneiden, Kopieren, Einfügen, Umbenennen, Löschen, ↶, ↷)
-  - [x] Operations-Panel (ab 300 ms Laufzeit): Titel, Balken, „x von y · MB/s · noch n s“, Pause/Fortsetzen, Abbrechen
-  - [x] Drag & Drop in der App: auf Ordnerzeile = hinein, auf Liste = in angezeigten Ordner, Standard Verschieben, Strg = Kopieren; nie in sich selbst/Unterordner; Mehrfachauswahl bleibt beim Ziehen erhalten
-  - [x] Tests: ops 18 Integrationstests (+ Disk-Full per tmpfs in CI, gesperrte Datei auf Windows), E2E 38–52 (40 Checks), CI-Clipboard-Interop mit Windows PowerShell
-  - [x] CI grün (Run #26: E2E 100/100, Windows-ops 19/19 inkl. Papierkorb + gesperrte Datei, Clipboard-Interop mit Windows, Disk-Full)
-- [ ] M4-Rest/Politur (später): DnD mit anderen Apps (OLE, M5), Standard-Aktion je Laufwerk (gleiches Laufwerk = Verschieben, anderes = Kopieren, wie Explorer), Job-Warteschlange (nacheinander statt parallel, pro Laufwerk), Konfliktdialog mit Vorschaubildern, „Kopieren nach…“/„Verschieben nach…“, Fortschritt in der Taskleiste (ITaskbarList3), Papierkorb-Ansicht, Junctions/Hardlinks beim Kopieren sauber behandeln, Alternate Data Streams/ACLs (CopyFileExW kopiert ADS bereits)
-- [x] M5 Shell-Integration (Boss-Freigabe 2026-11-04) – **komplett: M5.0–M5.5 (Run #37), M5.6 (Run #39–#44), M5.7 (Run #48)** – in Teilschritten, jeder einzeln CI-geprüft:
-  - [x] M5.0 Exe-Größe: `opt-level="s"` (**Windows 19,7 → 16,5 MB**, Linux 22,9 → 19,6 MB; Sortieren 100k +6–10 ms, Rest im Rauschen), CI-Gate < 20 MB
-  - [x] M5.1 Echte Icons: Shell-Icons (`SHGetFileInfoW`/`IShellItemImageFactory`), Cache pro Endung + individuell für .exe/.lnk/.ico/.url, im Hintergrund, Overlays (Verknüpfung) – Linux: Fallback wie bisher
-  - [x] M5.2 Shell-Typnamen (Typ-Sortierung nach angezeigtem Namen) („Textdokument“, „JPEG-Bild“) per `SHGetFileInfoW(SHGFI_TYPENAME|USEFILEATTRIBUTES)`, gecacht pro Endung
-  - [x] M5.3 Kontextmenü (Linux: eigenes Fallback-Menü später): `IContextMenu` (inkl. Erweiterungen Dritter, „Senden an“, „Öffnen mit“ via IContextMenu2/3), Rechtsklick auf Auswahl / leere Fläche (Ordner-Hintergrund), eigene Einträge davor (Kopieren/Einfügen/… über unsere Engine)
-  - [x] M5.4 Eigenschaften (`SHObjectProperties`/`SHMultiFileProperties`, Alt+Enter; „Öffnen mit“ kommt über das Shell-Menü)
-  - [x] M5.5 OLE-Drag&Drop mit anderen Apps (Windows-E2E zieht per echter Maus): Ziehen aus der App (`DoDragDrop` + `SHCreateDataObject`), Ablegen in die App (`RegisterDragDrop`, Winit-Handler ersetzen), Standard-Aktion je Laufwerk wie Explorer
-  - [x] M5.6 Virtuelle Orte (schneller Pfad bleibt für normale Ordner) – CI-Run #39–#44:
-    - [x] M5.6a Papierkorb-Ansicht: Liste (Gelöscht am, Ursprünglicher Ort, Größe), Wiederherstellen, endgültig löschen, leeren, Ablegen auf Papierkorb = löschen, Seitenleiste, Adress-Aliase (CI-Run #39)
-    - [x] M5.6b „Dieser PC“: Laufwerke mit Speicherplatz, Klick auf Überschrift in der Seitenleiste, „Hoch“ vom Laufwerk → Dieser PC (CI-Run #39)
-    - [x] M5.6c Netzwerk: `\\server` → Freigaben (`NetShareEnum`, ohne Admin-Freigaben `C$`/`IPC$`), Kommentar in „Typ“, Anmeldedialog (`WNetAddConnection3W`) bei Zugriff verweigert – einmal pro Ordner, „Hoch“ von Freigabe → Server, Breadcrumb `\\nas › film` (CI-Run #41)
-    - [x] M5.6d1 Adresszeile wie Explorer: `%VAR%`, `shell:<Name>` (32 Known Folders, z. B. `shell:Downloads\\x`, `shell:Common Startup`), `~` (Unix); echte Shell-Icons in Seitenleiste (Ordner, Laufwerke, Papierkorb) und „Dieser PC“ (CI-Run #43)
-    - [x] M5.6d2 Bibliotheken (`IShellLibrary`): Ansicht „Bibliotheken“, Bibliothek mit einem Ordner öffnet ihn, mit mehreren zeigt ihre Ordner; `shell:Libraries`/`shell:DocumentsLibrary` … (CI-Run #44)
-    - [ ] Später: zusammengeführte Bibliotheks-Ansicht (Inhalte aller Ordner in einer Liste, wie Explorer) – braucht Dateioperationen mit Pfad pro Zeile
-    - [ ] Später: Undo für „Wiederherstellen“, Shell-Kontextmenü im Papierkorb
-  - [x] M5.7 Kachel-Ansicht + Vorschaubilder (Boss: Weg 1) – CI-Run #48
-    - [x] M5.7a Vorschaubilder: `IShellItemImageFactory` (Windows-Thumbnail-Cache, sonst großes Icon), 2 Worker, nur sichtbare Kacheln, neueste zuerst, 96-MB-Speichergrenze (LRU), Schlüssel inkl. Änderungszeit
-    - [x] M5.7b Kachel-Ansicht: Mittel/Groß/Extra groß (48/96/256 px), Strg+Shift+1/2/3/6, Strg+Mausrad (gedrosselt), Knöpfe „Details/Symbole“ in der Statusleiste, Raster-Navigation (←→↑↓, Bild↑↓), Klick/Strg/Shift, Doppelklick, Kontextmenü, F2 über der Beschriftung, Ziehen & Ablegen (auch OLE, Trefferprüfung im Raster), Einstellung `view` gespeichert
-    - [ ] Später: Spaltenköpfe in der Kachel-Ansicht durch Sortier-Menü ersetzen; Rahmen-Auswahl (Lasso) für beide Ansichten; Ansicht pro Ordner merken
-- [x] M6 Ordneroptionen-Parität, Themes, Command Palette, Inspector (Boss: Reihenfolge M6.1 → M6.4) – komplett (CI-Run #58)
-  - [x] M6.1 Ordneroptionen wie im Explorer (CI-Run #49–#51)
-    - [x] M6.1a Einstellungs-Panel „Ordneroptionen“: Dateinamenerweiterungen anzeigen (aus = Endung bekannter Typen ausblenden, Windows: in HKCR registriert; F2 bearbeitet dann nur den Stamm, Endung bleibt), geschützte Systemdateien anzeigen, Öffnen durch einfachen Klick (Markieren durch Zeigen, Doppelklick-Schutz) – CI-Run #49
-    - [x] M6.1b Sortier-Menü „Sortieren ▾“ in der Statusleiste (Spalte behält Richtung, Richtung getrennt), Kachel-Ansicht ohne Spaltenköpfe, Rahmen-Auswahl auf freier Fläche in beiden Ansichten (Strg = hinzufügen) – CI-Run #51
-    - [ ] Später: Rahmen-Auswahl mit Auto-Scroll am Rand; Rahmen auch aus dem freien Teil einer Detail-Zeile starten (Explorer)
-    - [x] M6.1c Ansicht pro Ordner merken (`views.ini`, max. 5000 Ordner, älteste fallen raus; Windows ohne Groß/Klein) + „Aktuelle Ansicht für alle Ordner“; Ansicht pro Tab → zwei Panes können verschieden aussehen – CI-Run #51
-  - [x] M6.2 Inspector (Alt+P / „Details“): Vorschau (Shell-Bild 256 px, Text erste 40 Zeilen), Name/Typ/Größe/Geändert/Erstellt/Attribute/Pfad (markier- und kopierbar), Bildmaße aus dem Dateikopf (PNG/JPEG/GIF/BMP/WebP), Mehrfachauswahl mit Summen, Ordnergröße im Hintergrund (abbrechbar, keine Links, max. 500.000 Einträge, nie ganze Laufwerke; offener Ordner nur direkter Inhalt) – CI-Run #52
-    - [ ] Später: Inspector-Breite verstellbar; Metadaten aus Shell-Eigenschaften (Autor, Länge von Videos/Audio, EXIF)
-  - [x] M6.3 Befehlspalette (Strg+Shift+P): zentrales Befehlsverzeichnis (`core::commands`, 45 Befehle mit Kürzel + Bedingung), unscharfe Suche (Umlaute/Groß-Klein egal, Wortanfänge zählen), nicht verfügbare Befehle grau, zuletzt benutzte oben (settings.ini), „>“ = Orte (Schnellzugriff, Laufwerke, virtuelle Orte, zuletzt besuchte Ordner) – CI-Run #55
-    - [ ] Später: frei belegbare Tastenkürzel auf Basis des Befehlsverzeichnisses
-    - [x] Erststart-Gate: Warnung ab 1 s, rot ab 2 s (Boss: Variante 1, D-018)
-  - [x] M6.4 Farbschemata: Wie Windows (live) / Hell / Dunkel, Windows-Akzentfarbe (Auswahl-Familie im Farbton des Akzents, Rahmen in Windows-Schattierung), alle Farben zentral + kontrastgetestet, Std-Widgets + Titelleiste folgen – CI-Run #58
-    - [ ] Später: Windows-Kontrastdesigns (High Contrast) respektieren; Akzent-Häkchen auch für Std-Widgets (Slint färbt sie selbst nach `DwmGetColorizationColor`)
-- [x] **R-001 Ein-Knopf-Reset** für alle Integrationen (App-Knopf + eigenständiges Recovery-Tool + Journal + CI-Snapshot-Test) – Voraussetzung, bevor irgendeine Integration ausgeliefert wird
-  - [x] R-001a Crate `explorer-integrate`: Write-Ahead-Journal (atomar, Spiegel, Prüfsumme), `apply`/`reset`/`sweep`/`status`, rohe Registry-Werte, Dateien mit Sicherung, Umgebung + WM_SETTINGCHANGE, fremd geänderte Werte bleiben, Fehler bleiben im Journal; 13 Unit-Tests (Fake-Registry) + Test gegen echte Registry – CI-Run #59
-  - [x] R-001b `explorer2-recover.exe` (Konsole, `--status`/`--yes`) + CI-Pflichttest `scripts/r001-snapshot.ps1` (reg.exe-Export vorher = nachher: aus Journal, über Spiegel, ganz ohne Journal) – CI-Run #59
-  - [x] R-001c Einstellungen → „Windows-Integration“ (Status + „Alle Windows-Integrationen zurücksetzen“ mit Nachfrage) + Palette; Linux-E2E [71]–[71g] (188/188), Windows-E2E W41–W41h – CI-Run #61
-  - [x] Startmenü-Eintrag „Windows-Standard wiederherstellen“ + Deinstallation ruft Reset (M8.1, Run #69)
-  - [ ] Später: `.reg`/PowerShell-Fallback-Skript, Selbstheilung beim explorer.exe-Proxy, HKLM-Journal-Kopie in `%ProgramData%`
-- [x] M7 Windows-Integration Stufe 1–2 (Stufe 3 verschoben, D-022) (siehe `WINDOWS-INTEGRATION.md`) + Verifikationspunkte auf echtem Windows
-  - [x] M7.1 Ordner öffnen (eigenes Standard-Verb `explorer2open` für Directory/Drive, `Folder` bleibt bei Windows) + „In Explorer 2.0 öffnen“ im Kontextmenü (Ordner, Laufwerk, Ordner-Hintergrund); einzeln schaltbar (Einstellungen + Palette), Aus = exakt vorheriger Zustand; Exe verschoben → beim Start neu verknüpft; Notfall-Werkzeug-Kopie in `%LOCALAPPDATA%\Explorer2`; `"C:\"`-Quoting repariert; Windows-E2E W42 (echtes ShellExecute), R-001-Test [R5] – CI-Run #64
-  - [x] M7.2 Win+E: `HKCU\…\CLSID\{52205FD8-…}\shell\opennewwindow\command` = Exe (ohne Ordner = letzte Sitzung) + leerer `DelegateExecute`; Schalter + Palette; Windows-E2E W43 (echtes Win+E per `keybd_event`, vorher Prüfung, ob die Runner-Shell Win+E überhaupt verarbeitet) – CI-Run #67
-  - [ ] M7.3 `explorer.exe`-Aufrufe (IFEO-Proxy, HKLM/Admin, hohes Risiko) – **verschoben** (Boss, D-022), erst nach Praxistest von M7.1/7.2
-  - [ ] Auf echtem Windows 11 prüfen (Boss): Doppelklick auf Ordner/Laufwerk auf dem Desktop, „Ordner öffnen“ aus Browser-Downloads, Kontextmenü (Win11: unter „Weitere Optionen“)
-- [~] M8 Installer, Recovery-Tool, Härtung, Beta (Boss: eigener Installer in Rust, D-023)
-  - [x] M8.1 Installer-Kern: `explorer2.exe --install` (pro Benutzer, ohne Admin), Startmenü (App + „Windows-Standard wiederherstellen“), Apps & Features, Integrationen auf installierte Exe umbiegen, Update über laufende App, `explorer2-recover --uninstall [--quiet]` (Reset + Programmordner per Temp-Kopie, Schutz vor fremden Ordnern); CI `scripts/m8-install.ps1` (echte Standardpfade, Start über Startmenü, Deinstallation über `QuietUninstallString` → alles wie vorher) – CI-Run #69
-  - [x] M8.2 Einstellungen → „Installation“ (portabel/installiert, Installieren/Aktualisieren mit Nachfrage, danach Neustart aus dem Installationsordner) + Palette; Linux-E2E [72] – CI-Run #69
-  - [x] M8.3 Härtung (Boss, 2026-11-05) – CI-Run #70–#73
-    - [x] M8.3a Absturzbericht (Panic jedes Threads + Windows-Ausnahmen → `crash/crash-<utc>-<pid>.txt` mit Ursache, Ort, letzten 200 Protokollzeilen) + Hinweis beim nächsten Start („Bericht anzeigen“); Start-Wächter: 2 abgebrochene Starts in Folge → sicherer Start (Software-Darstellung, keine Sitzung, keine GPU-Prüfung), nach 5 s stabil = zurück auf normal; GPU-Prüfung, die den Prozess mitreißt → GPU dauerhaft „ungeeignet“; SIGTERM zählt nicht als Absturz; Linux-E2E [73]–[73j], Windows `scripts/m8-crash.ps1` [C1]–[C8] – CI-Run #70
-    - [x] M8.3b Eine Instanz: zweiter Start (Ordner-Doppelklick, Win+E, Startmenü) öffnet einen Tab im laufenden Fenster, minimiertes Fenster kommt nach vorn; Named Pipe (Windows, nur lokal, pro Sitzung) / Unix-Socket 0600; Antwort erst, wenn der Tab offen ist – hängende Instanz → nach 4 s eigenes Fenster; `--new-instance` + Schalter „Ordner im offenen Fenster öffnen“ (Einstellungen/Palette); Installer-Neustart mit `--new-instance`; Linux-E2E [74]–[74i], Windows `scripts/m8-instance.ps1` [N1]–[N9] – CI-Run #71
-    - [x] M8.3c Zufallsdaten-Tests für alle Parser/Text-Helfer (`core/tests/fuzz.rs`, `integrate/tests/fuzz.rs`: kein Panic, Speichern+Laden = gleich, jedes abgeschnittene/veränderte Journal wird erkannt; `FUZZ_ROUNDS`/`FUZZ_SEED`) – 3 Funde gefixt; Dauertest Linux `scripts/e2e-stress.sh` [75]–[75e] (RSS/Dateien/Threads) + Windows `scripts/m8-stress.ps1` [S1]–[S6] (Private Bytes/Handles/Threads/GDI/USER, zwei Messphasen, Bild-Cache herausgerechnet) – CI-Run #72/#73
-    - [ ] Optimierung (später): Kachel-Bild-Cache hält für Dateien **ohne** eigene Vorschau (nur Shell-Icon) je Datei ein Bild → pro Endung teilen (Windows-Dauertest: 50 MiB Cache bei 2400 leeren Dateien; im Budget, aber unnötig)
-  - [~] M8.4 Release-Paket (Boss, 2026-11-08): `Explorer2-Setup-<v>-x64.exe` (eine Datei, enthält App + Recovery, ruft `--install`; Nachfrage → Installieren → „Jetzt starten?“, `--quiet` für Skripte), Portable-ZIP, `SHA256SUMS.txt`; `scripts/release-package.ps1` (Setup bauen + Smoke-Test [S1]–[S9]: stilles Installieren in Temp-Pfade, Dateien = Build, Version, Apps & Features, Startmenü, erneut = Update, Deinstallation räumt alles weg) läuft in jedem CI-Run; `.github/workflows/release.yml`: neue Version (ohne Release) gepusht oder Tag `v*` → Tag + GitHub-Release; Version 0.1.0
-    - [x] Erstes Release v0.1.0 veröffentlicht (Release-Run #1 nach CI #134 grün, Setup-Smoke-Test 9/9): https://github.com/TeslaV0D/explorer-2.0/releases/tag/v0.1.0
-    - [ ] Vom Boss auf echtem Windows über das Setup installiert (SmartScreen, Startmenü, Deinstallation)
-  - [ ] Später: Code-Signatur (SmartScreen), automatische Updates, `.reg`/PowerShell-Fallback, Verknüpfung auf dem Desktop (optional)
+## Now (planning)
+- [x] Create project structure + doc files (CLAUDE.md, PROJECT, PLAN-BASICS, WINDOWS-INTEGRATION, TODO, STATUS)
+- [x] References researched (File Pilot, Sweetch, Everything)
+- [x] D-001 decided: Rust + Slint
+- [ ] Have Boss sign off / adjust the Phase 1 plan (continues implicitly, adjustments any time)
 
-## Technische Schulden / Follow-ups
-- [x] Exe-Größe: 19,7 → **16,5 MB** (Run #29, `opt-level="s"`, CI-Gate < 20 MB). Weitere Ideen bei Bedarf: – vor M5 prüfen: `opt-level="z"`/`lto`/`strip`, unnötige Slint-Features (Wayland?), Skia vs. femtovg; vorher 17,2 MB (Budget < 20 MB ok, Ideal < 10 MB verfehlt) → in M2 prüfen: Skia vs. femtovg/Software-Renderer, `opt-level="z"`-Vergleich
-- [x] Renderer-Entscheidung: Option 2 (GPU-Probe) + Einstellung (D-009)
-- [ ] `NtQueryDirectoryFile` als Alternative zum FindFirstFileExW messen (nur falls Windows-Bench knapp wird)
-- [ ] GitHub-Actions auf Node-24-Versionen heben (checkout@v4 → v5 etc., Deprecation-Warnung in CI)
+## Phase 1 – Basics (details: `PLAN-BASICS.md`)
+- [x] M0 Repo setup: Cargo workspace, CI (Windows+Linux, fmt/clippy/test, release build + exe smoke test), skeleton window, Windows manifest (PerMonitorV2, longPathAware, UTF-8) – **completed 2026-11-03, CI run #3 green**
+- [x] M1 fs core – **completed 2026-11-03, CI run #10 fully green**
+  - [x] Windows fast path `FindFirstFileExW` (`FindExInfoBasic` + `LARGE_FETCH`), attributes from the find data (hidden/system/readonly/link), cloud placeholder ≠ link
+  - [x] Long paths via `\?\` verbatim (including UNC, `.`/`..` normalisation), FILETIME→Unix
+  - [x] Portable path (std) for Linux/tests, symlinks/dangling links
+  - [x] Background loader: batches (256 first, then 8192), cancellation, error classes (NotFound/access denied/not a folder)
+  - [x] Watcher (`notify`: ReadDirectoryChangesW/inotify) + debounce (100 ms quiet / max 500 ms) + adaptive refresh throttle (≥500 ms, 4× load time, max 10 s)
+  - [x] Explorer visibility rules (hidden items / protected system files) + toggle “Ausgeblendete” (hidden items)
+  - [x] Natural sorting allocation-free (100k: 173 → 47 ms), deterministic for “equal” names
+  - [x] UI: never loads on the UI thread, generation counter against stale results, status bar, error display, fallback to the parent folder when the current folder disappears
+  - [x] Benchmark tool (`cargo run --release -p explorer-fs --example bench -- --assert`) + CI budgets
+  - [x] E2E test under Xvfb (13 checks): `scripts/e2e.sh`, runs as CI job `e2e-linux`
+  - [x] CI green including Windows benchmark + Windows UI smoke test (run #6)
+  - [x] CI green with separate start/data measurement (run #9: data 0.9 ms / 140 ms on Windows)
+  - [x] CI green with a stable bench gate (best-of-9, run #10: median 1.17 ms / 115 ms, OS stalls 2/9 absorbed)
+- [x] M1.5 Renderer choice + settings + icon – **completed 2026-11-03, CI run #13 green**
+  - [x] GPU probe (WGL) + classification (software GL = unusable), cache in settings.ini, background re-probe
+  - [x] Setting “Hardwarebeschleunigung verwenden, wenn verfügbar” (use hardware acceleration when available) (panel “Einstellungen”), takes effect on the next start
+  - [x] settings.ini (atomic, tolerant), “Ausgeblendete” is saved
+  - [x] App icon (SVG → ICO/PNG), exe icon + window icon
+  - [x] Linux locally: 6 environments (no GL, Mesa GL, forced GPU/software, setting off) + E2E 20/20
+  - [x] CI: Windows environment matrix (7 scenarios) + Linux GL check + exe icon check green (run #13)
+- [x] M2 UI shell – **completed 2026-11-03, CI run #16 green**
+  - [x] Details view: columns name / modified date / type / size, click sorts (▲▼, 2nd click reverses), column widths draggable, sorting saved
+  - [x] Type column (“Dateiordner”, “PNG-Datei”, “Datei”) + sorting by type (real shell type names in M5)
+  - [x] Selection like Explorer: click, Ctrl+click, Shift+click, click into empty space clears; selection survives auto-refresh/re-sorting (by name)
+  - [x] Keyboard: arrows, PgUp/PgDn, Home/End (+Shift/Ctrl), Ctrl+A, Ctrl+Space, Enter, Backspace/Alt+↑, F5, Ctrl+L/Alt+D, type-ahead (including letter cycling)
+  - [x] Open: double-click/Enter → navigate folders, files with the default app (ShellExecuteW), multiple files (max. 20)
+  - [x] Breadcrumb address bar (clickable segments, “…” truncation, click into empty space/Ctrl+L = edit, Esc = back)
+  - [x] After “Up” the folder we came from is selected; the list has keyboard focus at start
+  - [x] CI green (including Windows ShellExecute test, run #16)
+- [ ] M2 rest/polish (later): save column widths, show/hide columns, views list/icons/tiles (plan 4.2), grouping
+- [x] M3 Tabs, split view, sidebar, history, session restore – **completed 2026-11-03, CI run #19 green**
+  - [x] Tabs per pane: new (+ / Ctrl+T, same folder), close (× / middle-click / Ctrl+W, last tab stays), switch (click / Ctrl+Tab / Ctrl+Shift+Tab)
+  - [x] Split view (button “Zwei Ansichten” (two views) / Ctrl+\), F6 switches pane, click activates, keyboard focus follows the active pane; closing the last tab on the right = split off
+  - [x] History per tab: ← → buttons, Alt+←/→, mouse side buttons; “back to the parent folder” selects the folder we came from
+  - [x] Sidebar: Quick access (Known Folders/XDG), drives with name, fill bar (red > 90 %), “x GB frei von y GB” (x GB free of y GB), refresh every 15 s in the background
+  - [x] Session: panes, tabs, active tabs/pane, split in session.ini; restore on start without a path argument; only visible tabs load immediately (lazy); missing folders → nearest existing parent folder
+  - [x] CI green (run #19)
+- [ ] M3 rest/polish (later): reorder/tear off tabs by drag, draggable pane divider, sidebar: pin network/Recycle Bin/favourites, middle-click in sidebar = new tab, drive changes via WM_DEVICECHANGE instead of polling
+- [x] M4 File operations – **completed 2026-11-03, CI run #26 green**
+  - [x] Crate `explorer-ops`: jobs copy/move/Recycle Bin/delete permanently in the background (progress, pause, cancel), conflicts (replace/merge, skip, keep both, cancel, “for all”)
+  - [x] Data safety: temp file + rename, when moving across drives delete the source only after a complete + flushed copy, “Replace” puts the old file into the Recycle Bin, cancelling leaves no partial files, errors per item (job keeps running)
+  - [x] Undo/redo (Ctrl+Z/Ctrl+Y, max. 50): copy → Recycle Bin, move/rename → back, Recycle Bin → restore (snapshot before the undo), permanently deleted = not undoable
+  - [x] Clipboard Ctrl+C/X/V (+ Ctrl/Shift+Ins), Windows-compatible (CF_HDROP + Preferred DropEffect, exchange with Explorer), cut greys out entries, Esc clears, a cut is pasted only once
+  - [x] Del → Recycle Bin, Shift+Del → confirmation dialog → permanent
+  - [x] F2 inline rename (name without extension selected), Esc cancels, invalid/existing → error message + editor stays open; Ctrl+Shift+N “Neuer Ordner” (new folder) + immediate rename
+  - [x] Command bar (New folder, Cut, Copy, Paste, Rename, Delete, ↶, ↷)
+  - [x] Operations panel (from 300 ms runtime): title, bar, “x of y · MB/s · n s left”, pause/resume, cancel
+  - [x] Drag & drop in the app: onto a folder row = into it, onto the list = into the displayed folder, default move, Ctrl = copy; never into itself/a subfolder; multi-selection survives dragging
+  - [x] Tests: ops 18 integration tests (+ disk full via tmpfs in CI, locked file on Windows), E2E 38–52 (40 checks), CI clipboard interop with Windows PowerShell
+  - [x] CI green (run #26: E2E 100/100, Windows ops 19/19 including Recycle Bin + locked file, clipboard interop with Windows, disk full)
+- [ ] M4 rest/polish (later): DnD with other apps (OLE, M5), default action per drive (same drive = move, other = copy, like Explorer), job queue (sequential instead of parallel, per drive), conflict dialog with thumbnails, “Copy to…”/“Move to…”, progress in the taskbar (ITaskbarList3), Recycle Bin view, handle junctions/hardlinks cleanly when copying, alternate data streams/ACLs (CopyFileExW already copies ADS)
+- [x] M5 Shell integration (Boss approval 2026-11-04) – **complete: M5.0–M5.5 (run #37), M5.6 (runs #39–#44), M5.7 (run #48)** – in sub-steps, each CI-checked individually:
+  - [x] M5.0 Exe size: `opt-level="s"` (**Windows 19.7 → 16.5 MB**, Linux 22.9 → 19.6 MB; sorting 100k +6–10 ms, the rest within noise), CI gate < 20 MB
+  - [x] M5.1 Real icons: shell icons (`SHGetFileInfoW`/`IShellItemImageFactory`), cache per extension + individual for .exe/.lnk/.ico/.url, in the background, overlays (shortcut) – Linux: fallback as before
+  - [x] M5.2 Shell type names (type sorting by displayed name) (“Textdokument”, “JPEG-Bild”) via `SHGetFileInfoW(SHGFI_TYPENAME|USEFILEATTRIBUTES)`, cached per extension
+  - [x] M5.3 Context menu (Linux: own fallback menu later): `IContextMenu` (including third-party extensions, “Send to”, “Open with” via IContextMenu2/3), right-click on selection / empty space (folder background), own entries before them (copy/paste/… through our engine)
+  - [x] M5.4 Properties (`SHObjectProperties`/`SHMultiFileProperties`, Alt+Enter; “Open with” comes through the shell menu)
+  - [x] M5.5 OLE drag & drop with other apps (Windows E2E drags with a real mouse): drag out of the app (`DoDragDrop` + `SHCreateDataObject`), drop into the app (`RegisterDragDrop`, replace the winit handler), default action per drive like Explorer
+  - [x] M5.6 Virtual places (fast path stays for normal folders) – CI runs #39–#44:
+    - [x] M5.6a Recycle Bin view: list (deleted on, original location, size), restore, delete permanently, empty, dropping onto the Recycle Bin = delete, sidebar, address aliases (CI run #39)
+    - [x] M5.6b “Dieser PC” (This PC): drives with storage space, click on the heading in the sidebar, “Up” from a drive → This PC (CI run #39)
+    - [x] M5.6c Network: `\\server` → shares (`NetShareEnum`, without admin shares `C$`/`IPC$`), comment in “Type”, login dialog (`WNetAddConnection3W`) on access denied – once per folder, “Up” from a share → server, breadcrumb `\\nas › film` (CI run #41)
+    - [x] M5.6d1 Address bar like Explorer: `%VAR%`, `shell:<name>` (32 Known Folders, e.g. `shell:Downloads\\x`, `shell:Common Startup`), `~` (Unix); real shell icons in the sidebar (folders, drives, Recycle Bin) and “This PC” (CI run #43)
+    - [x] M5.6d2 Libraries (`IShellLibrary`): view “Bibliotheken” (Libraries), a library with one folder opens it, with several shows its folders; `shell:Libraries`/`shell:DocumentsLibrary` … (CI run #44)
+    - [ ] Later: merged library view (contents of all folders in one list, like Explorer) – needs file operations with a path per row
+    - [ ] Later: undo for “Restore”, shell context menu in the Recycle Bin
+  - [x] M5.7 Tile view + thumbnails (Boss: route 1) – CI run #48
+    - [x] M5.7a Thumbnails: `IShellItemImageFactory` (Windows thumbnail cache, otherwise large icon), 2 workers, only visible tiles, newest first, 96 MB memory limit (LRU), key including modification time
+    - [x] M5.7b Tile view: medium/large/extra large (48/96/256 px), Ctrl+Shift+1/2/3/6, Ctrl+mouse wheel (throttled), buttons “Details/Symbole” in the status bar, grid navigation (←→↑↓, PgUp/PgDn), click/Ctrl/Shift, double-click, context menu, F2 over the label, drag & drop (also OLE, hit test in the grid), setting `view` saved
+    - [ ] Later: replace column headers in the tile view with a sort menu; rubber-band selection (lasso) for both views; remember the view per folder
+- [x] M6 Folder-options parity, themes, command palette, Inspector (Boss: order M6.1 → M6.4) – complete (CI run #58)
+  - [x] M6.1 Folder options like in Explorer (CI runs #49–#51)
+    - [x] M6.1a Settings panel “Ordneroptionen” (folder options): show file name extensions (off = hide the extension of known types, Windows: registered in HKCR; F2 then edits only the stem, the extension stays), show protected system files, open with a single click (select by hovering, double-click protection) – CI run #49
+    - [x] M6.1b Sort menu “Sortieren ▾” in the status bar (column keeps its direction, direction separate), tile view without column headers, rubber-band selection on free space in both views (Ctrl = add) – CI run #51
+    - [ ] Later: rubber-band selection with auto-scroll at the edge; also start the rubber band from the free part of a details row (Explorer)
+    - [x] M6.1c Remember the view per folder (`views.ini`, max. 5000 folders, oldest drop out; Windows case-insensitive) + “Aktuelle Ansicht für alle Ordner” (current view for all folders); view per tab → two panes can look different – CI run #51
+  - [x] M6.2 Inspector (Alt+P / “Details”): preview (shell image 256 px, text first 40 lines), name/type/size/modified/created/attributes/path (selectable and copyable), image dimensions from the file header (PNG/JPEG/GIF/BMP/WebP), multi-selection with totals, folder size in the background (cancellable, no links, max. 500,000 entries, never whole drives; open folder only its direct contents) – CI run #52
+    - [ ] Later: adjustable Inspector width; metadata from shell properties (author, length of videos/audio, EXIF)
+  - [x] M6.3 Command palette (Ctrl+Shift+P): central command directory (`core::commands`, 45 commands with shortcut + condition), fuzzy search (umlauts/case don't matter, word starts count), unavailable commands greyed out, recently used on top (settings.ini), “>” = places (Quick access, drives, virtual places, recently visited folders) – CI run #55
+    - [ ] Later: freely assignable keyboard shortcuts based on the command directory
+    - [x] First-start gate: warning from 1 s, red from 2 s (Boss: variant 1, D-018)
+  - [x] M6.4 Colour schemes: Like Windows (live) / Light / Dark, Windows accent colour (selection family in the hue of the accent, frames in the Windows shade), all colours central + contrast-tested, std widgets + title bar follow – CI run #58
+    - [ ] Later: respect Windows contrast themes (High Contrast); accent check marks for std widgets too (Slint colours them itself from `DwmGetColorizationColor`)
+- [x] **R-001 One-button reset** for all integrations (app button + standalone recovery tool + journal + CI snapshot test) – prerequisite before any integration ships
+  - [x] R-001a Crate `explorer-integrate`: write-ahead journal (atomic, mirror, checksum), `apply`/`reset`/`sweep`/`status`, raw registry values, files with backup, environment + WM_SETTINGCHANGE, values changed by others stay, errors stay in the journal; 13 unit tests (fake registry) + test against the real registry – CI run #59
+  - [x] R-001b `explorer2-recover.exe` (console, `--status`/`--yes`) + mandatory CI test `scripts/r001-snapshot.ps1` (reg.exe export before = after: from the journal, via the mirror, entirely without a journal) – CI run #59
+  - [x] R-001c Settings → “Windows-Integration” (status + “Alle Windows-Integrationen zurücksetzen” (reset all Windows integrations) with confirmation) + palette; Linux E2E [71]–[71g] (188/188), Windows E2E W41–W41h – CI run #61
+  - [x] Start menu entry “Windows-Standard wiederherstellen” (restore Windows default) + uninstall calls reset (M8.1, run #69)
+  - [ ] Later: `.reg`/PowerShell fallback script, self-healing for the explorer.exe proxy, HKLM journal copy in `%ProgramData%`
+- [x] M7 Windows integration stages 1–2 (stage 3 postponed, D-022) (see `WINDOWS-INTEGRATION.md`) + verification points on real Windows
+  - [x] M7.1 Open folders (own default verb `explorer2open` for Directory/Drive, `Folder` stays with Windows) + “In Explorer 2.0 öffnen” (open in Explorer 2.0) in the context menu (folder, drive, folder background); individually switchable (settings + palette), off = exactly the previous state; exe moved → relinked on start; emergency tool copy in `%LOCALAPPDATA%\Explorer2`; `"C:\"` quoting fixed; Windows E2E W42 (real ShellExecute), R-001 test [R5] – CI run #64
+  - [x] M7.2 Win+E: `HKCU\…\CLSID\{52205FD8-…}\shell\opennewwindow\command` = exe (without folder = last session) + empty `DelegateExecute`; switch + palette; Windows E2E W43 (real Win+E via `keybd_event`, checking beforehand whether the runner shell processes Win+E at all) – CI run #67
+  - [ ] M7.3 `explorer.exe` invocations (IFEO proxy, HKLM/admin, high risk) – **postponed** (Boss, D-022), only after the field test of M7.1/7.2
+  - [ ] Check on real Windows 11 (Boss): double-click on a folder/drive on the desktop, “Open folder” from browser downloads, context menu (Win11: under “Show more options”)
+- [~] M8 Installer, recovery tool, hardening, beta (Boss: own installer in Rust, D-023)
+  - [x] M8.1 Installer core: `explorer2.exe --install` (per user, without admin), Start menu (app + “Windows-Standard wiederherstellen”), Apps & Features, redirect integrations to the installed exe, update over the running app, `explorer2-recover --uninstall [--quiet]` (reset + program folder via a temp copy, protection against foreign folders); CI `scripts/m8-install.ps1` (real default paths, start via the Start menu, uninstall via `QuietUninstallString` → everything as before) – CI run #69
+  - [x] M8.2 Settings → “Installation” (portable/installed, install/update with confirmation, then restart from the installation folder) + palette; Linux E2E [72] – CI run #69
+  - [x] M8.3 Hardening (Boss, 2026-11-05) – CI runs #70–#73
+    - [x] M8.3a Crash report (panic of any thread + Windows exceptions → `crash/crash-<utc>-<pid>.txt` with cause, location, last 200 log lines) + notice on the next start (“Bericht anzeigen” – show report); start guard: 2 aborted starts in a row → safe start (software rendering, no session, no GPU check), stable after 5 s = back to normal; a GPU check that takes the process down → GPU permanently “unsuitable”; SIGTERM does not count as a crash; Linux E2E [73]–[73j], Windows `scripts/m8-crash.ps1` [C1]–[C8] – CI run #70
+    - [x] M8.3b Single instance: a second start (folder double-click, Win+E, Start menu) opens a tab in the running window, a minimised window comes to the front; named pipe (Windows, local only, per session) / Unix socket 0600; reply only once the tab is open – a hanging instance → own window after 4 s; `--new-instance` + switch “Ordner im offenen Fenster öffnen” (open folders in the open window) (settings/palette); installer restart with `--new-instance`; Linux E2E [74]–[74i], Windows `scripts/m8-instance.ps1` [N1]–[N9] – CI run #71
+    - [x] M8.3c Random-data tests for all parsers/text helpers (`core/tests/fuzz.rs`, `integrate/tests/fuzz.rs`: no panic, save+load = equal, every truncated/modified journal is detected; `FUZZ_ROUNDS`/`FUZZ_SEED`) – 3 findings fixed; endurance test Linux `scripts/e2e-stress.sh` [75]–[75e] (RSS/files/threads) + Windows `scripts/m8-stress.ps1` [S1]–[S6] (private bytes/handles/threads/GDI/USER, two measuring phases, image cache factored out) – CI runs #72/#73
+    - [ ] Optimisation (later): the tile image cache holds one image per file for files **without** their own preview (shell icon only) → share per extension (Windows endurance test: 50 MiB cache with 2400 empty files; within budget, but unnecessary)
+  - [~] M8.4 Release package (Boss, 2026-11-08): `Explorer2-Setup-<v>-x64.exe` (one file, contains app + recovery, calls `--install`; confirmation → install → “Jetzt starten?” (start now?), `--quiet` for scripts), portable ZIP, `SHA256SUMS.txt`; `scripts/release-package.ps1` (build the setup + smoke test [S1]–[S9]: silent install into temp paths, files = build, version, Apps & Features, Start menu, again = update, uninstall cleans everything up) runs in every CI run; `.github/workflows/release.yml`: new version (without release) pushed or tag `v*` → tag + GitHub release; version 0.1.0
+    - [x] First release v0.1.0 published (release run #1 after CI #134 green, setup smoke test 9/9): https://github.com/TeslaV0D/explorer-2.0/releases/tag/v0.1.0
+    - [ ] Installed by Boss on real Windows via the setup (SmartScreen, Start menu, uninstall)
+  - [ ] Later: code signing (SmartScreen), automatic updates, `.reg`/PowerShell fallback, desktop shortcut (optional)
 
-- [ ] Echte Hardware-GPU-Probe nur über Boss-Test verifizierbar (CI hat keine GPU) → Artefakt auf eigenem PC testen: Einstellungen-Panel zeigt „GPU-Beschleunigung (<GPU-Name>)“
-- [ ] Linux: keine GPU-Probe (Plattform-Default) – nur Dev-Plattform, ok
+## Technical debt / follow-ups
+- [x] Exe size: 19.7 → **16.5 MB** (run #29, `opt-level="s"`, CI gate < 20 MB). Further ideas if needed: – check before M5: `opt-level="z"`/`lto`/`strip`, unnecessary Slint features (Wayland?), Skia vs. femtovg; previously 17.2 MB (budget < 20 MB ok, ideal < 10 MB missed) → check in M2: Skia vs. femtovg/software renderer, `opt-level="z"` comparison
+- [x] Renderer decision: option 2 (GPU probe) + setting (D-009)
+- [ ] Measure `NtQueryDirectoryFile` as an alternative to FindFirstFileExW (only if the Windows bench gets tight)
+- [ ] Raise GitHub Actions to Node 24 versions (checkout@v4 → v5 etc., deprecation warning in CI)
 
-## Phase 2 – Systemweite Suche (Everything-Stil) – **läuft** (Boss 2026-11-05, Plan: `docs/PLAN-SEARCH.md`)
-- [x] S1 ohne Admin (D-024) – komplett (CI-Run #93), nächster Schritt: Praxistest (`docs/PRAXISTEST-SUCHE.md`)
-  - [x] S1.1 Index-Kern `explorer-index` (82 MB / 1 Mio, Namensabfragen ≤ 5,1 ms Windows-CI, ≤ 3,2 ms Linux-CI; CI-Run #78): kompakte Struktur (Namens-Arena, Elternkette), Einfügen/Löschen/Umbenennen, Abfragesprache (UND/ODER/NICHT, Phrase, `*?`, `ext:` `size:` `dm:` `file:` `folder:` `path:` `regex:`), parallele Suche, Sortierung; Benchmark 1 Mio Einträge < 10 ms, < 100 MB
-  - [x] S1.2 Persistenz pro Laufwerk (Version, Volume-Kennung, Prüfsumme, atomar, jede Beschädigung erkannt = neu bauen, nie Absturz; 1 Mio: Datei 69 MB, Laden 116 ms, Speichern 179 ms; CI-Gate Laden < 1 s) + Ausschlusslisten (`Exclusions`: Pfade + Namensmuster, Standard-Ausschlüsse, Einstellung `index_exclude`) – CI-Run #80 (Laden Linux 88 ms, Windows 69 ms)
-  - [x] S1.3 `explorer-search`: paralleler Aufbau, Abgleich beim Start über Ordner-Änderungszeiten (in Scheiben), Live-Updates (rekursiver Watcher, Stapel, Überlauf → Abgleich), Dienst pro Laufwerk (Generationen, Neu-Ordnen unter Lese-Sperre, nur exakte Stände speichern), Laufwerks-Kennung; CI-Beispiel `drive` (Messläufe `C:\` kalt/warm/Priorität, Gate `D:\`) – CI-Run #83: kalte VM-Platte 5k/s, warm 207k/s, Live 204 ms
-    - [x] Netzlaufwerke/USB: optional + abschaltbar (S1.5c, Laufwerksauswahl)
-    - [x] Linux: inotify-Grenze (`max_user_watches`) im Index-Status anzeigen (S1.5a: verständlicher Text)
-    - [x] Watcher-Fehler/Überläufe zählen + letzten Grund im Status zeigen (S1.5a)
-  - [x] S1.4 UI (CI-Run #90)
-    - [x] S1.4a Dienst in der App: Start 3 s nach dem Fenster im Hintergrund, Laufwerke = feste lokale (Linux `$HOME`), Sperrdatei `index/lock` (zweites Fenster indexiert nicht), Speichern beim Beenden, Status + Ein/Aus + „Neu abgleichen“ in den Einstellungen (Panel scrollt auf kleinen Bildschirmen), Palette `search-rescan`/`toggle-index`, Overrides `EXPLORER2_INDEX=off`/`EXPLORER2_INDEX_ROOTS`/`EXPLORER2_INDEX_DELAY_MS`, E2E [76] – CI #90
-    - [x] S1.4b Suchfeld pro Tab (Strg+F/Strg+E/F3, ab aktuellem Ordner, Platzhalter `::suche:`, Treffer mit vollen Pfaden = alle Dateifunktionen, Spalte „Ordner“ relativ, max. 20.000 angezeigt, ohne Index Ordner durchlaufen, Treffer folgen dem Index, Esc/leeres Feld = zurück ohne Spur im Verlauf), E2E [76i], [77]–[77k], Windows [W44] – CI #89/#90
-    - [x] Lokale Zeitzone für Datumsanzeige **und** `dm:`-Abfragen (S1.5a, Sommerzeit pro Datum)
-    - [x] S1.4c globale Schnellsuche (Strg+Umschalt+F + Palette „Alle Laufwerke durchsuchen“): Overlay im Stil der Palette, beste 50 (exakter Name → Namensanfang → kürzer), Enter öffnet, Strg/Umschalt+Enter zeigt markiert im Ordner, Fußzeile mit Index-Umfang, E2E [78], Windows [W45] – CI #89/#90
-  - [x] S1.5 Feinschliff (CI-Run #91/#93)
-    - [x] S1.5a Ortszeit (Anzeige + `dm:`), verpasste Watcher-Ereignisse im Status – CI #91
-    - [x] S1.5b Treffer fett markiert, Sortieren per Spaltenkopf in Treffern (getestet), Suchverlauf (↑/↓ im Suchfeld, Liste in der Schnellsuche), E2E [79] – CI #91
-    - [~] S1.5c Laufwerksauswahl in den Einstellungen (automatisch = feste lokale; Netz/USB/Linux-`/` zuschaltbar; DVD nie), Neustart des Dienstes, E2E [80] – CI #93
-- [x] **Praxistest S1 auf echtem Windows (Boss, 2026-11-07): „es funktioniert“** – S2 vorerst nicht nötig
-- [ ] S2 optional mit Admin: MFT/USN-Dienst – erst nach Praxistest S1 + R-001-Erweiterung für Dienste
-- [ ] Später: Inhaltssuche, systemweiter Hotkey (Integration → R-001)
+- [ ] Real hardware GPU probe only verifiable by a Boss test (CI has no GPU) → test the artifact on your own PC: settings panel shows “GPU-Beschleunigung (<GPU name>)”
+- [ ] Linux: no GPU probe (platform default) – dev platform only, ok
 
-## Redesign (Boss 2026-11-07) – Plan `docs/PLAN-REDESIGN.md`, nur Design/UX, keine Logik
-- [x] Entscheidungen 1–5 aus dem Plan (Boss 2026-11-07: „passt so“ = alle Empfehlungen)
-- [x] R0 Absicherung (CI-Run #101): UI-Dump `EXPLORER2_UI_DUMP` (Item-Baum über `i-slint-core`), Test-Hilfen `scripts/ui-lib.sh` + `UiBox`/`UiClick`/`ListTop` in `e2e-windows.ps1`, alle Panel-/Leisten-Klicks per Name, Zeilen relativ zum Spaltenkopf, sprechende Namen für Symbol-Knöpfe, Galerie `scripts/gallery.sh` (22 Screens Linux) + Windows-Galerie (10 Screens) als CI-Artefakte (`ui-gallery-linux` 22, `ui-gallery-windows` 10)
-- [x] R1 Design-System (CI-Run #104): Farbrollen `core::theme::Design` + Kontrast-Test (12 Akzente × hell/dunkel), Global `Ui`, 50 Lucide-Icons (`scripts/make-ui-icons.py`), Bausteine `ui/kit.slint`, UI-Kit `EXPLORER2_UI_KIT=1` (Galerie + E2E [81])
-- [x] R2 Hauptlayout (CI-Run #110): globale Leiste aufgelöst (Aktionen in der Navigationszeile der aktiven Ansicht, ⋮-Menü, Statusleiste), Tooltips, Breakpoints, Dunkel als Standard
-- [x] R3 Seitenleiste (CI-Run #115): Linien-Icons, Akzentmarke, dezente Laufwerksbalken
-- [x] R4 Navigation (CI-Run #120): Icon-Knöpfe, Brotkrumen-Segmente, Suchfeld mit Lupe, 34 px
-- [x] R5 Tabs (CI-Run #123): IDE-Stil, Akzentstrich am aktuellen Tab der aktiven Ansicht, × bei Hover
-- [x] R6 Dateiliste (CI-Run #124): Kopf 24 px mit Chevron, Zeilen-Plättchen mit Akzentbalken, Fokus/Drop, Kacheln, Rahmenauswahl
-- [x] R7 Inspector (CI-Run #125): Gruppen, Pfad kopieren, Einblenden
-- [x] R8 Menüs + Dialoge (CI-Run #128): eigenes Kontextmenü + „Weitere Optionen“ (natives Menü dunkel), Dialoge/Palette/Schnellsuche/Einstellungen/Jobs/Hinweis/Statusleiste; Installer schließt erst nach erfolgreichem Start der installierten Kopie
-- [x] R9 Zustände + Bewegung (CI-Run #130): Gedrückt/Hover/Erscheinen einheitlich, Pixel-Checks der Zustände
-- [x] R10 Konsistenz + QA (CI-Run #131): alte Tokens weg, Skalierung 125/150 % (E2E [83]), Galerie vorher/nachher, Budgets, Checkliste → **Redesign R0–R10 komplett**
-- [ ] Praxistest Redesign auf echtem Windows (Boss, `docs/PRAXISTEST-REDESIGN.md`)
-- [ ] Exe-Größe beobachten (19,31 MB nach Redesign, Gate 20 MB): bei Annäherung Ursachen messen (Slint-Codegen pro Komponente), nichts verschlechtern (D-015)
-- [ ] E2E-Wackler beobachten: [49] erster Drag nach Gesamtlauf ([72c] behoben: Installer wartet auf die laufende Kopie, CI #128)
+## Phase 2 – System-wide search (Everything style) – **in progress** (Boss 2026-11-05, plan: `docs/PLAN-SEARCH.md`)
+- [x] S1 without admin (D-024) – complete (CI run #93), next step: field test (`docs/FIELD-TEST-SEARCH.md`)
+  - [x] S1.1 Index core `explorer-index` (82 MB / 1 M, name queries ≤ 5.1 ms Windows CI, ≤ 3.2 ms Linux CI; CI run #78): compact structure (name arena, parent chain), insert/delete/rename, query language (AND/OR/NOT, phrase, `*?`, `ext:` `size:` `dm:` `file:` `folder:` `path:` `regex:`), parallel search, sorting; benchmark 1 M entries < 10 ms, < 100 MB
+  - [x] S1.2 Persistence per drive (version, volume ID, checksum, atomic, every corruption detected = rebuild, never a crash; 1 M: file 69 MB, load 116 ms, save 179 ms; CI gate load < 1 s) + exclusion lists (`Exclusions`: paths + name patterns, default exclusions, setting `index_exclude`) – CI run #80 (load Linux 88 ms, Windows 69 ms)
+  - [x] S1.3 `explorer-search`: parallel build, reconciliation on start via folder modification times (in slices), live updates (recursive watcher, batches, overflow → reconciliation), service per drive (generations, reordering under the read lock, only save exact states), volume ID; CI example `drive` (measuring runs `C:\` cold/warm/priority, gate `D:\`) – CI run #83: cold VM disk 5k/s, warm 207k/s, live 204 ms
+    - [x] Network drives/USB: optional + switchable (S1.5c, drive selection)
+    - [x] Linux: show the inotify limit (`max_user_watches`) in the index status (S1.5a: understandable text)
+    - [x] Count watcher errors/overflows + show the last reason in the status (S1.5a)
+  - [x] S1.4 UI (CI run #90)
+    - [x] S1.4a Service in the app: starts 3 s after the window in the background, drives = fixed local ones (Linux `$HOME`), lock file `index/lock` (a second window does not index), save on exit, status + on/off + “Neu abgleichen” (reconcile again) in the settings (panel scrolls on small screens), palette `search-rescan`/`toggle-index`, overrides `EXPLORER2_INDEX=off`/`EXPLORER2_INDEX_ROOTS`/`EXPLORER2_INDEX_DELAY_MS`, E2E [76] – CI #90
+    - [x] S1.4b Search field per tab (Ctrl+F/Ctrl+E/F3, from the current folder, placeholder `::suche:`, hits with full paths = all file functions, column “Ordner” (folder) relative, max. 20,000 shown, without an index walk the folder, hits follow the index, Esc/empty field = back without a trace in the history), E2E [76i], [77]–[77k], Windows [W44] – CI #89/#90
+    - [x] Local time zone for date display **and** `dm:` queries (S1.5a, daylight saving per date)
+    - [x] S1.4c Global quick search (Ctrl+Shift+F + palette “Alle Laufwerke durchsuchen” (search all drives)): overlay in the style of the palette, best 50 (exact name → name prefix → shorter), Enter opens, Ctrl/Shift+Enter shows it selected in its folder, footer with index scope, E2E [78], Windows [W45] – CI #89/#90
+  - [x] S1.5 Polish (CI runs #91/#93)
+    - [x] S1.5a Local time (display + `dm:`), missed watcher events in the status – CI #91
+    - [x] S1.5b Hits marked bold, sorting by column header in hits (tested), search history (↑/↓ in the search field, list in the quick search), E2E [79] – CI #91
+    - [~] S1.5c Drive selection in the settings (automatic = fixed local drives; network/USB/Linux `/` can be added; DVD never), restart of the service, E2E [80] – CI #93
+- [x] **Field test S1 on real Windows (Boss, 2026-11-07): “it works”** – S2 not needed for now
+- [ ] S2 optional with admin: MFT/USN service – only after the field test of S1 + R-001 extension for services
+- [ ] Later: content search, system-wide hotkey (integration → R-001)
 
-## Wünsche Boss (2026-11-08) – für später, noch nicht geplant
-- [ ] **Lokalisierung (i18n)**: UI in weitere Sprachen übersetzen (löst D-007 ab, z. B. Slint `@tr` + Rust-Texte)
-  - [ ] Bedeutungen exakt treffen, nicht verwirrend: Begriffe wie im Windows Explorer der jeweiligen Sprache (Papierkorb, Dieser PC, Schnellzugriff, Eigenschaften …), Glossar pro Sprache
-  - [ ] Layout-Festigkeit beim Umschalten: **alle** Texte prüfen, ob sie in Knöpfe/Menüs/Spalten/Dialoge/Einstellungen passen (Deutsch/Französisch/Russisch lang, CJK andere Schrift) – kürzen, umbrechen oder Breiten dynamisch; Galerie pro Sprache + Pixel-/Überlauf-Check in E2E
-  - [ ] Sprache in den Einstellungen umschaltbar (Standard: Windows-Sprache), live oder mit Neustart-Hinweis
-  - [ ] Zahlen/Datum/Größen nach Gebietsschema; Schriftabdeckung beachten (Gotcha: fehlende Glyphen kosten Startzeit)
-- [ ] **„Neu“-Untermenü wie Windows**: nicht nur Ordner, sondern alle Erstellungsmöglichkeiten (Textdokument, Verknüpfung, gezippter Ordner, Word/Excel/… aus `HKCR\.<ext>\ShellNew` – `NullFile`/`FileName`/`Data`/`Command`), Name direkt im Umbenennen-Modus, Undo wie bei Neuer Ordner
-- [ ] **Autostart mit Windows** (opt-in, Schalter in Einstellungen + Palette)
-  - [ ] Eintrag `HKCU\Software\Microsoft\Windows\CurrentVersion\Run` (ohne Admin), **nur über `integrate::apply`** (Journal) + Eintrag in `manifest::points()` → Reset/Recovery/Deinstallation entfernen ihn (R-001, Snapshot-Test)
-  - [ ] Start im Hintergrund (`--background`: kein Fenster, Instanz-Server + Suchindex warm) → Win+E/Ordner öffnen zeigt sofort ein Fenster über die Eine-Instanz-Übergabe; Fenster schließen = **im Hintergrund weiterlaufen + Tray-Symbol** (Boss 2026-11-08)
-  - [ ] Tray-Symbol (`Shell_NotifyIconW`): Klick = Fenster öffnen, Menü = Neues Fenster / Einstellungen / Beenden; Speicher im Leerlauf klein halten (Ordner-Daten geschlossener Fenster freigeben), Dauertest auf Lecks
-  - [ ] Start-Wächter beachten (Hintergrundstart darf nicht als Absturz zählen), Startkosten beim Windows-Login messen (darf das Login nicht bremsen), Exe-Pfad nach Update/Installation umbiegen wie bei M7
-- [ ] **„Im Explorer öffnen“ systemweit → Explorer 2.0** (Boss 2026-11-08, Beispiel: Steam „Lokale Dateien durchsuchen“ öffnet noch den Windows Explorer)
-  - [ ] Zuerst messen, **wie** die betroffenen Apps öffnen (Process Monitor / API-Trace: Steam, Browser-Downloads „Im Ordner anzeigen“, VS Code, Discord, Installer …) und Liste der Wege führen
-  - [ ] Weg 1 – `ShellExecute` mit ausdrücklichem Verb `open`/`explore` (umgeht unser Standard-Verb `explorer2open`, D-021): HKCU-Übersteuerung von `Directory`/`Drive` `shell\open` + `shell\explore` (ohne Admin), nur über `integrate::apply` + `manifest`, einzeln schaltbar
-  - [ ] Weg 2 – direkter Aufruf `explorer.exe <Pfad>` bzw. `explorer.exe /select,<Datei>`: nur per IFEO-Umleitung (= M7.3, verschoben nach D-022) – `/select,` (Ordner öffnen + Datei markieren), `/e,`, `/root,`, `shell:`-Pfade und virtuelle Ordner verstehen bzw. an echten Explorer durchreichen
-  - [ ] Weg 3 – `SHOpenFolderAndSelectItems` (geht über die laufende Explorer-Shell): Machbarkeit prüfen (ShellWindows/DDE), sonst als bekannte Lücke dokumentieren
-  - [ ] Nie kaputt machen: `Folder` (virtuelle Ordner, Systemsteuerung, Papierkorb …) bleibt beim Windows Explorer, Fallback auf echten Explorer, wenn Explorer 2.0 fehlt/abstürzt; R-001-Snapshot-Test für alle neuen Werte; Windows-E2E pro Weg
-- [ ] **Notfall: Shift + Rechtsklick öffnet direkt das native Windows-Kontextmenü** (statt unseres eigenen; inkl. erweiterter Verben wie „Als Pfad kopieren“, Windows-Verhalten bei Shift = Extended-Verben `CMF_EXTENDEDVERBS`)
+## Redesign (Boss 2026-11-07) – plan `docs/PLAN-REDESIGN.md`, design/UX only, no logic
+- [x] Decisions 1–5 from the plan (Boss 2026-11-07: “passt so” = all recommendations)
+- [x] R0 Safeguards (CI run #101): UI dump `EXPLORER2_UI_DUMP` (item tree via `i-slint-core`), test helpers `scripts/ui-lib.sh` + `UiBox`/`UiClick`/`ListTop` in `e2e-windows.ps1`, all panel/bar clicks by name, rows relative to the column header, meaningful names for icon buttons, gallery `scripts/gallery.sh` (22 screens Linux) + Windows gallery (10 screens) as CI artifacts (`ui-gallery-linux` 22, `ui-gallery-windows` 10)
+- [x] R1 Design system (CI run #104): colour roles `core::theme::Design` + contrast test (12 accents × light/dark), global `Ui`, 50 Lucide icons (`scripts/make-ui-icons.py`), building blocks `ui/kit.slint`, UI kit `EXPLORER2_UI_KIT=1` (gallery + E2E [81])
+- [x] R2 Main layout (CI run #110): global bar dissolved (actions in the navigation row of the active view, ⋮ menu, status bar), tooltips, breakpoints, dark as default
+- [x] R3 Sidebar (CI run #115): line icons, accent mark, subtle drive bars
+- [x] R4 Navigation (CI run #120): icon buttons, breadcrumb segments, search field with magnifier, 34 px
+- [x] R5 Tabs (CI run #123): IDE style, accent stroke on the current tab of the active view, × on hover
+- [x] R6 File list (CI run #124): header 24 px with chevron, row tiles with accent bar, focus/drop, tiles, rubber-band selection
+- [x] R7 Inspector (CI run #125): groups, copy path, fade-in
+- [x] R8 Menus + dialogs (CI run #128): own context menu + “Weitere Optionen” (more options; native menu dark), dialogs/palette/quick search/settings/jobs/notice/status bar; installer closes only after the installed copy started successfully
+- [x] R9 States + motion (CI run #130): pressed/hover/appear uniform, pixel checks of the states
+- [x] R10 Consistency + QA (CI run #131): old tokens gone, scaling 125/150 % (E2E [83]), gallery before/after, budgets, checklist → **redesign R0–R10 complete**
+- [ ] Field test redesign on real Windows (Boss, `docs/FIELD-TEST-REDESIGN.md`)
+- [ ] Watch the exe size (19.31 MB after the redesign, gate 20 MB): when it gets close, measure the causes (Slint codegen per component), make nothing worse (D-015)
+- [ ] Watch E2E flakes: [49] first drag after the full run ([72c] fixed: installer waits for the running copy, CI #128)
 
-## Dokumentation auf Englisch (Boss 2026-11-09) – Start Do 12.11. 16:00, schrittweise
-- [ ] Ganze Doku auf GitHub ins Englische umschreiben: `docs/*.md` (PROJECT, PLAN-*, WINDOWS-INTEGRATION, PRAXISTEST-*, STATUS, TODO), `THIRD-PARTY.md`, `scripts/release-notes.md` **und `CLAUDE.md`** (Boss 2026-11-09) – Inhalt 1:1, keine Logik-Änderung; D-004 entsprechend geändert
-- [ ] README vervollständigen (aktuell 11 Zeilen): Was ist Explorer 2.0, Features (Panes/Tabs, Suche, Inspector, Palette, Farbschemata), Screenshots aus der Galerie, Download/Installation (Setup/Portable, SmartScreen-Hinweis), Notausgang/Reset (R-001), Bauen aus dem Quellcode, Tests/CI, Projektstruktur, Lizenz
+## Boss wishes (2026-11-08) – for later, not planned yet
+- [ ] **Localisation (i18n)**: translate the UI into further languages (supersedes D-007, e.g. Slint `@tr` + Rust texts)
+  - [ ] Hit meanings exactly, not confusing: terms as in Windows Explorer of the respective language (Recycle Bin, This PC, Quick access, Properties …), glossary per language
+  - [ ] Layout robustness when switching: check **all** texts for whether they fit into buttons/menus/columns/dialogs/settings (German/French/Russian long, CJK different font) – shorten, wrap or make widths dynamic; gallery per language + pixel/overflow check in E2E
+  - [ ] Language switchable in the settings (default: Windows language), live or with a restart notice
+  - [ ] Numbers/dates/sizes according to the locale; mind font coverage (gotcha: missing glyphs cost start time)
+- [ ] **“New” submenu like Windows**: not only folders but all creation options (text document, shortcut, zipped folder, Word/Excel/… from `HKCR\.<ext>\ShellNew` – `NullFile`/`FileName`/`Data`/`Command`), name directly in rename mode, undo like for New folder
+- [ ] **Autostart with Windows** (opt-in, switch in settings + palette)
+  - [ ] Entry `HKCU\Software\Microsoft\Windows\CurrentVersion\Run` (without admin), **only via `integrate::apply`** (journal) + entry in `manifest::points()` → reset/recovery/uninstall remove it (R-001, snapshot test)
+  - [ ] Start in the background (`--background`: no window, instance server + search index warm) → Win+E/open folder shows a window immediately via the single-instance hand-over; closing the window = **keep running in the background + tray icon** (Boss 2026-11-08)
+  - [ ] Tray icon (`Shell_NotifyIconW`): click = open window, menu = new window / settings / exit; keep idle memory small (free the folder data of closed windows), endurance test for leaks
+  - [ ] Mind the start guard (a background start must not count as a crash), measure start costs at Windows login (must not slow down the login), redirect the exe path after update/installation like in M7
+- [ ] **“Open in Explorer” system-wide → Explorer 2.0** (Boss 2026-11-08, example: Steam “Browse local files” still opens Windows Explorer)
+  - [ ] First measure **how** the affected apps open it (Process Monitor / API trace: Steam, browser downloads “Show in folder”, VS Code, Discord, installers …) and keep a list of the routes
+  - [ ] Route 1 – `ShellExecute` with an explicit verb `open`/`explore` (bypasses our default verb `explorer2open`, D-021): HKCU override of `Directory`/`Drive` `shell\open` + `shell\explore` (without admin), only via `integrate::apply` + `manifest`, individually switchable
+  - [ ] Route 2 – direct call `explorer.exe <path>` or `explorer.exe /select,<file>`: only via IFEO redirection (= M7.3, postponed per D-022) – understand `/select,` (open folder + select file), `/e,`, `/root,`, `shell:` paths and virtual folders or pass them on to the real Explorer
+  - [ ] Route 3 – `SHOpenFolderAndSelectItems` (goes through the running Explorer shell): check feasibility (ShellWindows/DDE), otherwise document as a known gap
+  - [ ] Never break anything: `Folder` (virtual folders, Control Panel, Recycle Bin …) stays with Windows Explorer, fallback to the real Explorer when Explorer 2.0 is missing/crashes; R-001 snapshot test for all new values; Windows E2E per route
+- [ ] **Emergency: Shift + right-click opens the native Windows context menu directly** (instead of our own; including extended verbs like “Copy as path”, Windows behaviour with Shift = extended verbs `CMF_EXTENDEDVERBS`)
 
-## Phase 3 – Datei-Aktions-Shortcuts (Sweetch-Stil)  *(später, nur beschrieben)*
-- [ ] Tray-Helper mit Kreismenü: Drag von Dateien auf Sektor oder Hotkey (Sweetch: Ctrl+Alt+Space) 
-- [ ] Modifier-Gruppen: Shift = Konvertieren, Ctrl = Tools, Alt = Aktionen
-- [ ] Aktionen: Konvertieren (Bild/Audio/Video/PDF/Doc via ffmpeg/pandoc – optional nachladbar), Archivieren, Kopieren nach…, Umbenennen, eigene Skripte
-- [ ] Konfigurierbare Sektoren/Profile, lokale Verarbeitung (keine Cloud)
-- [ ] Lizenz klären: Sweetch ist MIT → Ideen/Code-Nutzung mit Attribution möglich
+## Documentation in English (Boss 2026-11-09) – planned start Thu 12.11. 16:00, brought forward by Boss to Tue 10.11.
+- [~] Rewrite all docs on GitHub in English: `docs/*.md` (PROJECT, PLAN-*, WINDOWS-INTEGRATION, FIELD-TEST-* (formerly PRAXISTEST-*), STATUS, TODO), `THIRD-PARTY.md`, `scripts/release-notes.md` **and `CLAUDE.md`** (Boss 2026-11-09) – content 1:1, no logic change; D-004 changed accordingly
+- [ ] Complete the README (currently 11 lines): what Explorer 2.0 is, features (panes/tabs, search, Inspector, palette, colour schemes), screenshots from the gallery, download/installation (setup/portable, SmartScreen notice), emergency exit/reset (R-001), building from source, tests/CI, project structure, license
 
-## Phase 4 – Später
-- [ ] Plugins/Skripting, Settings-Sync, Auto-Update, ARM64, Code-Signing
+## Phase 3 – File action shortcuts (Sweetch style)  *(later, described only)*
+- [ ] Tray helper with radial menu: drag files onto a sector or hotkey (Sweetch: Ctrl+Alt+Space)
+- [ ] Modifier groups: Shift = convert, Ctrl = tools, Alt = actions
+- [ ] Actions: convert (image/audio/video/PDF/doc via ffmpeg/pandoc – optionally downloadable), archive, copy to…, rename, own scripts
+- [ ] Configurable sectors/profiles, local processing (no cloud)
+- [ ] Clarify the license: Sweetch is MIT → use of ideas/code with attribution possible
+
+## Phase 4 – Later
+- [ ] Plugins/scripting, settings sync, auto-update, ARM64, code signing
