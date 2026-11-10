@@ -135,7 +135,7 @@ LOG=$W/trace-80.log; start80
 check "[80] automatic: both candidates are indexed" "wait_for \"[ \\\$(grep -c 'phase=Ready' $LOG) -ge 2 ]\" && last 'search: start roots' | grep -qF '$SR2'"
 palette "einstellungen"; sleep 0.8
 check "[80b] the settings list the drives (both on)" "last 'search drives' | grep -qF '$SR2=true'"
-ui_click "$SR2"; sleep 0.5
+ui_scroll "$SR2"; sleep 0.3; ui_click "$SR2"; sleep 0.5
 check "[80c] one switched off: saved, the index restarts without it" "grep -qF 'index_roots = $SR' $IC2/settings.ini && ! grep -qF 'index_roots = $SR;' $IC2/settings.ini && wait_for \"[ \\\$(grep -c 'search: start roots' $LOG) -ge 2 ] && ! last 'search: start roots' | grep -qF '$SR2'\""
 ui_click "Schließen" last; sleep 0.4
 wait_for "[ \$(grep -c 'phase=Ready' $LOG) -ge 3 ]" >/dev/null
@@ -146,7 +146,7 @@ kill $PID; wait $PID 2>/dev/null
 LOG=$W/trace-80e.log; start80
 check "[80e] next start keeps the choice" "wait_for \"grep -q 'search: start roots' $LOG\" && ! last 'search: start roots' | grep -qF '$SR2'"
 sleep 1; palette "einstellungen"; sleep 0.8
-ui_click "$SR2"; sleep 0.5
+ui_scroll "$SR2"; sleep 0.3; ui_click "$SR2"; sleep 0.5
 check "[80f] on again = automatic again (empty setting)" "grep -qx 'index_roots = ' $IC2/settings.ini && wait_for \"last 'search: start roots' | grep -qF '$SR2'\""
 kill $PID; wait $PID 2>/dev/null
 
