@@ -315,3 +315,27 @@ fn offered_choices() {
         );
     }
 }
+
+#[test]
+fn pseudo_texts() {
+    use crate::pseudo::{growth, pseudo};
+    assert_eq!(pseudo(""), "");
+    assert_eq!(pseudo("Copy"), "[Çöpý··]");
+    // placeholders and escaped braces stay, every line grows on its own
+    let p = pseudo("{n} files in {0}\nnext {{x}}");
+    assert!(p.starts_with("[{n} fîłéš îñ {0}"), "{p}");
+    assert!(p.contains("\nñéxť {{x}}"), "{p}");
+    assert_eq!(
+        crate::extract::placeholders(&p),
+        crate::extract::placeholders("{n} files in {0}\nnext {{x}}")
+    );
+    assert!(p.ends_with("·]"));
+    assert_eq!(growth(4), 2);
+    assert_eq!(growth(10), 5);
+    assert_eq!(growth(30), 12);
+    assert!(
+        lang(crate::pseudo::CODE).is_some_and(|l| !l.complete),
+        "never offered"
+    );
+    assert!(!choices("").contains(&crate::pseudo::CODE));
+}

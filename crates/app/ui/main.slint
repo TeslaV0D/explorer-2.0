@@ -1,8 +1,8 @@
-import { Button, ComboBox, ListView, CheckBox, ScrollView, Palette } from "std-widgets.slint";
+import { Button, ComboBox, ListView, ScrollView, Palette } from "std-widgets.slint";
 
 import { Theme, DesignColors, Ui } from "theme.slint";
 import { IconData } from "icons.slint";
-import { UiKit, Icon, IconButton, MenuItem, MenuSeparator, SectionLabel, ToolbarButton } from "kit.slint";
+import { UiKit, CheckRow, Icon, IconButton, MenuItem, MenuSeparator, SectionLabel, ToolbarButton } from "kit.slint";
 export { Theme, DesignColors, Ui }
 
 export struct Row {
@@ -585,7 +585,8 @@ component FilePane inherits Rectangle {
     more-menu := PopupWindow {
         x: root.width - self.width - 6px;
         y: Ui.tab-h + 4px + Ui.nav-h - 2px;
-        width: 260px;
+        // grows with longer translations instead of eliding (L5)
+        width: min(root.width - 12px, max(260px, more-lay.preferred-width + 2px));
         Rectangle {
             property <bool> shown;
             init => { self.shown = true; }
@@ -598,7 +599,7 @@ component FilePane inherits Rectangle {
             drop-shadow-blur: 16px;
             drop-shadow-offset-y: 4px;
             drop-shadow-color: Theme.d.shadow;
-            VerticalLayout {
+            more-lay := VerticalLayout {
                 padding: 4px;
                 if root.compact && root.place == "" : MenuItem { icon: IconData.new-folder; text: @tr("New folder"); shortcut: @tr("Ctrl+Shift+N"); clicked => { root.command("new-folder"); } }
                 if root.compact && (root.place == "" || root.place == "search") : MenuItem { icon: IconData.cut; text: @tr("Cut"); shortcut: @tr("Ctrl+X"); enabled: root.has-selection; clicked => { root.command("cut"); } }
@@ -1753,7 +1754,7 @@ export component MainWindow inherits Window {
                         sort-ta := TouchArea { clicked => { sort-popup.show(); } }
                         sort-popup := PopupWindow {
                             x: 0; y: -self.height - 4px;
-                            width: 200px;
+                            width: max(200px, sort-lay.preferred-width + 2px);
                             Rectangle {
                                 property <bool> shown;
                                 init => { self.shown = true; }
@@ -1762,7 +1763,7 @@ export component MainWindow inherits Window {
                                 background: Theme.d.overlay;
                                 border-width: 1px; border-color: Theme.d.border; border-radius: Ui.r-large;
                                 drop-shadow-blur: 16px; drop-shadow-offset-y: 4px; drop-shadow-color: Theme.d.shadow;
-                                VerticalLayout {
+                                sort-lay := VerticalLayout {
                                     padding: 4px;
                                     for k in [{ id: "name", label: @tr("Name") }, { id: "modified", label: @tr("Date modified") },
                                               { id: "type", label: @tr("Type") }, { id: "size", label: @tr("Size") }] : MenuItem {
@@ -1825,7 +1826,7 @@ export component MainWindow inherits Window {
                     }
                     Text { text: root.conflict-source; font-size: Ui.font; color: Theme.d.text2; wrap: word-wrap; }
                     Text { text: root.conflict-target; font-size: Ui.font; color: Theme.d.text2; wrap: word-wrap; }
-                    CheckBox { text: @tr("Do this for all remaining conflicts"); checked <=> root.conflict-all; }
+                    CheckRow { text: @tr("Do this for all remaining conflicts"); checked <=> root.conflict-all; }
                     Rectangle { height: 4px; }
                     HorizontalLayout {
                         spacing: 6px; alignment: end;
@@ -1976,7 +1977,7 @@ export component MainWindow inherits Window {
                 }
             }
             Rectangle { height: 1px; background: Theme.d.border; }
-            CheckBox {
+            CheckRow {
                 text: @tr("Use hardware acceleration when available");
                 checked <=> root.hw-accel;
                 toggled => { root.toggle-hw-accel(self.checked); }
@@ -1985,17 +1986,17 @@ export component MainWindow inherits Window {
             Text { text: root.renderer-status; font-size: Ui.font-small; color: Theme.d.text2; wrap: word-wrap; }
             Rectangle { height: 1px; background: Theme.d.border; }
             Text { text: @tr("Folder options"); font-size: Ui.font-body; font-weight: 600; color: Theme.d.text; }
-            CheckBox {
+            CheckRow {
                 text: @tr("Show file name extensions");
                 checked <=> root.opt-show-ext;
                 toggled => { root.set-option("show_extensions", self.checked); }
             }
-            CheckBox {
+            CheckRow {
                 text: @tr("Show protected operating system files");
                 checked <=> root.opt-show-protected;
                 toggled => { root.set-option("show_protected", self.checked); }
             }
-            CheckBox {
+            CheckRow {
                 text: @tr("Single-click to open an item (point to select)");
                 checked <=> root.opt-single-click;
                 toggled => { root.set-option("single_click", self.checked); }
@@ -2027,29 +2028,29 @@ export component MainWindow inherits Window {
                     }
                 }
             }
-            CheckBox {
+            CheckRow {
                 text: @tr("Use the Windows accent color");
                 checked <=> root.opt-system-accent;
                 toggled => { root.set-option("system_accent", self.checked); }
             }
             Rectangle { height: 1px; background: Theme.d.border; }
             Text { text: @tr("Windows integration"); font-size: Ui.font-body; font-weight: 600; color: Theme.d.text; }
-            if root.integration-available : CheckBox {
+            if root.integration-available : CheckRow {
                 text: @tr("Open folders with Explorer 2.0 (double-click, “Open folder”)");
                 checked <=> root.feat-folder-open;
                 toggled => { root.integration-feature("folder-open", self.checked); }
             }
-            if root.integration-available : CheckBox {
+            if root.integration-available : CheckRow {
                 text: @tr("“Open in Explorer 2.0” in the context menu");
                 checked <=> root.feat-context-menu;
                 toggled => { root.integration-feature("context-menu", self.checked); }
             }
-            if root.integration-available : CheckBox {
+            if root.integration-available : CheckRow {
                 text: @tr("Win+E opens Explorer 2.0");
                 checked <=> root.feat-win-e;
                 toggled => { root.integration-feature("win-e", self.checked); }
             }
-            if root.integration-available : CheckBox {
+            if root.integration-available : CheckRow {
                 text: @tr("Open folders in the running window (as a new tab)");
                 checked <=> root.opt-single-instance;
                 toggled => { root.set-option("single_instance", self.checked); }
@@ -2065,7 +2066,7 @@ export component MainWindow inherits Window {
             }
             Rectangle { height: 1px; background: Theme.d.border; }
             Text { text: @tr("Search"); font-size: Ui.font-body; font-weight: 600; color: Theme.d.text; }
-            CheckBox {
+            CheckRow {
                 text: @tr("Index drives for search");
                 checked <=> root.opt-index-enabled;
                 toggled => { root.set-option("index_enabled", self.checked); }
@@ -2073,7 +2074,7 @@ export component MainWindow inherits Window {
             // above the status text: its length varies, the boxes keep their place
             if root.opt-index-enabled : VerticalLayout {
                 padding-left: 22px; spacing: 2px;
-                for d in root.index-drives : CheckBox {
+                for d in root.index-drives : CheckRow {
                     text: d.label;
                     checked: d.on;
                     toggled => { root.index-drive(d.path, self.checked); }
@@ -2120,7 +2121,7 @@ export component MainWindow inherits Window {
         ctx-menu := Rectangle {
             property <bool> shown;
             init => { self.shown = true; }
-            width: 252px;
+            width: min(parent.width - 8px, max(252px, ctx-lay.preferred-width + 2px));
             height: ctx-lay.preferred-height;
             // stays inside the window
             x: max(4px, min(root.ctx-x, parent.width - self.width - 4px));

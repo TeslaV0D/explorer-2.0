@@ -50,6 +50,13 @@ function Shot($name) {
   $bmp = New-Object System.Drawing.Bitmap $b.Width, $b.Height
   $g = [System.Drawing.Graphics]::FromImage($bmp); $g.CopyFromScreen($b.Location, [System.Drawing.Point]::Empty, $b.Size)
   $bmp.Save("$Work\$name.png"); $g.Dispose(); $bmp.Dispose()
+  # localisation L5: gallery screens also list the texts that do not fit (UI dump, 6th column)
+  if ($env:EXPLORER2_UI_OVERFLOW -and $name -like 'gallery\*') {
+    Start-Sleep -Milliseconds 300
+    @(Get-Content $env:EXPLORER2_UI_DUMP -Encoding UTF8 -ErrorAction SilentlyContinue | Select-Object -Skip 1 |
+      Where-Object { ($_ -split "`t").Count -ge 6 }) | ForEach-Object { "$($name.Substring(8))`t$_" } |
+      Add-Content "$Work\gallery\overflow.txt" -Encoding UTF8
+  }
 }
 function Log { Get-Content $script:log -Raw -ErrorAction SilentlyContinue }
 function Last($pattern) { (Log) -split "`n" | Where-Object { $_ -match $pattern } | Select-Object -Last 1 }
@@ -704,6 +711,8 @@ if ($script:fail -ne $failSearch) { Write-Host "----- trace (search)"; Write-Hos
 
 # ---- UI gallery (redesign R0): the real Windows look (Segoe UI, shell icons), light + dark
 $gal = New-Item -ItemType Directory -Force "$Work\gallery"
+$env:EXPLORER2_UI_OVERFLOW = '1'
+Set-Content "$Work\gallery\overflow.txt" '' -Encoding UTF8
 foreach ($theme in @('light', 'dark')) {
   $cfgG = "$Work\cfg-gallery-$theme"; New-Item -ItemType Directory -Force $cfgG | Out-Null
   Set-Content "$cfgG\settings.ini" "theme = $theme`nsystem_accent = false"
@@ -753,7 +762,39 @@ foreach ($theme in @('light', 'dark')) {
     if (-not $p.HasExited) { Stop-Process -Id $p.Id -Force }
   }
 }
+# L5: the pseudo-locale (every text ~40 % longer) with the real fonts; UI names
+# differ there, so only keys and the palette (it also matches the English source)
+$env:EXPLORER2_LANG = 'qps'
+$cfgQ = "$Work\cfg-gallery-qps"; New-Item -ItemType Directory -Force $cfgQ | Out-Null
+Set-Content "$cfgQ\settings.ini" "theme = dark`nsystem_accent = false"
+$env:EXPLORER2_CONFIG_DIR = $cfgQ
+$script:log = "$Work\win-gallery-qps.log"
+$p = Start-Process -FilePath $Exe -ArgumentList "`"$sr`"" -PassThru -RedirectStandardError $script:log
+try {
+  if (WaitFor 'done tab=1 ' 15000) {
+    Start-Sleep -Seconds 1
+    $p.Refresh(); $script:hwnd = $p.MainWindowHandle
+    [void][W]::ShowWindow($script:hwnd, 3); Start-Sleep -Milliseconds 800
+    Focus
+    Click $LISTX (RowY 0); Keys '{RIGHT}'
+    Shot "gallery\qps-01-ordner"
+    Keys '%p'; Start-Sleep -Milliseconds 1000; Shot "gallery\qps-02-inspector"; Keys '%p'
+    Keys '^+p'; Start-Sleep -Milliseconds 500; Shot "gallery\qps-03-befehlspalette"
+    Keys 'settings'; Start-Sleep -Milliseconds 400; Keys '{ENTER}'; Start-Sleep -Milliseconds 900; Shot "gallery\qps-04-einstellungen"
+    Keys '{ESC}'; Start-Sleep -Milliseconds 300
+    Click $LISTX (RowY 1) 'right'; Start-Sleep -Milliseconds 800; Shot "gallery\qps-05-kontextmenue"; Keys '{ESC}'
+  } else { Write-Host "NOTE qps window not ready" }
+} finally {
+  if (-not $p.HasExited) { Stop-Process -Id $p.Id -Force }
+  $env:EXPLORER2_LANG = 'de'
+  Remove-Item Env:EXPLORER2_UI_OVERFLOW -ErrorAction SilentlyContinue
+}
 Write-Host "gallery: $(@(Get-ChildItem "$gal\*.png").Count) screenshots"
+# every text fits its box (w/h/c/p); elided names/paths (e) are on purpose
+$over = @(Get-Content "$Work\gallery\overflow.txt" -Encoding UTF8 -ErrorAction SilentlyContinue |
+  Where-Object { $f = $_ -split "`t"; $f.Count -ge 7 -and $f[0] -notlike '*-ui-kit' -and $f[6] -notlike 'e*' })
+$over | ForEach-Object { $f = $_ -split "`t"; Write-Host ("  overflow {0,-26} {1,-6} {2}" -f $f[0], $f[6], $f[1]) }
+Check "[G1] layout check: every text fits (Segoe UI, de + qps)" { $over.Count -eq 0 }
 $script:log = $mainLog
 if ($script:fail) { Write-Host "----- trace"; Write-Host (Log) }
 exit $script:fail

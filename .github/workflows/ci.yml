@@ -147,6 +147,19 @@ jobs:
         with:
           name: ui-gallery-linux-en
           path: ${{ runner.temp }}/gallery-en/*.png
+      # localisation L5: pseudo-locale (every text ~40 % longer, accented) + layout check
+      - name: UI gallery in the pseudo-locale (qps)
+        if: always()
+        run: EXPLORER2_LANG=qps xvfb-run -a -s "-screen 0 1280x800x24" scripts/gallery.sh "$PWD/target/release/explorer2" "$RUNNER_TEMP/gallery-qps"
+      - name: Upload UI gallery in the pseudo-locale
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ui-gallery-linux-qps
+          path: ${{ runner.temp }}/gallery-qps/*.png
+      - name: Layout check (every text fits, all languages + pseudo-locale)
+        if: always()
+        run: scripts/layout-check.sh "$RUNNER_TEMP/gallery" "$RUNNER_TEMP/gallery-en" "$RUNNER_TEMP/gallery-qps"
       - name: Upload screenshots on failure
         if: failure()
         uses: actions/upload-artifact@v4

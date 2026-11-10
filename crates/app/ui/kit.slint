@@ -2,6 +2,7 @@
 // and Ui (metrics); every control has a spoken name (accessible-label), which
 // the tests click by (R0). Introduced here, used by the layout from R2 on.
 
+import { CheckBox, Palette } from "std-widgets.slint";
 import { Theme, Ui } from "theme.slint";
 import { IconData, IconList } from "icons.slint";
 
@@ -185,6 +186,45 @@ export component MenuItem inherits Rectangle {
         enabled: root.enabled;
         clicked => { root.clicked(); }
     }
+}
+
+// Check box with a wrapping text (L5): long translations and paths stay
+// inside narrow panels instead of running out of them. Looks like the std
+// CheckBox (same box, spacing, font and colour); the whole row toggles.
+export component CheckRow {
+    in property <string> text;
+    in-out property <bool> checked;
+    in property <bool> enabled: true;
+    callback toggled();
+    accessible-role: checkbox;
+    accessible-checkable: true;
+    accessible-label: root.text;
+    accessible-checked: root.checked;
+    accessible-enabled: root.enabled;
+    accessible-action-default => { root.flip(); }
+    function flip() {
+        if (root.enabled) {
+            root.checked = !root.checked;
+            root.toggled();
+        }
+    }
+    HorizontalLayout {
+        spacing: 12px;
+        alignment: stretch;
+        VerticalLayout {
+            alignment: center;
+            CheckBox { enabled: root.enabled; checked <=> root.checked; accessible-role: none; }
+        }
+        Text {
+            text: root.text;
+            wrap: word-wrap;
+            vertical-alignment: center;
+            horizontal-stretch: 1;
+            color: root.enabled ? Palette.foreground : Theme.d.faint;
+            accessible-role: none;
+        }
+    }
+    TouchArea { clicked => { root.flip(); } }
 }
 
 export component MenuSeparator inherits Rectangle {

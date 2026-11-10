@@ -4,6 +4,8 @@
 //!
 //!   cargo run -p explorer-i18n --example extract            # all existing catalogs
 //!   cargo run -p explorer-i18n --example extract -- fr ja   # also create these
+//!
+//! `lang/qps` (pseudo-locale, L5) is always generated from the sources.
 
 use explorer_i18n::extract::{collect, merge, render_pot};
 use explorer_i18n::po;
@@ -44,7 +46,12 @@ fn main() {
         let old = std::fs::read_to_string(&file)
             .ok()
             .map(|t| po::parse(&t).unwrap_or_else(|e| panic!("{}: {e}", file.display())));
-        let cat = merge(old.as_ref(), &found, &code);
+        // the pseudo-locale is generated, never translated
+        let cat = if code == explorer_i18n::pseudo::CODE {
+            explorer_i18n::pseudo::catalog(&found)
+        } else {
+            merge(old.as_ref(), &found, &code)
+        };
         std::fs::create_dir_all(file.parent().unwrap()).unwrap();
         std::fs::write(&file, po::write(&cat)).unwrap();
         let done = cat.entries.iter().filter(|e| e.is_translated()).count();

@@ -15,6 +15,7 @@
 
 pub mod extract;
 pub mod po;
+pub mod pseudo;
 mod system;
 
 pub use system::{init, system_languages};
@@ -112,6 +113,15 @@ pub const LANGS: &[Lang] = &[
         native: "日本語",
         english: "Japanese",
         plural_forms: "nplurals=1; plural=0;",
+        complete: false,
+    },
+    // L5 layout test: generated from the English source (`pseudo`), never
+    // offered, only via EXPLORER2_LANG=qps or `language = qps`
+    Lang {
+        code: pseudo::CODE,
+        native: "Pseudo",
+        english: "Pseudo-locale (layout test)",
+        plural_forms: TWO,
         complete: false,
     },
 ];

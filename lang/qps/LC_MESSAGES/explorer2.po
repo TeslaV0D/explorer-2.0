@@ -1,0 +1,1864 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: explorer2\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: qps\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+#: crates/integrate/src/bin/explorer2-recover.rs
+msgid "  error: {0}"
+msgstr "[  éřřöř: {0}······]"
+
+#: crates/integrate/src/bin/explorer2-recover.rs
+msgid "  left unchanged: {0}"
+msgstr "[  łéfť üñçhåñğéď: {0}·········]"
+
+#: crates/app/src/fileops.rs
+msgid " (+{n} more error)"
+msgid_plural " (+{n} more errors)"
+msgstr[0] "[ (+{n} möřé éřřöř)········]"
+msgstr[1] "[ (+{n} möřé éřřöřš)········]"
+
+#: crates/app/src/search.rs
+msgid " (built in {0})"
+msgstr "[ (büîłť îñ {0})·······]"
+
+#: crates/app/src/nav.rs
+msgid " (folder searched, without index)"
+msgstr "[ (föłďéř šéåřçhéď, wîťhöüť îñďéx)··············]"
+
+#: crates/integrate/src/lib.rs
+msgid " (journal was damaged, known locations checked)"
+msgstr "[ (jöüřñåł wåš ďåmåğéď, kñöwñ łöçåťîöñš çhéçkéď)···················]"
+
+#: crates/app/src/inspector.rs
+msgid " (more – counting stopped at {0} entries)"
+msgstr "[ (möřé – çöüñťîñğ šťöppéď åť {0} éñťřîéš)·················]"
+
+#: crates/app/src/quick.rs
+msgid " (still being built)"
+msgstr "[ (šťîłł béîñğ büîłť)········]"
+
+#: crates/app/src/nav.rs
+msgid " ({0} hidden)"
+msgstr "[ ({0} hîďďéñ)······]"
+
+#: crates/app/src/integration.rs
+msgid " Emergency tool: {0}"
+msgstr "[ Éméřğéñçý ťööł: {0}·········]"
+
+#: crates/app/src/search.rs
+msgid " – changes missed {n} time, re-synced afterwards ({0})"
+msgid_plural " – changes missed {n} times, re-synced afterwards ({0})"
+msgstr[0] "[ – çhåñğéš mîššéď {n} ťîmé, řé-šýñçéď åfťéřwåřďš ({0})·······················]"
+msgstr[1] "[ – çhåñğéš mîššéď {n} ťîméš, řé-šýñçéď åfťéřwåřďš ({0})·······················]"
+
+#: crates/integrate/src/lib.rs
+msgid " – journal damaged, reset recommended"
+msgstr "[ – jöüřñåł ďåmåğéď, řéšéť řéçömméñďéď···············]"
+
+#: crates/app/src/search.rs
+msgid " – network drive"
+msgstr "[ – ñéťwöřk ďřîvé·······]"
+
+#: crates/app/src/search.rs
+msgid " – other drive"
+msgstr "[ – öťhéř ďřîvé······]"
+
+#: crates/app/src/search.rs
+msgid " – removable drive"
+msgstr "[ – řémövåbłé ďřîvé········]"
+
+#: crates/app/src/search.rs
+msgid " – saving failed: {0}"
+msgstr "[ – šåvîñğ fåîłéď: {0}·········]"
+
+#: crates/app/src/search.rs
+msgid " – without live updates"
+msgstr "[ – wîťhöüť łîvé üpďåťéš··········]"
+
+#: crates/app/src/installer.rs
+msgid ", redirected: {0}"
+msgstr "[, řéďîřéçťéď: {0}········]"
+
+#: crates/integrate/src/lib.rs
+msgid ", {n} integration point active"
+msgid_plural ", {n} integration points active"
+msgstr[0] "[, {n} îñťéğřåťîöñ pöîñť åçťîvé·············]"
+msgstr[1] "[, {n} îñťéğřåťîöñ pöîñťš åçťîvé·············]"
+
+#: crates/ops/src/names.rs
+msgid "A file name can't contain {0}: \\ / : * ? \" < > |"
+msgstr "[Å fîłé ñåmé çåñ'ť çöñťåîñ {0}: \\ / : * ? \" < > |····················]"
+
+#: crates/ops/src/exec.rs
+msgid "A folder and a file can't replace each other."
+msgstr "[Å föłďéř åñď å fîłé çåñ'ť řépłåçé éåçh öťhéř.··················]"
+
+#: crates/fs/src/lib.rs
+#: crates/ops/src/exec.rs
+#: crates/ops/src/simple.rs
+msgid "Access denied"
+msgstr "[Åççéšš ďéñîéď······]"
+
+#: crates/app/ui/main.slint
+msgid "Address bar"
+msgstr "[Åďďřéšš båř·····]"
+
+#: crates/ops/src/exec.rs
+msgid "Already exists"
+msgstr "[Åłřéåďý éxîšťš······]"
+
+#: crates/app/src/fileops.rs
+#: crates/core/src/commands.rs
+msgid "Alt+Enter"
+msgstr "[Åłť+Éñťéř·····]"
+
+#: crates/app/ui/main.slint
+msgid "Alt+Left"
+msgstr "[Åłť+Łéfť····]"
+
+#: crates/app/ui/main.slint
+msgid "Alt+Right"
+msgstr "[Åłť+Řîğhť·····]"
+
+#: crates/app/ui/main.slint
+msgid "Alt+Up"
+msgstr "[Åłť+Üp···]"
+
+#: crates/ops/src/trashview.rs
+#: crates/ops/src/undo.rs
+msgid "An item already exists at the original location: {0}"
+msgstr "[Åñ îťém åłřéåďý éxîšťš åť ťhé öřîğîñåł łöçåťîöñ: {0}······················]"
+
+#: crates/app/ui/main.slint
+msgid "Ascending"
+msgstr "[Åšçéñďîñğ·····]"
+
+#: crates/app/src/inspector.rs
+msgid "Attributes"
+msgstr "[Åťťřîbüťéš·····]"
+
+#: crates/app/ui/main.slint
+#: crates/core/src/commands.rs
+msgid "Back"
+msgstr "[Båçk··]"
+
+#: crates/ops/src/undo.rs
+msgid "Can't move back, the target exists: {0}"
+msgstr "[Çåñ'ť mövé båçk, ťhé ťåřğéť éxîšťš: {0}················]"
+
+#: crates/app/ui/main.slint
+msgid "Cancel"
+msgstr "[Çåñçéł···]"
+
+#: crates/integrate/src/bin/explorer2-recover.rs
+msgid "Cancelled – nothing changed."
+msgstr "[Çåñçéłłéď – ñöťhîñğ çhåñğéď.············]"
+
+#: crates/setup/src/main.rs
+msgid "Cancelled."
+msgstr "[Çåñçéłłéď.·····]"
+
+#: crates/app/ui/main.slint
+msgid "Close"
+msgstr "[Çłöšé···]"
+
+#: crates/app/ui/main.slint
+#: crates/core/src/commands.rs
+msgid "Close tab"
+msgstr "[Çłöšé ťåb·····]"
+
+#: crates/app/ui/main.slint
+msgid "Color scheme"
+msgstr "[Çöłöř šçhémé·····]"
+
+#: crates/core/src/commands.rs
+msgid "Color scheme: Dark"
+msgstr "[Çöłöř šçhémé: Ďåřk········]"
+
+#: crates/core/src/commands.rs
+msgid "Color scheme: Light"
+msgstr "[Çöłöř šçhémé: Łîğhť········]"
+
+#: crates/core/src/commands.rs
+msgid "Color scheme: System default"
+msgstr "[Çöłöř šçhémé: Šýšťém ďéfåüłť············]"
+
+#: crates/app/ui/main.slint
+msgid "Command palette"
+msgstr "[Çömmåñď påłéťťé······]"
+
+#: crates/app/src/installer.rs
+msgid "Configuration folder not found"
+msgstr "[Çöñfîğüřåťîöñ föłďéř ñöť föüñď············]"
+
+#: crates/app/src/integration.rs
+msgid "Configuration folder not found."
+msgstr "[Çöñfîğüřåťîöñ föłďéř ñöť föüñď.·············]"
+
+#: crates/app/src/inspector.rs
+msgid "Contents"
+msgstr "[Çöñťéñťš····]"
+
+#: crates/app/ui/main.slint
+#: crates/core/src/commands.rs
+msgid "Context menu"
+msgstr "[Çöñťéxť méñü·····]"
+
+#: crates/app/src/fileops.rs
+msgid "Context menu: {0}"
+msgstr "[Çöñťéxť méñü: {0}········]"
+
+#: crates/ops/src/exec.rs
+msgid "Copied, but the source was not deleted: {0}"
+msgstr "[Çöpîéď, büť ťhé šöüřçé wåš ñöť ďéłéťéď: {0}··················]"
+
+#: crates/app/src/fileops.rs
+#: crates/app/ui/main.slint
+#: crates/core/src/commands.rs
+msgid "Copy"
+msgstr "[Çöpý··]"
+
+#: crates/app/ui/main.slint
+msgid "Copy path"
+msgstr "[Çöpý påťh·····]"
+
+#: crates/app/src/fileops.rs
+msgid "Copying {0} to “{1}”"
+msgstr "[Çöpýîñğ {0} ťö “{1}”·········]"
+
+#: crates/ops/src/exec.rs
+msgid "Couldn't move the existing item to the Recycle Bin: {0}"
+msgstr "[Çöüłďñ'ť mövé ťhé éxîšťîñğ îťém ťö ťhé Řéçýçłé Bîñ: {0}·······················]"
+
+#: crates/app/src/open.rs
+msgid "Couldn't open (code {0})"
+msgstr "[Çöüłďñ'ť öpéñ (çöďé {0})··········]"
+
+#: crates/app/src/open.rs
+msgid "Couldn't open ({0}): {1}"
+msgstr "[Çöüłďñ'ť öpéñ ({0}): {1}···········]"
+
+#: crates/app/src/inspector.rs
+msgid "Created"
+msgstr "[Çřéåťéď····]"
+
+#: crates/core/src/commands.rs
+msgid "Ctrl+A"
+msgstr "[Çťřł+Å···]"
+
+#: crates/app/src/fileops.rs
+#: crates/app/ui/main.slint
+#: crates/core/src/commands.rs
+msgid "Ctrl+C"
+msgstr "[Çťřł+Ç···]"
+
+#: crates/core/src/commands.rs
+msgid "Ctrl+F"
+msgstr "[Çťřł+F···]"
+
+#: crates/core/src/commands.rs
+msgid "Ctrl+L"
+msgstr "[Çťřł+Ł···]"
+
+#: crates/core/src/commands.rs
+msgid "Ctrl+Shift+1"
+msgstr "[Çťřł+Šhîfť+1·····]"
+
+#: crates/app/ui/main.slint
+#: crates/core/src/commands.rs
+msgid "Ctrl+Shift+2"
+msgstr "[Çťřł+Šhîfť+2·····]"
+
+#: crates/core/src/commands.rs
+msgid "Ctrl+Shift+3"
+msgstr "[Çťřł+Šhîfť+3·····]"
+
+#: crates/app/ui/main.slint
+#: crates/core/src/commands.rs
+msgid "Ctrl+Shift+6"
+msgstr "[Çťřł+Šhîfť+6·····]"
+
+#: crates/core/src/commands.rs
+msgid "Ctrl+Shift+F"
+msgstr "[Çťřł+Šhîfť+F·····]"
+
+#: crates/app/src/fileops.rs
+#: crates/app/ui/main.slint
+#: crates/core/src/commands.rs
+msgid "Ctrl+Shift+N"
+msgstr "[Çťřł+Šhîfť+Ñ·····]"
+
+#: crates/app/ui/main.slint
+msgid "Ctrl+Shift+P"
+msgstr "[Çťřł+Šhîfť+P·····]"
+
+#: crates/core/src/commands.rs
+msgid "Ctrl+Shift+Tab"
+msgstr "[Çťřł+Šhîfť+Ťåb······]"
+
+#: crates/app/ui/main.slint
+#: crates/core/src/commands.rs
+msgid "Ctrl+T"
+msgstr "[Çťřł+Ť···]"
+
+#: crates/core/src/commands.rs
+msgid "Ctrl+Tab"
+msgstr "[Çťřł+Ťåb····]"
+
+#: crates/app/src/fileops.rs
+#: crates/app/ui/main.slint
+#: crates/core/src/commands.rs
+msgid "Ctrl+V"
+msgstr "[Çťřł+V···]"
+
+#: crates/core/src/commands.rs
+msgid "Ctrl+W"
+msgstr "[Çťřł+W···]"
+
+#: crates/app/src/fileops.rs
+#: crates/app/ui/main.slint
+#: crates/core/src/commands.rs
+msgid "Ctrl+X"
+msgstr "[Çťřł+X···]"
+
+#: crates/app/ui/main.slint
+#: crates/core/src/commands.rs
+msgid "Ctrl+Y"
+msgstr "[Çťřł+Ý···]"
+
+#: crates/app/ui/main.slint
+#: crates/core/src/commands.rs
+msgid "Ctrl+Z"
+msgstr "[Çťřł+Ž···]"
+
+#: crates/app/ui/main.slint
+#: crates/core/src/commands.rs
+msgid "Ctrl+\\"
+msgstr "[Çťřł+\\···]"
+
+#: crates/core/src/renderer.rs
+msgid "Currently: {0} ({1})"
+msgstr "[Çüřřéñťłý: {0} ({1})·········]"
+
+#: crates/app/src/fileops.rs
+#: crates/app/ui/main.slint
+#: crates/core/src/commands.rs
+msgid "Cut"
+msgstr "[Çüť··]"
+
+#: crates/app/src/inspector.rs
+msgid "DATE"
+msgstr "[ĎÅŤÉ··]"
+
+#: crates/fs/src/places.rs
+msgid "DVD Drive"
+msgstr "[ĎVĎ Ďřîvé·····]"
+
+#: crates/app/ui/main.slint
+msgid "Dark"
+msgstr "[Ďåřk··]"
+
+#: crates/core/src/places.rs
+msgid "Date deleted"
+msgstr "[Ďåťé ďéłéťéď·····]"
+
+#: crates/app/src/nav.rs
+#: crates/app/ui/main.slint
+msgid "Date modified"
+msgstr "[Ďåťé möďîfîéď······]"
+
+#: crates/app/src/fileops.rs
+#: crates/app/ui/main.slint
+#: crates/core/src/commands.rs
+msgid "Del"
+msgstr "[Ďéł··]"
+
+#: crates/app/src/fileops.rs
+#: crates/app/ui/main.slint
+msgid "Delete"
+msgstr "[Ďéłéťé···]"
+
+#: crates/core/src/commands.rs
+msgid "Delete (to Recycle Bin)"
+msgstr "[Ďéłéťé (ťö Řéçýçłé Bîñ)··········]"
+
+#: crates/app/src/fileops.rs
+#: crates/app/ui/main.slint
+#: crates/core/src/commands.rs
+msgid "Delete permanently"
+msgstr "[Ďéłéťé péřmåñéñťłý········]"
+
+#: crates/ops/src/trashview.rs
+msgid "Delete permanently failed: {0}"
+msgstr "[Ďéłéťé péřmåñéñťłý fåîłéď: {0}·············]"
+
+#: crates/app/src/fileops.rs
+msgid ""
+"Delete this {n} item permanently?\n"
+"This can't be undone."
+msgid_plural ""
+"Delete these {n} items permanently?\n"
+"This can't be undone."
+msgstr[0] ""
+"[Ďéłéťé ťhîš {n} îťém péřmåñéñťłý?··············\n"
+"Ťhîš çåñ'ť bé üñďöñé.·········]"
+msgstr[1] ""
+"[Ďéłéťé ťhéšé {n} îťémš péřmåñéñťłý?···············\n"
+"Ťhîš çåñ'ť bé üñďöñé.·········]"
+
+#: crates/app/src/fileops.rs
+msgid ""
+"Delete {0} permanently?\n"
+"This can't be undone."
+msgstr ""
+"[Ďéłéťé {0} péřmåñéñťłý?··········\n"
+"Ťhîš çåñ'ť bé üñďöñé.·········]"
+
+#: crates/app/src/fileops.rs
+msgid ""
+"Delete “{0}” permanently?\n"
+"This can't be undone."
+msgstr ""
+"[Ďéłéťé “{0}” péřmåñéñťłý?···········\n"
+"Ťhîš çåñ'ť bé üñďöñé.·········]"
+
+#: crates/app/src/fileops.rs
+msgid "Deleting {0} permanently"
+msgstr "[Ďéłéťîñğ {0} péřmåñéñťłý··········]"
+
+#: crates/app/ui/main.slint
+msgid "Descending"
+msgstr "[Ďéšçéñďîñğ·····]"
+
+#: crates/fs/src/places.rs
+msgid "Desktop"
+msgstr "[Ďéškťöp····]"
+
+#: crates/app/ui/main.slint
+#: crates/core/src/view.rs
+msgid "Details"
+msgstr "[Ďéťåîłš····]"
+
+#: crates/app/src/inspector.rs
+msgid "Dimensions"
+msgstr "[Ďîméñšîöñš·····]"
+
+#: crates/app/ui/main.slint
+msgid "Do this for all remaining conflicts"
+msgstr "[Ďö ťhîš föř åłł řémåîñîñğ çöñfłîçťš··············]"
+
+#: crates/fs/src/places.rs
+msgid "Documents"
+msgstr "[Ďöçüméñťš·····]"
+
+#: crates/fs/src/places.rs
+msgid "Downloads"
+msgstr "[Ďöwñłöåďš·····]"
+
+#: crates/fs/src/places.rs
+msgid "Drive"
+msgstr "[Ďřîvé···]"
+
+#: crates/core/src/commands.rs
+msgid "Edit address"
+msgstr "[Éďîť åďďřéšš·····]"
+
+#: crates/app/ui/main.slint
+#: crates/core/src/commands.rs
+msgid "Empty Recycle Bin"
+msgstr "[Émpťý Řéçýçłé Bîñ·······]"
+
+#: crates/app/src/fileops.rs
+#: crates/core/src/commands.rs
+msgid "Enter"
+msgstr "[Éñťéř···]"
+
+#: crates/integrate/src/bin/explorer2-recover.rs
+msgid "Error: configuration folder not found (APPDATA missing)."
+msgstr "[Éřřöř: çöñfîğüřåťîöñ föłďéř ñöť föüñď (ÅPPĎÅŤÅ mîššîñğ).·······················]"
+
+#: crates/integrate/src/bin/explorer2-recover.rs
+msgid "Error: installation folder cannot be determined (LOCALAPPDATA missing)."
+msgstr "[Éřřöř: îñšťåłłåťîöñ föłďéř çåññöť bé ďéťéřmîñéď (ŁÖÇÅŁÅPPĎÅŤÅ mîššîñğ).·····························]"
+
+#: crates/integrate/src/bin/explorer2-recover.rs
+msgid "Error: {0} – please delete the program folder by hand: {1}"
+msgstr "[Éřřöř: {0} – płéåšé ďéłéťé ťhé přöğřåm föłďéř bý håñď: {1}························]"
+
+#: crates/app/src/fileops.rs
+msgid "Existing: {0}"
+msgstr "[Éxîšťîñğ: {0}······]"
+
+#: crates/core/src/guard.rs
+msgid "Explorer 2.0 closed unexpectedly last time."
+msgstr "[Éxpłöřéř 2.0 çłöšéď üñéxpéçťéďłý łåšť ťîmé.··················]"
+
+#: crates/core/src/guard.rs
+msgid "Explorer 2.0 closed unexpectedly {n} time."
+msgid_plural "Explorer 2.0 closed unexpectedly {n} times."
+msgstr[0] "[Éxpłöřéř 2.0 çłöšéď üñéxpéçťéďłý {n} ťîmé.··················]"
+msgstr[1] "[Éxpłöřéř 2.0 çłöšéď üñéxpéçťéďłý {n} ťîméš.··················]"
+
+#: crates/app/src/installer.rs
+msgid "Explorer 2.0 installed: {0} ({1} Start menu shortcuts{2})"
+msgstr "[Éxpłöřéř 2.0 îñšťåłłéď: {0} ({1} Šťåřť méñü šhöřťçüťš{2})························]"
+
+#: crates/setup/src/main.rs
+msgid "Explorer 2.0 is already installed. Update to version {0}?"
+msgstr "[Éxpłöřéř 2.0 îš åłřéåďý îñšťåłłéď. Üpďåťé ťö véřšîöñ {0}?························]"
+
+#: crates/integrate/src/bin/explorer2-recover.rs
+msgid "Explorer 2.0 was removed. Your settings stay in %APPDATA%\\Explorer2."
+msgstr "[Éxpłöřéř 2.0 wåš řémövéď. Ýöüř šéťťîñğš šťåý îñ %ÅPPĎÅŤÅ%\\Éxpłöřéř2.····························]"
+
+#: crates/setup/src/main.rs
+msgid ""
+"Explorer 2.0 {0} is installed.\n"
+"\n"
+"You'll find it in the Start menu under “Explorer 2.0”. To uninstall, use “Settings → Apps” or the Start menu entry “Explorer 2.0 – Windows-Standard wiederherstellen”.\n"
+"\n"
+"Start it now?"
+msgstr ""
+"[Éxpłöřéř 2.0 {0} îš îñšťåłłéď.·············\n"
+"\n"
+"Ýöü'łł fîñď îť îñ ťhé Šťåřť méñü üñďéř “Éxpłöřéř 2.0”. Ťö üñîñšťåłł, üšé “Šéťťîñğš → Åppš” öř ťhé Šťåřť méñü éñťřý “Éxpłöřéř 2.0 – Wîñďöwš-Šťåñďåřď wîéďéřhéřšťéłłéñ”.···································································\n"
+"\n"
+"Šťåřť îť ñöw?······]"
+
+#: crates/integrate/src/bin/explorer2-recover.rs
+msgid "Explorer 2.0 – restore the Windows default"
+msgstr "[Éxpłöřéř 2.0 – řéšťöřé ťhé Wîñďöwš ďéfåüłť·················]"
+
+#: crates/integrate/src/bin/explorer2-recover.rs
+msgid ""
+"Explorer 2.0 – restore the Windows default\n"
+"\n"
+"  explorer2-recover                  shows the state, asks and resets\n"
+"  explorer2-recover --yes            resets without asking\n"
+"  explorer2-recover --status         only shows the state (exit code 1 = active)\n"
+"  explorer2-recover --uninstall      resets and removes Explorer 2.0\n"
+"  explorer2-recover --uninstall --quiet   the same without asking\n"
+"\n"
+"Removes all Windows integrations of Explorer 2.0 (folder verbs, Win+E,\n"
+"context menu, environment variables, shortcuts …) and restores the previous\n"
+"values exactly. Values that other software has changed meanwhile stay\n"
+"untouched. Your settings (%APPDATA%\\Explorer2) are kept when uninstalling."
+msgstr ""
+"[Éxpłöřéř 2.0 – řéšťöřé ťhé Wîñďöwš ďéfåüłť·················\n"
+"\n"
+"  éxpłöřéř2-řéçövéř                  šhöwš ťhé šťåťé, åškš åñď řéšéťš····························\n"
+"  éxpłöřéř2-řéçövéř --ýéš            řéšéťš wîťhöüť åškîñğ························\n"
+"  éxpłöřéř2-řéçövéř --šťåťüš         öñłý šhöwš ťhé šťåťé (éxîť çöďé 1 = åçťîvé)································\n"
+"  éxpłöřéř2-řéçövéř --üñîñšťåłł      řéšéťš åñď řémövéš Éxpłöřéř 2.0····························\n"
+"  éxpłöřéř2-řéçövéř --üñîñšťåłł --qüîéť   ťhé šåmé wîťhöüť åškîñğ··························\n"
+"\n"
+"Řémövéš åłł Wîñďöwš îñťéğřåťîöñš öf Éxpłöřéř 2.0 (föłďéř véřbš, Wîñ+É,····························\n"
+"çöñťéxť méñü, éñvîřöñméñť våřîåbłéš, šhöřťçüťš …) åñď řéšťöřéš ťhé přévîöüš······························\n"
+"våłüéš éxåçťłý. Våłüéš ťhåť öťhéř šöfťwåřé håš çhåñğéď méåñwhîłé šťåý····························\n"
+"üñťöüçhéď. Ýöüř šéťťîñğš (%ÅPPĎÅŤÅ%\\Éxpłöřéř2) åřé képť whéñ üñîñšťåłłîñğ.······························]"
+
+#: crates/core/src/view.rs
+msgid "Extra large icons"
+msgstr "[Éxťřå łåřğé îçöñš·······]"
+
+#: crates/core/src/lib.rs
+msgid "File"
+msgstr "[Fîłé··]"
+
+#: crates/core/src/lib.rs
+msgid "File folder"
+msgstr "[Fîłé föłďéř·····]"
+
+#: crates/fs/src/places.rs
+msgid "File system"
+msgstr "[Fîłé šýšťém·····]"
+
+#: crates/app/src/inspector.rs
+#: crates/app/src/nav.rs
+#: crates/core/src/places.rs
+msgid "Folder"
+msgstr "[Föłďéř···]"
+
+#: crates/fs/src/lib.rs
+#: crates/search/src/watch.rs
+msgid "Folder not found"
+msgstr "[Föłďéř ñöť föüñď·······]"
+
+#: crates/app/ui/main.slint
+msgid "Folder options"
+msgstr "[Föłďéř öpťîöñš······]"
+
+#: crates/app/src/fileops.rs
+msgid "Folder · {0}"
+msgstr "[Föłďéř · {0}······]"
+
+#: crates/app/ui/main.slint
+#: crates/core/src/commands.rs
+msgid "Forward"
+msgstr "[Föřwåřď····]"
+
+#: crates/app/src/inspector.rs
+msgid "GENERAL"
+msgstr "[ĞÉÑÉŘÅŁ····]"
+
+#: crates/core/src/renderer.rs
+msgid "GPU acceleration"
+msgstr "[ĞPÜ åççéłéřåťîöñ·······]"
+
+#: crates/core/src/renderer.rs
+msgid "GPU check running in the background – applies from the next start"
+msgstr "[ĞPÜ çhéçk řüññîñğ îñ ťhé båçkğřöüñď – åppłîéš fřöm ťhé ñéxť šťåřť··························]"
+
+#: crates/core/src/commands.rs
+msgid "Go to parent folder"
+msgstr "[Ğö ťö påřéñť föłďéř········]"
+
+#: crates/core/src/inspect.rs
+msgid "Hidden"
+msgstr "[Hîďďéñ···]"
+
+#: crates/fs/src/places.rs
+msgid "Home"
+msgstr "[Hömé··]"
+
+#: crates/app/src/search.rs
+msgid "Home ({0})"
+msgstr "[Hömé ({0})·····]"
+
+#: crates/app/ui/main.slint
+msgid "Icons"
+msgstr "[Îçöñš···]"
+
+#: crates/app/ui/main.slint
+msgid "Index drives for search"
+msgstr "[Îñďéx ďřîvéš föř šéåřçh··········]"
+
+#: crates/app/ui/main.slint
+msgid "Inspector"
+msgstr "[Îñšpéçťöř·····]"
+
+#: crates/app/src/installer.rs
+msgid "Install"
+msgstr "[Îñšťåłł····]"
+
+#: crates/core/src/commands.rs
+msgid "Install / update Explorer 2.0"
+msgstr "[Îñšťåłł / üpďåťé Éxpłöřéř 2.0············]"
+
+#: crates/setup/src/main.rs
+msgid "Install Explorer 2.0 {0} for this user?"
+msgstr "[Îñšťåłł Éxpłöřéř 2.0 {0} föř ťhîš üšéř?················]"
+
+#: crates/app/ui/main.slint
+msgid "Installation"
+msgstr "[Îñšťåłłåťîöñ·····]"
+
+#: crates/app/src/installer.rs
+#: crates/setup/src/main.rs
+msgid "Installation failed: {0}"
+msgstr "[Îñšťåłłåťîöñ fåîłéď: {0}··········]"
+
+#: crates/app/src/installer.rs
+msgid "Installation folder cannot be determined"
+msgstr "[Îñšťåłłåťîöñ föłďéř çåññöť bé ďéťéřmîñéď················]"
+
+#: crates/setup/src/main.rs
+msgid "Installation folder cannot be determined (LOCALAPPDATA/APPDATA missing)."
+msgstr "[Îñšťåłłåťîöñ föłďéř çåññöť bé ďéťéřmîñéď (ŁÖÇÅŁÅPPĎÅŤÅ/ÅPPĎÅŤÅ mîššîñğ).·····························]"
+
+#: crates/integrate/src/bin/explorer2-recover.rs
+msgid "Installation: {0}"
+msgstr "[Îñšťåłłåťîöñ: {0}········]"
+
+#: crates/app/src/installer.rs
+msgid "Installed (version {0}) in {1}. Uninstall via “Apps & Features” or the Start menu."
+msgstr "[Îñšťåłłéď (véřšîöñ {0}) îñ {1}. Üñîñšťåłł vîå “Åppš & Féåťüřéš” öř ťhé Šťåřť méñü.··································]"
+
+#: crates/app/src/installer.rs
+msgid "Installed in {0}; this copy is running from {1}."
+msgstr "[Îñšťåłłéď îñ {0}; ťhîš çöpý îš řüññîñğ fřöm {1}.····················]"
+
+#: crates/app/src/installer.rs
+#: crates/setup/src/main.rs
+msgid "Installed, but starting failed: {0}"
+msgstr "[Îñšťåłłéď, büť šťåřťîñğ fåîłéď: {0}···············]"
+
+#: crates/app/src/installer.rs
+msgid "Installed, but the installed copy did not start – this window stays open."
+msgstr "[Îñšťåłłéď, büť ťhé îñšťåłłéď çöpý ďîď ñöť šťåřť – ťhîš wîñďöw šťåýš öpéñ.······························]"
+
+#: crates/app/src/installer.rs
+msgid "Installed, but the start could not be checked: {0}"
+msgstr "[Îñšťåłłéď, büť ťhé šťåřť çöüłď ñöť bé çhéçkéď: {0}·····················]"
+
+#: crates/setup/src/main.rs
+msgid "Installer ended with {0}"
+msgstr "[Îñšťåłłéř éñďéď wîťh {0}··········]"
+
+#: crates/integrate/src/lib.rs
+msgid "Integration journal damaged – please reset first"
+msgstr "[Îñťéğřåťîöñ jöüřñåł ďåmåğéď – płéåšé řéšéť fîřšť····················]"
+
+#: crates/ops/src/exec.rs
+msgid "Invalid path"
+msgstr "[Îñvåłîď påťh·····]"
+
+#: crates/integrate/src/bin/explorer2-recover.rs
+msgid "Journal: {0}"
+msgstr "[Jöüřñåł: {0}······]"
+
+#: crates/app/ui/main.slint
+msgid "Keep both"
+msgstr "[Kéép böťh·····]"
+
+#: crates/app/src/inspector.rs
+msgid "LOCATION"
+msgstr "[ŁÖÇÅŤÎÖÑ····]"
+
+#: crates/app/ui/main.slint
+msgid "Language"
+msgstr "[Łåñğüåğé····]"
+
+#: crates/core/src/commands.rs
+msgid "Language: Deutsch"
+msgstr "[Łåñğüåğé: Ďéüťšçh·······]"
+
+#: crates/core/src/commands.rs
+msgid "Language: English"
+msgstr "[Łåñğüåğé: Éñğłîšh·······]"
+
+#: crates/core/src/commands.rs
+msgid "Language: System default"
+msgstr "[Łåñğüåğé: Šýšťém ďéfåüłť··········]"
+
+#: crates/core/src/view.rs
+msgid "Large icons"
+msgstr "[Łåřğé îçöñš·····]"
+
+#: crates/core/src/places.rs
+msgid "Libraries"
+msgstr "[Łîbřåřîéš·····]"
+
+#: crates/app/src/nav.rs
+msgid "Libraries are only available on Windows"
+msgstr "[Łîbřåřîéš åřé öñłý åvåîłåbłé öñ Wîñďöwš················]"
+
+#: crates/app/src/nav.rs
+msgid "Library not found: {0}"
+msgstr "[Łîbřåřý ñöť föüñď: {0}··········]"
+
+#: crates/app/ui/main.slint
+msgid "Light"
+msgstr "[Łîğhť···]"
+
+#: crates/app/src/nav.rs
+msgid "Loading …"
+msgstr "[Łöåďîñğ …·····]"
+
+#: crates/app/src/nav.rs
+msgid "Loading … {0}"
+msgstr "[Łöåďîñğ … {0}······]"
+
+#: crates/fs/src/places.rs
+msgid "Local Disk"
+msgstr "[Łöçåł Ďîšk·····]"
+
+#: crates/core/src/view.rs
+msgid "Medium icons"
+msgstr "[Méďîüm îçöñš·····]"
+
+#: crates/app/ui/main.slint
+msgid "Merge"
+msgstr "[Méřğé···]"
+
+#: crates/app/src/inspector.rs
+msgid "Modified"
+msgstr "[Möďîfîéď····]"
+
+#: crates/app/ui/main.slint
+msgid "More"
+msgstr "[Möřé··]"
+
+#: crates/app/src/fileops.rs
+msgid "Moving {0} to the Recycle Bin"
+msgstr "[Mövîñğ {0} ťö ťhé Řéçýçłé Bîñ············]"
+
+#: crates/app/src/fileops.rs
+msgid "Moving {0} to “{1}”"
+msgstr "[Mövîñğ {0} ťö “{1}”·········]"
+
+#: crates/fs/src/places.rs
+msgid "Music"
+msgstr "[Müšîç···]"
+
+#: crates/app/ui/main.slint
+msgid "Name"
+msgstr "[Ñåmé··]"
+
+#: crates/fs/src/places.rs
+msgid "Network Drive"
+msgstr "[Ñéťwöřk Ďřîvé······]"
+
+#: crates/fs/src/network.rs
+msgid "Network path not found"
+msgstr "[Ñéťwöřk påťh ñöť föüñď·········]"
+
+#: crates/fs/src/network.rs
+msgid "Network shares are only available on Windows"
+msgstr "[Ñéťwöřk šhåřéš åřé öñłý åvåîłåbłé öñ Wîñďöwš··················]"
+
+#: crates/app/src/fileops.rs
+#: crates/app/ui/main.slint
+#: crates/core/src/commands.rs
+#: crates/ops/src/names.rs
+msgid "New folder"
+msgstr "[Ñéw föłďéř·····]"
+
+#: crates/app/ui/main.slint
+#: crates/core/src/commands.rs
+msgid "New tab"
+msgstr "[Ñéw ťåb····]"
+
+#: crates/app/src/fileops.rs
+msgid "New: {0} (from {1})"
+msgstr "[Ñéw: {0} (fřöm {1})·········]"
+
+#: crates/core/src/commands.rs
+msgid "Next tab"
+msgstr "[Ñéxť ťåb····]"
+
+#: crates/integrate/src/lib.rs
+msgid "No Windows integration active – nothing to do."
+msgstr "[Ñö Wîñďöwš îñťéğřåťîöñ åçťîvé – ñöťhîñğ ťö ďö.···················]"
+
+#: crates/integrate/src/lib.rs
+msgid "No Windows integration active."
+msgstr "[Ñö Wîñďöwš îñťéğřåťîöñ åçťîvé.············]"
+
+#: crates/integrate/src/bin/explorer2-recover.rs
+msgid "No console to ask – start it with --quiet."
+msgstr "[Ñö çöñšöłé ťö åšk – šťåřť îť wîťh --qüîéť.·················]"
+
+#: crates/integrate/src/bin/explorer2-recover.rs
+msgid "No console to ask – start it with --yes."
+msgstr "[Ñö çöñšöłé ťö åšk – šťåřť îť wîťh --ýéš.················]"
+
+#: crates/app/src/nav.rs
+msgid "No results"
+msgstr "[Ñö řéšüłťš·····]"
+
+#: crates/fs/src/lib.rs
+#: crates/shell/src/win_menu.rs
+msgid "Not a folder"
+msgstr "[Ñöť å föłďéř·····]"
+
+#: crates/app/src/palette.rs
+msgid "Not available here"
+msgstr "[Ñöť åvåîłåbłé héřé········]"
+
+#: crates/app/src/fileops.rs
+msgid "Not available here ({0})."
+msgstr "[Ñöť åvåîłåbłé héřé ({0}).···········]"
+
+#: crates/ops/src/exec.rs
+msgid "Not enough disk space"
+msgstr "[Ñöť éñöüğh ďîšk špåçé·········]"
+
+#: crates/ops/src/exec.rs
+#: crates/ops/src/simple.rs
+msgid "Not found"
+msgstr "[Ñöť föüñď·····]"
+
+#: crates/ops/src/undo.rs
+msgid "Not found in the Recycle Bin: {0}"
+msgstr "[Ñöť föüñď îñ ťhé Řéçýçłé Bîñ: {0}··············]"
+
+#: crates/app/src/installer.rs
+msgid "Not installed – running from {0}. Installing copies Explorer 2.0 to {1} (no administrator rights needed) and adds it to the Start menu."
+msgstr "[Ñöť îñšťåłłéď – řüññîñğ fřöm {0}. Îñšťåłłîñğ çöpîéš Éxpłöřéř 2.0 ťö {1} (ñö åďmîñîšťřåťöř řîğhťš ñééďéď) åñď åďďš îť ťö ťhé Šťåřť méñü.·······················································]"
+
+#: crates/app/src/inspector.rs
+msgid "Not readable"
+msgstr "[Ñöť řéåďåbłé·····]"
+
+#: crates/app/src/quick.rs
+#: crates/app/ui/main.slint
+msgid "Nothing found"
+msgstr "[Ñöťhîñğ föüñď······]"
+
+#: crates/app/ui/main.slint
+msgid "OK"
+msgstr "[ÖK··]"
+
+#: crates/app/ui/main.slint
+msgid "One view"
+msgstr "[Öñé vîéw····]"
+
+#: crates/app/src/fileops.rs
+#: crates/core/src/commands.rs
+msgid "Open"
+msgstr "[Öpéñ··]"
+
+#: crates/core/src/commands.rs
+msgid "Open Libraries"
+msgstr "[Öpéñ Łîbřåřîéš······]"
+
+#: crates/core/src/commands.rs
+msgid "Open Recycle Bin"
+msgstr "[Öpéñ Řéçýçłé Bîñ·······]"
+
+#: crates/core/src/commands.rs
+msgid "Open This PC"
+msgstr "[Öpéñ Ťhîš PÇ·····]"
+
+#: crates/app/ui/main.slint
+msgid "Open folders in the running window (as a new tab)"
+msgstr "[Öpéñ föłďéřš îñ ťhé řüññîñğ wîñďöw (åš å ñéw ťåb)····················]"
+
+#: crates/integrate/src/features.rs
+msgid "Open folders with Explorer 2.0"
+msgstr "[Öpéñ föłďéřš wîťh Éxpłöřéř 2.0············]"
+
+#: crates/app/ui/main.slint
+msgid "Open folders with Explorer 2.0 (double-click, “Open folder”)"
+msgstr "[Öpéñ föłďéřš wîťh Éxpłöřéř 2.0 (ďöübłé-çłîçk, “Öpéñ föłďéř”)························]"
+
+#: crates/app/src/fileops.rs
+msgid "Operation cancelled."
+msgstr "[Öpéřåťîöñ çåñçéłłéď.········]"
+
+#: crates/core/src/places.rs
+msgid "Original location"
+msgstr "[Öřîğîñåł łöçåťîöñ·······]"
+
+#: crates/app/src/fileops.rs
+#: crates/app/ui/main.slint
+#: crates/core/src/commands.rs
+msgid "Paste"
+msgstr "[Påšťé···]"
+
+#: crates/app/src/inspector.rs
+msgid "Path"
+msgstr "[Påťh··]"
+
+#: crates/app/ui/main.slint
+msgid "Pause"
+msgstr "[Påüšé···]"
+
+#: crates/app/src/fileops.rs
+msgid "Paused"
+msgstr "[Påüšéď···]"
+
+#: crates/app/src/fileops.rs
+msgid ""
+"Permanently delete the {n} item in the Recycle Bin?\n"
+"This can't be undone."
+msgid_plural ""
+"Permanently delete all {n} items in the Recycle Bin?\n"
+"This can't be undone."
+msgstr[0] ""
+"[Péřmåñéñťłý ďéłéťé ťhé {n} îťém îñ ťhé Řéçýçłé Bîñ?·····················\n"
+"Ťhîš çåñ'ť bé üñďöñé.·········]"
+msgstr[1] ""
+"[Péřmåñéñťłý ďéłéťé åłł {n} îťémš îñ ťhé Řéçýçłé Bîñ?······················\n"
+"Ťhîš çåñ'ť bé üñďöñé.·········]"
+
+#: crates/fs/src/places.rs
+msgid "Pictures"
+msgstr "[Pîçťüřéš····]"
+
+#: crates/core/src/commands.rs
+msgid "Previous tab"
+msgstr "[Přévîöüš ťåb·····]"
+
+#: crates/app/src/installer.rs
+msgid "Program folder cannot be determined"
+msgstr "[Přöğřåm föłďéř çåññöť bé ďéťéřmîñéď··············]"
+
+#: crates/integrate/src/bin/explorer2-recover.rs
+msgid "Program folder not removed ({0}) – is Explorer 2.0 still open? Folder: {1}"
+msgstr "[Přöğřåm föłďéř ñöť řémövéď ({0}) – îš Éxpłöřéř 2.0 šťîłł öpéñ? Föłďéř: {1}·······························]"
+
+#: crates/app/src/fileops.rs
+#: crates/core/src/commands.rs
+msgid "Properties"
+msgstr "[Přöpéřťîéš·····]"
+
+#: crates/shell/src/win_menu.rs
+msgid "Properties not available: {0}"
+msgstr "[Přöpéřťîéš ñöť åvåîłåbłé: {0}············]"
+
+#: crates/app/ui/main.slint
+msgid "Quick access"
+msgstr "[Qüîçk åççéšš·····]"
+
+#: crates/core/src/commands.rs
+msgid "Re-sync search index with disk"
+msgstr "[Řé-šýñç šéåřçh îñďéx wîťh ďîšk············]"
+
+#: crates/app/ui/main.slint
+msgid "Re-sync with disk"
+msgstr "[Řé-šýñç wîťh ďîšk·······]"
+
+#: crates/core/src/inspect.rs
+msgid "Read-only"
+msgstr "[Řéåď-öñłý·····]"
+
+#: crates/core/src/places.rs
+msgid "Recycle Bin"
+msgstr "[Řéçýçłé Bîñ·····]"
+
+#: crates/ops/src/undo.rs
+msgid "Recycle Bin not available"
+msgstr "[Řéçýçłé Bîñ ñöť åvåîłåbłé··········]"
+
+#: crates/ops/src/trashview.rs
+#: crates/ops/src/undo.rs
+msgid "Recycle Bin not readable: {0}"
+msgstr "[Řéçýçłé Bîñ ñöť řéåďåbłé: {0}············]"
+
+#: crates/ops/src/exec.rs
+msgid "Recycle Bin: {0}"
+msgstr "[Řéçýçłé Bîñ: {0}·······]"
+
+#: crates/app/ui/main.slint
+#: crates/core/src/commands.rs
+msgid "Redo"
+msgstr "[Řéďö··]"
+
+#: crates/app/src/fileops.rs
+msgid "Redo: {0}"
+msgstr "[Řéďö: {0}·····]"
+
+#: crates/app/src/fileops.rs
+#: crates/core/src/commands.rs
+msgid "Refresh"
+msgstr "[Řéfřéšh····]"
+
+#: crates/integrate/src/bin/explorer2-recover.rs
+msgid "Removing the program folder …"
+msgstr "[Řémövîñğ ťhé přöğřåm föłďéř …············]"
+
+#: crates/app/src/fileops.rs
+#: crates/app/ui/main.slint
+#: crates/core/src/commands.rs
+msgid "Rename"
+msgstr "[Řéñåmé···]"
+
+#: crates/app/ui/main.slint
+msgid "Replace"
+msgstr "[Řépłåçé····]"
+
+#: crates/app/src/fileops.rs
+msgid "Reset"
+msgstr "[Řéšéť···]"
+
+#: crates/app/ui/main.slint
+#: crates/core/src/commands.rs
+msgid "Reset all Windows integrations"
+msgstr "[Řéšéť åłł Wîñďöwš îñťéğřåťîöñš············]"
+
+#: crates/integrate/src/bin/explorer2-recover.rs
+msgid "Reset everything to the Windows default now?"
+msgstr "[Řéšéť évéřýťhîñğ ťö ťhé Wîñďöwš ďéfåüłť ñöw?··················]"
+
+#: crates/app/src/integration.rs
+msgid "Reset incomplete: {0}"
+msgstr "[Řéšéť îñçömpłéťé: {0}·········]"
+
+#: crates/app/ui/main.slint
+msgid "Restore"
+msgstr "[Řéšťöřé····]"
+
+#: crates/ops/src/trashview.rs
+#: crates/ops/src/undo.rs
+msgid "Restore failed: {0}"
+msgstr "[Řéšťöřé fåîłéď: {0}········]"
+
+#: crates/core/src/commands.rs
+msgid "Restore from the Recycle Bin"
+msgstr "[Řéšťöřé fřöm ťhé Řéçýçłé Bîñ············]"
+
+#: crates/app/ui/main.slint
+msgid "Resume"
+msgstr "[Řéšümé···]"
+
+#: crates/core/src/guard.rs
+msgid "Safe start: the last {0} starts were aborted, so Explorer 2.0 uses software rendering and does not restore the session. If it runs stably, the next start is normal again."
+msgstr "[Šåfé šťåřť: ťhé łåšť {0} šťåřťš wéřé åböřťéď, šö Éxpłöřéř 2.0 üšéš šöfťwåřé řéñďéřîñğ åñď ďöéš ñöť řéšťöřé ťhé šéššîöñ. Îf îť řüñš šťåbłý, ťhé ñéxť šťåřť îš ñöřmåł åğåîñ.·····································································]"
+
+#: crates/app/ui/main.slint
+msgid "Search"
+msgstr "[Šéåřçh···]"
+
+#: crates/core/src/commands.rs
+msgid "Search (in the current folder)"
+msgstr "[Šéåřçh (îñ ťhé çüřřéñť föłďéř)············]"
+
+#: crates/app/src/nav.rs
+#: crates/core/src/commands.rs
+msgid "Search all drives"
+msgstr "[Šéåřçh åłł ďřîvéš·······]"
+
+#: crates/app/ui/main.slint
+msgid "Search all drives …"
+msgstr "[Šéåřçh åłł ďřîvéš …········]"
+
+#: crates/app/ui/main.slint
+msgid "Search commands …   (type > for places)"
+msgstr "[Šéåřçh çömmåñďš …   (ťýpé > föř płåçéš)················]"
+
+#: crates/app/src/search.rs
+msgid "Search index off (EXPLORER2_INDEX=off)."
+msgstr "[Šéåřçh îñďéx öff (ÉXPŁÖŘÉŘ2_ÎÑĎÉX=öff).················]"
+
+#: crates/app/src/search.rs
+msgid "Search index off: searches only go through the current folder."
+msgstr "[Šéåřçh îñďéx öff: šéåřçhéš öñłý ğö ťhřöüğh ťhé çüřřéñť föłďéř.·························]"
+
+#: crates/app/src/search.rs
+msgid "Search index restarting …"
+msgstr "[Šéåřçh îñďéx řéšťåřťîñğ …··········]"
+
+#: crates/app/src/search.rs
+msgid "Search index starting shortly …"
+msgstr "[Šéåřçh îñďéx šťåřťîñğ šhöřťłý …·············]"
+
+#: crates/app/src/search.rs
+msgid "Search index starting …"
+msgstr "[Šéåřçh îñďéx šťåřťîñğ …··········]"
+
+#: crates/app/src/search.rs
+msgid "Search index: no folder for the index files."
+msgstr "[Šéåřçh îñďéx: ñö föłďéř föř ťhé îñďéx fîłéš.··················]"
+
+#: crates/app/src/nav.rs
+msgid "Search {0}"
+msgstr "[Šéåřçh {0}·····]"
+
+#: crates/app/src/nav.rs
+msgid "Search “{0}”"
+msgstr "[Šéåřçh “{0}”······]"
+
+#: crates/app/src/nav.rs
+#: crates/app/src/search.rs
+msgid "Search: {0}"
+msgstr "[Šéåřçh: {0}·····]"
+
+#: crates/core/src/commands.rs
+msgid "Select all"
+msgstr "[Šéłéçť åłł·····]"
+
+#: crates/app/ui/main.slint
+#: crates/core/src/commands.rs
+msgid "Settings"
+msgstr "[Šéťťîñğš····]"
+
+#: crates/app/src/config.rs
+msgid "Settings not saved: {0}"
+msgstr "[Šéťťîñğš ñöť šåvéď: {0}··········]"
+
+#: crates/app/src/nav.rs
+msgid "Shared folder"
+msgstr "[Šhåřéď föłďéř······]"
+
+#: crates/core/src/commands.rs
+msgid "Shift+Del"
+msgstr "[Šhîfť+Ďéł·····]"
+
+#: crates/core/src/commands.rs
+msgid "Shift+F10"
+msgstr "[Šhîfť+F10·····]"
+
+#: crates/core/src/inspect.rs
+msgid "Shortcut or link"
+msgstr "[Šhöřťçüť öř łîñk·······]"
+
+#: crates/app/ui/main.slint
+msgid "Show file name extensions"
+msgstr "[Šhöw fîłé ñåmé éxťéñšîöñš··········]"
+
+#: crates/app/ui/main.slint
+msgid "Show hidden items"
+msgstr "[Šhöw hîďďéñ îťémš·······]"
+
+#: crates/app/src/fileops.rs
+msgid "Show more options"
+msgstr "[Šhöw möřé öpťîöñš·······]"
+
+#: crates/app/ui/main.slint
+msgid "Show protected operating system files"
+msgstr "[Šhöw přöťéçťéď öpéřåťîñğ šýšťém fîłéš···············]"
+
+#: crates/app/ui/main.slint
+msgid "Show report"
+msgstr "[Šhöw řépöřť·····]"
+
+#: crates/fs/src/network.rs
+msgid "Sign-in cancelled"
+msgstr "[Šîğñ-îñ çåñçéłłéď·······]"
+
+#: crates/fs/src/lib.rs
+#: crates/fs/src/network.rs
+msgid "Sign-in required"
+msgstr "[Šîğñ-îñ řéqüîřéď·······]"
+
+#: crates/fs/src/network.rs
+msgid "Signing in is only available on Windows"
+msgstr "[Šîğñîñğ îñ îš öñłý åvåîłåbłé öñ Wîñďöwš················]"
+
+#: crates/app/ui/main.slint
+msgid "Single-click to open an item (point to select)"
+msgstr "[Šîñğłé-çłîçk ťö öpéñ åñ îťém (pöîñť ťö šéłéçť)···················]"
+
+#: crates/app/src/inspector.rs
+#: crates/app/ui/main.slint
+msgid "Size"
+msgstr "[Šîžé··]"
+
+#: crates/app/src/inspector.rs
+msgid "Size of files"
+msgstr "[Šîžé öf fîłéš······]"
+
+#: crates/app/ui/main.slint
+msgid "Skip"
+msgstr "[Škîp··]"
+
+#: crates/core/src/renderer.rs
+msgid "Software rendering"
+msgstr "[Šöfťwåřé řéñďéřîñğ········]"
+
+#: crates/app/ui/main.slint
+msgid "Sort"
+msgstr "[Šöřť··]"
+
+#: crates/core/src/commands.rs
+msgid "Sort ascending"
+msgstr "[Šöřť åšçéñďîñğ······]"
+
+#: crates/core/src/commands.rs
+msgid "Sort by date modified"
+msgstr "[Šöřť bý ďåťé möďîfîéď·········]"
+
+#: crates/core/src/commands.rs
+msgid "Sort by name"
+msgstr "[Šöřť bý ñåmé·····]"
+
+#: crates/core/src/commands.rs
+msgid "Sort by size"
+msgstr "[Šöřť bý šîžé·····]"
+
+#: crates/core/src/commands.rs
+msgid "Sort by type"
+msgstr "[Šöřť bý ťýpé·····]"
+
+#: crates/core/src/commands.rs
+msgid "Sort descending"
+msgstr "[Šöřť ďéšçéñďîñğ······]"
+
+#: crates/integrate/src/bin/explorer2-recover.rs
+msgid "State: {0}"
+msgstr "[Šťåťé: {0}·····]"
+
+#: crates/core/src/places.rs
+msgid "Storage"
+msgstr "[Šťöřåğé····]"
+
+#: crates/core/src/commands.rs
+msgid "Switch to the other view"
+msgstr "[Šwîťçh ťö ťhé öťhéř vîéw··········]"
+
+#: crates/core/src/inspect.rs
+msgid "System"
+msgstr "[Šýšťém···]"
+
+#: crates/app/ui/main.slint
+msgid "System default"
+msgstr "[Šýšťém ďéfåüłť······]"
+
+#: crates/app/src/lang.rs
+msgid "System default ({0})"
+msgstr "[Šýšťém ďéfåüłť ({0})·········]"
+
+#: crates/core/src/renderer.rs
+msgid "System default renderer"
+msgstr "[Šýšťém ďéfåüłť řéñďéřéř··········]"
+
+#: crates/app/ui/main.slint
+msgid "Takes effect the next time the app starts."
+msgstr "[Ťåkéš éfféçť ťhé ñéxť ťîmé ťhé åpp šťåřťš.·················]"
+
+#: crates/setup/src/main.rs
+msgid "Temp folder {0}: {1}"
+msgstr "[Ťémp föłďéř {0}: {1}·········]"
+
+#: crates/app/src/fileops.rs
+msgid "The Recycle Bin is empty."
+msgstr "[Ťhé Řéçýçłé Bîñ îš émpťý.··········]"
+
+#: crates/shell/src/menu.rs
+msgid "The context menu is only available on Windows."
+msgstr "[Ťhé çöñťéxť méñü îš öñłý åvåîłåbłé öñ Wîñďöwš.···················]"
+
+#: crates/app/src/fileops.rs
+msgid "The destination already has a folder named “{0}”."
+msgstr "[Ťhé ďéšťîñåťîöñ åłřéåďý håš å föłďéř ñåméď “{0}”.····················]"
+
+#: crates/app/src/fileops.rs
+msgid "The destination already has an item named “{0}”."
+msgstr "[Ťhé ďéšťîñåťîöñ åłřéåďý håš åñ îťém ñåméď “{0}”.····················]"
+
+#: crates/ops/src/exec.rs
+msgid "The destination folder is a subfolder of the source folder."
+msgstr "[Ťhé ďéšťîñåťîöñ föłďéř îš å šübföłďéř öf ťhé šöüřçé föłďéř.························]"
+
+#: crates/ops/src/exec.rs
+msgid "The file is being used by another process"
+msgstr "[Ťhé fîłé îš béîñğ üšéď bý åñöťhéř přöçéšš·················]"
+
+#: crates/app/src/nav.rs
+msgid "The folder no longer exists: {0}"
+msgstr "[Ťhé föłďéř ñö łöñğéř éxîšťš: {0}··············]"
+
+#: crates/ops/src/names.rs
+msgid "The name can't be empty."
+msgstr "[Ťhé ñåmé çåñ'ť bé émpťý.··········]"
+
+#: crates/ops/src/names.rs
+msgid "The name can't end with a period or a space."
+msgstr "[Ťhé ñåmé çåñ'ť éñď wîťh å péřîöď öř å špåçé.··················]"
+
+#: crates/ops/src/names.rs
+msgid "The name contains an invalid character."
+msgstr "[Ťhé ñåmé çöñťåîñš åñ îñvåłîď çhåřåçťéř.················]"
+
+#: crates/ops/src/names.rs
+msgid "The name is too long (at most 255 characters)."
+msgstr "[Ťhé ñåmé îš ťöö łöñğ (åť möšť 255 çhåřåçťéřš).···················]"
+
+#: crates/app/src/search.rs
+msgid "The search index could not start."
+msgstr "[Ťhé šéåřçh îñďéx çöüłď ñöť šťåřť.··············]"
+
+#: crates/app/src/quick.rs
+msgid "The search index is being prepared …"
+msgstr "[Ťhé šéåřçh îñďéx îš béîñğ přépåřéď …···············]"
+
+#: crates/app/src/search.rs
+msgid "The search index is kept by another Explorer 2.0 window."
+msgstr "[Ťhé šéåřçh îñďéx îš képť bý åñöťhéř Éxpłöřéř 2.0 wîñďöw.·······················]"
+
+#: crates/app/src/search.rs
+msgid "The search index is not running yet."
+msgstr "[Ťhé šéåřçh îñďéx îš ñöť řüññîñğ ýéť.···············]"
+
+#: crates/app/src/quick.rs
+msgid "The search index is off (Settings → Search)."
+msgstr "[Ťhé šéåřçh îñďéx îš öff (Šéťťîñğš → Šéåřçh).··················]"
+
+#: crates/app/ui/main.slint
+msgid "The view is remembered per folder."
+msgstr "[Ťhé vîéw îš řémémbéřéď péř föłďéř.··············]"
+
+#: crates/ops/src/simple.rs
+msgid "There is already an item named “{0}”."
+msgstr "[Ťhéřé îš åłřéåďý åñ îťém ñåméď “{0}”.················]"
+
+#: crates/app/ui/main.slint
+#: crates/core/src/places.rs
+msgid "This PC"
+msgstr "[Ťhîš PÇ····]"
+
+#: crates/app/src/nav.rs
+msgid "This location doesn't exist on this system: {0}"
+msgstr "[Ťhîš łöçåťîöñ ďöéšñ'ť éxîšť öñ ťhîš šýšťém: {0}····················]"
+
+#: crates/setup/src/main.rs
+msgid "This setup was built without the program files."
+msgstr "[Ťhîš šéťüp wåš büîłť wîťhöüť ťhé přöğřåm fîłéš.···················]"
+
+#: crates/core/src/commands.rs
+msgid "Toggle details pane"
+msgstr "[Ťöğğłé ďéťåîłš påñé········]"
+
+#: crates/core/src/commands.rs
+msgid "Toggle file name extensions"
+msgstr "[Ťöğğłé fîłé ñåmé éxťéñšîöñš···········]"
+
+#: crates/core/src/commands.rs
+msgid "Toggle hidden items"
+msgstr "[Ťöğğłé hîďďéñ îťémš········]"
+
+#: crates/core/src/commands.rs
+msgid "Toggle search index"
+msgstr "[Ťöğğłé šéåřçh îñďéx········]"
+
+#: crates/core/src/commands.rs
+msgid "Toggle two views"
+msgstr "[Ťöğğłé ťwö vîéwš·······]"
+
+#: crates/core/src/commands.rs
+msgid "Toggle: Win+E opens Explorer 2.0"
+msgstr "[Ťöğğłé: Wîñ+É öpéñš Éxpłöřéř 2.0·············]"
+
+#: crates/core/src/commands.rs
+msgid "Toggle: open folders in the running window (new tab)"
+msgstr "[Ťöğğłé: öpéñ föłďéřš îñ ťhé řüññîñğ wîñďöw (ñéw ťåb)·····················]"
+
+#: crates/core/src/commands.rs
+msgid "Toggle: open folders with Explorer 2.0"
+msgstr "[Ťöğğłé: öpéñ föłďéřš wîťh Éxpłöřéř 2.0················]"
+
+#: crates/core/src/commands.rs
+msgid "Toggle: “Open in Explorer 2.0” in the context menu"
+msgstr "[Ťöğğłé: “Öpéñ îñ Éxpłöřéř 2.0” îñ ťhé çöñťéxť méñü····················]"
+
+#: crates/app/src/inspector.rs
+msgid "Total"
+msgstr "[Ťöťåł···]"
+
+#: crates/app/src/inspector.rs
+msgid "Total size"
+msgstr "[Ťöťåł šîžé·····]"
+
+#: crates/app/ui/main.slint
+msgid "Two views"
+msgstr "[Ťwö vîéwš·····]"
+
+#: crates/app/src/nav.rs
+#: crates/app/ui/main.slint
+msgid "Type"
+msgstr "[Ťýpé··]"
+
+#: crates/app/src/quick.rs
+msgid "Type to search all drives"
+msgstr "[Ťýpé ťö šéåřçh åłł ďřîvéš··········]"
+
+#: crates/fs/src/places.rs
+msgid "USB Drive"
+msgstr "[ÜŠB Ďřîvé·····]"
+
+#: crates/app/ui/main.slint
+#: crates/core/src/commands.rs
+msgid "Undo"
+msgstr "[Üñďö··]"
+
+#: crates/app/src/fileops.rs
+msgid "Undo: {0}"
+msgstr "[Üñďö: {0}·····]"
+
+#: crates/integrate/src/bin/explorer2-recover.rs
+msgid "Uninstall Explorer 2.0 and reset all Windows integrations?"
+msgstr "[Üñîñšťåłł Éxpłöřéř 2.0 åñď řéšéť åłł Wîñďöwš îñťéğřåťîöñš?························]"
+
+#: crates/app/src/nav.rs
+msgid "Unknown shell location: shell:{0}"
+msgstr "[Üñkñöwñ šhéłł łöçåťîöñ: šhéłł:{0}··············]"
+
+#: crates/app/ui/main.slint
+msgid "Up"
+msgstr "[Üp··]"
+
+#: crates/app/src/installer.rs
+msgid "Update the installation with this copy"
+msgstr "[Üpďåťé ťhé îñšťåłłåťîöñ wîťh ťhîš çöpý················]"
+
+#: crates/app/ui/main.slint
+msgid "Use hardware acceleration when available"
+msgstr "[Üšé håřďwåřé åççéłéřåťîöñ whéñ åvåîłåbłé················]"
+
+#: crates/app/ui/main.slint
+msgid "Use the Windows accent color"
+msgstr "[Üšé ťhé Wîñďöwš åççéñť çöłöř············]"
+
+#: crates/app/ui/main.slint
+#: crates/core/src/commands.rs
+msgid "Use the current view for all folders"
+msgstr "[Üšé ťhé çüřřéñť vîéw föř åłł föłďéřš···············]"
+
+#: crates/fs/src/places.rs
+msgid "Videos"
+msgstr "[Vîďéöš···]"
+
+#: crates/app/src/nav.rs
+msgid "View not saved: {0}"
+msgstr "[Vîéw ñöť šåvéď: {0}········]"
+
+#: crates/core/src/commands.rs
+msgid "View: Details"
+msgstr "[Vîéw: Ďéťåîłš······]"
+
+#: crates/core/src/commands.rs
+msgid "View: Extra large icons"
+msgstr "[Vîéw: Éxťřå łåřğé îçöñš··········]"
+
+#: crates/core/src/commands.rs
+msgid "View: Large icons"
+msgstr "[Vîéw: Łåřğé îçöñš·······]"
+
+#: crates/core/src/commands.rs
+msgid "View: Medium icons"
+msgstr "[Vîéw: Méďîüm îçöñš········]"
+
+#: crates/app/ui/main.slint
+#: crates/integrate/src/features.rs
+msgid "Win+E opens Explorer 2.0"
+msgstr "[Wîñ+É öpéñš Éxpłöřéř 2.0··········]"
+
+#: crates/integrate/src/lib.rs
+msgid "Windows default restored: {0} values/files, {1} keys removed{2}."
+msgstr "[Wîñďöwš ďéfåüłť řéšťöřéď: {0} våłüéš/fîłéš, {1} kéýš řémövéď{2}.···························]"
+
+#: crates/app/ui/main.slint
+msgid "Windows integration"
+msgstr "[Wîñďöwš îñťéğřåťîöñ········]"
+
+#: crates/app/src/integration.rs
+msgid "Windows integration is only available on Windows."
+msgstr "[Wîñďöwš îñťéğřåťîöñ îš öñłý åvåîłåbłé öñ Wîñďöwš.····················]"
+
+#: crates/app/src/quick.rs
+msgid "Without the search index there is nothing to find here (Settings → Search)."
+msgstr "[Wîťhöüť ťhé šéåřçh îñďéx ťhéřé îš ñöťhîñğ ťö fîñď héřé (Šéťťîñğš → Šéåřçh).······························]"
+
+#: crates/integrate/src/bin/explorer2-recover.rs
+msgid "[y/N]"
+msgstr "[[ý/Ñ]···]"
+
+#: crates/ops/src/names.rs
+msgid "control characters"
+msgstr "[çöñťřöł çhåřåçťéřš········]"
+
+#: crates/app/src/inspector.rs
+msgid "counting …"
+msgstr "[çöüñťîñğ …·····]"
+
+#: crates/index/src/query.rs
+msgid "date not understood: {0}"
+msgstr "[ďåťé ñöť üñďéřšťööď: {0}··········]"
+
+#: crates/core/src/renderer.rs
+msgid "disabled in the settings"
+msgstr "[ďîšåbłéď îñ ťhé šéťťîñğš··········]"
+
+#: crates/core/src/inspect.rs
+msgid "empty"
+msgstr "[émpťý···]"
+
+#: crates/core/src/renderer.rs
+msgid "forced by EXPLORER2_RENDERER"
+msgstr "[föřçéď bý ÉXPŁÖŘÉŘ2_ŘÉÑĎÉŘÉŘ············]"
+
+#: crates/index/src/persist.rs
+msgid "index belongs to another drive ({0})"
+msgstr "[îñďéx béłöñğš ťö åñöťhéř ďřîvé ({0})···············]"
+
+#: crates/search/src/service.rs
+msgid "index belongs to another folder"
+msgstr "[îñďéx béłöñğš ťö åñöťhéř föłďéř·············]"
+
+#: crates/index/src/persist.rs
+msgid "index damaged: {0}"
+msgstr "[îñďéx ďåmåğéď: {0}········]"
+
+#: crates/index/src/persist.rs
+msgid "index from another version ({0})"
+msgstr "[îñďéx fřöm åñöťhéř véřšîöñ ({0})··············]"
+
+#: crates/index/src/persist.rs
+msgid "index not readable: {0}"
+msgstr "[îñďéx ñöť řéåďåbłé: {0}··········]"
+
+#: crates/search/src/watch.rs
+msgid "input/output error: {0}"
+msgstr "[îñpüť/öüťpüť éřřöř: {0}··········]"
+
+#: crates/index/src/query.rs
+msgid "invalid regular expression: {0}"
+msgstr "[îñvåłîď řéğüłåř éxpřéššîöñ: {0}·············]"
+
+#: crates/core/src/renderer.rs
+msgid "no GPU check on this system"
+msgstr "[ñö ĞPÜ çhéçk öñ ťhîš šýšťém···········]"
+
+#: crates/app/src/config.rs
+msgid "no configuration folder"
+msgstr "[ñö çöñfîğüřåťîöñ föłďéř··········]"
+
+#: crates/index/src/persist.rs
+msgid "no saved index"
+msgstr "[ñö šåvéď îñďéx······]"
+
+#: crates/core/src/renderer.rs
+msgid "no suitable GPU found"
+msgstr "[ñö šüîťåbłé ĞPÜ föüñď·········]"
+
+#: crates/core/src/renderer.rs
+msgid "safe start after aborted starts"
+msgstr "[šåfé šťåřť åfťéř åböřťéď šťåřťš·············]"
+
+#: crates/app/src/quick.rs
+msgid "searched recently"
+msgstr "[šéåřçhéď řéçéñťłý·······]"
+
+#: crates/core/src/renderer.rs
+msgid "set by SLINT_BACKEND"
+msgstr "[šéť bý ŠŁÎÑŤ_BÅÇKÉÑĎ········]"
+
+#: crates/index/src/query.rs
+msgid "size not understood: {0}"
+msgstr "[šîžé ñöť üñďéřšťööď: {0}··········]"
+
+#: crates/core/src/renderer.rs
+msgid "suitable GPU found"
+msgstr "[šüîťåbłé ĞPÜ föüñď········]"
+
+#: crates/search/src/watch.rs
+msgid "too many changes at once"
+msgstr "[ťöö måñý çhåñğéš åť öñçé··········]"
+
+#: crates/search/src/watch.rs
+msgid "too many folders for the Linux watcher (raise fs.inotify.max_user_watches)"
+msgstr "[ťöö måñý föłďéřš föř ťhé Łîñüx wåťçhéř (řåîšé fš.îñöťîfý.måx_üšéř_wåťçhéš)······························]"
+
+#: crates/app/src/search.rs
+msgid "unknown"
+msgstr "[üñkñöwñ····]"
+
+#: crates/integrate/src/bin/explorer2-recover.rs
+msgid "yes"
+msgstr "[ýéš··]"
+
+#: crates/app/src/integration.rs
+msgid ""
+"{0}\n"
+"\n"
+"Afterwards Explorer 2.0 continues from the installation folder (this window closes)."
+msgstr ""
+"[{0}··\n"
+"\n"
+"Åfťéřwåřďš Éxpłöřéř 2.0 çöñťîñüéš fřöm ťhé îñšťåłłåťîöñ föłďéř (ťhîš wîñďöw çłöšéš).··································]"
+
+#: crates/setup/src/main.rs
+msgid ""
+"{0}\n"
+"\n"
+"Target: {1}\n"
+"\n"
+"No administrator rights needed; a Start menu entry and an “Apps & Features” entry are created. Windows integrations (open folders, Win+E) can be switched on afterwards in the settings – undoable at any time with one button."
+msgstr ""
+"[{0}··\n"
+"\n"
+"Ťåřğéť: {1}·····\n"
+"\n"
+"Ñö åďmîñîšťřåťöř řîğhťš ñééďéď; å Šťåřť méñü éñťřý åñď åñ “Åppš & Féåťüřéš” éñťřý åřé çřéåťéď. Wîñďöwš îñťéğřåťîöñš (öpéñ föłďéřš, Wîñ+É) çåñ bé šwîťçhéď öñ åfťéřwåřďš îñ ťhé šéťťîñğš – üñďöåbłé åť åñý ťîmé wîťh öñé büťťöñ.··························································································]"
+
+#: crates/integrate/src/lib.rs
+msgid "{0} (not empty)"
+msgstr "[{0} (ñöť émpťý)·······]"
+
+#: crates/app/src/inspector.rs
+msgid "{0} ({1} bytes)"
+msgstr "[{0} ({1} býťéš)·······]"
+
+#: crates/ops/src/names.rs
+msgid "{0} - Copy ({1}){2}"
+msgstr "[{0} - Çöpý ({1}){2}·········]"
+
+#: crates/ops/src/names.rs
+msgid "{0} - Copy{1}"
+msgstr "[{0} - Çöpý{1}······]"
+
+#: crates/core/src/guard.rs
+msgid "{0} A report is in the “crash” folder."
+msgstr "[{0} Å řépöřť îš îñ ťhé “çřåšh” föłďéř.················]"
+
+#: crates/setup/src/main.rs
+msgid "{0} cannot be started: {1}"
+msgstr "[{0} çåññöť bé šťåřťéď: {1}············]"
+
+#: crates/integrate/src/lib.rs
+msgid "{0} changed by other software – left unchanged."
+msgstr "[{0} çhåñğéď bý öťhéř šöfťwåřé – łéfť üñçhåñğéď.····················]"
+
+#: crates/integrate/src/install.rs
+msgid "{0} contains foreign files – not deleted"
+msgstr "[{0} çöñťåîñš föřéîğñ fîłéš – ñöť ďéłéťéď·················]"
+
+#: crates/integrate/src/lib.rs
+msgid "{0} errors: {1}"
+msgstr "[{0} éřřöřš: {1}·······]"
+
+#: crates/core/src/inspect.rs
+msgid "{0} file"
+msgid_plural "{0} files"
+msgstr[0] "[{0} fîłé·····]"
+msgstr[1] "[{0} fîłéš·····]"
+
+#: crates/app/src/nav.rs
+#: crates/core/src/inspect.rs
+msgid "{0} folder"
+msgid_plural "{0} folders"
+msgstr[0] "[{0} föłďéř·····]"
+msgstr[1] "[{0} föłďéřš·····]"
+
+#: crates/app/src/inspector.rs
+msgid "{0} folder (not counted)"
+msgid_plural "{0} folders (not counted)"
+msgstr[0] "[{0} föłďéř (ñöť çöüñťéď)··········]"
+msgstr[1] "[{0} föłďéřš (ñöť çöüñťéď)···········]"
+
+#: crates/core/src/lib.rs
+msgid "{0} free of {1}"
+msgstr "[{0} fřéé öf {1}·······]"
+
+#: crates/app/src/fileops.rs
+msgid "{0} h {1} min left"
+msgstr "[{0} h {1} mîñ łéfť········]"
+
+#: crates/app/src/nav.rs
+msgid "{0} item"
+msgid_plural "{0} items"
+msgstr[0] "[{0} îťém·····]"
+msgstr[1] "[{0} îťémš·····]"
+
+#: crates/app/src/inspector.rs
+#: crates/app/src/nav.rs
+msgid "{0} item selected"
+msgid_plural "{0} items selected"
+msgstr[0] "[{0} îťém šéłéçťéď········]"
+msgstr[1] "[{0} îťémš šéłéçťéď········]"
+
+#: crates/app/src/fileops.rs
+msgid "{0} min left"
+msgstr "[{0} mîñ łéfť······]"
+
+#: crates/app/src/fileops.rs
+msgid "{0} of {1}"
+msgstr "[{0} öf {1}·····]"
+
+#: crates/app/src/quick.rs
+msgid "{0} of {1} result · Enter opens · Ctrl+Enter shows it in its folder"
+msgid_plural "{0} of {1} results · Enter opens · Ctrl+Enter shows it in its folder"
+msgstr[0] "[{0} öf {1} řéšüłť · Éñťéř öpéñš · Çťřł+Éñťéř šhöwš îť îñ îťš föłďéř····························]"
+msgstr[1] "[{0} öf {1} řéšüłťš · Éñťéř öpéñš · Çťřł+Éñťéř šhöwš îť îñ îťš föłďéř····························]"
+
+#: crates/app/src/nav.rs
+msgid "{0} of {1} result – refine the search"
+msgid_plural "{0} of {1} results – refine the search"
+msgstr[0] "[{0} öf {1} řéšüłť – řéfîñé ťhé šéåřçh················]"
+msgstr[1] "[{0} öf {1} řéšüłťš – řéfîñé ťhé šéåřçh················]"
+
+#: crates/app/src/fileops.rs
+msgid "{0} of {n} item"
+msgid_plural "{0} of {n} items"
+msgstr[0] "[{0} öf {n} îťém·······]"
+msgstr[1] "[{0} öf {n} îťémš········]"
+
+#: crates/app/src/nav.rs
+msgid "{0} result"
+msgid_plural "{0} results"
+msgstr[0] "[{0} řéšüłť·····]"
+msgstr[1] "[{0} řéšüłťš·····]"
+
+#: crates/app/src/quick.rs
+msgid "{0} result · Enter opens · Ctrl+Enter shows it in its folder"
+msgid_plural "{0} results · Enter opens · Ctrl+Enter shows it in its folder"
+msgstr[0] "[{0} řéšüłť · Éñťéř öpéñš · Çťřł+Éñťéř šhöwš îť îñ îťš föłďéř·························]"
+msgstr[1] "[{0} řéšüłťš · Éñťéř öpéñš · Çťřł+Éñťéř šhöwš îť îñ îťš föłďéř·························]"
+
+#: crates/app/src/fileops.rs
+msgid "{0} s left"
+msgstr "[{0} š łéfť·····]"
+
+#: crates/app/src/quick.rs
+msgid "{0} · Enter picks an earlier search"
+msgstr "[{0} · Éñťéř pîçkš åñ éåřłîéř šéåřçh···············]"
+
+#: crates/app/src/inspector.rs
+msgid "{0} × {1} pixels"
+msgstr "[{0} × {1} pîxéłš········]"
+
+#: crates/app/src/integration.rs
+msgid "{0} – off, the Windows default is active again."
+msgstr "[{0} – öff, ťhé Wîñďöwš ďéfåüłť îš åçťîvé åğåîñ.····················]"
+
+#: crates/app/src/integration.rs
+msgid "{0} – on. Please don't move Explorer 2.0 (reset first if you need to).{1}"
+msgstr "[{0} – öñ. Płéåšé ďöñ'ť mövé Éxpłöřéř 2.0 (řéšéť fîřšť îf ýöü ñééď ťö).{1}······························]"
+
+#: crates/app/src/quick.rs
+msgid "{0}, {1} entry"
+msgid_plural "{0}, {1} entries"
+msgstr[0] "[{0}, {1} éñťřý·······]"
+msgstr[1] "[{0}, {1} éñťřîéš········]"
+
+#: crates/app/src/search.rs
+msgid "{0}: building … {1} entry"
+msgid_plural "{0}: building … {1} entries"
+msgstr[0] "[{0}: büîłďîñğ … {1} éñťřý···········]"
+msgstr[1] "[{0}: büîłďîñğ … {1} éñťřîéš············]"
+
+#: crates/app/src/search.rs
+msgid "{0}: loading …"
+msgstr "[{0}: łöåďîñğ …······]"
+
+#: crates/app/src/search.rs
+msgid "{0}: ready, {1} entry{2}"
+msgid_plural "{0}: ready, {1} entries{2}"
+msgstr[0] "[{0}: řéåďý, {1} éñťřý{2}···········]"
+msgstr[1] "[{0}: řéåďý, {1} éñťřîéš{2}············]"
+
+#: crates/app/src/search.rs
+msgid "{0}: stopped"
+msgstr "[{0}: šťöppéď······]"
+
+#: crates/app/src/search.rs
+msgid "{0}: {1} entry, re-syncing with the disk …"
+msgid_plural "{0}: {1} entries, re-syncing with the disk …"
+msgstr[0] "[{0}: {1} éñťřý, řé-šýñçîñğ wîťh ťhé ďîšk …··················]"
+msgstr[1] "[{0}: {1} éñťřîéš, řé-šýñçîñğ wîťh ťhé ďîšk …···················]"
+
+#: crates/integrate/src/lib.rs
+msgid "{n} change in the journal"
+msgid_plural "{n} changes in the journal"
+msgstr[0] "[{n} çhåñğé îñ ťhé jöüřñåł···········]"
+msgstr[1] "[{n} çhåñğéš îñ ťhé jöüřñåł···········]"
+
+#: crates/app/src/quick.rs
+msgid "{n} drive"
+msgid_plural "{n} drives"
+msgstr[0] "[{n} ďřîvé·····]"
+msgstr[1] "[{n} ďřîvéš·····]"
+
+#: crates/app/src/fileops.rs
+msgid "{n} item"
+msgid_plural "{n} items"
+msgstr[0] "[{n} îťém·····]"
+msgstr[1] "[{n} îťémš·····]"
+
+#: crates/core/src/lib.rs
+msgid "{} File"
+msgstr "[{} Fîłé·····]"
+
+#: crates/ops/src/names.rs
+msgid "“.” and “..” are not allowed as a name."
+msgstr "[“.” åñď “..” åřé ñöť åłłöwéď åš å ñåmé.················]"
+
+#: crates/app/ui/main.slint
+#: crates/integrate/src/features.rs
+msgid "“Open in Explorer 2.0” in the context menu"
+msgstr "[“Öpéñ îñ Éxpłöřéř 2.0” îñ ťhé çöñťéxť méñü·················]"
+
+#: crates/app/src/fileops.rs
+#: crates/ops/src/names.rs
+msgid "“{0}”"
+msgstr "[“{0}”···]"
+
+#: crates/ops/src/names.rs
+msgid "“{0}” is a reserved device name on Windows."
+msgstr "[“{0}” îš å řéšéřvéď ďévîçé ñåmé öñ Wîñďöwš.··················]"

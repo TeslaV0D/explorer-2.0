@@ -28,6 +28,16 @@ fn template_is_current() {
 }
 
 #[test]
+fn pseudo_locale_is_current() {
+    let found = collect(&root()).expect("scanning the sources");
+    let want = po::write(&explorer_i18n::pseudo::catalog(&found));
+    let have = std::fs::read_to_string(root().join("lang/qps/LC_MESSAGES/explorer2.po"))
+        .unwrap_or_default()
+        .replace("\r\n", "\n");
+    assert!(have == want, "lang/qps is out of date – {FIX} -- qps");
+}
+
+#[test]
 fn catalogs_are_consistent() {
     let found = collect(&root()).expect("scanning the sources");
     let dir = root().join("lang");
