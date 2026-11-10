@@ -2798,6 +2798,14 @@ pub fn list_key(
     // (rows per page, items per row)
     (page_rows, cols): (i32, i32),
 ) -> bool {
+    if std::env::var_os("EXPLORER2_TRACE_KEYS").is_some() {
+        // raw key (code points), to tell "never arrived" from "not mapped"
+        let codes: Vec<String> = text.chars().map(|c| format!("{:04x}", c as u32)).collect();
+        trace(&format!(
+            "key raw pane={pi} text=[{}] ctrl={ctrl} shift={shift} alt={alt}",
+            codes.join(" ")
+        ));
+    }
     let Some(action) = map_key_grid(text, ctrl, shift, alt, page_rows as isize, cols as isize)
     else {
         return false;

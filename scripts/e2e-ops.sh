@@ -12,7 +12,7 @@ check() { if eval "$2"; then pass "$1"; else fail "$1"; fi; }
 LIST_X=500
 row_y() { echo $(( $(ui_list_top) + 24 * $1 + 12 )); }
 
-export EXPLORER2_TRACE=1 SLINT_BACKEND=winit-software EXPLORER2_CONFIG_DIR=$W/config-ops HOME=$W/home-ops
+export EXPLORER2_TRACE=1 EXPLORER2_TRACE_KEYS=1 SLINT_BACKEND=winit-software EXPLORER2_CONFIG_DIR=$W/config-ops HOME=$W/home-ops
 mkdir -p "$HOME"
 shot() { command -v import >/dev/null && import -window root "$W/$1.png" || true; }
 focus() { xdotool windowfocus --sync "$(xdotool search --name 'Explorer 2.0' | head -1)"; }

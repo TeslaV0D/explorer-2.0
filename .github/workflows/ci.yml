@@ -107,7 +107,7 @@ jobs:
       - uses: dtolnay/rust-toolchain@stable
       - uses: Swatinem/rust-cache@v2
       - name: UI deps
-        run: sudo apt-get update && sudo apt-get install -y libfontconfig1-dev libxkbcommon-dev libxkbcommon-x11-0 libwayland-dev libx11-dev xvfb xdotool imagemagick libgl1-mesa-dri libegl1 libgl1 x11-utils
+        run: sudo apt-get update && sudo apt-get install -y libfontconfig1-dev libxkbcommon-dev libxkbcommon-x11-0 libwayland-dev libx11-dev xvfb xdotool x11-xserver-utils imagemagick libgl1-mesa-dri libegl1 libgl1 x11-utils
       # the installer test [72] needs explorer2-recover next to the app
       - run: cargo build --release -p explorer2 -p explorer-integrate --bins
       - name: E2E UI test (Xvfb)

@@ -21,6 +21,9 @@ export EXPLORER2_UI_DUMP=$UI_DUMP
 # a gallery in another language: EXPLORER2_LANG=fr scripts/gallery.sh …)
 export EXPLORER2_LANG=${EXPLORER2_LANG:-de}
 
+# diagnostics (CI #139: F2 stopped reaching the app after [84]): X key mapping of F2/F6
+keymap_note() { command -v xmodmap >/dev/null && echo "-- keymap $1: $(xmodmap -pke | grep -wE 'F2|F6' | tr -s ' ' | tr '\n' ';')"; return 0; }
+
 _ui_line() { # label which -> "x y w h" of the chosen element
   awk -F'\t' -v L="$1" -v N="${2:-1}" '
     NR==1 { split($0, w, " "); wx=w[2]; wy=w[3]; s=w[4]; next }
