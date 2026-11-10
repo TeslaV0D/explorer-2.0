@@ -236,6 +236,11 @@ LC1=$W/lang-cfg1; mkdir -p $LC1
 EXPLORER2_CONFIG_DIR=$LC1 $EXE "$W" > $LOG 2>&1 & PID=$!
 sleep 2
 check "[84] tests run pinned to German (EXPLORER2_LANG=de), bundled into the UI" "grep -q 'language de (setting=\"\" override=Some(\"de\")' $LOG && grep -q 'language ui=de$' $LOG"
+check "[84a] German UI texts come from lang/de (L1: English source)" "ui_has 'Einstellungen' && ! ui_has 'Settings'"
+kill $PID; wait $PID 2>/dev/null
+EXPLORER2_LANG=en EXPLORER2_CONFIG_DIR=$LC1 $EXE "$W" > $LOG.en 2>&1 & PID=$!
+sleep 2
+check "[84d] EXPLORER2_LANG=en shows the English source texts" "grep -q 'language en (' $LOG.en && ui_has 'Settings' && ui_has 'Quick access' && ! ui_has 'Einstellungen'"
 kill $PID; wait $PID 2>/dev/null
 LC2=$W/lang-cfg2; mkdir -p $LC2; printf 'language = pl\n' > $LC2/settings.ini
 env -u EXPLORER2_LANG EXPLORER2_CONFIG_DIR=$LC2 $EXE "$W" > $LOG.2 2>&1 & PID=$!

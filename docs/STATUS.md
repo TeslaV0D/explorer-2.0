@@ -9,6 +9,14 @@ The app UI is German; UI labels and messages are quoted as they appear (with a t
 - Field-test checklists renamed: `PRAXISTEST-SUCHE.md` → `FIELD-TEST-SEARCH.md`, `PRAXISTEST-REDESIGN.md` → `FIELD-TEST-REDESIGN.md`.
 - No code change; CI ignores doc-only commits (`paths-ignore`).
 
+## Localisation L1 – Slint texts (2026-11-10, CI pending)
+- All 89 UI texts of `ui/main.slint` are now `@tr("English")` (Windows Explorer terms, US spelling like Windows: “Color scheme”, “Date modified”, “Empty Recycle Bin”, “Show protected operating system files” …); shortcuts are texts too (`Ctrl+Shift+N` ↔ `Strg+Umschalt+N`, `Del` ↔ `Entf`). Identifiers (`command("…")`, `== "trash"`, theme ids, sort keys) stay untouched.
+- `lang/de/…/explorer2.po` holds exactly the German texts the UI had before → **German UI unchanged** (gallery checked by eye); `de` is marked **complete** from now on, so the catalog test makes every new text bring its German translation, and German Windows users get German automatically.
+- `EXPLORER2_LANG=en` shows the English source texts for everything that comes from Slint; texts built in Rust (column headers, status bar, menus, dialogs, Inspector facts) follow in L2.
+- Not translated on purpose: the developer UI kit (`ui/kit.slint`, `EXPLORER2_UI_KIT=1`), product name, file paths.
+- Found for L2: the Inspector compares a group by its German label (`r.group != "ORT"`) → needs a group id; the conflict dialog's letter keys R/S/B/A match the German and the English words, not other languages; the gallery script clicks German names → galleries per language need language-neutral targets (L5).
+- Tests: unit `compiled_german_catalog_is_used` (Rust table answers from `lang/de`), E2E [84a] German texts come from the catalog, [84d] `EXPLORER2_LANG=en` shows “Settings”/“Quick access”.
+
 ## Localisation L0 – basics ✅ (CI run #141, 2026-11-10, plan `docs/PLAN-I18N.md`, D-029)
 - Boss decisions (D-029): **10 languages** (de, en, es, fr, ru, uk, pl, it, zh Simplified, ja), **English source texts** in the code (German becomes `lang/de/…/explorer2.po`), **live** language switch.
 - New crate **`explorer-i18n`** (no dependencies): `LANGS` (code, own name, plural header, `complete`), `tr!("…")` / `tr_n!(n, "…", "…")` with Slint-style placeholders (`{}`, `{0}`, `{n}`, `{{`), gettext plural rules for all 10 languages (Russian/Ukrainian/Polish three forms, French 0/1 singular, Chinese/Japanese one form), own `.po` reader/writer, `build.rs` compiles the `.po` files into static tables (only translated, non-fuzzy entries). `normalize`/`resolve`: `EXPLORER2_LANG` > setting `language` > first **complete** system language > English; Traditional Chinese is deliberately not mapped to Simplified.

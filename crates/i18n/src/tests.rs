@@ -256,3 +256,20 @@ fn placeholder_sets() {
     assert_eq!(placeholders("{} of {n} in {0} {{x}}"), ["{0}", "{n}", "{}"]);
     assert!(placeholders("none").is_empty());
 }
+
+#[test]
+fn compiled_german_catalog_is_used() {
+    // lang/de is complete since L1: the table built by build.rs answers
+    assert_eq!(translate_in("de", "Settings"), "Einstellungen");
+    assert_eq!(translate_in("de", "Ctrl+\\"), "Strg+\\");
+    assert_eq!(translate_in("en", "Settings"), "Settings");
+    assert_eq!(
+        translate_in("de", "not a catalog text"),
+        "not a catalog text"
+    );
+    assert_eq!(
+        translate_in("ja", "Settings"),
+        "Settings",
+        "no catalog yet → English"
+    );
+}

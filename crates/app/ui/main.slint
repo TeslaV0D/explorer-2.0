@@ -210,7 +210,7 @@ component TabItem inherits Rectangle {
                 y: (parent.height - 20px) / 2;
                 height: 20px;
                 accessible-role: button;
-                accessible-label: "Tab schließen";
+                accessible-label: @tr("Close tab");
                 accessible-action-default => { root.close(); }
                 border-radius: Ui.r-small;
                 background: close-ta.pressed ? Theme.d.pressed : (close-ta.has-hover ? Theme.d.hover : transparent);
@@ -372,18 +372,18 @@ component PaneActions inherits HorizontalLayout {
     callback command(string);
     spacing: 1px;
     property <bool> files: root.place == "" || root.place == "search";
-    if root.place == "" : IconButton { y: (parent.height - self.height) / 2; icon: IconData.new-folder; label: "Neuer Ordner"; shortcut: "Strg+Umschalt+N"; clicked => { root.command("new-folder"); } }
-    if root.files : IconButton { y: (parent.height - self.height) / 2; icon: IconData.cut; label: "Ausschneiden"; shortcut: "Strg+X"; enabled: root.has-selection; clicked => { root.command("cut"); } }
-    if root.files : IconButton { y: (parent.height - self.height) / 2; icon: IconData.copy; label: "Kopieren"; shortcut: "Strg+C"; enabled: root.has-selection; clicked => { root.command("copy"); } }
-    if root.place == "" : IconButton { y: (parent.height - self.height) / 2; icon: IconData.paste; label: "Einfügen"; shortcut: "Strg+V"; enabled: root.can-paste; clicked => { root.command("paste"); } }
-    if root.files : IconButton { y: (parent.height - self.height) / 2; icon: IconData.rename; label: "Umbenennen"; shortcut: "F2"; enabled: root.has-selection; clicked => { root.command("rename"); } }
-    if root.files : IconButton { y: (parent.height - self.height) / 2; icon: IconData.delete; label: "Löschen"; shortcut: "Entf"; enabled: root.has-selection; clicked => { root.command("delete"); } }
-    if root.place == "trash" : IconButton { y: (parent.height - self.height) / 2; icon: IconData.restore; label: "Wiederherstellen"; enabled: root.has-selection; clicked => { root.command("restore"); } }
-    if root.place == "trash" : IconButton { y: (parent.height - self.height) / 2; icon: IconData.delete; label: "Endgültig löschen"; shortcut: "Entf"; enabled: root.has-selection; clicked => { root.command("delete"); } }
-    if root.place == "trash" : IconButton { y: (parent.height - self.height) / 2; icon: IconData.trash; label: "Papierkorb leeren"; clicked => { root.command("empty-trash"); } }
+    if root.place == "" : IconButton { y: (parent.height - self.height) / 2; icon: IconData.new-folder; label: @tr("New folder"); shortcut: @tr("Ctrl+Shift+N"); clicked => { root.command("new-folder"); } }
+    if root.files : IconButton { y: (parent.height - self.height) / 2; icon: IconData.cut; label: @tr("Cut"); shortcut: @tr("Ctrl+X"); enabled: root.has-selection; clicked => { root.command("cut"); } }
+    if root.files : IconButton { y: (parent.height - self.height) / 2; icon: IconData.copy; label: @tr("Copy"); shortcut: @tr("Ctrl+C"); enabled: root.has-selection; clicked => { root.command("copy"); } }
+    if root.place == "" : IconButton { y: (parent.height - self.height) / 2; icon: IconData.paste; label: @tr("Paste"); shortcut: @tr("Ctrl+V"); enabled: root.can-paste; clicked => { root.command("paste"); } }
+    if root.files : IconButton { y: (parent.height - self.height) / 2; icon: IconData.rename; label: @tr("Rename"); shortcut: "F2"; enabled: root.has-selection; clicked => { root.command("rename"); } }
+    if root.files : IconButton { y: (parent.height - self.height) / 2; icon: IconData.delete; label: @tr("Delete"); shortcut: @tr("Del"); enabled: root.has-selection; clicked => { root.command("delete"); } }
+    if root.place == "trash" : IconButton { y: (parent.height - self.height) / 2; icon: IconData.restore; label: @tr("Restore"); enabled: root.has-selection; clicked => { root.command("restore"); } }
+    if root.place == "trash" : IconButton { y: (parent.height - self.height) / 2; icon: IconData.delete; label: @tr("Delete permanently"); shortcut: @tr("Del"); enabled: root.has-selection; clicked => { root.command("delete"); } }
+    if root.place == "trash" : IconButton { y: (parent.height - self.height) / 2; icon: IconData.trash; label: @tr("Empty Recycle Bin"); clicked => { root.command("empty-trash"); } }
     if root.files || root.place == "trash" : ActionGap {}
-    IconButton { y: (parent.height - self.height) / 2; icon: IconData.undo; label: "Rückgängig"; shortcut: "Strg+Z"; enabled: root.can-undo; clicked => { root.command("undo"); } }
-    IconButton { y: (parent.height - self.height) / 2; icon: IconData.redo; label: "Wiederholen"; shortcut: "Strg+Y"; enabled: root.can-redo; clicked => { root.command("redo"); } }
+    IconButton { y: (parent.height - self.height) / 2; icon: IconData.undo; label: @tr("Undo"); shortcut: @tr("Ctrl+Z"); enabled: root.can-undo; clicked => { root.command("undo"); } }
+    IconButton { y: (parent.height - self.height) / 2; icon: IconData.redo; label: @tr("Redo"); shortcut: @tr("Ctrl+Y"); enabled: root.can-redo; clicked => { root.command("redo"); } }
 }
 
 component FilePane inherits Rectangle {
@@ -599,24 +599,24 @@ component FilePane inherits Rectangle {
             drop-shadow-color: Theme.d.shadow;
             VerticalLayout {
                 padding: 4px;
-                if root.compact && root.place == "" : MenuItem { icon: IconData.new-folder; text: "Neuer Ordner"; shortcut: "Strg+Umschalt+N"; clicked => { root.command("new-folder"); } }
-                if root.compact && (root.place == "" || root.place == "search") : MenuItem { icon: IconData.cut; text: "Ausschneiden"; shortcut: "Strg+X"; enabled: root.has-selection; clicked => { root.command("cut"); } }
-                if root.compact && (root.place == "" || root.place == "search") : MenuItem { icon: IconData.copy; text: "Kopieren"; shortcut: "Strg+C"; enabled: root.has-selection; clicked => { root.command("copy"); } }
-                if root.compact && root.place == "" : MenuItem { icon: IconData.paste; text: "Einfügen"; shortcut: "Strg+V"; enabled: root.can-paste; clicked => { root.command("paste"); } }
-                if root.compact && (root.place == "" || root.place == "search") : MenuItem { icon: IconData.rename; text: "Umbenennen"; shortcut: "F2"; enabled: root.has-selection; clicked => { root.command("rename"); } }
-                if root.compact && (root.place == "" || root.place == "search") : MenuItem { icon: IconData.delete; text: "Löschen"; shortcut: "Entf"; enabled: root.has-selection; clicked => { root.command("delete"); } }
-                if root.compact && root.place == "trash" : MenuItem { icon: IconData.restore; text: "Wiederherstellen"; enabled: root.has-selection; clicked => { root.command("restore"); } }
-                if root.compact && root.place == "trash" : MenuItem { icon: IconData.delete; text: "Endgültig löschen"; shortcut: "Entf"; enabled: root.has-selection; danger: true; clicked => { root.command("delete"); } }
-                if root.compact && root.place == "trash" : MenuItem { icon: IconData.trash; text: "Papierkorb leeren"; danger: true; clicked => { root.command("empty-trash"); } }
-                if root.compact : MenuItem { icon: IconData.undo; text: "Rückgängig"; shortcut: "Strg+Z"; enabled: root.can-undo; clicked => { root.command("undo"); } }
-                if root.compact : MenuItem { icon: IconData.redo; text: "Wiederholen"; shortcut: "Strg+Y"; enabled: root.can-redo; clicked => { root.command("redo"); } }
+                if root.compact && root.place == "" : MenuItem { icon: IconData.new-folder; text: @tr("New folder"); shortcut: @tr("Ctrl+Shift+N"); clicked => { root.command("new-folder"); } }
+                if root.compact && (root.place == "" || root.place == "search") : MenuItem { icon: IconData.cut; text: @tr("Cut"); shortcut: @tr("Ctrl+X"); enabled: root.has-selection; clicked => { root.command("cut"); } }
+                if root.compact && (root.place == "" || root.place == "search") : MenuItem { icon: IconData.copy; text: @tr("Copy"); shortcut: @tr("Ctrl+C"); enabled: root.has-selection; clicked => { root.command("copy"); } }
+                if root.compact && root.place == "" : MenuItem { icon: IconData.paste; text: @tr("Paste"); shortcut: @tr("Ctrl+V"); enabled: root.can-paste; clicked => { root.command("paste"); } }
+                if root.compact && (root.place == "" || root.place == "search") : MenuItem { icon: IconData.rename; text: @tr("Rename"); shortcut: "F2"; enabled: root.has-selection; clicked => { root.command("rename"); } }
+                if root.compact && (root.place == "" || root.place == "search") : MenuItem { icon: IconData.delete; text: @tr("Delete"); shortcut: @tr("Del"); enabled: root.has-selection; clicked => { root.command("delete"); } }
+                if root.compact && root.place == "trash" : MenuItem { icon: IconData.restore; text: @tr("Restore"); enabled: root.has-selection; clicked => { root.command("restore"); } }
+                if root.compact && root.place == "trash" : MenuItem { icon: IconData.delete; text: @tr("Delete permanently"); shortcut: @tr("Del"); enabled: root.has-selection; danger: true; clicked => { root.command("delete"); } }
+                if root.compact && root.place == "trash" : MenuItem { icon: IconData.trash; text: @tr("Empty Recycle Bin"); danger: true; clicked => { root.command("empty-trash"); } }
+                if root.compact : MenuItem { icon: IconData.undo; text: @tr("Undo"); shortcut: @tr("Ctrl+Z"); enabled: root.can-undo; clicked => { root.command("undo"); } }
+                if root.compact : MenuItem { icon: IconData.redo; text: @tr("Redo"); shortcut: @tr("Ctrl+Y"); enabled: root.can-redo; clicked => { root.command("redo"); } }
                 if root.compact : MenuSeparator {}
-                MenuItem { icon: IconData.split; text: root.split ? "Eine Ansicht" : "Zwei Ansichten"; shortcut: "Strg+\\"; clicked => { root.toggle-split(); } }
-                MenuItem { text: "Ausgeblendete Elemente anzeigen"; checked: root.show-hidden; clicked => { root.flip-hidden(); } }
-                MenuItem { text: "Inspector"; shortcut: "Alt+P"; checked: root.insp-open; clicked => { root.toggle-inspector(); } }
+                MenuItem { icon: IconData.split; text: root.split ? @tr("One view") : @tr("Two views"); shortcut: @tr("Ctrl+\\"); clicked => { root.toggle-split(); } }
+                MenuItem { text: @tr("Show hidden items"); checked: root.show-hidden; clicked => { root.flip-hidden(); } }
+                MenuItem { text: @tr("Inspector"); shortcut: "Alt+P"; checked: root.insp-open; clicked => { root.toggle-inspector(); } }
                 MenuSeparator {}
-                MenuItem { icon: IconData.command; text: "Befehlspalette"; shortcut: "Strg+Umschalt+P"; clicked => { root.open-palette(); } }
-                MenuItem { icon: IconData.settings; text: "Einstellungen"; clicked => { root.open-settings(); } }
+                MenuItem { icon: IconData.command; text: @tr("Command palette"); shortcut: @tr("Ctrl+Shift+P"); clicked => { root.open-palette(); } }
+                MenuItem { icon: IconData.settings; text: @tr("Settings"); clicked => { root.open-settings(); } }
             }
         }
     }
@@ -640,8 +640,8 @@ component FilePane inherits Rectangle {
                     y: (parent.height - self.height) / 2 + 2px;
                     size: 24px;
                     icon: IconData.plus;
-                    label: "Neuer Tab";
-                    shortcut: "Strg+T";
+                    label: @tr("New tab");
+                    shortcut: @tr("Ctrl+T");
                     clicked => { root.activate(); root.tab-new(); }
                 }
                 Rectangle { horizontal-stretch: 1; }
@@ -655,13 +655,13 @@ component FilePane inherits Rectangle {
           HorizontalLayout {
             padding-left: 6px; padding-right: 6px; padding-top: 4px; padding-bottom: 4px;
             spacing: 2px;
-            IconButton { icon: IconData.back; label: "Zurück"; shortcut: "Alt+Links"; enabled: root.data.can-back; clicked => { root.activate(); root.back(); } }
-            IconButton { icon: IconData.forward; label: "Vorwärts"; shortcut: "Alt+Rechts"; enabled: root.data.can-forward; clicked => { root.activate(); root.forward(); } }
-            IconButton { icon: IconData.up; label: "Nach oben"; shortcut: "Alt+Oben"; clicked => { root.activate(); root.go-up(); } }
+            IconButton { icon: IconData.back; label: @tr("Back"); shortcut: @tr("Alt+Left"); enabled: root.data.can-back; clicked => { root.activate(); root.back(); } }
+            IconButton { icon: IconData.forward; label: @tr("Forward"); shortcut: @tr("Alt+Right"); enabled: root.data.can-forward; clicked => { root.activate(); root.forward(); } }
+            IconButton { icon: IconData.up; label: @tr("Up"); shortcut: @tr("Alt+Up"); clicked => { root.activate(); root.go-up(); } }
             Rectangle { width: 4px; }
             address := Rectangle {
                 accessible-role: groupbox;
-                accessible-label: "Adresszeile";
+                accessible-label: @tr("Address bar");
                 border-width: 1px;
                 border-color: root.editing-path ? Theme.d.accent : (addr-ta.has-hover ? Theme.d.border-strong : Theme.d.border);
                 animate border-color { duration: Ui.fast; }
@@ -787,7 +787,7 @@ component FilePane inherits Rectangle {
                 y: (parent.height - self.height) / 2;
                 visible: root.active;
                 icon: IconData.more;
-                label: "Mehr";
+                label: @tr("More");
                 clicked => { more-menu.show(); }
             }
           }
@@ -801,13 +801,13 @@ component FilePane inherits Rectangle {
             HorizontalLayout {
                 // the label starts where the names start (row inset 4 + padding 6 + icon 20)
                 padding-left: 22px;
-                HeaderCell { label: "Name"; key: "name"; sort-key: root.sort-key; sort-desc: root.sort-desc; horizontal-stretch: 1; sort(k) => { root.activate(); root.sort-by(k); } }
+                HeaderCell { label: @tr("Name"); key: "name"; sort-key: root.sort-key; sort-desc: root.sort-desc; horizontal-stretch: 1; sort(k) => { root.activate(); root.sort-by(k); } }
                 ResizeHandle { target-width <=> root.w-date; }
                 HeaderCell { label: root.data.date-label; key: "modified"; sort-key: root.sort-key; sort-desc: root.sort-desc; width: root.w-date; sort(k) => { root.activate(); root.sort-by(k); } }
                 ResizeHandle { target-width <=> root.w-type; }
                 HeaderCell { label: root.data.type-label; key: "type"; sort-key: root.sort-key; sort-desc: root.sort-desc; width: root.w-type; sort(k) => { root.activate(); root.sort-by(k); } }
                 ResizeHandle { target-width <=> root.w-size; }
-                HeaderCell { label: "Größe"; key: "size"; sort-key: root.sort-key; sort-desc: root.sort-desc; width: root.w-size; align: right; sort(k) => { root.activate(); root.sort-by(k); } }
+                HeaderCell { label: @tr("Size"); key: "size"; sort-key: root.sort-key; sort-desc: root.sort-desc; width: root.w-size; align: right; sort(k) => { root.activate(); root.sort-by(k); } }
                 Rectangle { width: 14px; }
             }
         }
@@ -1095,9 +1095,9 @@ component CommandPalette inherits Rectangle {
     in property <[PaletteItem]> items;
     in-out property <int> sel;
     // the quick search (S1.4c) uses the same box: own hint, status line, empty text
-    in property <string> hint: "Befehl suchen …   (> springt zu Orten)";
+    in property <string> hint: @tr("Search commands …   (> jumps to places)");
     in property <string> footer;
-    in property <string> empty-text: "Nichts gefunden";
+    in property <string> empty-text: @tr("Nothing found");
     // put a text into the field and search it (recent searches)
     in property <int> fill-seq;
     in property <string> fill-text;
@@ -1316,11 +1316,11 @@ component Sidebar inherits Rectangle {
         VerticalLayout {
             padding: 6px; padding-top: 4px; spacing: 1px;
             alignment: start;
-            SidebarHeading { text: "Schnellzugriff"; }
+            SidebarHeading { text: @tr("Quick access"); }
             for p in root.places : SidebarItem { item: p; current: p.path == root.current-path; open(path) => { root.open(path); } }
             Rectangle { height: 10px; }
             SidebarHeading {
-                text: "Dieser PC";
+                text: @tr("This PC");
                 clickable: true;
                 current: root.current-path == "::dieser-pc";
                 clicked => { root.open("::dieser-pc"); }
@@ -1689,7 +1689,7 @@ export component MainWindow inherits Window {
                                     IconButton {
                                         size: 22px;
                                         icon: IconData.copy;
-                                        label: "Pfad kopieren";
+                                        label: @tr("Copy path");
                                         clicked => { path-value.select-all(); path-value.copy(); path-value.clear-selection(); }
                                     }
                                 }
@@ -1719,8 +1719,8 @@ export component MainWindow inherits Window {
                         }
                         Text { text: j.detail; font-size: Ui.font-small; color: Theme.d.muted; overflow: elide; }
                     }
-                    ToolbarButton { y: (parent.height - self.height) / 2; text: j.paused ? "Fortsetzen" : "Pause"; clicked => { root.job-pause(j.id, !j.paused); } }
-                    ToolbarButton { y: (parent.height - self.height) / 2; text: "Abbrechen"; clicked => { root.job-cancel(j.id); } }
+                    ToolbarButton { y: (parent.height - self.height) / 2; text: j.paused ? @tr("Resume") : @tr("Pause"); clicked => { root.job-pause(j.id, !j.paused); } }
+                    ToolbarButton { y: (parent.height - self.height) / 2; text: @tr("Cancel"); clicked => { root.job-cancel(j.id); } }
                 }
             }
             // ---------- status bar ----------
@@ -1741,7 +1741,7 @@ export component MainWindow inherits Window {
                         // fallback search cost seconds on a fresh Windows VM (CI #50)
                         HorizontalLayout {
                             padding-left: 6px; spacing: 4px;
-                            sort-text := Text { text: "Sortieren"; vertical-alignment: center; color: Theme.d.text2; font-size: Ui.font-small; }
+                            sort-text := Text { text: @tr("Sort"); vertical-alignment: center; color: Theme.d.text2; font-size: Ui.font-small; }
                             Icon { y: (parent.height - self.height) / 2; d: IconData.chevron-up; size: 12px; tint: Theme.d.icon-muted; }
                         }
                         sort-ta := TouchArea { clicked => { sort-popup.show(); } }
@@ -1758,14 +1758,14 @@ export component MainWindow inherits Window {
                                 drop-shadow-blur: 16px; drop-shadow-offset-y: 4px; drop-shadow-color: Theme.d.shadow;
                                 VerticalLayout {
                                     padding: 4px;
-                                    for k in [{ id: "name", label: "Name" }, { id: "modified", label: "Änderungsdatum" },
-                                              { id: "type", label: "Typ" }, { id: "size", label: "Größe" }] : MenuItem {
+                                    for k in [{ id: "name", label: @tr("Name") }, { id: "modified", label: @tr("Date modified") },
+                                              { id: "type", label: @tr("Type") }, { id: "size", label: @tr("Size") }] : MenuItem {
                                         text: k.label; checked: root.sort-key == k.id;
                                         clicked => { root.sort-pick(k.id); }
                                     }
                                     MenuSeparator {}
-                                    MenuItem { text: "Aufsteigend"; checked: !root.sort-desc; clicked => { root.sort-dir(false); } }
-                                    MenuItem { text: "Absteigend"; checked: root.sort-desc; clicked => { root.sort-dir(true); } }
+                                    MenuItem { text: @tr("Ascending"); checked: !root.sort-desc; clicked => { root.sort-dir(false); } }
+                                    MenuItem { text: @tr("Descending"); checked: root.sort-desc; clicked => { root.sort-dir(true); } }
                                 }
                             }
                         }
@@ -1773,11 +1773,11 @@ export component MainWindow inherits Window {
                     // view switch (like Explorer's buttons bottom right), inspector, settings (R2)
                     HorizontalLayout {
                         spacing: 1px;
-                        IconButton { y: 1px; size: 22px; icon: IconData.details; label: "Details"; shortcut: "Strg+Umschalt+6"; checked: root.view-mode == "details"; clicked => { root.set-view("details"); } }
-                        IconButton { y: 1px; size: 22px; icon: IconData.tiles; label: "Symbole"; shortcut: "Strg+Umschalt+2"; checked: root.view-mode != "details"; clicked => { root.set-view("large"); } }
+                        IconButton { y: 1px; size: 22px; icon: IconData.details; label: @tr("Details"); shortcut: @tr("Ctrl+Shift+6"); checked: root.view-mode == "details"; clicked => { root.set-view("details"); } }
+                        IconButton { y: 1px; size: 22px; icon: IconData.tiles; label: @tr("Icons"); shortcut: @tr("Ctrl+Shift+2"); checked: root.view-mode != "details"; clicked => { root.set-view("large"); } }
                         ActionGap {}
-                        IconButton { y: 1px; size: 22px; icon: IconData.inspector; label: "Inspector"; shortcut: "Alt+P"; checked: root.insp-open; clicked => { root.toggle-inspector(); } }
-                        IconButton { y: 1px; size: 22px; icon: IconData.settings; label: "Einstellungen"; checked: root.settings-open; clicked => { root.settings-open = !root.settings-open; } }
+                        IconButton { y: 1px; size: 22px; icon: IconData.inspector; label: @tr("Inspector"); shortcut: "Alt+P"; checked: root.insp-open; clicked => { root.toggle-inspector(); } }
+                        IconButton { y: 1px; size: 22px; icon: IconData.settings; label: @tr("Settings"); checked: root.settings-open; clicked => { root.settings-open = !root.settings-open; } }
                     }
                 }
             }
@@ -1819,14 +1819,14 @@ export component MainWindow inherits Window {
                     }
                     Text { text: root.conflict-source; font-size: Ui.font; color: Theme.d.text2; wrap: word-wrap; }
                     Text { text: root.conflict-target; font-size: Ui.font; color: Theme.d.text2; wrap: word-wrap; }
-                    CheckBox { text: "Für alle weiteren Konflikte übernehmen"; checked <=> root.conflict-all; }
+                    CheckBox { text: @tr("Do this for all remaining conflicts"); checked <=> root.conflict-all; }
                     Rectangle { height: 4px; }
                     HorizontalLayout {
                         spacing: 6px; alignment: end;
-                        ToolbarButton { text: root.conflict-dirs ? "Zusammenführen" : "Ersetzen"; primary: true; clicked => { root.conflict-answer(0); } }
-                        ToolbarButton { text: "Überspringen"; clicked => { root.conflict-answer(1); } }
-                        ToolbarButton { text: "Beide behalten"; clicked => { root.conflict-answer(2); } }
-                        ToolbarButton { text: "Abbrechen"; clicked => { root.conflict-answer(3); } }
+                        ToolbarButton { text: root.conflict-dirs ? @tr("Merge") : @tr("Replace"); primary: true; clicked => { root.conflict-answer(0); } }
+                        ToolbarButton { text: @tr("Skip"); clicked => { root.conflict-answer(1); } }
+                        ToolbarButton { text: @tr("Keep both"); clicked => { root.conflict-answer(2); } }
+                        ToolbarButton { text: @tr("Cancel"); clicked => { root.conflict-answer(3); } }
                     }
                 }
             }
@@ -1866,7 +1866,7 @@ export component MainWindow inherits Window {
                     HorizontalLayout {
                         spacing: 6px; alignment: end;
                         ToolbarButton { text: root.confirm-ok; primary: true; clicked => { root.confirm-answer(true); } }
-                        ToolbarButton { text: "Abbrechen"; clicked => { root.confirm-answer(false); } }
+                        ToolbarButton { text: @tr("Cancel"); clicked => { root.confirm-answer(false); } }
                     }
                 }
             }
@@ -1896,8 +1896,8 @@ export component MainWindow inherits Window {
             }
             VerticalLayout {
                 alignment: center; spacing: 4px;
-                if root.notice-folder : ToolbarButton { text: "Bericht anzeigen"; clicked => { root.notice-open(); } }
-                ToolbarButton { text: "OK"; primary: true; clicked => { root.notice = ""; } }
+                if root.notice-folder : ToolbarButton { text: @tr("Show report"); clicked => { root.notice-open(); } }
+                ToolbarButton { text: @tr("OK"); primary: true; clicked => { root.notice = ""; } }
             }
         }
     }
@@ -1914,7 +1914,7 @@ export component MainWindow inherits Window {
     if root.qs-open : CommandPalette {
         items: root.qs-items;
         sel <=> root.qs-sel;
-        hint: "Alle Laufwerke durchsuchen …";
+        hint: @tr("Search all drives …");
         footer: root.qs-footer;
         empty-text: root.qs-empty;
         fill-seq: root.qs-fill-seq;
@@ -1952,38 +1952,38 @@ export component MainWindow inherits Window {
             width: settings-scroll.visible-width;
             padding: 14px;
             spacing: 8px;
-            Text { text: "Einstellungen"; font-size: Ui.font-title; font-weight: 600; color: Theme.d.text; }
+            Text { text: @tr("Settings"); font-size: Ui.font-title; font-weight: 600; color: Theme.d.text; }
             CheckBox {
-                text: "Hardwarebeschleunigung verwenden, wenn verfügbar";
+                text: @tr("Use hardware acceleration when available");
                 checked <=> root.hw-accel;
                 toggled => { root.toggle-hw-accel(self.checked); }
             }
-            Text { text: "Änderung wird beim nächsten Start wirksam."; font-size: Ui.font-small; color: Theme.d.muted; }
+            Text { text: @tr("Takes effect the next time the app starts."); font-size: Ui.font-small; color: Theme.d.muted; }
             Text { text: root.renderer-status; font-size: Ui.font-small; color: Theme.d.text2; wrap: word-wrap; }
             Rectangle { height: 1px; background: Theme.d.border; }
-            Text { text: "Ordneroptionen"; font-size: Ui.font-body; font-weight: 600; color: Theme.d.text; }
+            Text { text: @tr("Folder options"); font-size: Ui.font-body; font-weight: 600; color: Theme.d.text; }
             CheckBox {
-                text: "Dateinamenerweiterungen anzeigen";
+                text: @tr("Show file name extensions");
                 checked <=> root.opt-show-ext;
                 toggled => { root.set-option("show_extensions", self.checked); }
             }
             CheckBox {
-                text: "Geschützte Systemdateien anzeigen";
+                text: @tr("Show protected operating system files");
                 checked <=> root.opt-show-protected;
                 toggled => { root.set-option("show_protected", self.checked); }
             }
             CheckBox {
-                text: "Öffnen durch einfachen Klick (Markieren durch Zeigen)";
+                text: @tr("Single-click to open an item (point to select)");
                 checked <=> root.opt-single-click;
                 toggled => { root.set-option("single_click", self.checked); }
             }
-            Text { text: "Die Ansicht wird pro Ordner gemerkt."; font-size: Ui.font-small; color: Theme.d.muted; }
+            Text { text: @tr("The view is remembered per folder."); font-size: Ui.font-small; color: Theme.d.muted; }
             HorizontalLayout {
                 alignment: start;
-                Button { text: "Aktuelle Ansicht für alle Ordner"; clicked => { root.apply-view-all(); } }
+                Button { text: @tr("Use the current view for all folders"); clicked => { root.apply-view-all(); } }
             }
             Rectangle { height: 1px; background: Theme.d.border; }
-            Text { text: "Farbschema"; font-size: Ui.font-body; font-weight: 600; color: Theme.d.text; }
+            Text { text: @tr("Color scheme"); font-size: Ui.font-body; font-weight: 600; color: Theme.d.text; }
             // segmented control (own drawing: checkable Buttons would toggle themselves)
             HorizontalLayout {
                 alignment: start;
@@ -1992,7 +1992,7 @@ export component MainWindow inherits Window {
                     width: theme-row.preferred-width; height: 28px;
                     theme-row := HorizontalLayout {
                         padding: 2px; spacing: 2px;
-                        for t in [{ id: "system", label: "Wie Windows" }, { id: "light", label: "Hell" }, { id: "dark", label: "Dunkel" }] : Rectangle {
+                        for t in [{ id: "system", label: @tr("Like Windows") }, { id: "light", label: @tr("Light") }, { id: "dark", label: @tr("Dark") }] : Rectangle {
                             width: theme-text.preferred-width + 20px;
                             border-radius: 3px;
                             background: root.theme-choice == t.id ? Theme.d.selected : (theme-ta.has-hover ? Theme.d.hover : transparent);
@@ -2005,29 +2005,29 @@ export component MainWindow inherits Window {
                 }
             }
             CheckBox {
-                text: "Windows-Akzentfarbe verwenden";
+                text: @tr("Use the Windows accent color");
                 checked <=> root.opt-system-accent;
                 toggled => { root.set-option("system_accent", self.checked); }
             }
             Rectangle { height: 1px; background: Theme.d.border; }
-            Text { text: "Windows-Integration"; font-size: Ui.font-body; font-weight: 600; color: Theme.d.text; }
+            Text { text: @tr("Windows integration"); font-size: Ui.font-body; font-weight: 600; color: Theme.d.text; }
             if root.integration-available : CheckBox {
-                text: "Ordner mit Explorer 2.0 öffnen (Doppelklick, „Ordner öffnen“)";
+                text: @tr("Open folders with Explorer 2.0 (double-click, “Open folder”)");
                 checked <=> root.feat-folder-open;
                 toggled => { root.integration-feature("folder-open", self.checked); }
             }
             if root.integration-available : CheckBox {
-                text: "„In Explorer 2.0 öffnen“ im Kontextmenü";
+                text: @tr("“Open in Explorer 2.0” in the context menu");
                 checked <=> root.feat-context-menu;
                 toggled => { root.integration-feature("context-menu", self.checked); }
             }
             if root.integration-available : CheckBox {
-                text: "Win+E öffnet Explorer 2.0";
+                text: @tr("Win+E opens Explorer 2.0");
                 checked <=> root.feat-win-e;
                 toggled => { root.integration-feature("win-e", self.checked); }
             }
             if root.integration-available : CheckBox {
-                text: "Ordner im offenen Fenster öffnen (als neuen Tab)";
+                text: @tr("Open folders in the open window (as a new tab)");
                 checked <=> root.opt-single-instance;
                 toggled => { root.set-option("single_instance", self.checked); }
             }
@@ -2035,15 +2035,15 @@ export component MainWindow inherits Window {
             HorizontalLayout {
                 alignment: start;
                 Button {
-                    text: "Alle Windows-Integrationen zurücksetzen";
+                    text: @tr("Reset all Windows integrations");
                     enabled: root.integration-active;
                     clicked => { root.integration-reset(); }
                 }
             }
             Rectangle { height: 1px; background: Theme.d.border; }
-            Text { text: "Suche"; font-size: Ui.font-body; font-weight: 600; color: Theme.d.text; }
+            Text { text: @tr("Search"); font-size: Ui.font-body; font-weight: 600; color: Theme.d.text; }
             CheckBox {
-                text: "Laufwerke für die Suche indexieren";
+                text: @tr("Index drives for the search");
                 checked <=> root.opt-index-enabled;
                 toggled => { root.set-option("index_enabled", self.checked); }
             }
@@ -2059,10 +2059,10 @@ export component MainWindow inherits Window {
             Text { text: root.search-status; font-size: Ui.font-small; color: Theme.d.muted; wrap: word-wrap; }
             if root.opt-index-enabled : HorizontalLayout {
                 alignment: start;
-                Button { text: "Neu mit der Platte abgleichen"; clicked => { root.search-rescan(); } }
+                Button { text: @tr("Re-sync with the disk"); clicked => { root.search-rescan(); } }
             }
             if root.install-available : Rectangle { height: 1px; background: Theme.d.border; }
-            if root.install-available : Text { text: "Installation"; font-size: Ui.font-body; font-weight: 600; color: Theme.d.text; }
+            if root.install-available : Text { text: @tr("Installation"); font-size: Ui.font-body; font-weight: 600; color: Theme.d.text; }
             if root.install-available : Text { text: root.install-status; font-size: Ui.font-small; color: Theme.d.muted; wrap: word-wrap; }
             if root.install-available && root.install-button != "" : HorizontalLayout {
                 alignment: start;
@@ -2073,7 +2073,7 @@ export component MainWindow inherits Window {
         // fixed in the corner: reachable while scrolled, never moved by new sections
         Button {
             x: parent.width - self.width - 22px; y: 8px;
-            text: "Schließen";
+            text: @tr("Close");
             clicked => { root.settings-open = false; }
         }
     }
@@ -2113,7 +2113,7 @@ export component MainWindow inherits Window {
             drop-shadow-offset-y: 4px;
             drop-shadow-color: Theme.d.shadow;
             accessible-role: list;
-            accessible-label: "Kontextmenü";
+            accessible-label: @tr("Context menu");
             TouchArea {}
             ctx-lay := VerticalLayout {
                 padding: 4px;

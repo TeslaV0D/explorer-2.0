@@ -52,7 +52,7 @@ pub const LANGS: &[Lang] = &[
         native: "Deutsch",
         english: "German",
         plural_forms: TWO,
-        complete: false,
+        complete: true,
     },
     Lang {
         code: "es",

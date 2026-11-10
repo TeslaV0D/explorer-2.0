@@ -6,3 +6,359 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Language: de\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+#: crates/app/ui/main.slint
+msgid "Address bar"
+msgstr "Adresszeile"
+
+#: crates/app/ui/main.slint
+msgid "Alt+Left"
+msgstr "Alt+Links"
+
+#: crates/app/ui/main.slint
+msgid "Alt+Right"
+msgstr "Alt+Rechts"
+
+#: crates/app/ui/main.slint
+msgid "Alt+Up"
+msgstr "Alt+Oben"
+
+#: crates/app/ui/main.slint
+msgid "Ascending"
+msgstr "Aufsteigend"
+
+#: crates/app/ui/main.slint
+msgid "Back"
+msgstr "Zurück"
+
+#: crates/app/ui/main.slint
+msgid "Cancel"
+msgstr "Abbrechen"
+
+#: crates/app/ui/main.slint
+msgid "Close"
+msgstr "Schließen"
+
+#: crates/app/ui/main.slint
+msgid "Close tab"
+msgstr "Tab schließen"
+
+#: crates/app/ui/main.slint
+msgid "Color scheme"
+msgstr "Farbschema"
+
+#: crates/app/ui/main.slint
+msgid "Command palette"
+msgstr "Befehlspalette"
+
+#: crates/app/ui/main.slint
+msgid "Context menu"
+msgstr "Kontextmenü"
+
+#: crates/app/ui/main.slint
+msgid "Copy"
+msgstr "Kopieren"
+
+#: crates/app/ui/main.slint
+msgid "Copy path"
+msgstr "Pfad kopieren"
+
+#: crates/app/ui/main.slint
+msgid "Ctrl+C"
+msgstr "Strg+C"
+
+#: crates/app/ui/main.slint
+msgid "Ctrl+Shift+2"
+msgstr "Strg+Umschalt+2"
+
+#: crates/app/ui/main.slint
+msgid "Ctrl+Shift+6"
+msgstr "Strg+Umschalt+6"
+
+#: crates/app/ui/main.slint
+msgid "Ctrl+Shift+N"
+msgstr "Strg+Umschalt+N"
+
+#: crates/app/ui/main.slint
+msgid "Ctrl+Shift+P"
+msgstr "Strg+Umschalt+P"
+
+#: crates/app/ui/main.slint
+msgid "Ctrl+T"
+msgstr "Strg+T"
+
+#: crates/app/ui/main.slint
+msgid "Ctrl+V"
+msgstr "Strg+V"
+
+#: crates/app/ui/main.slint
+msgid "Ctrl+X"
+msgstr "Strg+X"
+
+#: crates/app/ui/main.slint
+msgid "Ctrl+Y"
+msgstr "Strg+Y"
+
+#: crates/app/ui/main.slint
+msgid "Ctrl+Z"
+msgstr "Strg+Z"
+
+#: crates/app/ui/main.slint
+msgid "Ctrl+\\"
+msgstr "Strg+\\"
+
+#: crates/app/ui/main.slint
+msgid "Cut"
+msgstr "Ausschneiden"
+
+#: crates/app/ui/main.slint
+msgid "Dark"
+msgstr "Dunkel"
+
+#: crates/app/ui/main.slint
+msgid "Date modified"
+msgstr "Änderungsdatum"
+
+#: crates/app/ui/main.slint
+msgid "Del"
+msgstr "Entf"
+
+#: crates/app/ui/main.slint
+msgid "Delete"
+msgstr "Löschen"
+
+#: crates/app/ui/main.slint
+msgid "Delete permanently"
+msgstr "Endgültig löschen"
+
+#: crates/app/ui/main.slint
+msgid "Descending"
+msgstr "Absteigend"
+
+#: crates/app/ui/main.slint
+msgid "Details"
+msgstr "Details"
+
+#: crates/app/ui/main.slint
+msgid "Do this for all remaining conflicts"
+msgstr "Für alle weiteren Konflikte übernehmen"
+
+#: crates/app/ui/main.slint
+msgid "Empty Recycle Bin"
+msgstr "Papierkorb leeren"
+
+#: crates/app/ui/main.slint
+msgid "Folder options"
+msgstr "Ordneroptionen"
+
+#: crates/app/ui/main.slint
+msgid "Forward"
+msgstr "Vorwärts"
+
+#: crates/app/ui/main.slint
+msgid "Icons"
+msgstr "Symbole"
+
+#: crates/app/ui/main.slint
+msgid "Index drives for the search"
+msgstr "Laufwerke für die Suche indexieren"
+
+#: crates/app/ui/main.slint
+msgid "Inspector"
+msgstr "Inspector"
+
+#: crates/app/ui/main.slint
+msgid "Installation"
+msgstr "Installation"
+
+#: crates/app/ui/main.slint
+msgid "Keep both"
+msgstr "Beide behalten"
+
+#: crates/app/ui/main.slint
+msgid "Light"
+msgstr "Hell"
+
+#: crates/app/ui/main.slint
+msgid "Like Windows"
+msgstr "Wie Windows"
+
+#: crates/app/ui/main.slint
+msgid "Merge"
+msgstr "Zusammenführen"
+
+#: crates/app/ui/main.slint
+msgid "More"
+msgstr "Mehr"
+
+#: crates/app/ui/main.slint
+msgid "Name"
+msgstr "Name"
+
+#: crates/app/ui/main.slint
+msgid "New folder"
+msgstr "Neuer Ordner"
+
+#: crates/app/ui/main.slint
+msgid "New tab"
+msgstr "Neuer Tab"
+
+#: crates/app/ui/main.slint
+msgid "Nothing found"
+msgstr "Nichts gefunden"
+
+#: crates/app/ui/main.slint
+msgid "OK"
+msgstr "OK"
+
+#: crates/app/ui/main.slint
+msgid "One view"
+msgstr "Eine Ansicht"
+
+#: crates/app/ui/main.slint
+msgid "Open folders in the open window (as a new tab)"
+msgstr "Ordner im offenen Fenster öffnen (als neuen Tab)"
+
+#: crates/app/ui/main.slint
+msgid "Open folders with Explorer 2.0 (double-click, “Open folder”)"
+msgstr "Ordner mit Explorer 2.0 öffnen (Doppelklick, „Ordner öffnen“)"
+
+#: crates/app/ui/main.slint
+msgid "Paste"
+msgstr "Einfügen"
+
+#: crates/app/ui/main.slint
+msgid "Pause"
+msgstr "Pause"
+
+#: crates/app/ui/main.slint
+msgid "Quick access"
+msgstr "Schnellzugriff"
+
+#: crates/app/ui/main.slint
+msgid "Re-sync with the disk"
+msgstr "Neu mit der Platte abgleichen"
+
+#: crates/app/ui/main.slint
+msgid "Redo"
+msgstr "Wiederholen"
+
+#: crates/app/ui/main.slint
+msgid "Rename"
+msgstr "Umbenennen"
+
+#: crates/app/ui/main.slint
+msgid "Replace"
+msgstr "Ersetzen"
+
+#: crates/app/ui/main.slint
+msgid "Reset all Windows integrations"
+msgstr "Alle Windows-Integrationen zurücksetzen"
+
+#: crates/app/ui/main.slint
+msgid "Restore"
+msgstr "Wiederherstellen"
+
+#: crates/app/ui/main.slint
+msgid "Resume"
+msgstr "Fortsetzen"
+
+#: crates/app/ui/main.slint
+msgid "Search"
+msgstr "Suche"
+
+#: crates/app/ui/main.slint
+msgid "Search all drives …"
+msgstr "Alle Laufwerke durchsuchen …"
+
+#: crates/app/ui/main.slint
+msgid "Search commands …   (> jumps to places)"
+msgstr "Befehl suchen …   (> springt zu Orten)"
+
+#: crates/app/ui/main.slint
+msgid "Settings"
+msgstr "Einstellungen"
+
+#: crates/app/ui/main.slint
+msgid "Show file name extensions"
+msgstr "Dateinamenerweiterungen anzeigen"
+
+#: crates/app/ui/main.slint
+msgid "Show hidden items"
+msgstr "Ausgeblendete Elemente anzeigen"
+
+#: crates/app/ui/main.slint
+msgid "Show protected operating system files"
+msgstr "Geschützte Systemdateien anzeigen"
+
+#: crates/app/ui/main.slint
+msgid "Show report"
+msgstr "Bericht anzeigen"
+
+#: crates/app/ui/main.slint
+msgid "Single-click to open an item (point to select)"
+msgstr "Öffnen durch einfachen Klick (Markieren durch Zeigen)"
+
+#: crates/app/ui/main.slint
+msgid "Size"
+msgstr "Größe"
+
+#: crates/app/ui/main.slint
+msgid "Skip"
+msgstr "Überspringen"
+
+#: crates/app/ui/main.slint
+msgid "Sort"
+msgstr "Sortieren"
+
+#: crates/app/ui/main.slint
+msgid "Takes effect the next time the app starts."
+msgstr "Änderung wird beim nächsten Start wirksam."
+
+#: crates/app/ui/main.slint
+msgid "The view is remembered per folder."
+msgstr "Die Ansicht wird pro Ordner gemerkt."
+
+#: crates/app/ui/main.slint
+msgid "This PC"
+msgstr "Dieser PC"
+
+#: crates/app/ui/main.slint
+msgid "Two views"
+msgstr "Zwei Ansichten"
+
+#: crates/app/ui/main.slint
+msgid "Type"
+msgstr "Typ"
+
+#: crates/app/ui/main.slint
+msgid "Undo"
+msgstr "Rückgängig"
+
+#: crates/app/ui/main.slint
+msgid "Up"
+msgstr "Nach oben"
+
+#: crates/app/ui/main.slint
+msgid "Use hardware acceleration when available"
+msgstr "Hardwarebeschleunigung verwenden, wenn verfügbar"
+
+#: crates/app/ui/main.slint
+msgid "Use the Windows accent color"
+msgstr "Windows-Akzentfarbe verwenden"
+
+#: crates/app/ui/main.slint
+msgid "Use the current view for all folders"
+msgstr "Aktuelle Ansicht für alle Ordner"
+
+#: crates/app/ui/main.slint
+msgid "Win+E opens Explorer 2.0"
+msgstr "Win+E öffnet Explorer 2.0"
+
+#: crates/app/ui/main.slint
+msgid "Windows integration"
+msgstr "Windows-Integration"
+
+#: crates/app/ui/main.slint
+msgid "“Open in Explorer 2.0” in the context menu"
+msgstr "„In Explorer 2.0 öffnen“ im Kontextmenü"

@@ -171,11 +171,11 @@ The app UI is German; UI labels are quoted as they appear (with a translation wh
 ## Boss wishes (2026-11-08) – for later, not planned yet
 - [~] **Localisation (i18n)**: translate the UI into further languages (supersedes D-007) – plan `docs/PLAN-I18N.md`, D-029 (Boss 2026-11-10: de, en, es, fr, ru, uk, pl, it, zh, ja; English source; live switch)
   - [x] L0 Basics (CI run #141): crate `explorer-i18n` (`tr!`/`tr_n!`, plural rules, `.po` reader, build-time tables, `extract` tool, catalog test), setting `language`, Windows/POSIX system language, Slint bundled translations, tests pinned to `de`, E2E [84]
-  - [ ] L1 Slint texts → `@tr` (English source) + `de.po` filled, German UI unchanged
-  - [ ] L2 Rust texts → `tr!`/`tr_n!` + `core::locale` (numbers/sizes), `de.po` complete → `de` marked complete
+  - [~] L1 Slint texts → `@tr` (English source) + `de.po` filled, German UI unchanged – 89 texts, `de` complete, E2E [84a]/[84d] (CI pending)
+  - [ ] L2 Rust texts → `tr!`/`tr_n!` + `core::locale` (numbers/sizes); every new text with its German translation (`de` is complete); Inspector group by id instead of the German label (`r.group != "ORT"`); conflict letter keys per language
   - [ ] L3 English review + gallery in English
   - [ ] L4 language setting in the UI (own names, live switch, palette)
-  - [ ] L5 layout robustness: pseudo-locale + overflow check + gallery per language
+  - [ ] L5 layout robustness: pseudo-locale + overflow check + gallery per language (the gallery clicks German names today → language-neutral targets first)
   - [ ] L6 languages one by one: es, fr, ru, uk, pl, it, zh, ja (glossary per language, native-speaker review of the gallery)
   - [ ] Hit meanings exactly, not confusing: terms as in Windows Explorer of the respective language (Recycle Bin, This PC, Quick access, Properties …), glossary per language
   - [ ] Layout robustness when switching: check **all** texts for whether they fit into buttons/menus/columns/dialogs/settings (German/French/Russian long, CJK different font) – shorten, wrap or make widths dynamic; gallery per language + pixel/overflow check in E2E
