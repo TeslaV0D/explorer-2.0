@@ -171,7 +171,7 @@ The app UI is German; UI labels are quoted as they appear (with a translation wh
 ## Boss wishes (2026-11-08) – for later, not planned yet
 - [~] **Localisation (i18n)**: translate the UI into further languages (supersedes D-007) – plan `docs/PLAN-I18N.md`, D-029 (Boss 2026-11-10: de, en, es, fr, ru, uk, pl, it, zh, ja; English source; live switch)
   - [x] L0 Basics (CI run #141): crate `explorer-i18n` (`tr!`/`tr_n!`, plural rules, `.po` reader, build-time tables, `extract` tool, catalog test), setting `language`, Windows/POSIX system language, Slint bundled translations, tests pinned to `de`, E2E [84]
-  - [~] L1 Slint texts → `@tr` (English source) + `de.po` filled, German UI unchanged – 89 texts, `de` complete, E2E [84a]/[84d] (CI pending)
+  - [x] L1 Slint texts → `@tr` (English source) + `de.po` filled, German UI unchanged – 89 texts, `de` complete, E2E [84a]/[84d] (CI run #144)
   - [ ] L2 Rust texts → `tr!`/`tr_n!` + `core::locale` (numbers/sizes); every new text with its German translation (`de` is complete); Inspector group by id instead of the German label (`r.group != "ORT"`); conflict letter keys per language
   - [ ] L3 English review + gallery in English
   - [ ] L4 language setting in the UI (own names, live switch, palette)

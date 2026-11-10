@@ -9,7 +9,7 @@ The app UI is German; UI labels and messages are quoted as they appear (with a t
 - Field-test checklists renamed: `PRAXISTEST-SUCHE.md` → `FIELD-TEST-SEARCH.md`, `PRAXISTEST-REDESIGN.md` → `FIELD-TEST-REDESIGN.md`.
 - No code change; CI ignores doc-only commits (`paths-ignore`).
 
-## Localisation L1 – Slint texts (2026-11-10)
+## Localisation L1 – Slint texts ✅ (CI run #144, 2026-11-10)
 - All 89 UI texts of `ui/main.slint` are now `@tr("English")` (Windows Explorer terms, US spelling like Windows: “Color scheme”, “Date modified”, “Empty Recycle Bin”, “Show protected operating system files” …); shortcuts are texts too (`Ctrl+Shift+N` ↔ `Strg+Umschalt+N`, `Del` ↔ `Entf`). Identifiers (`command("…")`, `== "trash"`, theme ids, sort keys) stay untouched.
 - `lang/de/…/explorer2.po` holds exactly the German texts the UI had before → **German UI unchanged** (gallery checked by eye); `de` is marked **complete** from now on, so the catalog test makes every new text bring its German translation, and German Windows users get German automatically.
 - `EXPLORER2_LANG=en` shows the English source texts for everything that comes from Slint; texts built in Rust (column headers, status bar, menus, dialogs, Inspector facts) follow in L2.
