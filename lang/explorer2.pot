@@ -49,6 +49,10 @@ msgstr[1] ""
 msgid " Emergency tool: {0}"
 msgstr ""
 
+#: crates/app/src/nav.rs
+msgid " · {0} ms"
+msgstr ""
+
 #: crates/app/src/search.rs
 msgid " – changes missed {n} time, re-synced afterwards ({0})"
 msgid_plural " – changes missed {n} times, re-synced afterwards ({0})"
@@ -746,6 +750,10 @@ msgstr ""
 
 #: crates/core/src/commands.rs
 msgid "Language: System default"
+msgstr ""
+
+#: crates/core/src/commands.rs
+msgid "Language: Русский"
 msgstr ""
 
 #: crates/core/src/view.rs

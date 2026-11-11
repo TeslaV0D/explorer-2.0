@@ -1595,7 +1595,8 @@ fn apply(
                         ));
                     }
                     if reason == Reason::User {
-                        st.push_str(&format!(" · {} ms", took.as_millis()));
+                        // the unit is a text: “мс” in Russian
+                        st.push_str(&tr!(" · {0} ms", took.as_millis()));
                     }
                     set_tab_status(win, id, st);
                     trace(&format!(

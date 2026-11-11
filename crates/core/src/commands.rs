@@ -270,6 +270,12 @@ pub const ALL: &[Command] = &[
         Need::Always,
     ),
     c(
+        "language-ru",
+        tr_noop!("Language: Русский"),
+        "",
+        Need::Always,
+    ),
+    c(
         "toggle-folder-open",
         tr_noop!("Toggle: open folders with Explorer 2.0"),
         "",

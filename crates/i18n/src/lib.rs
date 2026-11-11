@@ -92,7 +92,7 @@ pub const LANGS: &[Lang] = &[
         native: "Русский",
         english: "Russian",
         plural_forms: SLAVIC,
-        complete: false,
+        complete: true,
     },
     Lang {
         code: "uk",

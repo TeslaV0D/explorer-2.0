@@ -9,6 +9,13 @@ The app UI is German; UI labels and messages are quoted as they appear (with a t
 - Field-test checklists renamed: `PRAXISTEST-SUCHE.md` → `FIELD-TEST-SEARCH.md`, `PRAXISTEST-REDESIGN.md` → `FIELD-TEST-REDESIGN.md`.
 - No code change; CI ignores doc-only commits (`paths-ignore`).
 
+## Localisation L6 – Russian ✅ (CI pending, 2026-11-11)
+- **Русский (ru-RU)** complete: all 430 texts with the Windows Explorer terms of Russian Windows (Корзина, Этот компьютер, Быстрый доступ, Папка с файлами, Дата изменения, view names Таблица/Крупные значки/Огромные значки …), formal “вы”, е instead of ё like Windows; glossary **`docs/GLOSSARY-RU.md`**. Offered as “Русский” and palette command “Language: Русский”. Native-speaker review of the gallery open.
+- **Three plural forms** (1, 21 → элемент / 2–4 → элемента / 0, 5–20 → элементов) – the rule from L0 is used by every `tr_n!` (“15 элементов (1 скрыт)”, “Выбрано 3 элемента”).
+- Cyrillic access keys in the conflict dialog (З/О/П/С/В, as Windows does with the Russian layout); key names stay Latin (Ctrl, Shift, Del, Enter); size units Б/КБ/МБ/ГБ/ТБ (“3,1 КБ (3 170 байт)”); quotes «…».
+- The load time in the status line (“· 12 ms”) is a text now (“мс” in Russian).
+- Layout check: every text fits on all 50 screens (Cyrillic is wider than Latin in places – still inside every box).
+
 ## Localisation L6 – French ✅ (CI pending, 2026-11-11)
 - **Français (fr-FR)** complete: all 428 texts with the Windows Explorer terms of French Windows (Corbeille, Ce PC, Accès rapide, Dossier de fichiers, Modifié le, Renommer, Afficher les éléments masqués …), formal “vous”, key names Maj/Suppr/Entrée; glossary **`docs/GLOSSARY-FR.md`**. Offered as “Français” and palette command “Language: Français”. Native-speaker review of the gallery open.
 - **French typography**: no-break space before `:` `?` `!` `;` and inside « », ellipsis without a space (`Chargement…`); numbers `1 234,5` (from L2).
