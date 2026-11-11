@@ -43,7 +43,9 @@ msgstr " (wird noch aufgebaut)"
 
 #: crates/app/src/nav.rs
 msgid " ({0} hidden)"
-msgstr " ({0} ausgeblendet)"
+msgid_plural " ({0} hidden)"
+msgstr[0] " ({0} ausgeblendet)"
+msgstr[1] " ({0} ausgeblendet)"
 
 #: crates/app/src/integration.rs
 msgid " Emergency tool: {0}"
@@ -78,6 +80,14 @@ msgstr " – Speichern fehlgeschlagen: {0}"
 #: crates/app/src/search.rs
 msgid " – without live updates"
 msgstr " – ohne Live-Aktualisierung"
+
+#: crates/core/src/mnemonic.rs
+msgid "&Replace"
+msgstr "E&rsetzen"
+
+#: crates/core/src/mnemonic.rs
+msgid "&Skip"
+msgstr "Über&springen"
 
 #: crates/app/src/installer.rs
 msgid ", redirected: {0}"
@@ -362,6 +372,7 @@ msgstr "DVD-Laufwerk"
 msgid "Dark"
 msgstr "Dunkel"
 
+#: crates/app/ui/main.slint
 #: crates/core/src/places.rs
 msgid "Date deleted"
 msgstr "Gelöscht am"
@@ -446,6 +457,10 @@ msgstr "Details"
 #: crates/app/src/inspector.rs
 msgid "Dimensions"
 msgstr "Abmessungen"
+
+#: crates/core/src/mnemonic.rs
+msgid "Do this for &all remaining conflicts"
+msgstr "Für &alle weiteren Konflikte übernehmen"
 
 #: crates/app/ui/main.slint
 msgid "Do this for all remaining conflicts"
@@ -570,6 +585,7 @@ msgstr "Extra große Symbole"
 msgid "File"
 msgstr "Datei"
 
+#: crates/app/ui/main.slint
 #: crates/core/src/lib.rs
 msgid "File folder"
 msgstr "Dateiordner"
@@ -712,6 +728,10 @@ msgstr "Ungültiger Pfad"
 msgid "Journal: {0}"
 msgstr "Journal: {0}"
 
+#: crates/core/src/mnemonic.rs
+msgid "Keep &both"
+msgstr "&Beide behalten"
+
 #: crates/app/ui/main.slint
 msgid "Keep both"
 msgstr "Beide behalten"
@@ -731,6 +751,10 @@ msgstr "Sprache: Deutsch"
 #: crates/core/src/commands.rs
 msgid "Language: English"
 msgstr "Sprache: English"
+
+#: crates/core/src/commands.rs
+msgid "Language: Español"
+msgstr "Sprache: Español"
 
 #: crates/core/src/commands.rs
 msgid "Language: System default"
@@ -767,6 +791,10 @@ msgstr "Lädt … {0}"
 #: crates/fs/src/places.rs
 msgid "Local Disk"
 msgstr "Lokaler Datenträger"
+
+#: crates/core/src/mnemonic.rs
+msgid "Me&rge"
+msgstr "Zusammenfüh&ren"
 
 #: crates/core/src/view.rs
 msgid "Medium icons"

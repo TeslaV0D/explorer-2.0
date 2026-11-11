@@ -1587,7 +1587,12 @@ fn apply(
                         None => count_label(n),
                     };
                     if hidden > 0 {
-                        st.push_str(&tr!(" ({0} hidden)", format_count(hidden)));
+                        st.push_str(&tr_n!(
+                            hidden,
+                            " ({0} hidden)",
+                            " ({0} hidden)",
+                            format_count(hidden)
+                        ));
                     }
                     if reason == Reason::User {
                         st.push_str(&format!(" · {} ms", took.as_millis()));

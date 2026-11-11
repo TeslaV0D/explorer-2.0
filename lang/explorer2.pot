@@ -41,7 +41,9 @@ msgstr ""
 
 #: crates/app/src/nav.rs
 msgid " ({0} hidden)"
-msgstr ""
+msgid_plural " ({0} hidden)"
+msgstr[0] ""
+msgstr[1] ""
 
 #: crates/app/src/integration.rs
 msgid " Emergency tool: {0}"
@@ -75,6 +77,14 @@ msgstr ""
 
 #: crates/app/src/search.rs
 msgid " – without live updates"
+msgstr ""
+
+#: crates/core/src/mnemonic.rs
+msgid "&Replace"
+msgstr ""
+
+#: crates/core/src/mnemonic.rs
+msgid "&Skip"
 msgstr ""
 
 #: crates/app/src/installer.rs
@@ -360,6 +370,7 @@ msgstr ""
 msgid "Dark"
 msgstr ""
 
+#: crates/app/ui/main.slint
 #: crates/core/src/places.rs
 msgid "Date deleted"
 msgstr ""
@@ -435,6 +446,10 @@ msgstr ""
 
 #: crates/app/src/inspector.rs
 msgid "Dimensions"
+msgstr ""
+
+#: crates/core/src/mnemonic.rs
+msgid "Do this for &all remaining conflicts"
 msgstr ""
 
 #: crates/app/ui/main.slint
@@ -542,6 +557,7 @@ msgstr ""
 msgid "File"
 msgstr ""
 
+#: crates/app/ui/main.slint
 #: crates/core/src/lib.rs
 msgid "File folder"
 msgstr ""
@@ -684,6 +700,10 @@ msgstr ""
 msgid "Journal: {0}"
 msgstr ""
 
+#: crates/core/src/mnemonic.rs
+msgid "Keep &both"
+msgstr ""
+
 #: crates/app/ui/main.slint
 msgid "Keep both"
 msgstr ""
@@ -702,6 +722,10 @@ msgstr ""
 
 #: crates/core/src/commands.rs
 msgid "Language: English"
+msgstr ""
+
+#: crates/core/src/commands.rs
+msgid "Language: Español"
 msgstr ""
 
 #: crates/core/src/commands.rs
@@ -738,6 +762,10 @@ msgstr ""
 
 #: crates/fs/src/places.rs
 msgid "Local Disk"
+msgstr ""
+
+#: crates/core/src/mnemonic.rs
+msgid "Me&rge"
 msgstr ""
 
 #: crates/core/src/view.rs

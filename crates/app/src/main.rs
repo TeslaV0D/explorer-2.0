@@ -308,6 +308,20 @@ fn main() -> Result<(), slint::PlatformError> {
     on!(win, on_conflict_answer, |w, n| fileops::conflict_answer(
         &w, n
     ));
+    win.on_conflict_key({
+        let w = win.as_weak();
+        move |typed| {
+            use explorer_core::mnemonic::{conflict_key, ConflictKey};
+            let dirs = w.upgrade().is_some_and(|w| w.get_conflict_dirs());
+            match conflict_key(typed.as_str(), dirs) {
+                Some(ConflictKey::Replace) => 0,
+                Some(ConflictKey::Skip) => 1,
+                Some(ConflictKey::KeepBoth) => 2,
+                Some(ConflictKey::All) => 4,
+                None => -1,
+            }
+        }
+    });
     on!(win, on_confirm_answer, |w, ok| fileops::confirm_answer(
         &w, ok
     ));

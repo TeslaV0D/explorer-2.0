@@ -63,7 +63,7 @@ pub const LANGS: &[Lang] = &[
         native: "Español",
         english: "Spanish",
         plural_forms: TWO,
-        complete: false,
+        complete: true,
     },
     Lang {
         code: "fr",

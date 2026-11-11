@@ -157,9 +157,22 @@ jobs:
         with:
           name: ui-gallery-linux-qps
           path: ${{ runner.temp }}/gallery-qps/*.png
+      # localisation L6: every further translated language (lang/<code>, not de/qps)
+      - name: UI galleries in the other translated languages
+        if: always()
+        run: |
+          for code in $(ls lang | grep -vxE 'de|qps|explorer2.pot'); do
+            EXPLORER2_LANG=$code xvfb-run -a -s "-screen 0 1280x800x24" scripts/gallery.sh "$PWD/target/release/explorer2" "$RUNNER_TEMP/gallery-l10n/$code"
+          done
+      - name: Upload UI galleries in the other languages
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ui-gallery-linux-l10n
+          path: ${{ runner.temp }}/gallery-l10n/*/*.png
       - name: Layout check (every text fits, all languages + pseudo-locale)
         if: always()
-        run: scripts/layout-check.sh "$RUNNER_TEMP/gallery" "$RUNNER_TEMP/gallery-en" "$RUNNER_TEMP/gallery-qps"
+        run: scripts/layout-check.sh "$RUNNER_TEMP/gallery" "$RUNNER_TEMP/gallery-en" "$RUNNER_TEMP/gallery-qps" "$RUNNER_TEMP"/gallery-l10n/*
       - name: Upload screenshots on failure
         if: failure()
         uses: actions/upload-artifact@v4

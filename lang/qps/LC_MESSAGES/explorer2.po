@@ -43,7 +43,9 @@ msgstr "[ (šťîłł béîñğ büîłť)········]"
 
 #: crates/app/src/nav.rs
 msgid " ({0} hidden)"
-msgstr "[ ({0} hîďďéñ)······]"
+msgid_plural " ({0} hidden)"
+msgstr[0] "[ ({0} hîďďéñ)······]"
+msgstr[1] "[ ({0} hîďďéñ)······]"
 
 #: crates/app/src/integration.rs
 msgid " Emergency tool: {0}"
@@ -78,6 +80,14 @@ msgstr "[ – šåvîñğ fåîłéď: {0}·········]"
 #: crates/app/src/search.rs
 msgid " – without live updates"
 msgstr "[ – wîťhöüť łîvé üpďåťéš··········]"
+
+#: crates/core/src/mnemonic.rs
+msgid "&Replace"
+msgstr "[&Řépłåçé····]"
+
+#: crates/core/src/mnemonic.rs
+msgid "&Skip"
+msgstr "[&Škîp··]"
 
 #: crates/app/src/installer.rs
 msgid ", redirected: {0}"
@@ -362,6 +372,7 @@ msgstr "[ĎVĎ Ďřîvé·····]"
 msgid "Dark"
 msgstr "[Ďåřk··]"
 
+#: crates/app/ui/main.slint
 #: crates/core/src/places.rs
 msgid "Date deleted"
 msgstr "[Ďåťé ďéłéťéď·····]"
@@ -446,6 +457,10 @@ msgstr "[Ďéťåîłš····]"
 #: crates/app/src/inspector.rs
 msgid "Dimensions"
 msgstr "[Ďîméñšîöñš·····]"
+
+#: crates/core/src/mnemonic.rs
+msgid "Do this for &all remaining conflicts"
+msgstr "[Ďö ťhîš föř &åłł řémåîñîñğ çöñfłîçťš··············]"
 
 #: crates/app/ui/main.slint
 msgid "Do this for all remaining conflicts"
@@ -569,6 +584,7 @@ msgstr "[Éxťřå łåřğé îçöñš·······]"
 msgid "File"
 msgstr "[Fîłé··]"
 
+#: crates/app/ui/main.slint
 #: crates/core/src/lib.rs
 msgid "File folder"
 msgstr "[Fîłé föłďéř·····]"
@@ -711,6 +727,10 @@ msgstr "[Îñvåłîď påťh·····]"
 msgid "Journal: {0}"
 msgstr "[Jöüřñåł: {0}······]"
 
+#: crates/core/src/mnemonic.rs
+msgid "Keep &both"
+msgstr "[Kéép &böťh·····]"
+
 #: crates/app/ui/main.slint
 msgid "Keep both"
 msgstr "[Kéép böťh·····]"
@@ -730,6 +750,10 @@ msgstr "[Łåñğüåğé: Ďéüťšçh·······]"
 #: crates/core/src/commands.rs
 msgid "Language: English"
 msgstr "[Łåñğüåğé: Éñğłîšh·······]"
+
+#: crates/core/src/commands.rs
+msgid "Language: Español"
+msgstr "[Łåñğüåğé: Éšpåñöł·······]"
 
 #: crates/core/src/commands.rs
 msgid "Language: System default"
@@ -766,6 +790,10 @@ msgstr "[Łöåďîñğ … {0}······]"
 #: crates/fs/src/places.rs
 msgid "Local Disk"
 msgstr "[Łöçåł Ďîšk·····]"
+
+#: crates/core/src/mnemonic.rs
+msgid "Me&rge"
+msgstr "[Mé&řğé···]"
 
 #: crates/core/src/view.rs
 msgid "Medium icons"
@@ -1655,7 +1683,7 @@ msgstr ""
 "\n"
 "Ťåřğéť: {1}·····\n"
 "\n"
-"Ñö åďmîñîšťřåťöř řîğhťš ñééďéď; å Šťåřť méñü éñťřý åñď åñ “Åppš & Féåťüřéš” éñťřý åřé çřéåťéď. Wîñďöwš îñťéğřåťîöñš (öpéñ föłďéřš, Wîñ+É) çåñ bé šwîťçhéď öñ åfťéřwåřďš îñ ťhé šéťťîñğš – üñďöåbłé åť åñý ťîmé wîťh öñé büťťöñ.··························································································]"
+"Ñö åďmîñîšťřåťöř řîğhťš ñééďéď; å Šťåřť méñü éñťřý åñď åñ “Åppš & Féåťüřéš” éñťřý åřé çřéåťéď. Wîñďöwš îñťéğřåťîöñš (öpéñ föłďéřš, Wîñ+É) çåñ bé šwîťçhéď öñ åfťéřwåřďš îñ ťhé šéťťîñğš – üñďöåbłé åť åñý ťîmé wîťh öñé büťťöñ.·························································································]"
 
 #: crates/integrate/src/lib.rs
 msgid "{0} (not empty)"

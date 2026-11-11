@@ -1402,9 +1402,14 @@ export component MainWindow inherits Window {
     in property <string> renderer-status;
     in property <string> sort-key: "name";
     in property <bool> sort-desc;
-    in-out property <length> w-date: 130px;
-    in-out property <length> w-type: 110px;
+    // default column widths fit the labels of the language (L6: “Fecha de modificación”,
+    // “Carpeta de archivos”) – until the user drags a column (the binding is then replaced)
+    in-out property <length> w-date: max(130px, max(probe-date.preferred-width, probe-deleted.preferred-width) + 30px);
+    in-out property <length> w-type: max(110px, probe-folder.preferred-width + 14px);
     in-out property <length> w-size: 80px;
+    probe-date := Text { visible: false; font-size: Ui.font; text: @tr("Date modified"); accessible-role: none; }
+    probe-deleted := Text { visible: false; font-size: Ui.font; text: @tr("Date deleted"); accessible-role: none; }
+    probe-folder := Text { visible: false; font-size: Ui.font; text: @tr("File folder"); accessible-role: none; }
     // file operations
     in property <[JobRow]> jobs;
     in property <[image]> icons;
@@ -1483,6 +1488,9 @@ export component MainWindow inherits Window {
     callback job-pause(int, bool);
     callback job-cancel(int);
     callback conflict-answer(int);
+    // typed letter → 0 replace/merge, 1 skip, 2 keep both, 4 “for all”, -1 none
+    // (access keys per language, core::mnemonic)
+    callback conflict-key(string) -> int;
     callback confirm-answer(bool);
     callback rename-commit(int, string);
     callback rename-cancel(int);
@@ -1811,10 +1819,9 @@ export component MainWindow inherits Window {
             conflict-focus := FocusScope {
                 key-pressed(e) => {
                     if (e.text == Key.Escape) { root.conflict-answer(3); return accept; }
-                    if (e.text == "r" || e.text == "R") { root.conflict-answer(0); return accept; }
-                    if (e.text == "s" || e.text == "S") { root.conflict-answer(1); return accept; }
-                    if (e.text == "b" || e.text == "B") { root.conflict-answer(2); return accept; }
-                    if (e.text == "a" || e.text == "A") { root.conflict-all = !root.conflict-all; return accept; }
+                    let k = root.conflict-key(e.text);
+                    if (k == 4) { root.conflict-all = !root.conflict-all; return accept; }
+                    if (k >= 0) { root.conflict-answer(k); }
                     accept
                 }
                 conflict-layout := VerticalLayout {
@@ -1967,9 +1974,7 @@ export component MainWindow inherits Window {
                 font-size: Ui.font-body; font-weight: 600; color: Theme.d.text;
             }
             HorizontalLayout {
-                alignment: start;
                 ComboBox {
-                    width: 240px;
                     accessible-label: lang-head.text;
                     model: root.language-names;
                     current-index <=> root.language-index;

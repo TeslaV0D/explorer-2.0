@@ -89,7 +89,10 @@ fn pseudo_line(line: &str) -> String {
             continue;
         }
         out.push(accent(c));
-        visible += 1;
+        // an access-key marker (`&Replace`) is not shown: same padding as `Replace`
+        if c != '&' {
+            visible += 1;
+        }
     }
     out.extend(std::iter::repeat_n('·', growth(visible)));
     out
