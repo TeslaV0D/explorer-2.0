@@ -99,7 +99,7 @@ pub const LANGS: &[Lang] = &[
         native: "Українська",
         english: "Ukrainian",
         plural_forms: SLAVIC,
-        complete: false,
+        complete: true,
     },
     Lang {
         code: "zh",

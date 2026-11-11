@@ -9,6 +9,10 @@ The app UI is German; UI labels and messages are quoted as they appear (with a t
 - Field-test checklists renamed: `PRAXISTEST-SUCHE.md` → `FIELD-TEST-SEARCH.md`, `PRAXISTEST-REDESIGN.md` → `FIELD-TEST-REDESIGN.md`.
 - No code change; CI ignores doc-only commits (`paths-ignore`).
 
+## Localisation L6 – Ukrainian ✅ (CI pending, 2026-11-11)
+- **Українська (uk-UA)** complete: all 431 texts with the Windows Explorer terms of Ukrainian Windows (Кошик, Цей ПК, Швидкий доступ, Папка файлів, Дата змінення, Інсталювати …), formal “ви”; glossary **`docs/GLOSSARY-UK.md`**. Offered as “Українська” and palette command “Language: Українська”. Three plural forms (same rule as Russian), Cyrillic access keys (З/О/П/Б/В), units Б/КБ/МБ, “мс”. Layout check: every text fits on all 50 screens. Native-speaker review open.
+- CI #155 (Russian) was red in a test that has nothing to do with languages: `search::refresh::tests::nothing_changed_nothing_read` read a folder again on Windows – NTFS updated the folder's last-write time a moment after the files were created. The test now does a first pass that takes such late times in, then checks that the second pass reads nothing.
+
 ## Localisation L6 – Russian ✅ (CI pending, 2026-11-11)
 - **Русский (ru-RU)** complete: all 430 texts with the Windows Explorer terms of Russian Windows (Корзина, Этот компьютер, Быстрый доступ, Папка с файлами, Дата изменения, view names Таблица/Крупные значки/Огромные значки …), formal “вы”, е instead of ё like Windows; glossary **`docs/GLOSSARY-RU.md`**. Offered as “Русский” and palette command “Language: Русский”. Native-speaker review of the gallery open.
 - **Three plural forms** (1, 21 → элемент / 2–4 → элемента / 0, 5–20 → элементов) – the rule from L0 is used by every `tr_n!` (“15 элементов (1 скрыт)”, “Выбрано 3 элемента”).
@@ -16,7 +20,7 @@ The app UI is German; UI labels and messages are quoted as they appear (with a t
 - The load time in the status line (“· 12 ms”) is a text now (“мс” in Russian).
 - Layout check: every text fits on all 50 screens (Cyrillic is wider than Latin in places – still inside every box).
 
-## Localisation L6 – French ✅ (CI pending, 2026-11-11)
+## Localisation L6 – French ✅ (CI run #154, 2026-11-11)
 - **Français (fr-FR)** complete: all 428 texts with the Windows Explorer terms of French Windows (Corbeille, Ce PC, Accès rapide, Dossier de fichiers, Modifié le, Renommer, Afficher les éléments masqués …), formal “vous”, key names Maj/Suppr/Entrée; glossary **`docs/GLOSSARY-FR.md`**. Offered as “Français” and palette command “Language: Français”. Native-speaker review of the gallery open.
 - **French typography**: no-break space before `:` `?` `!` `;` and inside « », ellipsis without a space (`Chargement…`); numbers `1 234,5` (from L2).
 - **Size units are texts now** (`core::format_size`: `B/KB/MB/GB/TB` via `tr_noop!`): French Windows shows **o, Ko, Mo, Go, To** (“3,1 Ko (3 170 octets)”); German/Spanish/English keep B/KB/MB.

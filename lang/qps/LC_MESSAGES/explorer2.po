@@ -783,6 +783,10 @@ msgstr "[Łåñğüåğé: Šýšťém ďéfåüłť··········]"
 msgid "Language: Русский"
 msgstr "[Łåñğüåğé: Русский·······]"
 
+#: crates/core/src/commands.rs
+msgid "Language: Українська"
+msgstr "[Łåñğüåğé: Українська········]"
+
 #: crates/core/src/view.rs
 msgid "Large icons"
 msgstr "[Łåřğé îçöñš·····]"

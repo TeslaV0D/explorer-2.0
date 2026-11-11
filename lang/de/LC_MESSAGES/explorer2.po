@@ -784,6 +784,10 @@ msgstr "Sprache: Wie Windows"
 msgid "Language: Русский"
 msgstr "Sprache: Русский"
 
+#: crates/core/src/commands.rs
+msgid "Language: Українська"
+msgstr "Sprache: Українська"
+
 #: crates/core/src/view.rs
 msgid "Large icons"
 msgstr "Große Symbole"

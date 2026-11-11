@@ -783,6 +783,10 @@ msgstr "Langue : Par défaut du système"
 msgid "Language: Русский"
 msgstr "Langue : Русский"
 
+#: crates/core/src/commands.rs
+msgid "Language: Українська"
+msgstr "Langue : Українська"
+
 #: crates/core/src/view.rs
 msgid "Large icons"
 msgstr "Grandes icônes"
