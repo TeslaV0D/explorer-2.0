@@ -9,6 +9,12 @@ The app UI is German; UI labels and messages are quoted as they appear (with a t
 - Field-test checklists renamed: `PRAXISTEST-SUCHE.md` → `FIELD-TEST-SEARCH.md`, `PRAXISTEST-REDESIGN.md` → `FIELD-TEST-REDESIGN.md`.
 - No code change; CI ignores doc-only commits (`paths-ignore`).
 
+## Localisation L6 – French ✅ (CI pending, 2026-11-11)
+- **Français (fr-FR)** complete: all 428 texts with the Windows Explorer terms of French Windows (Corbeille, Ce PC, Accès rapide, Dossier de fichiers, Modifié le, Renommer, Afficher les éléments masqués …), formal “vous”, key names Maj/Suppr/Entrée; glossary **`docs/GLOSSARY-FR.md`**. Offered as “Français” and palette command “Language: Français”. Native-speaker review of the gallery open.
+- **French typography**: no-break space before `:` `?` `!` `;` and inside « », ellipsis without a space (`Chargement…`); numbers `1 234,5` (from L2).
+- **Size units are texts now** (`core::format_size`: `B/KB/MB/GB/TB` via `tr_noop!`): French Windows shows **o, Ko, Mo, Go, To** (“3,1 Ko (3 170 octets)”); German/Spanish/English keep B/KB/MB.
+- Layout: “Rechercher dans tous les lecteurs” was 5 px too long for the search box in This PC / Recycle Bin → “Rechercher dans les lecteurs”; then every text fits on all 50 screens. French plural rule (0 and 1 singular) from L0.
+
 ## Localisation L6 – Spanish ✅ (CI run #153, 2026-11-11)
 - **Español (es-ES)** complete: all 422 texts with the Windows Explorer terms of Spanish Windows (Papelera de reciclaje, Este equipo, Acceso rápido, Carpeta de archivos, Fecha de modificación, Cambiar nombre …), key names Mayús/Supr/Entrar, numbers `1.234,5`; glossary **`docs/GLOSSARY-ES.md`**. Offered in the language list and as palette command “Language: Español”. Native-speaker review of the gallery still open.
 - **Access keys per language** (`core::mnemonic`): the conflict dialog no longer has R/S/B/A hard-wired in Slint; the letter comes from the catalog like Windows' `&` (`E&rsetzen`, `&Reemplazar`, `Co&mbinar`, `&Omitir`, `&Conservar ambos`, `&todos`). Slint asks Rust (`conflict-key`), German keeps r/s/b/a. Test `crates/core/tests/mnemonics.rs`: in every catalog the mnemonic without `&` equals the button text, and the keys of one dialog differ. The pseudo-locale does not count `&` (same padding as the label).

@@ -70,7 +70,7 @@ pub const LANGS: &[Lang] = &[
         native: "Français",
         english: "French",
         plural_forms: "nplurals=2; plural=(n > 1);",
-        complete: false,
+        complete: true,
     },
     Lang {
         code: "it",

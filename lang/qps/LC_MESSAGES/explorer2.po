@@ -151,6 +151,10 @@ msgstr "[Åšçéñďîñğ·····]"
 msgid "Attributes"
 msgstr "[Åťťřîbüťéš·····]"
 
+#: crates/core/src/lib.rs
+msgid "B"
+msgstr "[B··]"
+
 #: crates/app/ui/main.slint
 #: crates/core/src/commands.rs
 msgid "Back"
@@ -617,6 +621,10 @@ msgstr "[Föłďéř · {0}······]"
 msgid "Forward"
 msgstr "[Föřwåřď····]"
 
+#: crates/core/src/lib.rs
+msgid "GB"
+msgstr "[ĞB··]"
+
 #: crates/app/src/inspector.rs
 msgid "GENERAL"
 msgstr "[ĞÉÑÉŘÅŁ····]"
@@ -727,6 +735,10 @@ msgstr "[Îñvåłîď påťh·····]"
 msgid "Journal: {0}"
 msgstr "[Jöüřñåł: {0}······]"
 
+#: crates/core/src/lib.rs
+msgid "KB"
+msgstr "[KB··]"
+
 #: crates/core/src/mnemonic.rs
 msgid "Keep &both"
 msgstr "[Kéép &böťh·····]"
@@ -754,6 +766,10 @@ msgstr "[Łåñğüåğé: Éñğłîšh·······]"
 #: crates/core/src/commands.rs
 msgid "Language: Español"
 msgstr "[Łåñğüåğé: Éšpåñöł·······]"
+
+#: crates/core/src/commands.rs
+msgid "Language: Français"
+msgstr "[Łåñğüåğé: Fřåñçåîš········]"
 
 #: crates/core/src/commands.rs
 msgid "Language: System default"
@@ -790,6 +806,10 @@ msgstr "[Łöåďîñğ … {0}······]"
 #: crates/fs/src/places.rs
 msgid "Local Disk"
 msgstr "[Łöçåł Ďîšk·····]"
+
+#: crates/core/src/lib.rs
+msgid "MB"
+msgstr "[MB··]"
 
 #: crates/core/src/mnemonic.rs
 msgid "Me&rge"
@@ -1315,6 +1335,10 @@ msgstr "[Šýšťém ďéfåüłť ({0})·········]"
 #: crates/core/src/renderer.rs
 msgid "System default renderer"
 msgstr "[Šýšťém ďéfåüłť řéñďéřéř··········]"
+
+#: crates/core/src/lib.rs
+msgid "TB"
+msgstr "[ŤB··]"
 
 #: crates/app/ui/main.slint
 msgid "Takes effect the next time the app starts."

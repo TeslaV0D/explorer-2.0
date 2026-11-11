@@ -267,9 +267,17 @@ pub fn sort_entries_with_type_names(
 
 /// Human-readable size, Explorer-style ("1 KB", "3.4 MB" / German "3,4 MB").
 pub fn format_size(bytes: u64) -> String {
-    const UNITS: [&str; 5] = ["B", "KB", "MB", "GB", "TB"];
+    // the unit names are texts too: French Windows shows “o, Ko, Mo”, Russian “Б, КБ”
+    const UNITS: [&str; 5] = [
+        explorer_i18n::tr_noop!("B"),
+        explorer_i18n::tr_noop!("KB"),
+        explorer_i18n::tr_noop!("MB"),
+        explorer_i18n::tr_noop!("GB"),
+        explorer_i18n::tr_noop!("TB"),
+    ];
+    let unit = |i: usize| explorer_i18n::translate(UNITS[i]);
     if bytes < 1024 {
-        return format!("{bytes} B");
+        return format!("{bytes} {}", unit(0));
     }
     let mut v = bytes as f64;
     let mut i = 0;
@@ -278,9 +286,9 @@ pub fn format_size(bytes: u64) -> String {
         i += 1;
     }
     if v >= 100.0 || (v - v.round()).abs() < 0.05 {
-        format!("{:.0} {}", v, UNITS[i])
+        format!("{:.0} {}", v, unit(i))
     } else {
-        format!("{} {}", explorer_i18n::format_decimal(v, 1), UNITS[i])
+        format!("{} {}", explorer_i18n::format_decimal(v, 1), unit(i))
     }
 }
 

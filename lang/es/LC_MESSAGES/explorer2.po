@@ -151,6 +151,10 @@ msgstr "Ascendente"
 msgid "Attributes"
 msgstr "Atributos"
 
+#: crates/core/src/lib.rs
+msgid "B"
+msgstr "B"
+
 #: crates/app/ui/main.slint
 #: crates/core/src/commands.rs
 msgid "Back"
@@ -617,6 +621,10 @@ msgstr "Carpeta · {0}"
 msgid "Forward"
 msgstr "Adelante"
 
+#: crates/core/src/lib.rs
+msgid "GB"
+msgstr "GB"
+
 #: crates/app/src/inspector.rs
 msgid "GENERAL"
 msgstr "GENERAL"
@@ -727,6 +735,10 @@ msgstr "Ruta no válida"
 msgid "Journal: {0}"
 msgstr "Registro: {0}"
 
+#: crates/core/src/lib.rs
+msgid "KB"
+msgstr "KB"
+
 #: crates/core/src/mnemonic.rs
 msgid "Keep &both"
 msgstr "&Conservar ambos"
@@ -754,6 +766,10 @@ msgstr "Idioma: English"
 #: crates/core/src/commands.rs
 msgid "Language: Español"
 msgstr "Idioma: Español"
+
+#: crates/core/src/commands.rs
+msgid "Language: Français"
+msgstr "Idioma: Français"
 
 #: crates/core/src/commands.rs
 msgid "Language: System default"
@@ -790,6 +806,10 @@ msgstr "Cargando … {0}"
 #: crates/fs/src/places.rs
 msgid "Local Disk"
 msgstr "Disco local"
+
+#: crates/core/src/lib.rs
+msgid "MB"
+msgstr "MB"
 
 #: crates/core/src/mnemonic.rs
 msgid "Me&rge"
@@ -1315,6 +1335,10 @@ msgstr "Predeterminado del sistema ({0})"
 #: crates/core/src/renderer.rs
 msgid "System default renderer"
 msgstr "Renderizador predeterminado del sistema"
+
+#: crates/core/src/lib.rs
+msgid "TB"
+msgstr "TB"
 
 #: crates/app/ui/main.slint
 msgid "Takes effect the next time the app starts."

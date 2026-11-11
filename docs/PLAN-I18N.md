@@ -1,6 +1,6 @@
 # Plan: localisation (i18n)
 
-As of 2026-11-10 · Boss: “mach die Lokalisation weiter” · decisions in D-029 (supersedes D-007) · **L0 ✅ (CI #141), L1 ✅ (CI #144), L2 ✅ (CI #146), L3 ✅ (CI #147), L4 ✅ (CI #149), L5 ✅ (CI #152), L6: es ✅ (CI #153)**, next fr.
+As of 2026-11-10 · Boss: “mach die Lokalisation weiter” · decisions in D-029 (supersedes D-007) · **L0 ✅ (CI #141), L1 ✅ (CI #144), L2 ✅ (CI #146), L3 ✅ (CI #147), L4 ✅ (CI #149), L5 ✅ (CI #152), L6: es ✅ (CI #153), fr ✅ (CI pending)**, next ru.
 Wish list from 2026-11-08 (`docs/TODO.md`): exact meanings like Windows Explorer in each language, layout robustness, language switchable in the settings (default: Windows language), numbers/dates per locale, mind font coverage.
 
 ## 1. Current state (inventory)

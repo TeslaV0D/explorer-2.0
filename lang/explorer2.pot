@@ -149,6 +149,10 @@ msgstr ""
 msgid "Attributes"
 msgstr ""
 
+#: crates/core/src/lib.rs
+msgid "B"
+msgstr ""
+
 #: crates/app/ui/main.slint
 #: crates/core/src/commands.rs
 msgid "Back"
@@ -590,6 +594,10 @@ msgstr ""
 msgid "Forward"
 msgstr ""
 
+#: crates/core/src/lib.rs
+msgid "GB"
+msgstr ""
+
 #: crates/app/src/inspector.rs
 msgid "GENERAL"
 msgstr ""
@@ -700,6 +708,10 @@ msgstr ""
 msgid "Journal: {0}"
 msgstr ""
 
+#: crates/core/src/lib.rs
+msgid "KB"
+msgstr ""
+
 #: crates/core/src/mnemonic.rs
 msgid "Keep &both"
 msgstr ""
@@ -726,6 +738,10 @@ msgstr ""
 
 #: crates/core/src/commands.rs
 msgid "Language: Español"
+msgstr ""
+
+#: crates/core/src/commands.rs
+msgid "Language: Français"
 msgstr ""
 
 #: crates/core/src/commands.rs
@@ -762,6 +778,10 @@ msgstr ""
 
 #: crates/fs/src/places.rs
 msgid "Local Disk"
+msgstr ""
+
+#: crates/core/src/lib.rs
+msgid "MB"
 msgstr ""
 
 #: crates/core/src/mnemonic.rs
@@ -1283,6 +1303,10 @@ msgstr ""
 
 #: crates/core/src/renderer.rs
 msgid "System default renderer"
+msgstr ""
+
+#: crates/core/src/lib.rs
+msgid "TB"
 msgstr ""
 
 #: crates/app/ui/main.slint

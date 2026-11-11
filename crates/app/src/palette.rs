@@ -218,7 +218,7 @@ pub(crate) fn execute(win: &MainWindow, pi: usize, id: &str) {
         "theme-system" => crate::theme::set_choice(win, "system"),
         "theme-light" => crate::theme::set_choice(win, "light"),
         "theme-dark" => crate::theme::set_choice(win, "dark"),
-        "language-system" | "language-en" | "language-de" | "language-es" => {
+        "language-system" | "language-en" | "language-de" | "language-es" | "language-fr" => {
             crate::lang::choose_code(win, &id["language-".len()..])
         }
         "integration-reset" => crate::integration::ask_reset(win),
