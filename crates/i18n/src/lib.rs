@@ -85,7 +85,7 @@ pub const LANGS: &[Lang] = &[
         english: "Polish",
         plural_forms:
             "nplurals=3; plural=(n==1 ? 0 : n%10>=2 && n%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2);",
-        complete: false,
+        complete: true,
     },
     Lang {
         code: "ru",

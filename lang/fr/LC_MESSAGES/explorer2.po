@@ -776,6 +776,10 @@ msgid "Language: Français"
 msgstr "Langue : Français"
 
 #: crates/core/src/commands.rs
+msgid "Language: Polski"
+msgstr "Langue : Polski"
+
+#: crates/core/src/commands.rs
 msgid "Language: System default"
 msgstr "Langue : Par défaut du système"
 

@@ -248,9 +248,13 @@ sleep 2
 check "[84b] the setting picks the language (pl)" "grep -q 'language pl (setting=\"pl\" override=None' $LOG.2"
 kill $PID; wait $PID 2>/dev/null
 LC3=$W/lang-cfg3; mkdir -p $LC3
-env -u EXPLORER2_LANG -u LANGUAGE -u LC_ALL -u LC_MESSAGES LANG=uk_UA.UTF-8 EXPLORER2_CONFIG_DIR=$LC3 $EXE "$W" > $LOG.3 2>&1 & PID=$!
+env -u EXPLORER2_LANG -u LANGUAGE -u LC_ALL -u LC_MESSAGES LANG=pt_BR.UTF-8 EXPLORER2_CONFIG_DIR=$LC3 $EXE "$W" > $LOG.3 2>&1 & PID=$!
 sleep 2
-check "[84c] automatic: a system language that is not complete yet (uk) falls back to English" "grep -qF 'language en (setting=\"\" override=None system=[\"uk_UA.UTF-8\"])' $LOG.3"
+check "[84c] automatic: a system language we don't have (pt-BR) falls back to English" "grep -qF 'language en (setting=\"\" override=None system=[\"pt_BR.UTF-8\"])' $LOG.3"
+kill $PID; wait $PID 2>/dev/null
+env -u EXPLORER2_LANG -u LANGUAGE -u LC_ALL -u LC_MESSAGES LANG=uk_UA.UTF-8 EXPLORER2_CONFIG_DIR=$LC3 $EXE "$W" > $LOG.4 2>&1 & PID=$!
+sleep 2
+check "[84e] automatic: a complete system language (uk, L6) is picked" "grep -qF 'language uk (setting=\"\" override=None system=[\"uk_UA.UTF-8\"])' $LOG.4 && ui_has 'Параметри'"
 kill $PID; wait $PID 2>/dev/null
 
 # ---- L4 language setting: switch live, the restart keeps it
