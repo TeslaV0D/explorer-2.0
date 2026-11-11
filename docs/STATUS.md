@@ -9,15 +9,16 @@ The app UI is German; UI labels and messages are quoted as they appear (with a t
 - Field-test checklists renamed: `PRAXISTEST-SUCHE.md` → `FIELD-TEST-SEARCH.md`, `PRAXISTEST-REDESIGN.md` → `FIELD-TEST-REDESIGN.md`.
 - No code change; CI ignores doc-only commits (`paths-ignore`).
 
-## Localisation L6 – Polish ✅ (CI pending, 2026-11-11)
+## Localisation L6 – Polish ✅ (CI run #157, 2026-11-11)
 - **Polski (pl-PL)** complete: all 432 texts with the Windows Explorer terms of Polish Windows (Kosz, Ten komputer, Szybki dostęp, Folder plików, Data modyfikacji, Zmień nazwę …), informal “ty” like Windows; glossary **`docs/GLOSSARY-PL.md`**. Offered as “Polski” and palette command “Language: Polski”. Three plural forms with Polish rules (exactly 1 / 2–4 / the rest: “1 ukryty”, “3 170 bajtów”), quotes „…”, access keys Z/S/P/O/W. Layout check: every text fits on all 50 screens. Native-speaker review open.
 - E2E [84c] assumed Ukrainian is still incomplete (automatic fallback to English) – with uk complete it is rightly picked → [84c] now uses a language we don't have (pt-BR → English) and the new **[84e]** checks that a complete system language (uk) is picked automatically, UI in Ukrainian. CI #156 (Ukrainian) was red on that one check.
+- **CI #157 fully green** with ru, uk and pl: galleries + layout check for de, en, qps, es, fr, pl, ru, uk (50 screens each, every text fits), Windows incl. [G1]; Linux E2E locally 288/288.
 
-## Localisation L6 – Ukrainian ✅ (CI pending, 2026-11-11)
+## Localisation L6 – Ukrainian ✅ (CI run #157, 2026-11-11)
 - **Українська (uk-UA)** complete: all 431 texts with the Windows Explorer terms of Ukrainian Windows (Кошик, Цей ПК, Швидкий доступ, Папка файлів, Дата змінення, Інсталювати …), formal “ви”; glossary **`docs/GLOSSARY-UK.md`**. Offered as “Українська” and palette command “Language: Українська”. Three plural forms (same rule as Russian), Cyrillic access keys (З/О/П/Б/В), units Б/КБ/МБ, “мс”. Layout check: every text fits on all 50 screens. Native-speaker review open.
 - CI #155 (Russian) was red in a test that has nothing to do with languages: `search::refresh::tests::nothing_changed_nothing_read` read a folder again on Windows – NTFS updated the folder's last-write time a moment after the files were created. The test now does a first pass that takes such late times in, then checks that the second pass reads nothing.
 
-## Localisation L6 – Russian ✅ (CI pending, 2026-11-11)
+## Localisation L6 – Russian ✅ (CI run #157, 2026-11-11)
 - **Русский (ru-RU)** complete: all 430 texts with the Windows Explorer terms of Russian Windows (Корзина, Этот компьютер, Быстрый доступ, Папка с файлами, Дата изменения, view names Таблица/Крупные значки/Огромные значки …), formal “вы”, е instead of ё like Windows; glossary **`docs/GLOSSARY-RU.md`**. Offered as “Русский” and palette command “Language: Русский”. Native-speaker review of the gallery open.
 - **Three plural forms** (1, 21 → элемент / 2–4 → элемента / 0, 5–20 → элементов) – the rule from L0 is used by every `tr_n!` (“15 элементов (1 скрыт)”, “Выбрано 3 элемента”).
 - Cyrillic access keys in the conflict dialog (З/О/П/С/В, as Windows does with the Russian layout); key names stay Latin (Ctrl, Shift, Del, Enter); size units Б/КБ/МБ/ГБ/ТБ (“3,1 КБ (3 170 байт)”); quotes «…».
