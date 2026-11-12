@@ -784,6 +784,10 @@ msgid "Language: Français"
 msgstr "Język: Français"
 
 #: crates/core/src/commands.rs
+msgid "Language: Italiano"
+msgstr "Język: Italiano"
+
+#: crates/core/src/commands.rs
 msgid "Language: Polski"
 msgstr "Język: Polski"
 

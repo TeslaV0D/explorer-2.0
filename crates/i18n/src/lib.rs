@@ -77,7 +77,7 @@ pub const LANGS: &[Lang] = &[
         native: "Italiano",
         english: "Italian",
         plural_forms: TWO,
-        complete: false,
+        complete: true,
     },
     Lang {
         code: "pl",

@@ -1,0 +1,1936 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: explorer2\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: it\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+#: crates/integrate/src/bin/explorer2-recover.rs
+msgid "  error: {0}"
+msgstr "  errore: {0}"
+
+#: crates/integrate/src/bin/explorer2-recover.rs
+msgid "  left unchanged: {0}"
+msgstr "  lasciato invariato: {0}"
+
+#: crates/app/src/fileops.rs
+msgid " (+{n} more error)"
+msgid_plural " (+{n} more errors)"
+msgstr[0] " (+{n} altro errore)"
+msgstr[1] " (+{n} altri errori)"
+
+#: crates/app/src/search.rs
+msgid " (built in {0})"
+msgstr " (creato in {0})"
+
+#: crates/app/src/nav.rs
+msgid " (folder searched, without index)"
+msgstr " (cartella esaminata, senza indice)"
+
+#: crates/integrate/src/lib.rs
+msgid " (journal was damaged, known locations checked)"
+msgstr " (il registro era danneggiato, percorsi noti controllati)"
+
+#: crates/app/src/inspector.rs
+msgid " (more – counting stopped at {0} entries)"
+msgstr " (altro: il conteggio si è fermato a {0} elementi)"
+
+#: crates/app/src/quick.rs
+msgid " (still being built)"
+msgstr " (ancora in costruzione)"
+
+#: crates/app/src/nav.rs
+msgid " ({0} hidden)"
+msgid_plural " ({0} hidden)"
+msgstr[0] " ({0} nascosto)"
+msgstr[1] " ({0} nascosti)"
+
+#: crates/app/src/integration.rs
+msgid " Emergency tool: {0}"
+msgstr " Strumento di emergenza: {0}"
+
+#: crates/app/src/nav.rs
+msgid " · {0} ms"
+msgstr " · {0} ms"
+
+#: crates/app/src/search.rs
+msgid " – changes missed {n} time, re-synced afterwards ({0})"
+msgid_plural " – changes missed {n} times, re-synced afterwards ({0})"
+msgstr[0] " – modifiche perse {n} volta, poi risincronizzato ({0})"
+msgstr[1] " – modifiche perse {n} volte, poi risincronizzato ({0})"
+
+#: crates/integrate/src/lib.rs
+msgid " – journal damaged, reset recommended"
+msgstr " – registro danneggiato, reimpostazione consigliata"
+
+#: crates/app/src/search.rs
+msgid " – network drive"
+msgstr " – unità di rete"
+
+#: crates/app/src/search.rs
+msgid " – other drive"
+msgstr " – altra unità"
+
+#: crates/app/src/search.rs
+msgid " – removable drive"
+msgstr " – unità rimovibile"
+
+#: crates/app/src/search.rs
+msgid " – saving failed: {0}"
+msgstr " – salvataggio non riuscito: {0}"
+
+#: crates/app/src/search.rs
+msgid " – without live updates"
+msgstr " – senza aggiornamenti in tempo reale"
+
+#: crates/core/src/mnemonic.rs
+msgid "&Replace"
+msgstr "&Sostituisci"
+
+#: crates/core/src/mnemonic.rs
+msgid "&Skip"
+msgstr "&Ignora"
+
+#: crates/app/src/installer.rs
+msgid ", redirected: {0}"
+msgstr ", reindirizzati: {0}"
+
+#: crates/integrate/src/lib.rs
+msgid ", {n} integration point active"
+msgid_plural ", {n} integration points active"
+msgstr[0] ", {n} punto di integrazione attivo"
+msgstr[1] ", {n} punti di integrazione attivi"
+
+#: crates/ops/src/names.rs
+msgid "A file name can't contain {0}: \\ / : * ? \" < > |"
+msgstr "Un nome di file non può contenere {0}: \\ / : * ? \" < > |"
+
+#: crates/ops/src/exec.rs
+msgid "A folder and a file can't replace each other."
+msgstr "Una cartella e un file non possono sostituirsi a vicenda."
+
+#: crates/fs/src/lib.rs
+#: crates/ops/src/exec.rs
+#: crates/ops/src/simple.rs
+msgid "Access denied"
+msgstr "Accesso negato"
+
+#: crates/app/ui/main.slint
+msgid "Address bar"
+msgstr "Barra degli indirizzi"
+
+#: crates/ops/src/exec.rs
+msgid "Already exists"
+msgstr "Esiste già"
+
+#: crates/app/src/fileops.rs
+#: crates/core/src/commands.rs
+msgid "Alt+Enter"
+msgstr "Alt+INVIO"
+
+#: crates/app/ui/main.slint
+msgid "Alt+Left"
+msgstr "Alt+Sinistra"
+
+#: crates/app/ui/main.slint
+msgid "Alt+Right"
+msgstr "Alt+Destra"
+
+#: crates/app/ui/main.slint
+msgid "Alt+Up"
+msgstr "Alt+Su"
+
+#: crates/ops/src/trashview.rs
+#: crates/ops/src/undo.rs
+msgid "An item already exists at the original location: {0}"
+msgstr "Esiste già un elemento nel percorso originale: {0}"
+
+#: crates/app/ui/main.slint
+msgid "Ascending"
+msgstr "Crescente"
+
+#: crates/app/src/inspector.rs
+msgid "Attributes"
+msgstr "Attributi"
+
+#: crates/core/src/lib.rs
+msgid "B"
+msgstr "B"
+
+#: crates/app/ui/main.slint
+#: crates/core/src/commands.rs
+msgid "Back"
+msgstr "Indietro"
+
+#: crates/ops/src/undo.rs
+msgid "Can't move back, the target exists: {0}"
+msgstr "Impossibile riportare indietro, la destinazione esiste già: {0}"
+
+#: crates/app/ui/main.slint
+msgid "Cancel"
+msgstr "Annulla"
+
+#: crates/integrate/src/bin/explorer2-recover.rs
+msgid "Cancelled – nothing changed."
+msgstr "Annullato: nessuna modifica."
+
+#: crates/setup/src/main.rs
+msgid "Cancelled."
+msgstr "Annullato."
+
+#: crates/app/ui/main.slint
+msgid "Close"
+msgstr "Chiudi"
+
+#: crates/app/ui/main.slint
+#: crates/core/src/commands.rs
+msgid "Close tab"
+msgstr "Chiudi scheda"
+
+#: crates/app/ui/main.slint
+msgid "Color scheme"
+msgstr "Combinazione di colori"
+
+#: crates/core/src/commands.rs
+msgid "Color scheme: Dark"
+msgstr "Combinazione di colori: Scuro"
+
+#: crates/core/src/commands.rs
+msgid "Color scheme: Light"
+msgstr "Combinazione di colori: Chiaro"
+
+#: crates/core/src/commands.rs
+msgid "Color scheme: System default"
+msgstr "Combinazione di colori: Predefinito di sistema"
+
+#: crates/app/ui/main.slint
+msgid "Command palette"
+msgstr "Tavolozza dei comandi"
+
+#: crates/app/src/installer.rs
+msgid "Configuration folder not found"
+msgstr "Cartella di configurazione non trovata"
+
+#: crates/app/src/integration.rs
+msgid "Configuration folder not found."
+msgstr "Cartella di configurazione non trovata."
+
+#: crates/app/src/inspector.rs
+msgid "Contents"
+msgstr "Contenuto"
+
+#: crates/app/ui/main.slint
+#: crates/core/src/commands.rs
+msgid "Context menu"
+msgstr "Menu contestuale"
+
+#: crates/app/src/fileops.rs
+msgid "Context menu: {0}"
+msgstr "Menu contestuale: {0}"
+
+#: crates/ops/src/exec.rs
+msgid "Copied, but the source was not deleted: {0}"
+msgstr "Copiato, ma l'origine non è stata eliminata: {0}"
+
+#: crates/app/src/fileops.rs
+#: crates/app/ui/main.slint
+#: crates/core/src/commands.rs
+msgid "Copy"
+msgstr "Copia"
+
+#: crates/app/ui/main.slint
+msgid "Copy path"
+msgstr "Copia percorso"
+
+#: crates/app/src/fileops.rs
+msgid "Copying {0} to “{1}”"
+msgstr "Copia di {0} in «{1}»"
+
+#: crates/ops/src/exec.rs
+msgid "Couldn't move the existing item to the Recycle Bin: {0}"
+msgstr "Impossibile spostare l'elemento esistente nel Cestino: {0}"
+
+#: crates/app/src/open.rs
+msgid "Couldn't open (code {0})"
+msgstr "Impossibile aprire (codice {0})"
+
+#: crates/app/src/open.rs
+msgid "Couldn't open ({0}): {1}"
+msgstr "Impossibile aprire ({0}): {1}"
+
+#: crates/app/src/inspector.rs
+msgid "Created"
+msgstr "Creato"
+
+#: crates/core/src/commands.rs
+msgid "Ctrl+A"
+msgstr "Ctrl+A"
+
+#: crates/app/src/fileops.rs
+#: crates/app/ui/main.slint
+#: crates/core/src/commands.rs
+msgid "Ctrl+C"
+msgstr "Ctrl+C"
+
+#: crates/core/src/commands.rs
+msgid "Ctrl+F"
+msgstr "Ctrl+F"
+
+#: crates/core/src/commands.rs
+msgid "Ctrl+L"
+msgstr "Ctrl+L"
+
+#: crates/core/src/commands.rs
+msgid "Ctrl+Shift+1"
+msgstr "Ctrl+Maiusc+1"
+
+#: crates/app/ui/main.slint
+#: crates/core/src/commands.rs
+msgid "Ctrl+Shift+2"
+msgstr "Ctrl+Maiusc+2"
+
+#: crates/core/src/commands.rs
+msgid "Ctrl+Shift+3"
+msgstr "Ctrl+Maiusc+3"
+
+#: crates/app/ui/main.slint
+#: crates/core/src/commands.rs
+msgid "Ctrl+Shift+6"
+msgstr "Ctrl+Maiusc+6"
+
+#: crates/core/src/commands.rs
+msgid "Ctrl+Shift+F"
+msgstr "Ctrl+Maiusc+F"
+
+#: crates/app/src/fileops.rs
+#: crates/app/ui/main.slint
+#: crates/core/src/commands.rs
+msgid "Ctrl+Shift+N"
+msgstr "Ctrl+Maiusc+N"
+
+#: crates/app/ui/main.slint
+msgid "Ctrl+Shift+P"
+msgstr "Ctrl+Maiusc+P"
+
+#: crates/core/src/commands.rs
+msgid "Ctrl+Shift+Tab"
+msgstr "Ctrl+Maiusc+Tab"
+
+#: crates/app/ui/main.slint
+#: crates/core/src/commands.rs
+msgid "Ctrl+T"
+msgstr "Ctrl+T"
+
+#: crates/core/src/commands.rs
+msgid "Ctrl+Tab"
+msgstr "Ctrl+Tab"
+
+#: crates/app/src/fileops.rs
+#: crates/app/ui/main.slint
+#: crates/core/src/commands.rs
+msgid "Ctrl+V"
+msgstr "Ctrl+V"
+
+#: crates/core/src/commands.rs
+msgid "Ctrl+W"
+msgstr "Ctrl+W"
+
+#: crates/app/src/fileops.rs
+#: crates/app/ui/main.slint
+#: crates/core/src/commands.rs
+msgid "Ctrl+X"
+msgstr "Ctrl+X"
+
+#: crates/app/ui/main.slint
+#: crates/core/src/commands.rs
+msgid "Ctrl+Y"
+msgstr "Ctrl+Y"
+
+#: crates/app/ui/main.slint
+#: crates/core/src/commands.rs
+msgid "Ctrl+Z"
+msgstr "Ctrl+Z"
+
+#: crates/app/ui/main.slint
+#: crates/core/src/commands.rs
+msgid "Ctrl+\\"
+msgstr "Ctrl+\\"
+
+#: crates/core/src/renderer.rs
+msgid "Currently: {0} ({1})"
+msgstr "Attuale: {0} ({1})"
+
+#: crates/app/src/fileops.rs
+#: crates/app/ui/main.slint
+#: crates/core/src/commands.rs
+msgid "Cut"
+msgstr "Taglia"
+
+#: crates/app/src/inspector.rs
+msgid "DATE"
+msgstr "DATA"
+
+#: crates/fs/src/places.rs
+msgid "DVD Drive"
+msgstr "Unità DVD"
+
+#: crates/app/ui/main.slint
+msgid "Dark"
+msgstr "Scuro"
+
+#: crates/app/ui/main.slint
+#: crates/core/src/places.rs
+msgid "Date deleted"
+msgstr "Data eliminazione"
+
+#: crates/app/src/nav.rs
+#: crates/app/ui/main.slint
+msgid "Date modified"
+msgstr "Data ultima modifica"
+
+#: crates/app/src/fileops.rs
+#: crates/app/ui/main.slint
+#: crates/core/src/commands.rs
+msgid "Del"
+msgstr "CANC"
+
+#: crates/app/src/fileops.rs
+#: crates/app/ui/main.slint
+msgid "Delete"
+msgstr "Elimina"
+
+#: crates/core/src/commands.rs
+msgid "Delete (to Recycle Bin)"
+msgstr "Elimina (sposta nel Cestino)"
+
+#: crates/app/src/fileops.rs
+#: crates/app/ui/main.slint
+#: crates/core/src/commands.rs
+msgid "Delete permanently"
+msgstr "Elimina definitivamente"
+
+#: crates/ops/src/trashview.rs
+msgid "Delete permanently failed: {0}"
+msgstr "Eliminazione definitiva non riuscita: {0}"
+
+#: crates/app/src/fileops.rs
+msgid ""
+"Delete this {n} item permanently?\n"
+"This can't be undone."
+msgid_plural ""
+"Delete these {n} items permanently?\n"
+"This can't be undone."
+msgstr[0] ""
+"Eliminare definitivamente questo elemento?\n"
+"L'operazione non può essere annullata."
+msgstr[1] ""
+"Eliminare definitivamente questi {n} elementi?\n"
+"L'operazione non può essere annullata."
+
+#: crates/app/src/fileops.rs
+msgid ""
+"Delete {0} permanently?\n"
+"This can't be undone."
+msgstr ""
+"Eliminare definitivamente {0}?\n"
+"L'operazione non può essere annullata."
+
+#: crates/app/src/fileops.rs
+msgid ""
+"Delete “{0}” permanently?\n"
+"This can't be undone."
+msgstr ""
+"Eliminare definitivamente «{0}»?\n"
+"L'operazione non può essere annullata."
+
+#: crates/app/src/fileops.rs
+msgid "Deleting {0} permanently"
+msgstr "Eliminazione definitiva di {0}"
+
+#: crates/app/ui/main.slint
+msgid "Descending"
+msgstr "Decrescente"
+
+#: crates/fs/src/places.rs
+msgid "Desktop"
+msgstr "Desktop"
+
+#: crates/app/ui/main.slint
+#: crates/core/src/view.rs
+msgid "Details"
+msgstr "Dettagli"
+
+#: crates/app/src/inspector.rs
+msgid "Dimensions"
+msgstr "Dimensioni"
+
+#: crates/core/src/mnemonic.rs
+msgid "Do this for &all remaining conflicts"
+msgstr "Esegui l'operazione per &tutti i conflitti rimanenti"
+
+#: crates/app/ui/main.slint
+msgid "Do this for all remaining conflicts"
+msgstr "Esegui l'operazione per tutti i conflitti rimanenti"
+
+#: crates/fs/src/places.rs
+msgid "Documents"
+msgstr "Documenti"
+
+#: crates/fs/src/places.rs
+msgid "Downloads"
+msgstr "Download"
+
+#: crates/fs/src/places.rs
+msgid "Drive"
+msgstr "Unità"
+
+#: crates/core/src/commands.rs
+msgid "Edit address"
+msgstr "Modifica indirizzo"
+
+#: crates/app/ui/main.slint
+#: crates/core/src/commands.rs
+msgid "Empty Recycle Bin"
+msgstr "Svuota Cestino"
+
+#: crates/app/src/fileops.rs
+#: crates/core/src/commands.rs
+msgid "Enter"
+msgstr "INVIO"
+
+#: crates/integrate/src/bin/explorer2-recover.rs
+msgid "Error: configuration folder not found (APPDATA missing)."
+msgstr "Errore: cartella di configurazione non trovata (APPDATA mancante)."
+
+#: crates/integrate/src/bin/explorer2-recover.rs
+msgid "Error: installation folder cannot be determined (LOCALAPPDATA missing)."
+msgstr "Errore: impossibile determinare la cartella di installazione (LOCALAPPDATA mancante)."
+
+#: crates/integrate/src/bin/explorer2-recover.rs
+msgid "Error: {0} – please delete the program folder by hand: {1}"
+msgstr "Errore: {0}. Elimina la cartella del programma a mano: {1}"
+
+#: crates/app/src/fileops.rs
+msgid "Existing: {0}"
+msgstr "Esistente: {0}"
+
+#: crates/core/src/guard.rs
+msgid "Explorer 2.0 closed unexpectedly last time."
+msgstr "Explorer 2.0 si è chiuso in modo imprevisto l'ultima volta."
+
+#: crates/core/src/guard.rs
+msgid "Explorer 2.0 closed unexpectedly {n} time."
+msgid_plural "Explorer 2.0 closed unexpectedly {n} times."
+msgstr[0] "Explorer 2.0 si è chiuso in modo imprevisto {n} volta."
+msgstr[1] "Explorer 2.0 si è chiuso in modo imprevisto {n} volte."
+
+#: crates/app/src/installer.rs
+msgid "Explorer 2.0 installed: {0} ({1} Start menu shortcuts{2})"
+msgstr "Explorer 2.0 installato: {0} ({1} collegamenti nel menu Start{2})"
+
+#: crates/setup/src/main.rs
+msgid "Explorer 2.0 is already installed. Update to version {0}?"
+msgstr "Explorer 2.0 è già installato. Aggiornare alla versione {0}?"
+
+#: crates/integrate/src/bin/explorer2-recover.rs
+msgid "Explorer 2.0 was removed. Your settings stay in %APPDATA%\\Explorer2."
+msgstr "Explorer 2.0 è stato rimosso. Le impostazioni restano in %APPDATA%\\Explorer2."
+
+#: crates/setup/src/main.rs
+msgid ""
+"Explorer 2.0 {0} is installed.\n"
+"\n"
+"You'll find it in the Start menu under “Explorer 2.0”. To uninstall, use “Settings → Apps” or the Start menu entry “Explorer 2.0 – Windows-Standard wiederherstellen”.\n"
+"\n"
+"Start it now?"
+msgstr ""
+"Explorer 2.0 {0} è installato.\n"
+"\n"
+"Lo trovi nel menu Start come «Explorer 2.0». Per disinstallarlo, usa «Impostazioni → App» o la voce del menu Start «Explorer 2.0 – Windows-Standard wiederherstellen».\n"
+"\n"
+"Avviarlo ora?"
+
+#: crates/integrate/src/bin/explorer2-recover.rs
+msgid "Explorer 2.0 – restore the Windows default"
+msgstr "Explorer 2.0 – ripristina i valori predefiniti di Windows"
+
+#: crates/integrate/src/bin/explorer2-recover.rs
+msgid ""
+"Explorer 2.0 – restore the Windows default\n"
+"\n"
+"  explorer2-recover                  shows the state, asks and resets\n"
+"  explorer2-recover --yes            resets without asking\n"
+"  explorer2-recover --status         only shows the state (exit code 1 = active)\n"
+"  explorer2-recover --uninstall      resets and removes Explorer 2.0\n"
+"  explorer2-recover --uninstall --quiet   the same without asking\n"
+"\n"
+"Removes all Windows integrations of Explorer 2.0 (folder verbs, Win+E,\n"
+"context menu, environment variables, shortcuts …) and restores the previous\n"
+"values exactly. Values that other software has changed meanwhile stay\n"
+"untouched. Your settings (%APPDATA%\\Explorer2) are kept when uninstalling."
+msgstr ""
+"Explorer 2.0 – ripristina i valori predefiniti di Windows\n"
+"\n"
+"  explorer2-recover                  mostra lo stato, chiede e reimposta\n"
+"  explorer2-recover --yes            reimposta senza chiedere\n"
+"  explorer2-recover --status         mostra solo lo stato (codice di uscita 1 = attivo)\n"
+"  explorer2-recover --uninstall      reimposta e rimuove Explorer 2.0\n"
+"  explorer2-recover --uninstall --quiet   lo stesso senza chiedere\n"
+"\n"
+"Rimuove tutte le integrazioni di Explorer 2.0 in Windows (verbi delle cartelle, Win+E,\n"
+"menu contestuale, variabili d'ambiente, collegamenti …) e ripristina esattamente\n"
+"i valori precedenti. I valori che nel frattempo un altro programma ha modificato\n"
+"restano invariati. Le impostazioni (%APPDATA%\\Explorer2) si conservano alla disinstallazione."
+
+#: crates/core/src/view.rs
+msgid "Extra large icons"
+msgstr "Icone molto grandi"
+
+#: crates/core/src/lib.rs
+msgid "File"
+msgstr "File"
+
+#: crates/app/ui/main.slint
+#: crates/core/src/lib.rs
+msgid "File folder"
+msgstr "Cartella di file"
+
+#: crates/fs/src/places.rs
+msgid "File system"
+msgstr "File system"
+
+#: crates/app/src/inspector.rs
+#: crates/app/src/nav.rs
+#: crates/core/src/places.rs
+msgid "Folder"
+msgstr "Cartella"
+
+#: crates/fs/src/lib.rs
+#: crates/search/src/watch.rs
+msgid "Folder not found"
+msgstr "Cartella non trovata"
+
+#: crates/app/ui/main.slint
+msgid "Folder options"
+msgstr "Opzioni cartella"
+
+#: crates/app/src/fileops.rs
+msgid "Folder · {0}"
+msgstr "Cartella · {0}"
+
+#: crates/app/ui/main.slint
+#: crates/core/src/commands.rs
+msgid "Forward"
+msgstr "Avanti"
+
+#: crates/core/src/lib.rs
+msgid "GB"
+msgstr "GB"
+
+#: crates/app/src/inspector.rs
+msgid "GENERAL"
+msgstr "GENERALE"
+
+#: crates/core/src/renderer.rs
+msgid "GPU acceleration"
+msgstr "Accelerazione GPU"
+
+#: crates/core/src/renderer.rs
+msgid "GPU check running in the background – applies from the next start"
+msgstr "Controllo GPU in background: si applica dal prossimo avvio"
+
+#: crates/core/src/commands.rs
+msgid "Go to parent folder"
+msgstr "Vai alla cartella superiore"
+
+#: crates/core/src/inspect.rs
+msgid "Hidden"
+msgstr "Nascosto"
+
+#: crates/fs/src/places.rs
+msgid "Home"
+msgstr "Cartella personale"
+
+#: crates/app/src/search.rs
+msgid "Home ({0})"
+msgstr "Cartella personale ({0})"
+
+#: crates/app/ui/main.slint
+msgid "Icons"
+msgstr "Icone"
+
+#: crates/app/ui/main.slint
+msgid "Index drives for search"
+msgstr "Unità da indicizzare per la ricerca"
+
+#: crates/app/ui/main.slint
+msgid "Inspector"
+msgstr "Ispettore"
+
+#: crates/app/src/installer.rs
+msgid "Install"
+msgstr "Installa"
+
+#: crates/core/src/commands.rs
+msgid "Install / update Explorer 2.0"
+msgstr "Installa o aggiorna Explorer 2.0"
+
+#: crates/setup/src/main.rs
+msgid "Install Explorer 2.0 {0} for this user?"
+msgstr "Installare Explorer 2.0 {0} per questo utente?"
+
+#: crates/app/ui/main.slint
+msgid "Installation"
+msgstr "Installazione"
+
+#: crates/app/src/installer.rs
+#: crates/setup/src/main.rs
+msgid "Installation failed: {0}"
+msgstr "Installazione non riuscita: {0}"
+
+#: crates/app/src/installer.rs
+msgid "Installation folder cannot be determined"
+msgstr "Impossibile determinare la cartella di installazione"
+
+#: crates/setup/src/main.rs
+msgid "Installation folder cannot be determined (LOCALAPPDATA/APPDATA missing)."
+msgstr "Impossibile determinare la cartella di installazione (LOCALAPPDATA/APPDATA mancante)."
+
+#: crates/integrate/src/bin/explorer2-recover.rs
+msgid "Installation: {0}"
+msgstr "Installazione: {0}"
+
+#: crates/app/src/installer.rs
+msgid "Installed (version {0}) in {1}. Uninstall via “Apps & Features” or the Start menu."
+msgstr "Installato (versione {0}) in {1}. Per disinstallare, usa «App e funzionalità» o il menu Start."
+
+#: crates/app/src/installer.rs
+msgid "Installed in {0}; this copy is running from {1}."
+msgstr "Installato in {0}; questa copia è in esecuzione da {1}."
+
+#: crates/app/src/installer.rs
+#: crates/setup/src/main.rs
+msgid "Installed, but starting failed: {0}"
+msgstr "Installato, ma l'avvio non è riuscito: {0}"
+
+#: crates/app/src/installer.rs
+msgid "Installed, but the installed copy did not start – this window stays open."
+msgstr "Installato, ma la copia installata non si è avviata: questa finestra resta aperta."
+
+#: crates/app/src/installer.rs
+msgid "Installed, but the start could not be checked: {0}"
+msgstr "Installato, ma non è stato possibile verificare l'avvio: {0}"
+
+#: crates/setup/src/main.rs
+msgid "Installer ended with {0}"
+msgstr "Il programma di installazione è terminato con {0}"
+
+#: crates/integrate/src/lib.rs
+msgid "Integration journal damaged – please reset first"
+msgstr "Registro di integrazione danneggiato: reimposta prima"
+
+#: crates/ops/src/exec.rs
+msgid "Invalid path"
+msgstr "Percorso non valido"
+
+#: crates/integrate/src/bin/explorer2-recover.rs
+msgid "Journal: {0}"
+msgstr "Registro: {0}"
+
+#: crates/core/src/lib.rs
+msgid "KB"
+msgstr "KB"
+
+#: crates/core/src/mnemonic.rs
+msgid "Keep &both"
+msgstr "&Mantieni entrambi"
+
+#: crates/app/ui/main.slint
+msgid "Keep both"
+msgstr "Mantieni entrambi"
+
+#: crates/app/src/inspector.rs
+msgid "LOCATION"
+msgstr "POSIZIONE"
+
+#: crates/app/ui/main.slint
+msgid "Language"
+msgstr "Lingua"
+
+#: crates/core/src/commands.rs
+msgid "Language: Deutsch"
+msgstr "Lingua: Deutsch"
+
+#: crates/core/src/commands.rs
+msgid "Language: English"
+msgstr "Lingua: English"
+
+#: crates/core/src/commands.rs
+msgid "Language: Español"
+msgstr "Lingua: Español"
+
+#: crates/core/src/commands.rs
+msgid "Language: Français"
+msgstr "Lingua: Français"
+
+#: crates/core/src/commands.rs
+msgid "Language: Italiano"
+msgstr "Lingua: Italiano"
+
+#: crates/core/src/commands.rs
+msgid "Language: Polski"
+msgstr "Lingua: Polski"
+
+#: crates/core/src/commands.rs
+msgid "Language: System default"
+msgstr "Lingua: Predefinito di sistema"
+
+#: crates/core/src/commands.rs
+msgid "Language: Русский"
+msgstr "Lingua: Русский"
+
+#: crates/core/src/commands.rs
+msgid "Language: Українська"
+msgstr "Lingua: Українська"
+
+#: crates/core/src/view.rs
+msgid "Large icons"
+msgstr "Icone grandi"
+
+#: crates/core/src/places.rs
+msgid "Libraries"
+msgstr "Raccolte"
+
+#: crates/app/src/nav.rs
+msgid "Libraries are only available on Windows"
+msgstr "Le raccolte sono disponibili solo in Windows"
+
+#: crates/app/src/nav.rs
+msgid "Library not found: {0}"
+msgstr "Raccolta non trovata: {0}"
+
+#: crates/app/ui/main.slint
+msgid "Light"
+msgstr "Chiaro"
+
+#: crates/app/src/nav.rs
+msgid "Loading …"
+msgstr "Caricamento …"
+
+#: crates/app/src/nav.rs
+msgid "Loading … {0}"
+msgstr "Caricamento … {0}"
+
+#: crates/fs/src/places.rs
+msgid "Local Disk"
+msgstr "Disco locale"
+
+#: crates/core/src/lib.rs
+msgid "MB"
+msgstr "MB"
+
+#: crates/core/src/mnemonic.rs
+msgid "Me&rge"
+msgstr "&Unisci"
+
+#: crates/core/src/view.rs
+msgid "Medium icons"
+msgstr "Icone medie"
+
+#: crates/app/ui/main.slint
+msgid "Merge"
+msgstr "Unisci"
+
+#: crates/app/src/inspector.rs
+msgid "Modified"
+msgstr "Modificato"
+
+#: crates/app/ui/main.slint
+msgid "More"
+msgstr "Altro"
+
+#: crates/app/src/fileops.rs
+msgid "Moving {0} to the Recycle Bin"
+msgstr "Spostamento di {0} nel Cestino"
+
+#: crates/app/src/fileops.rs
+msgid "Moving {0} to “{1}”"
+msgstr "Spostamento di {0} in «{1}»"
+
+#: crates/fs/src/places.rs
+msgid "Music"
+msgstr "Musica"
+
+#: crates/app/ui/main.slint
+msgid "Name"
+msgstr "Nome"
+
+#: crates/fs/src/places.rs
+msgid "Network Drive"
+msgstr "Unità di rete"
+
+#: crates/fs/src/network.rs
+msgid "Network path not found"
+msgstr "Percorso di rete non trovato"
+
+#: crates/fs/src/network.rs
+msgid "Network shares are only available on Windows"
+msgstr "Le condivisioni di rete sono disponibili solo in Windows"
+
+#: crates/app/src/fileops.rs
+#: crates/app/ui/main.slint
+#: crates/core/src/commands.rs
+#: crates/ops/src/names.rs
+msgid "New folder"
+msgstr "Nuova cartella"
+
+#: crates/app/ui/main.slint
+#: crates/core/src/commands.rs
+msgid "New tab"
+msgstr "Nuova scheda"
+
+#: crates/app/src/fileops.rs
+msgid "New: {0} (from {1})"
+msgstr "Nuovo: {0} (da {1})"
+
+#: crates/core/src/commands.rs
+msgid "Next tab"
+msgstr "Scheda successiva"
+
+#: crates/integrate/src/lib.rs
+msgid "No Windows integration active – nothing to do."
+msgstr "Nessuna integrazione con Windows attiva: niente da fare."
+
+#: crates/integrate/src/lib.rs
+msgid "No Windows integration active."
+msgstr "Nessuna integrazione con Windows attiva."
+
+#: crates/integrate/src/bin/explorer2-recover.rs
+msgid "No console to ask – start it with --quiet."
+msgstr "Nessuna console per la domanda: avvialo con --quiet."
+
+#: crates/integrate/src/bin/explorer2-recover.rs
+msgid "No console to ask – start it with --yes."
+msgstr "Nessuna console per la domanda: avvialo con --yes."
+
+#: crates/app/src/nav.rs
+msgid "No results"
+msgstr "Nessun risultato"
+
+#: crates/fs/src/lib.rs
+#: crates/shell/src/win_menu.rs
+msgid "Not a folder"
+msgstr "Non è una cartella"
+
+#: crates/app/src/palette.rs
+msgid "Not available here"
+msgstr "Non disponibile qui"
+
+#: crates/app/src/fileops.rs
+msgid "Not available here ({0})."
+msgstr "Non disponibile qui ({0})."
+
+#: crates/ops/src/exec.rs
+msgid "Not enough disk space"
+msgstr "Spazio su disco insufficiente"
+
+#: crates/ops/src/exec.rs
+#: crates/ops/src/simple.rs
+msgid "Not found"
+msgstr "Non trovato"
+
+#: crates/ops/src/undo.rs
+msgid "Not found in the Recycle Bin: {0}"
+msgstr "Non trovato nel Cestino: {0}"
+
+#: crates/app/src/installer.rs
+msgid "Not installed – running from {0}. Installing copies Explorer 2.0 to {1} (no administrator rights needed) and adds it to the Start menu."
+msgstr "Non installato: in esecuzione da {0}. L'installazione copia Explorer 2.0 in {1} (non servono diritti di amministratore) e lo aggiunge al menu Start."
+
+#: crates/app/src/inspector.rs
+msgid "Not readable"
+msgstr "Non leggibile"
+
+#: crates/app/src/quick.rs
+#: crates/app/ui/main.slint
+msgid "Nothing found"
+msgstr "Non è stato trovato nulla"
+
+#: crates/app/ui/main.slint
+msgid "OK"
+msgstr "OK"
+
+#: crates/app/ui/main.slint
+msgid "One view"
+msgstr "Una visualizzazione"
+
+#: crates/app/src/fileops.rs
+#: crates/core/src/commands.rs
+msgid "Open"
+msgstr "Apri"
+
+#: crates/core/src/commands.rs
+msgid "Open Libraries"
+msgstr "Apri Raccolte"
+
+#: crates/core/src/commands.rs
+msgid "Open Recycle Bin"
+msgstr "Apri Cestino"
+
+#: crates/core/src/commands.rs
+msgid "Open This PC"
+msgstr "Apri Questo PC"
+
+#: crates/app/ui/main.slint
+msgid "Open folders in the running window (as a new tab)"
+msgstr "Apri le cartelle nella finestra aperta (come nuova scheda)"
+
+#: crates/integrate/src/features.rs
+msgid "Open folders with Explorer 2.0"
+msgstr "Apri le cartelle con Explorer 2.0"
+
+#: crates/app/ui/main.slint
+msgid "Open folders with Explorer 2.0 (double-click, “Open folder”)"
+msgstr "Apri le cartelle con Explorer 2.0 (doppio clic, «Apri cartella»)"
+
+#: crates/app/src/fileops.rs
+msgid "Operation cancelled."
+msgstr "Operazione annullata."
+
+#: crates/core/src/places.rs
+msgid "Original location"
+msgstr "Percorso originale"
+
+#: crates/app/src/fileops.rs
+#: crates/app/ui/main.slint
+#: crates/core/src/commands.rs
+msgid "Paste"
+msgstr "Incolla"
+
+#: crates/app/src/inspector.rs
+msgid "Path"
+msgstr "Percorso"
+
+#: crates/app/ui/main.slint
+msgid "Pause"
+msgstr "Pausa"
+
+#: crates/app/src/fileops.rs
+msgid "Paused"
+msgstr "In pausa"
+
+#: crates/app/src/fileops.rs
+msgid ""
+"Permanently delete the {n} item in the Recycle Bin?\n"
+"This can't be undone."
+msgid_plural ""
+"Permanently delete all {n} items in the Recycle Bin?\n"
+"This can't be undone."
+msgstr[0] ""
+"Eliminare definitivamente l'elemento nel Cestino?\n"
+"L'operazione non può essere annullata."
+msgstr[1] ""
+"Eliminare definitivamente i {n} elementi nel Cestino?\n"
+"L'operazione non può essere annullata."
+
+#: crates/fs/src/places.rs
+msgid "Pictures"
+msgstr "Immagini"
+
+#: crates/core/src/commands.rs
+msgid "Previous tab"
+msgstr "Scheda precedente"
+
+#: crates/app/src/installer.rs
+msgid "Program folder cannot be determined"
+msgstr "Impossibile determinare la cartella del programma"
+
+#: crates/integrate/src/bin/explorer2-recover.rs
+msgid "Program folder not removed ({0}) – is Explorer 2.0 still open? Folder: {1}"
+msgstr "Cartella del programma non rimossa ({0}). Explorer 2.0 è ancora aperto? Cartella: {1}"
+
+#: crates/app/src/fileops.rs
+#: crates/core/src/commands.rs
+msgid "Properties"
+msgstr "Proprietà"
+
+#: crates/shell/src/win_menu.rs
+msgid "Properties not available: {0}"
+msgstr "Proprietà non disponibili: {0}"
+
+#: crates/app/ui/main.slint
+msgid "Quick access"
+msgstr "Accesso rapido"
+
+#: crates/core/src/commands.rs
+msgid "Re-sync search index with disk"
+msgstr "Risincronizza l'indice di ricerca con il disco"
+
+#: crates/app/ui/main.slint
+msgid "Re-sync with disk"
+msgstr "Risincronizza con il disco"
+
+#: crates/core/src/inspect.rs
+msgid "Read-only"
+msgstr "Sola lettura"
+
+#: crates/core/src/places.rs
+msgid "Recycle Bin"
+msgstr "Cestino"
+
+#: crates/ops/src/undo.rs
+msgid "Recycle Bin not available"
+msgstr "Cestino non disponibile"
+
+#: crates/ops/src/trashview.rs
+#: crates/ops/src/undo.rs
+msgid "Recycle Bin not readable: {0}"
+msgstr "Impossibile leggere il Cestino: {0}"
+
+#: crates/ops/src/exec.rs
+msgid "Recycle Bin: {0}"
+msgstr "Cestino: {0}"
+
+#: crates/app/ui/main.slint
+#: crates/core/src/commands.rs
+msgid "Redo"
+msgstr "Ripeti"
+
+#: crates/app/src/fileops.rs
+msgid "Redo: {0}"
+msgstr "Ripeti: {0}"
+
+#: crates/app/src/fileops.rs
+#: crates/core/src/commands.rs
+msgid "Refresh"
+msgstr "Aggiorna"
+
+#: crates/integrate/src/bin/explorer2-recover.rs
+msgid "Removing the program folder …"
+msgstr "Rimozione della cartella del programma …"
+
+#: crates/app/src/fileops.rs
+#: crates/app/ui/main.slint
+#: crates/core/src/commands.rs
+msgid "Rename"
+msgstr "Rinomina"
+
+#: crates/app/ui/main.slint
+msgid "Replace"
+msgstr "Sostituisci"
+
+#: crates/app/src/fileops.rs
+msgid "Reset"
+msgstr "Reimposta"
+
+#: crates/app/ui/main.slint
+#: crates/core/src/commands.rs
+msgid "Reset all Windows integrations"
+msgstr "Reimposta tutte le integrazioni con Windows"
+
+#: crates/integrate/src/bin/explorer2-recover.rs
+msgid "Reset everything to the Windows default now?"
+msgstr "Reimpostare ora tutto sui valori predefiniti di Windows?"
+
+#: crates/app/src/integration.rs
+msgid "Reset incomplete: {0}"
+msgstr "Reimpostazione incompleta: {0}"
+
+#: crates/app/ui/main.slint
+msgid "Restore"
+msgstr "Ripristina"
+
+#: crates/ops/src/trashview.rs
+#: crates/ops/src/undo.rs
+msgid "Restore failed: {0}"
+msgstr "Ripristino non riuscito: {0}"
+
+#: crates/core/src/commands.rs
+msgid "Restore from the Recycle Bin"
+msgstr "Ripristina dal Cestino"
+
+#: crates/app/ui/main.slint
+msgid "Resume"
+msgstr "Riprendi"
+
+#: crates/core/src/guard.rs
+msgid "Safe start: the last {0} starts were aborted, so Explorer 2.0 uses software rendering and does not restore the session. If it runs stably, the next start is normal again."
+msgstr "Avvio sicuro: gli ultimi {0} avvii sono stati interrotti, quindi Explorer 2.0 usa il rendering software e non ripristina la sessione. Se resta stabile, il prossimo avvio torna normale."
+
+#: crates/app/ui/main.slint
+msgid "Search"
+msgstr "Cerca"
+
+#: crates/core/src/commands.rs
+msgid "Search (in the current folder)"
+msgstr "Cerca (nella cartella corrente)"
+
+#: crates/app/src/nav.rs
+#: crates/core/src/commands.rs
+msgid "Search all drives"
+msgstr "Cerca in tutte le unità"
+
+#: crates/app/ui/main.slint
+msgid "Search all drives …"
+msgstr "Cerca in tutte le unità …"
+
+#: crates/app/ui/main.slint
+msgid "Search commands …   (type > for places)"
+msgstr "Cerca comandi …   (digita > per le posizioni)"
+
+#: crates/app/src/search.rs
+msgid "Search index off (EXPLORER2_INDEX=off)."
+msgstr "Indice di ricerca disattivato (EXPLORER2_INDEX=off)."
+
+#: crates/app/src/search.rs
+msgid "Search index off: searches only go through the current folder."
+msgstr "Indice di ricerca disattivato: la ricerca esamina solo la cartella corrente."
+
+#: crates/app/src/search.rs
+msgid "Search index restarting …"
+msgstr "Riavvio dell'indice di ricerca …"
+
+#: crates/app/src/search.rs
+msgid "Search index starting shortly …"
+msgstr "L'indice di ricerca si avvierà a breve …"
+
+#: crates/app/src/search.rs
+msgid "Search index starting …"
+msgstr "Avvio dell'indice di ricerca …"
+
+#: crates/app/src/search.rs
+msgid "Search index: no folder for the index files."
+msgstr "Indice di ricerca: nessuna cartella per i file dell'indice."
+
+#: crates/app/src/nav.rs
+msgid "Search {0}"
+msgstr "Cerca in {0}"
+
+#: crates/app/src/nav.rs
+msgid "Search “{0}”"
+msgstr "Cerca «{0}»"
+
+#: crates/app/src/nav.rs
+#: crates/app/src/search.rs
+msgid "Search: {0}"
+msgstr "Ricerca: {0}"
+
+#: crates/core/src/commands.rs
+msgid "Select all"
+msgstr "Seleziona tutto"
+
+#: crates/app/ui/main.slint
+#: crates/core/src/commands.rs
+msgid "Settings"
+msgstr "Impostazioni"
+
+#: crates/app/src/config.rs
+msgid "Settings not saved: {0}"
+msgstr "Impostazioni non salvate: {0}"
+
+#: crates/app/src/nav.rs
+msgid "Shared folder"
+msgstr "Cartella condivisa"
+
+#: crates/core/src/commands.rs
+msgid "Shift+Del"
+msgstr "Maiusc+CANC"
+
+#: crates/core/src/commands.rs
+msgid "Shift+F10"
+msgstr "Maiusc+F10"
+
+#: crates/core/src/inspect.rs
+msgid "Shortcut or link"
+msgstr "Collegamento o link"
+
+#: crates/app/ui/main.slint
+msgid "Show file name extensions"
+msgstr "Mostra le estensioni dei nomi dei file"
+
+#: crates/app/ui/main.slint
+msgid "Show hidden items"
+msgstr "Mostra elementi nascosti"
+
+#: crates/app/src/fileops.rs
+msgid "Show more options"
+msgstr "Mostra altre opzioni"
+
+#: crates/app/ui/main.slint
+msgid "Show protected operating system files"
+msgstr "Mostra i file protetti del sistema operativo"
+
+#: crates/app/ui/main.slint
+msgid "Show report"
+msgstr "Mostra rapporto"
+
+#: crates/fs/src/network.rs
+msgid "Sign-in cancelled"
+msgstr "Accesso annullato"
+
+#: crates/fs/src/lib.rs
+#: crates/fs/src/network.rs
+msgid "Sign-in required"
+msgstr "Accesso richiesto"
+
+#: crates/fs/src/network.rs
+msgid "Signing in is only available on Windows"
+msgstr "L'accesso è disponibile solo in Windows"
+
+#: crates/app/ui/main.slint
+msgid "Single-click to open an item (point to select)"
+msgstr "Apri con un solo clic (seleziona al passaggio)"
+
+#: crates/app/src/inspector.rs
+#: crates/app/ui/main.slint
+msgid "Size"
+msgstr "Dimensioni"
+
+#: crates/app/src/inspector.rs
+msgid "Size of files"
+msgstr "Dimensioni dei file"
+
+#: crates/app/ui/main.slint
+msgid "Skip"
+msgstr "Ignora"
+
+#: crates/core/src/renderer.rs
+msgid "Software rendering"
+msgstr "Rendering software"
+
+#: crates/app/ui/main.slint
+msgid "Sort"
+msgstr "Ordina"
+
+#: crates/core/src/commands.rs
+msgid "Sort ascending"
+msgstr "Ordine crescente"
+
+#: crates/core/src/commands.rs
+msgid "Sort by date modified"
+msgstr "Ordina per data ultima modifica"
+
+#: crates/core/src/commands.rs
+msgid "Sort by name"
+msgstr "Ordina per nome"
+
+#: crates/core/src/commands.rs
+msgid "Sort by size"
+msgstr "Ordina per dimensioni"
+
+#: crates/core/src/commands.rs
+msgid "Sort by type"
+msgstr "Ordina per tipo"
+
+#: crates/core/src/commands.rs
+msgid "Sort descending"
+msgstr "Ordine decrescente"
+
+#: crates/integrate/src/bin/explorer2-recover.rs
+msgid "State: {0}"
+msgstr "Stato: {0}"
+
+#: crates/core/src/places.rs
+msgid "Storage"
+msgstr "Spazio"
+
+#: crates/core/src/commands.rs
+msgid "Switch to the other view"
+msgstr "Passa all'altra visualizzazione"
+
+#: crates/core/src/inspect.rs
+msgid "System"
+msgstr "Sistema"
+
+#: crates/app/ui/main.slint
+msgid "System default"
+msgstr "Predefinito di sistema"
+
+#: crates/app/src/lang.rs
+msgid "System default ({0})"
+msgstr "Predefinito di sistema ({0})"
+
+#: crates/core/src/renderer.rs
+msgid "System default renderer"
+msgstr "Renderer predefinito di sistema"
+
+#: crates/core/src/lib.rs
+msgid "TB"
+msgstr "TB"
+
+#: crates/app/ui/main.slint
+msgid "Takes effect the next time the app starts."
+msgstr "Ha effetto al prossimo avvio dell'app."
+
+#: crates/setup/src/main.rs
+msgid "Temp folder {0}: {1}"
+msgstr "Cartella temporanea {0}: {1}"
+
+#: crates/app/src/fileops.rs
+msgid "The Recycle Bin is empty."
+msgstr "Il Cestino è vuoto."
+
+#: crates/shell/src/menu.rs
+msgid "The context menu is only available on Windows."
+msgstr "Il menu contestuale è disponibile solo in Windows."
+
+#: crates/app/src/fileops.rs
+msgid "The destination already has a folder named “{0}”."
+msgstr "La destinazione contiene già una cartella denominata «{0}»."
+
+#: crates/app/src/fileops.rs
+msgid "The destination already has an item named “{0}”."
+msgstr "La destinazione contiene già un elemento denominato «{0}»."
+
+#: crates/ops/src/exec.rs
+msgid "The destination folder is a subfolder of the source folder."
+msgstr "La cartella di destinazione è una sottocartella della cartella di origine."
+
+#: crates/ops/src/exec.rs
+msgid "The file is being used by another process"
+msgstr "Il file è in uso da un altro processo"
+
+#: crates/app/src/nav.rs
+msgid "The folder no longer exists: {0}"
+msgstr "La cartella non esiste più: {0}"
+
+#: crates/ops/src/names.rs
+msgid "The name can't be empty."
+msgstr "Il nome non può essere vuoto."
+
+#: crates/ops/src/names.rs
+msgid "The name can't end with a period or a space."
+msgstr "Il nome non può terminare con un punto o uno spazio."
+
+#: crates/ops/src/names.rs
+msgid "The name contains an invalid character."
+msgstr "Il nome contiene un carattere non valido."
+
+#: crates/ops/src/names.rs
+msgid "The name is too long (at most 255 characters)."
+msgstr "Il nome è troppo lungo (al massimo 255 caratteri)."
+
+#: crates/app/src/search.rs
+msgid "The search index could not start."
+msgstr "Impossibile avviare l'indice di ricerca."
+
+#: crates/app/src/quick.rs
+msgid "The search index is being prepared …"
+msgstr "Preparazione dell'indice di ricerca …"
+
+#: crates/app/src/search.rs
+msgid "The search index is kept by another Explorer 2.0 window."
+msgstr "L'indice di ricerca è gestito da un'altra finestra di Explorer 2.0."
+
+#: crates/app/src/search.rs
+msgid "The search index is not running yet."
+msgstr "L'indice di ricerca non è ancora in esecuzione."
+
+#: crates/app/src/quick.rs
+msgid "The search index is off (Settings → Search)."
+msgstr "L'indice di ricerca è disattivato (Impostazioni → Cerca)."
+
+#: crates/app/ui/main.slint
+msgid "The view is remembered per folder."
+msgstr "La visualizzazione viene ricordata per ogni cartella."
+
+#: crates/ops/src/simple.rs
+msgid "There is already an item named “{0}”."
+msgstr "Esiste già un elemento denominato «{0}»."
+
+#: crates/app/ui/main.slint
+#: crates/core/src/places.rs
+msgid "This PC"
+msgstr "Questo PC"
+
+#: crates/app/src/nav.rs
+msgid "This location doesn't exist on this system: {0}"
+msgstr "Questo percorso non esiste in questo sistema: {0}"
+
+#: crates/setup/src/main.rs
+msgid "This setup was built without the program files."
+msgstr "Questo programma di installazione è stato compilato senza i file del programma."
+
+#: crates/core/src/commands.rs
+msgid "Toggle details pane"
+msgstr "Mostra o nascondi il riquadro dei dettagli"
+
+#: crates/core/src/commands.rs
+msgid "Toggle file name extensions"
+msgstr "Mostra o nascondi le estensioni dei nomi dei file"
+
+#: crates/core/src/commands.rs
+msgid "Toggle hidden items"
+msgstr "Mostra o nascondi gli elementi nascosti"
+
+#: crates/core/src/commands.rs
+msgid "Toggle search index"
+msgstr "Attiva o disattiva l'indice di ricerca"
+
+#: crates/core/src/commands.rs
+msgid "Toggle two views"
+msgstr "Attiva o disattiva due visualizzazioni"
+
+#: crates/core/src/commands.rs
+msgid "Toggle: Win+E opens Explorer 2.0"
+msgstr "Attiva o disattiva: Win+E apre Explorer 2.0"
+
+#: crates/core/src/commands.rs
+msgid "Toggle: open folders in the running window (new tab)"
+msgstr "Attiva o disattiva: apri le cartelle nella finestra aperta (nuova scheda)"
+
+#: crates/core/src/commands.rs
+msgid "Toggle: open folders with Explorer 2.0"
+msgstr "Attiva o disattiva: apri le cartelle con Explorer 2.0"
+
+#: crates/core/src/commands.rs
+msgid "Toggle: “Open in Explorer 2.0” in the context menu"
+msgstr "Attiva o disattiva: «Apri in Explorer 2.0» nel menu contestuale"
+
+#: crates/app/src/inspector.rs
+msgid "Total"
+msgstr "Totale"
+
+#: crates/app/src/inspector.rs
+msgid "Total size"
+msgstr "Dimensioni totali"
+
+#: crates/app/ui/main.slint
+msgid "Two views"
+msgstr "Due visualizzazioni"
+
+#: crates/app/src/nav.rs
+#: crates/app/ui/main.slint
+msgid "Type"
+msgstr "Tipo"
+
+#: crates/app/src/quick.rs
+msgid "Type to search all drives"
+msgstr "Digita per cercare in tutte le unità"
+
+#: crates/fs/src/places.rs
+msgid "USB Drive"
+msgstr "Unità USB"
+
+#: crates/app/ui/main.slint
+#: crates/core/src/commands.rs
+msgid "Undo"
+msgstr "Annulla"
+
+#: crates/app/src/fileops.rs
+msgid "Undo: {0}"
+msgstr "Annulla: {0}"
+
+#: crates/integrate/src/bin/explorer2-recover.rs
+msgid "Uninstall Explorer 2.0 and reset all Windows integrations?"
+msgstr "Disinstallare Explorer 2.0 e reimpostare tutte le integrazioni con Windows?"
+
+#: crates/app/src/nav.rs
+msgid "Unknown shell location: shell:{0}"
+msgstr "Percorso shell sconosciuto: shell:{0}"
+
+#: crates/app/ui/main.slint
+msgid "Up"
+msgstr "Su"
+
+#: crates/app/src/installer.rs
+msgid "Update the installation with this copy"
+msgstr "Aggiorna l'installazione con questa copia"
+
+#: crates/app/ui/main.slint
+msgid "Use hardware acceleration when available"
+msgstr "Usa l'accelerazione hardware se disponibile"
+
+#: crates/app/ui/main.slint
+msgid "Use the Windows accent color"
+msgstr "Usa il colore principale di Windows"
+
+#: crates/app/ui/main.slint
+#: crates/core/src/commands.rs
+msgid "Use the current view for all folders"
+msgstr "Usa la visualizzazione corrente per tutte le cartelle"
+
+#: crates/fs/src/places.rs
+msgid "Videos"
+msgstr "Video"
+
+#: crates/app/src/nav.rs
+msgid "View not saved: {0}"
+msgstr "Visualizzazione non salvata: {0}"
+
+#: crates/core/src/commands.rs
+msgid "View: Details"
+msgstr "Visualizzazione: Dettagli"
+
+#: crates/core/src/commands.rs
+msgid "View: Extra large icons"
+msgstr "Visualizzazione: Icone molto grandi"
+
+#: crates/core/src/commands.rs
+msgid "View: Large icons"
+msgstr "Visualizzazione: Icone grandi"
+
+#: crates/core/src/commands.rs
+msgid "View: Medium icons"
+msgstr "Visualizzazione: Icone medie"
+
+#: crates/app/ui/main.slint
+#: crates/integrate/src/features.rs
+msgid "Win+E opens Explorer 2.0"
+msgstr "Win+E apre Explorer 2.0"
+
+#: crates/integrate/src/lib.rs
+msgid "Windows default restored: {0} values/files, {1} keys removed{2}."
+msgstr "Valori predefiniti di Windows ripristinati: {0} valori/file, {1} chiavi rimosse{2}."
+
+#: crates/app/ui/main.slint
+msgid "Windows integration"
+msgstr "Integrazione con Windows"
+
+#: crates/app/src/integration.rs
+msgid "Windows integration is only available on Windows."
+msgstr "L'integrazione con Windows è disponibile solo in Windows."
+
+#: crates/app/src/quick.rs
+msgid "Without the search index there is nothing to find here (Settings → Search)."
+msgstr "Senza l'indice di ricerca non c'è nulla da trovare qui (Impostazioni → Cerca)."
+
+#: crates/integrate/src/bin/explorer2-recover.rs
+msgid "[y/N]"
+msgstr "[s/N]"
+
+#: crates/ops/src/names.rs
+msgid "control characters"
+msgstr "caratteri di controllo"
+
+#: crates/app/src/inspector.rs
+msgid "counting …"
+msgstr "conteggio …"
+
+#: crates/index/src/query.rs
+msgid "date not understood: {0}"
+msgstr "data non riconosciuta: {0}"
+
+#: crates/core/src/renderer.rs
+msgid "disabled in the settings"
+msgstr "disattivata nelle impostazioni"
+
+#: crates/core/src/inspect.rs
+msgid "empty"
+msgstr "vuoto"
+
+#: crates/core/src/renderer.rs
+msgid "forced by EXPLORER2_RENDERER"
+msgstr "forzato da EXPLORER2_RENDERER"
+
+#: crates/index/src/persist.rs
+msgid "index belongs to another drive ({0})"
+msgstr "l'indice appartiene a un'altra unità ({0})"
+
+#: crates/search/src/service.rs
+msgid "index belongs to another folder"
+msgstr "l'indice appartiene a un'altra cartella"
+
+#: crates/index/src/persist.rs
+msgid "index damaged: {0}"
+msgstr "indice danneggiato: {0}"
+
+#: crates/index/src/persist.rs
+msgid "index from another version ({0})"
+msgstr "indice di un'altra versione ({0})"
+
+#: crates/index/src/persist.rs
+msgid "index not readable: {0}"
+msgstr "indice non leggibile: {0}"
+
+#: crates/search/src/watch.rs
+msgid "input/output error: {0}"
+msgstr "errore di input/output: {0}"
+
+#: crates/index/src/query.rs
+msgid "invalid regular expression: {0}"
+msgstr "espressione regolare non valida: {0}"
+
+#: crates/core/src/renderer.rs
+msgid "no GPU check on this system"
+msgstr "nessun controllo GPU su questo sistema"
+
+#: crates/app/src/config.rs
+msgid "no configuration folder"
+msgstr "nessuna cartella di configurazione"
+
+#: crates/index/src/persist.rs
+msgid "no saved index"
+msgstr "nessun indice salvato"
+
+#: crates/core/src/renderer.rs
+msgid "no suitable GPU found"
+msgstr "nessuna GPU adatta trovata"
+
+#: crates/core/src/renderer.rs
+msgid "safe start after aborted starts"
+msgstr "avvio sicuro dopo avvii interrotti"
+
+#: crates/app/src/quick.rs
+msgid "searched recently"
+msgstr "ricerche recenti"
+
+#: crates/core/src/renderer.rs
+msgid "set by SLINT_BACKEND"
+msgstr "impostato da SLINT_BACKEND"
+
+#: crates/index/src/query.rs
+msgid "size not understood: {0}"
+msgstr "dimensione non riconosciuta: {0}"
+
+#: crates/core/src/renderer.rs
+msgid "suitable GPU found"
+msgstr "GPU adatta trovata"
+
+#: crates/search/src/watch.rs
+msgid "too many changes at once"
+msgstr "troppe modifiche contemporaneamente"
+
+#: crates/search/src/watch.rs
+msgid "too many folders for the Linux watcher (raise fs.inotify.max_user_watches)"
+msgstr "troppe cartelle per il monitoraggio di Linux (aumenta fs.inotify.max_user_watches)"
+
+#: crates/app/src/search.rs
+msgid "unknown"
+msgstr "sconosciuto"
+
+#: crates/integrate/src/bin/explorer2-recover.rs
+msgid "yes"
+msgstr "sì"
+
+#: crates/app/src/integration.rs
+msgid ""
+"{0}\n"
+"\n"
+"Afterwards Explorer 2.0 continues from the installation folder (this window closes)."
+msgstr ""
+"{0}\n"
+"\n"
+"Poi Explorer 2.0 continua dalla cartella di installazione (questa finestra si chiude)."
+
+#: crates/setup/src/main.rs
+msgid ""
+"{0}\n"
+"\n"
+"Target: {1}\n"
+"\n"
+"No administrator rights needed; a Start menu entry and an “Apps & Features” entry are created. Windows integrations (open folders, Win+E) can be switched on afterwards in the settings – undoable at any time with one button."
+msgstr ""
+"{0}\n"
+"\n"
+"Destinazione: {1}\n"
+"\n"
+"Non servono diritti di amministratore; vengono creati una voce nel menu Start e una in «App e funzionalità». Le integrazioni con Windows (aprire le cartelle, Win+E) si possono attivare dopo nelle impostazioni e annullare in qualsiasi momento con un solo pulsante."
+
+#: crates/integrate/src/lib.rs
+msgid "{0} (not empty)"
+msgstr "{0} (non vuota)"
+
+#: crates/app/src/inspector.rs
+msgid "{0} ({1} bytes)"
+msgstr "{0} ({1} byte)"
+
+#: crates/ops/src/names.rs
+msgid "{0} - Copy ({1}){2}"
+msgstr "{0} - Copia ({1}){2}"
+
+#: crates/ops/src/names.rs
+msgid "{0} - Copy{1}"
+msgstr "{0} - Copia{1}"
+
+#: crates/core/src/guard.rs
+msgid "{0} A report is in the “crash” folder."
+msgstr "{0} Un rapporto si trova nella cartella «crash»."
+
+#: crates/setup/src/main.rs
+msgid "{0} cannot be started: {1}"
+msgstr "Impossibile avviare {0}: {1}"
+
+#: crates/integrate/src/lib.rs
+msgid "{0} changed by other software – left unchanged."
+msgstr "{0} modificato da altro software: lasciato invariato."
+
+#: crates/integrate/src/install.rs
+msgid "{0} contains foreign files – not deleted"
+msgstr "{0} contiene file estranei: non eliminata"
+
+#: crates/integrate/src/lib.rs
+msgid "{0} errors: {1}"
+msgstr "{0} errori: {1}"
+
+#: crates/core/src/inspect.rs
+msgid "{0} file"
+msgid_plural "{0} files"
+msgstr[0] "{0} file"
+msgstr[1] "{0} file"
+
+#: crates/app/src/nav.rs
+#: crates/core/src/inspect.rs
+msgid "{0} folder"
+msgid_plural "{0} folders"
+msgstr[0] "{0} cartella"
+msgstr[1] "{0} cartelle"
+
+#: crates/app/src/inspector.rs
+msgid "{0} folder (not counted)"
+msgid_plural "{0} folders (not counted)"
+msgstr[0] "{0} cartella (non conteggiata)"
+msgstr[1] "{0} cartelle (non conteggiate)"
+
+#: crates/core/src/lib.rs
+msgid "{0} free of {1}"
+msgstr "{0} liberi di {1}"
+
+#: crates/app/src/fileops.rs
+msgid "{0} h {1} min left"
+msgstr "{0} h {1} min rimanenti"
+
+#: crates/app/src/nav.rs
+msgid "{0} item"
+msgid_plural "{0} items"
+msgstr[0] "{0} elemento"
+msgstr[1] "{0} elementi"
+
+#: crates/app/src/inspector.rs
+#: crates/app/src/nav.rs
+msgid "{0} item selected"
+msgid_plural "{0} items selected"
+msgstr[0] "{0} elemento selezionato"
+msgstr[1] "{0} elementi selezionati"
+
+#: crates/app/src/fileops.rs
+msgid "{0} min left"
+msgstr "{0} min rimanenti"
+
+#: crates/app/src/fileops.rs
+msgid "{0} of {1}"
+msgstr "{0} di {1}"
+
+#: crates/app/src/quick.rs
+msgid "{0} of {1} result · Enter opens · Ctrl+Enter shows it in its folder"
+msgid_plural "{0} of {1} results · Enter opens · Ctrl+Enter shows it in its folder"
+msgstr[0] "{0} di {1} risultato · INVIO apre · Ctrl+INVIO lo mostra nella sua cartella"
+msgstr[1] "{0} di {1} risultati · INVIO apre · Ctrl+INVIO lo mostra nella sua cartella"
+
+#: crates/app/src/nav.rs
+msgid "{0} of {1} result – refine the search"
+msgid_plural "{0} of {1} results – refine the search"
+msgstr[0] "{0} di {1} risultato: restringi la ricerca"
+msgstr[1] "{0} di {1} risultati: restringi la ricerca"
+
+#: crates/app/src/fileops.rs
+msgid "{0} of {n} item"
+msgid_plural "{0} of {n} items"
+msgstr[0] "{0} di {n} elemento"
+msgstr[1] "{0} di {n} elementi"
+
+#: crates/app/src/nav.rs
+msgid "{0} result"
+msgid_plural "{0} results"
+msgstr[0] "{0} risultato"
+msgstr[1] "{0} risultati"
+
+#: crates/app/src/quick.rs
+msgid "{0} result · Enter opens · Ctrl+Enter shows it in its folder"
+msgid_plural "{0} results · Enter opens · Ctrl+Enter shows it in its folder"
+msgstr[0] "{0} risultato · INVIO apre · Ctrl+INVIO lo mostra nella sua cartella"
+msgstr[1] "{0} risultati · INVIO apre · Ctrl+INVIO lo mostra nella sua cartella"
+
+#: crates/app/src/fileops.rs
+msgid "{0} s left"
+msgstr "{0} s rimanenti"
+
+#: crates/app/src/quick.rs
+msgid "{0} · Enter picks an earlier search"
+msgstr "{0} · INVIO sceglie una ricerca precedente"
+
+#: crates/app/src/inspector.rs
+msgid "{0} × {1} pixels"
+msgstr "{0} × {1} pixel"
+
+#: crates/app/src/integration.rs
+msgid "{0} – off, the Windows default is active again."
+msgstr "{0}: disattivato, i valori predefiniti di Windows sono di nuovo attivi."
+
+#: crates/app/src/integration.rs
+msgid "{0} – on. Please don't move Explorer 2.0 (reset first if you need to).{1}"
+msgstr "{0}: attivato. Non spostare Explorer 2.0 (se serve, reimposta prima).{1}"
+
+#: crates/app/src/quick.rs
+msgid "{0}, {1} entry"
+msgid_plural "{0}, {1} entries"
+msgstr[0] "{0}, {1} voce"
+msgstr[1] "{0}, {1} voci"
+
+#: crates/app/src/search.rs
+msgid "{0}: building … {1} entry"
+msgid_plural "{0}: building … {1} entries"
+msgstr[0] "{0}: creazione … {1} voce"
+msgstr[1] "{0}: creazione … {1} voci"
+
+#: crates/app/src/search.rs
+msgid "{0}: loading …"
+msgstr "{0}: caricamento …"
+
+#: crates/app/src/search.rs
+msgid "{0}: ready, {1} entry{2}"
+msgid_plural "{0}: ready, {1} entries{2}"
+msgstr[0] "{0}: pronto, {1} voce{2}"
+msgstr[1] "{0}: pronto, {1} voci{2}"
+
+#: crates/app/src/search.rs
+msgid "{0}: stopped"
+msgstr "{0}: arrestato"
+
+#: crates/app/src/search.rs
+msgid "{0}: {1} entry, re-syncing with the disk …"
+msgid_plural "{0}: {1} entries, re-syncing with the disk …"
+msgstr[0] "{0}: {1} voce, risincronizzazione con il disco …"
+msgstr[1] "{0}: {1} voci, risincronizzazione con il disco …"
+
+#: crates/integrate/src/lib.rs
+msgid "{n} change in the journal"
+msgid_plural "{n} changes in the journal"
+msgstr[0] "{n} modifica nel registro"
+msgstr[1] "{n} modifiche nel registro"
+
+#: crates/app/src/quick.rs
+msgid "{n} drive"
+msgid_plural "{n} drives"
+msgstr[0] "{n} unità"
+msgstr[1] "{n} unità"
+
+#: crates/app/src/fileops.rs
+msgid "{n} item"
+msgid_plural "{n} items"
+msgstr[0] "{n} elemento"
+msgstr[1] "{n} elementi"
+
+#: crates/core/src/lib.rs
+msgid "{} File"
+msgstr "File {}"
+
+#: crates/ops/src/names.rs
+msgid "“.” and “..” are not allowed as a name."
+msgstr "«.» e «..» non sono consentiti come nome."
+
+#: crates/app/ui/main.slint
+#: crates/integrate/src/features.rs
+msgid "“Open in Explorer 2.0” in the context menu"
+msgstr "«Apri in Explorer 2.0» nel menu contestuale"
+
+#: crates/app/src/fileops.rs
+#: crates/ops/src/names.rs
+msgid "“{0}”"
+msgstr "«{0}»"
+
+#: crates/ops/src/names.rs
+msgid "“{0}” is a reserved device name on Windows."
+msgstr "«{0}» è un nome di dispositivo riservato in Windows."
