@@ -14,7 +14,12 @@ pub fn crumbs(path: &str) -> Vec<Crumb> {
         .strip_prefix(r"\\?\UNC\")
         .map(|r| format!(r"\\{r}"))
         .unwrap_or_else(|| path.strip_prefix(r"\\?\").unwrap_or(path).to_string());
-    let windows = p.contains('\\') || (p.len() >= 2 && p.as_bytes()[1] == b':');
+    // A drive (`C:/Users`) or a UNC path (`//nas/share`) may use either
+    // separator. Split on one of them, or the rest stays one segment and
+    // the accumulated path mixes `\` and `/`.
+    let windows =
+        p.contains('\\') || p.starts_with("//") || (p.len() >= 2 && p.as_bytes()[1] == b':');
+    let p = if windows { p.replace('/', "\\") } else { p };
     let sep = if windows { '\\' } else { '/' };
     let (root, rest): (String, &str) = if let Some(unc) = p.strip_prefix(r"\\") {
         // the server is its own segment (it lists its shares), like Explorer
@@ -114,6 +119,21 @@ mod tests {
             labels(&crumbs(r"\\?\UNC\nas\share\x")),
             [r"\\nas", "share", "x"]
         );
+    }
+
+    #[test]
+    fn forward_slashes_on_windows_paths() {
+        let c = crumbs("C:/Users/Boss");
+        assert_eq!(labels(&c), [r"C:\", "Users", "Boss"]);
+        assert_eq!(c[0].path, r"C:\");
+        assert_eq!(c[1].path, r"C:\Users");
+        assert_eq!(c[2].path, r"C:\Users\Boss");
+        let u = crumbs("//nas/share/x");
+        assert_eq!(labels(&u), [r"\\nas", "share", "x"]);
+        assert_eq!(u[1].path, r"\\nas\share");
+        assert_eq!(u[2].path, r"\\nas\share\x");
+        let mixed = crumbs(r"\\nas/share\x");
+        assert_eq!(labels(&mixed), [r"\\nas", "share", "x"]);
     }
 
     #[test]

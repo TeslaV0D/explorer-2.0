@@ -3,6 +3,7 @@ use super::*;
 const NOW: Now = Now {
     unix: 1_793_883_600, // 2026-11-05 13:00 UTC
     utc_offset: 3600,
+    offset_at: None,
 };
 const DAY: i64 = 86_400;
 
@@ -61,6 +62,12 @@ fn paths_and_lookup() {
     assert_eq!(ix.path(id[4]), r"C:\Users\Boss\Bilder\Urlaub.JPG");
     assert_eq!(ix.path(id[0]), r"C:\");
     assert_eq!(ix.find(r"c:\users\BOSS\bilder\urlaub.jpg"), Some(id[4]));
+    assert_eq!(
+        ix.find("C:/Users/Boss/Bilder/Urlaub.JPG"),
+        Some(id[4]),
+        "forward slashes still address a backslash root"
+    );
+    assert_eq!(ix.find(r"C:\Users/Boss\Bilder/Urlaub.JPG"), Some(id[4]));
     assert_eq!(ix.find(r"C:\Users\Boss\Docs\"), Some(id[6]));
     assert_eq!(ix.find(r"C:\Users\Nobody"), None);
     assert_eq!(ix.find(r"D:\x"), None);

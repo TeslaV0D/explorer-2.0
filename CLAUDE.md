@@ -119,6 +119,7 @@
 - Slint gotcha: widgets (`Button`, `ListView`) need `import { … } from "std-widgets.slint";`
 
 ## Insights / gotchas
+- Windows paths in the address bar, the index and live updates may use `/` or `\`. Compare a Windows root with both separators. `dm:` day boundaries need the offset of that date (`Now.offset_at`), not only today's offset. Search rows repeat names, so a reload remaps the selection by full path.
 - The release exe is GUI subsystem: never `println!` (panics on missing stdout, `panic=abort` kills the app) → `let _ = writeln!(...)`.
 - PowerShell `& exe` does not wait for GUI exes → in CI `Start-Process -Wait -RedirectStandardOutput`.
 - Sandbox: the Xvfb UI test needs `libxkbcommon-x11-0`; start with `SLINT_BACKEND=winit-software xvfb-run ...`.

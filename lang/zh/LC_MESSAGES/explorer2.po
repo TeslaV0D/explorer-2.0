@@ -177,6 +177,7 @@ msgstr "取消"
 msgid "Cancelled – nothing changed."
 msgstr "已取消，未做任何更改。"
 
+#: crates/ops/src/exec.rs
 #: crates/setup/src/main.rs
 msgid "Cancelled."
 msgstr "已取消。"
@@ -1133,6 +1134,20 @@ msgstr "重做：{0}"
 msgid "Refresh"
 msgstr "刷新"
 
+#: crates/app/src/integration.rs
+msgid ""
+"Remove all Windows integrations of Explorer 2.0 and restore the previous Windows settings exactly?\n"
+"\n"
+"{0}\n"
+"\n"
+"Values that another program has changed in the meantime are left alone."
+msgstr ""
+"移除 Explorer 2.0 的全部 Windows 集成，并精确还原之前的 Windows 设置？\n"
+"\n"
+"{0}\n"
+"\n"
+"其他软件在此期间更改过的值将保持不变。"
+
 #: crates/integrate/src/bin/explorer2-recover.rs
 msgid "Removing the program folder …"
 msgstr "正在删除程序文件夹…"
@@ -1229,6 +1244,10 @@ msgstr "正在启动搜索索引…"
 #: crates/app/src/search.rs
 msgid "Search index: no folder for the index files."
 msgstr "搜索索引：没有存放索引文件的文件夹。"
+
+#: crates/app/src/search.rs
+msgid "Search was cancelled."
+msgstr "搜索已取消。"
 
 #: crates/app/src/nav.rs
 msgid "Search {0}"

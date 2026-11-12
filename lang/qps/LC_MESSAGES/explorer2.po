@@ -181,6 +181,7 @@ msgstr "[Çåñçéł···]"
 msgid "Cancelled – nothing changed."
 msgstr "[Çåñçéłłéď – ñöťhîñğ çhåñğéď.············]"
 
+#: crates/ops/src/exec.rs
 #: crates/setup/src/main.rs
 msgid "Cancelled."
 msgstr "[Çåñçéłłéď.·····]"
@@ -1145,6 +1146,20 @@ msgstr "[Řéďö: {0}·····]"
 msgid "Refresh"
 msgstr "[Řéfřéšh····]"
 
+#: crates/app/src/integration.rs
+msgid ""
+"Remove all Windows integrations of Explorer 2.0 and restore the previous Windows settings exactly?\n"
+"\n"
+"{0}\n"
+"\n"
+"Values that another program has changed in the meantime are left alone."
+msgstr ""
+"[Řémövé åłł Wîñďöwš îñťéğřåťîöñš öf Éxpłöřéř 2.0 åñď řéšťöřé ťhé přévîöüš Wîñďöwš šéťťîñğš éxåçťłý?········································\n"
+"\n"
+"{0}··\n"
+"\n"
+"Våłüéš ťhåť åñöťhéř přöğřåm håš çhåñğéď îñ ťhé méåñťîmé åřé łéfť åłöñé.·····························]"
+
 #: crates/integrate/src/bin/explorer2-recover.rs
 msgid "Removing the program folder …"
 msgstr "[Řémövîñğ ťhé přöğřåm föłďéř …············]"
@@ -1241,6 +1256,10 @@ msgstr "[Šéåřçh îñďéx šťåřťîñğ …··········]"
 #: crates/app/src/search.rs
 msgid "Search index: no folder for the index files."
 msgstr "[Šéåřçh îñďéx: ñö föłďéř föř ťhé îñďéx fîłéš.··················]"
+
+#: crates/app/src/search.rs
+msgid "Search was cancelled."
+msgstr "[Šéåřçh wåš çåñçéłłéď.·········]"
 
 #: crates/app/src/nav.rs
 msgid "Search {0}"

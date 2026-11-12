@@ -185,6 +185,7 @@ msgstr "Скасувати"
 msgid "Cancelled – nothing changed."
 msgstr "Скасовано – нічого не змінено."
 
+#: crates/ops/src/exec.rs
 #: crates/setup/src/main.rs
 msgid "Cancelled."
 msgstr "Скасовано."
@@ -1156,6 +1157,20 @@ msgstr "Повторити: {0}"
 msgid "Refresh"
 msgstr "Оновити"
 
+#: crates/app/src/integration.rs
+msgid ""
+"Remove all Windows integrations of Explorer 2.0 and restore the previous Windows settings exactly?\n"
+"\n"
+"{0}\n"
+"\n"
+"Values that another program has changed in the meantime are left alone."
+msgstr ""
+"Вилучити всі інтеграції Explorer 2.0 з Windows і точно відновити попередні параметри Windows?\n"
+"\n"
+"{0}\n"
+"\n"
+"Значення, які за цей час змінила інша програма, залишаються без змін."
+
 #: crates/integrate/src/bin/explorer2-recover.rs
 msgid "Removing the program folder …"
 msgstr "Видалення папки програми…"
@@ -1252,6 +1267,10 @@ msgstr "Запуск індексу пошуку…"
 #: crates/app/src/search.rs
 msgid "Search index: no folder for the index files."
 msgstr "Індекс пошуку: немає папки для файлів індексу."
+
+#: crates/app/src/search.rs
+msgid "Search was cancelled."
+msgstr "Пошук скасовано."
 
 #: crates/app/src/nav.rs
 msgid "Search {0}"

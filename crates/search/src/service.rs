@@ -686,6 +686,7 @@ mod tests {
             Now {
                 unix: 0,
                 utc_offset: 0,
+                offset_at: None,
             },
         )
         .unwrap()

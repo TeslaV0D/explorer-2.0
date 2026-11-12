@@ -315,6 +315,7 @@ fn msg(e: &io::Error) -> String {
         io::ErrorKind::PermissionDenied => explorer_i18n::tr!("Access denied").into(),
         io::ErrorKind::StorageFull => explorer_i18n::tr!("Not enough disk space").into(),
         io::ErrorKind::AlreadyExists => explorer_i18n::tr!("Already exists").into(),
+        io::ErrorKind::Interrupted => explorer_i18n::tr!("Cancelled.").into(),
         _ if e.raw_os_error() == Some(32) && cfg!(windows) => {
             explorer_i18n::tr!("The file is being used by another process").into()
         }
@@ -665,5 +666,16 @@ fn delete_all(cx: &mut Ctx, sources: &[PathBuf]) {
         cx.progress.done_items += items;
         cx.progress.done_bytes += bytes;
         cx.tick(false);
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn a_cancelled_copy_is_not_a_german_word() {
+        let e = io::Error::new(io::ErrorKind::Interrupted, "abgebrochen");
+        assert_eq!(msg(&e), "Cancelled.");
     }
 }
