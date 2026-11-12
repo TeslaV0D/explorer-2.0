@@ -133,6 +133,19 @@ pub fn toggle(win: &MainWindow) {
     }
 }
 
+/// Window hidden: drop the preview image and the fact rows.
+pub fn release(win: &MainWindow) {
+    cancel_running();
+    ST.with_borrow_mut(|s| {
+        s.shown_key.clear();
+        s.gen += 1;
+        s.rows.set_vec(Vec::new());
+    });
+    win.set_insp_image(slint::Image::default());
+    win.set_insp_has_image(false);
+    win.set_insp_text("".into());
+}
+
 fn cancel_running() {
     ST.with_borrow_mut(|s| {
         if let Some(c) = s.cancel.take() {

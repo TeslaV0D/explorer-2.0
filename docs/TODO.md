@@ -196,7 +196,7 @@ The app UI is German; UI labels are quoted as they appear (with a translation wh
   - [x] Entry `HKCU\Software\Microsoft\Windows\CurrentVersion\Run` (without admin), **only via `integrate::apply`** (journal) + entry in `manifest::points()` → reset/recovery/uninstall remove it (R-001). Value `Explorer2` = `"exe" --background`
   - [x] Start in the background (`--background`: window hidden, instance server + search stay up) → Win+E/open folder shows the window via the single-instance hand-over (`raise` calls `show`); closing the window hides it and the tray keeps the process
   - [x] Tray icon (Slint `SystemTrayIcon`, which is `Shell_NotifyIconW` on Windows): click = show window, menu = show / new window / settings / exit. Without a tray (Linux CI) hiding the window still quits
-  - [ ] Keep idle memory small (free the folder data while the window is hidden) and an endurance check for that
+  - [x] Keep idle memory small (free the folder data while the window is hidden) and an endurance check for that (Linux [75f]–[75k], Windows [S8]–[S12])
   - [x] Start guard: `--background` calls `stable()` immediately, so a tray-less exit is not a crash. The installed exe is re-pointed with the other features (M8)
   - [ ] Measure the login start on a real Windows machine (must not slow the login down)
 - [~] **“Open in Explorer” system-wide → Explorer 2.0** (Boss 2026-11-08, example: Steam “Browse local files” still opens Windows Explorer)

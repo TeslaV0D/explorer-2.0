@@ -407,6 +407,7 @@ fn main() -> Result<(), slint::PlatformError> {
         start,
         session,
         settings.view,
+        background,
     );
     inspector::init(&win, settings.inspector);
     palette::init(&win, settings.recent_commands.clone());
@@ -448,10 +449,15 @@ fn main() -> Result<(), slint::PlatformError> {
 
     // Closing the window hides it. A visible tray keeps the process (D-028);
     // without a tray (Linux CI, tray failed) Slint quits the loop and the
-    // shutdown below runs. Jobs are not cancelled on hide.
-    win.window().on_close_requested(|| {
+    // shutdown below runs. Jobs are not cancelled on hide. The folder listings
+    // are dropped (D-028 idle memory) and loaded again on the next show.
+    let close_win = win.as_weak();
+    win.window().on_close_requested(move || {
         crash::stable();
         nav::save_session_now();
+        if let Some(w) = close_win.upgrade() {
+            nav::on_window_hidden(&w);
+        }
         nav::trace_line("window close: hide");
         slint::CloseRequestResponse::HideWindow
     });
@@ -505,6 +511,22 @@ fn main() -> Result<(), slint::PlatformError> {
             None
         }
     };
+    // Show after a hide (tray, second start, taskbar) loads the folders again.
+    // A minimize stays visible, so this does not park on minimize.
+    let vis_timer = slint::Timer::default();
+    vis_timer.start(
+        slint::TimerMode::Repeated,
+        std::time::Duration::from_millis(200),
+        {
+            let w = win.as_weak();
+            move || {
+                if let Some(w) = w.upgrade() {
+                    nav::note_visibility(&w, w.window().is_visible());
+                    nav::poll_test_park(&w);
+                }
+            }
+        },
+    );
     if background {
         // a start that exits at once (no tray) must not count as a crash
         crash::stable();
@@ -513,6 +535,7 @@ fn main() -> Result<(), slint::PlatformError> {
         slint::Timer::single_shot(std::time::Duration::ZERO, move || {
             if let Some(w) = weak.upgrade() {
                 let _ = w.hide();
+                nav::on_window_hidden(&w);
                 nav::trace_line("background: window hidden");
             }
         });
