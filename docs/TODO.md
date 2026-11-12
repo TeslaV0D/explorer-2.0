@@ -184,7 +184,8 @@ The app UI is German; UI labels are quoted as they appear (with a translation wh
     - [x] ru – Russian (ru-RU): 430 texts, three plural forms, Cyrillic access keys, units Б/КБ/МБ, `docs/GLOSSARY-RU.md`, layout check green (CI run #157); native-speaker review open
     - [x] uk – Ukrainian (uk-UA): 431 texts, three plural forms, Cyrillic access keys, `docs/GLOSSARY-UK.md`, layout check green (CI run #157); native-speaker review open
     - [x] pl – Polish (pl-PL): 432 texts, three plural forms (one = exactly 1), „…” quotes, `docs/GLOSSARY-PL.md`, layout check green (CI run #157); native-speaker review open
-    - [ ] it · [ ] zh · [ ] ja
+    - [x] it – Italian (it-IT): 433 texts, `docs/GLOSSARY-IT.md`, access keys S/U/I/M/t; native-speaker review open
+    - [ ] zh · [ ] ja
   - [ ] Hit meanings exactly, not confusing: terms as in Windows Explorer of the respective language (Recycle Bin, This PC, Quick access, Properties …), glossary per language
   - [x] Layout robustness when switching: check **all** texts for whether they fit into buttons/menus/columns/dialogs/settings (German/French/Russian long, CJK different font) – shorten, wrap or make widths dynamic; gallery per language + pixel/overflow check in E2E (L5; per new language L6 runs the same gate, CJK fonts are measured there)
   - [x] Language switchable in the settings (default: Windows language), live (L4)

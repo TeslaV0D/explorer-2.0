@@ -9,6 +9,12 @@ The app UI is German; UI labels and messages are quoted as they appear (with a t
 - Field-test checklists renamed: `PRAXISTEST-SUCHE.md` → `FIELD-TEST-SEARCH.md`, `PRAXISTEST-REDESIGN.md` → `FIELD-TEST-REDESIGN.md`.
 - No code change; CI ignores doc-only commits (`paths-ignore`).
 
+## Localisation L6 – Italian ✅ (2026-11-12)
+- **Italiano (it-IT)** complete: all 433 texts with the Windows Explorer terms of Italian Windows (Cestino, Questo PC, Accesso rapido, Cartella di file, Data ultima modifica, Rinomina, Svuota Cestino …), informal “tu” in instructions and the infinitive in confirmation questions, like Windows; glossary **`docs/GLOSSARY-IT.md`**. Offered as “Italiano” and palette command “Language: Italiano”. Two plural forms (`n != 1`: “1 elemento”, “0 elementi”, “3 elementi”); “unità” stays the same in both forms. Quotes «…», access keys S/U/I/M/t. Size units stay B/KB/MB/GB/TB; the word is “byte”. Numbers `1.234,5` (already `separators("it")`).
+- Undo and Cancel are both “Annulla”, Redo is “Ripeti”, as in Italian Windows.
+- Local tests: i18n catalog (template, every complete language, compiled tables) and `conflict_keys_match_labels_and_differ` green. The gallery and layout gate run in CI for every language under `lang/`, including `it`. Native-speaker review open.
+- **Next language: Chinese (Simplified).**
+
 ## Localisation L6 – Polish ✅ (CI run #157, 2026-11-11)
 - **Polski (pl-PL)** complete: all 432 texts with the Windows Explorer terms of Polish Windows (Kosz, Ten komputer, Szybki dostęp, Folder plików, Data modyfikacji, Zmień nazwę …), informal “ty” like Windows; glossary **`docs/GLOSSARY-PL.md`**. Offered as “Polski” and palette command “Language: Polski”. Three plural forms with Polish rules (exactly 1 / 2–4 / the rest: “1 ukryty”, “3 170 bajtów”), quotes „…”, access keys Z/S/P/O/W. Layout check: every text fits on all 50 screens. Native-speaker review open.
 - E2E [84c] assumed Ukrainian is still incomplete (automatic fallback to English) – with uk complete it is rightly picked → [84c] now uses a language we don't have (pt-BR → English) and the new **[84e]** checks that a complete system language (uk) is picked automatically, UI in Ukrainian. CI #156 (Ukrainian) was red on that one check.
