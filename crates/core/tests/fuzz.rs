@@ -301,5 +301,20 @@ fn text_helpers_never_panic() {
         bytes.extend((0..r.below(64)).map(|_| r.next() as u8));
         let _ = inspect::image_size(&bytes);
         let _ = inspect::text_preview(&bytes, r.below(30), r.below(200));
+        // New menu: any shell record and any command line, never panics
+        {
+            use explorer_core::newmenu::{command_argv, from_record, menu_specs, ShellNewRecord};
+            let rec = ShellNewRecord {
+                extension: other.chars().take(24).collect(),
+                menu_text: other.clone(),
+                command: other.clone(),
+                data: bytes.clone(),
+                file_name: other.clone(),
+                null_file: r.below(2) == 0,
+            };
+            let _ = from_record(&rec, &other);
+            let _ = menu_specs(std::slice::from_ref(&rec), &other);
+            let _ = command_argv(&other, &other);
+        }
     }
 }

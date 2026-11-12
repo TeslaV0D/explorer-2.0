@@ -125,6 +125,11 @@ msgstr "Adresszeile"
 msgid "Already exists"
 msgstr "Ist bereits vorhanden"
 
+#: crates/app/ui/main.slint
+#: crates/integrate/src/features.rs
+msgid "Also handle Open and Explore"
+msgstr "Auch „Öffnen“ und „Durchsuchen“ übernehmen"
+
 #: crates/app/src/fileops.rs
 #: crates/core/src/commands.rs
 msgid "Alt+Enter"
@@ -247,6 +252,10 @@ msgstr "Pfad kopieren"
 #: crates/app/src/fileops.rs
 msgid "Copying {0} to “{1}”"
 msgstr "Kopiere {0} nach „{1}“"
+
+#: crates/ops/src/newitem.rs
+msgid "Could not run the command for this item: {0}"
+msgstr "Der Befehl für diesen Eintrag konnte nicht gestartet werden: {0}"
 
 #: crates/ops/src/exec.rs
 msgid "Couldn't move the existing item to the Recycle Bin: {0}"
@@ -515,6 +524,10 @@ msgstr "Fehler: {0} – Programmordner bitte von Hand löschen: {1}"
 #: crates/app/src/fileops.rs
 msgid "Existing: {0}"
 msgstr "Vorhanden: {0}"
+
+#: crates/app/ui/tray.slint
+msgid "Exit"
+msgstr "Beenden"
 
 #: crates/core/src/guard.rs
 msgid "Explorer 2.0 closed unexpectedly last time."
@@ -889,6 +902,15 @@ msgid "Network shares are only available on Windows"
 msgstr "Netzwerkfreigaben gibt es nur unter Windows"
 
 #: crates/app/src/fileops.rs
+#: crates/core/src/newmenu.rs
+msgid "New"
+msgstr "Neu"
+
+#: crates/core/src/newmenu.rs
+msgid "New Text Document"
+msgstr "Neues Textdokument"
+
+#: crates/app/src/fileops.rs
 #: crates/app/ui/main.slint
 #: crates/core/src/commands.rs
 #: crates/ops/src/names.rs
@@ -899,6 +921,14 @@ msgstr "Neuer Ordner"
 #: crates/core/src/commands.rs
 msgid "New tab"
 msgstr "Neuer Tab"
+
+#: crates/core/src/commands.rs
+msgid "New text document"
+msgstr "Neues Textdokument"
+
+#: crates/app/ui/tray.slint
+msgid "New window"
+msgstr "Neues Fenster"
 
 #: crates/app/src/fileops.rs
 msgid "New: {0} (from {1})"
@@ -1231,6 +1261,7 @@ msgid "Select all"
 msgstr "Alles auswählen"
 
 #: crates/app/ui/main.slint
+#: crates/app/ui/tray.slint
 #: crates/core/src/commands.rs
 msgid "Settings"
 msgstr "Einstellungen"
@@ -1274,6 +1305,10 @@ msgstr "Geschützte Systemdateien anzeigen"
 #: crates/app/ui/main.slint
 msgid "Show report"
 msgstr "Bericht anzeigen"
+
+#: crates/app/ui/tray.slint
+msgid "Show window"
+msgstr "Fenster anzeigen"
 
 #: crates/fs/src/network.rs
 msgid "Sign-in cancelled"
@@ -1337,6 +1372,11 @@ msgstr "Sortieren nach Typ"
 msgid "Sort descending"
 msgstr "Absteigend sortieren"
 
+#: crates/app/ui/main.slint
+#: crates/integrate/src/features.rs
+msgid "Start with Windows"
+msgstr "Mit Windows starten"
+
 #: crates/integrate/src/bin/explorer2-recover.rs
 msgid "State: {0}"
 msgstr "Stand: {0}"
@@ -1377,9 +1417,25 @@ msgstr "Änderung wird beim nächsten Start wirksam."
 msgid "Temp folder {0}: {1}"
 msgstr "Temp-Ordner {0}: {1}"
 
+#: crates/core/src/newmenu.rs
+msgid "Text Document"
+msgstr "Textdokument"
+
+#: crates/app/src/fileops.rs
+msgid "That item can't be created here."
+msgstr "Dieser Eintrag kann hier nicht erstellt werden."
+
 #: crates/app/src/fileops.rs
 msgid "The Recycle Bin is empty."
 msgstr "Der Papierkorb ist leer."
+
+#: crates/ops/src/newitem.rs
+msgid "The command for this item is empty."
+msgstr "Der Befehl für diesen Eintrag ist leer."
+
+#: crates/ops/src/newitem.rs
+msgid "The command for this item is still running."
+msgstr "Der Befehl für diesen Eintrag läuft noch."
 
 #: crates/shell/src/menu.rs
 msgid "The context menu is only available on Windows."
@@ -1487,12 +1543,20 @@ msgid "Toggle: Win+E opens Explorer 2.0"
 msgstr "Win+E öffnet Explorer 2.0 ein/aus"
 
 #: crates/core/src/commands.rs
+msgid "Toggle: also handle Open and Explore"
+msgstr "Öffnen und Durchsuchen ein/aus"
+
+#: crates/core/src/commands.rs
 msgid "Toggle: open folders in the running window (new tab)"
 msgstr "Ordner im offenen Fenster öffnen (neuer Tab) ein/aus"
 
 #: crates/core/src/commands.rs
 msgid "Toggle: open folders with Explorer 2.0"
 msgstr "Ordner mit Explorer 2.0 öffnen ein/aus"
+
+#: crates/core/src/commands.rs
+msgid "Toggle: start with Windows"
+msgstr "Mit Windows starten ein/aus"
 
 #: crates/core/src/commands.rs
 msgid "Toggle: “Open in Explorer 2.0” in the context menu"

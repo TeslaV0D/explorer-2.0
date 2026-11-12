@@ -4,6 +4,7 @@ import { Theme, DesignColors, Ui } from "theme.slint";
 import { IconData } from "icons.slint";
 import { UiKit, CheckRow, Icon, IconButton, MenuItem, MenuSeparator, SectionLabel, ToolbarButton } from "kit.slint";
 export { Theme, DesignColors, Ui }
+export { AppTray } from "tray.slint";
 
 export struct Row {
     name: string,
@@ -238,7 +239,7 @@ component Tile inherits Rectangle {
     callback click-open(int);
     callback activate();
     callback pressed(int, bool, bool);
-    callback context(int, float, float);
+    callback context(int, float, float, bool);
     callback open(int);
     callback os-drag(int);
     callback zoom(bool);
@@ -301,7 +302,7 @@ component Tile inherits Rectangle {
                 if (e.kind == PointerEventKind.cancel) { root.defer-click = false; }
                 if (e.kind == PointerEventKind.up && e.button == PointerEventButton.right) {
                     root.activate();
-                    root.context(root.index, (self.absolute-position.x + self.mouse-x) / 1px, (self.absolute-position.y + self.mouse-y) / 1px);
+                    root.context(root.index, (self.absolute-position.x + self.mouse-x) / 1px, (self.absolute-position.y + self.mouse-y) / 1px, e.modifiers.shift);
                 }
                 if (e.kind == PointerEventKind.down && e.button == PointerEventButton.back) { root.back(); }
                 if (e.kind == PointerEventKind.down && e.button == PointerEventButton.forward) { root.forward(); }
@@ -489,12 +490,14 @@ component FilePane inherits Rectangle {
     changed geo-h => { root.report-geometry(); }
     changed geo-scroll => { root.report-geometry(); }
     // right-click / Shift+F10: row (-1 = folder background), window position in px
-    callback context-menu(int, float, float);
+    callback context-menu(int, float, float, bool);
     property <int> menu-seq: root.data.menu-seq;
     changed menu-seq => {
+        // keyboard (Shift+F10): our menu. Shift+right-click is the native one.
         root.context-menu(root.data.menu-row,
             (list-focus.absolute-position.x + mod(max(0, root.data.menu-row), root.cols) * (root.grid ? root.tile-w : 0px) + 60px) / 1px,
-            (list-focus.absolute-position.y + floor(max(0, root.data.menu-row) / root.cols) * root.line-h + root.scroll-y + root.line-h - 4px) / 1px);
+            (list-focus.absolute-position.y + floor(max(0, root.data.menu-row) / root.cols) * root.line-h + root.scroll-y + root.line-h - 4px) / 1px,
+            false);
     }
     // visible rows changed (first index, count) → per-file icons are loaded lazily
     callback viewport(int, int);
@@ -871,7 +874,7 @@ component FilePane inherits Rectangle {
                         if (e.kind == PointerEventKind.up && e.button == PointerEventButton.right) {
                             root.activate();
                             list-focus.focus();
-                            root.context-menu(-1, (self.absolute-position.x + self.mouse-x) / 1px, (self.absolute-position.y + self.mouse-y) / 1px);
+                            root.context-menu(-1, (self.absolute-position.x + self.mouse-x) / 1px, (self.absolute-position.y + self.mouse-y) / 1px, e.modifiers.shift);
                         }
                         root.mouse-nav(e);
                     }
@@ -948,7 +951,7 @@ component FilePane inherits Rectangle {
                                     if (e.kind == PointerEventKind.up && e.button == PointerEventButton.right) {
                                         root.activate();
                                         list-focus.focus();
-                                        root.context-menu(i, (self.absolute-position.x + self.mouse-x) / 1px, (self.absolute-position.y + self.mouse-y) / 1px);
+                                        root.context-menu(i, (self.absolute-position.x + self.mouse-x) / 1px, (self.absolute-position.y + self.mouse-y) / 1px, e.modifiers.shift);
                                     }
                                     root.mouse-nav(e);
                                 }
@@ -1027,7 +1030,7 @@ component FilePane inherits Rectangle {
                                 click-open(i) => { root.click-open(i); }
                                 activate => { root.activate(); list-focus.focus(); }
                                 pressed(i, c, s) => { root.row-pressed(i, c, s); }
-                                context(i, x, y) => { list-focus.focus(); root.context-menu(i, x, y); }
+                                context(i, x, y, shift) => { list-focus.focus(); root.context-menu(i, x, y, shift); }
                                 open(i) => { root.open-row(i); }
                                 os-drag(i) => { root.os-drag(i); }
                                 zoom(up) => { root.zoom(up); }
@@ -1388,6 +1391,8 @@ export component MainWindow inherits Window {
     in-out property <bool> feat-folder-open;
     in-out property <bool> feat-context-menu;
     in-out property <bool> feat-win-e;
+    in-out property <bool> feat-open-explore;
+    in-out property <bool> feat-start-with-windows;
     callback integration-feature(string, bool);
     // M8: installation
     in property <bool> install-available;
@@ -1456,7 +1461,7 @@ export component MainWindow inherits Window {
     callback sort-dir(bool);
     callback click-open(int, int);
     callback band(int, float, float, float, float, bool, int);
-    callback context-menu(int, int, float, float);
+    callback context-menu(int, int, float, float, bool);
     in property <bool> can-paste;
     in property <bool> can-undo;
     in property <bool> can-redo;
@@ -1614,7 +1619,7 @@ export component MainWindow inherits Window {
                         img-size: pane.img-size;
                         zoom(up) => { root.pane-activate(pi); root.zoom(up); }
                         viewport(f, n) => { root.viewport(pi, f, n); }
-                        context-menu(r, x, y) => { root.context-menu(pi, r, x, y); }
+                        context-menu(r, x, y, shift) => { root.context-menu(pi, r, x, y, shift); }
                         drag-payload(r) => { return root.drag-payload(pi, r); }
                         drop-check(r, d, c) => { return root.drop-check(pi, r, d, c); }
                         drop-files(r, d, c) => { return root.drop-files(pi, r, d, c); }
@@ -2054,6 +2059,16 @@ export component MainWindow inherits Window {
                 text: @tr("Win+E opens Explorer 2.0");
                 checked <=> root.feat-win-e;
                 toggled => { root.integration-feature("win-e", self.checked); }
+            }
+            if root.integration-available : CheckRow {
+                text: @tr("Also handle Open and Explore");
+                checked <=> root.feat-open-explore;
+                toggled => { root.integration-feature("open-explore", self.checked); }
+            }
+            if root.integration-available : CheckRow {
+                text: @tr("Start with Windows");
+                checked <=> root.feat-start-with-windows;
+                toggled => { root.integration-feature("start-with-windows", self.checked); }
             }
             if root.integration-available : CheckRow {
                 text: @tr("Open folders in the running window (as a new tab)");

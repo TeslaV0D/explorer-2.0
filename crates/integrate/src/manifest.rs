@@ -71,6 +71,15 @@ pub fn points() -> Vec<Point> {
         r"CLSID\{52205FD8-5DFB-447D-801A-D0B52F2E83E1}",
         "opennewwindow",
     ));
+    // autostart (D-028): one value in Run; the key itself belongs to Windows
+    v.push(Point::Value {
+        key: KeyPath::hkcu(r"Software\Microsoft\Windows\CurrentVersion\Run"),
+        probe: "Explorer2",
+        also: &[],
+        // `Software` already exists; stopping at CurrentVersion would leave
+        // the empty keys we created on the way down
+        stop: KeyPath::hkcu("Software"),
+    });
     // our own namespace (selftest, future per-user state)
     v.push(Point::OwnTree(KeyPath::hkcu(r"Software\Explorer2")));
     // M8: the "Apps & Features" entry of the installation

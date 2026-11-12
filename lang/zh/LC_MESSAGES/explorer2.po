@@ -121,6 +121,11 @@ msgstr "地址栏"
 msgid "Already exists"
 msgstr "已存在"
 
+#: crates/app/ui/main.slint
+#: crates/integrate/src/features.rs
+msgid "Also handle Open and Explore"
+msgstr "同时接管“打开”和“浏览”"
+
 #: crates/app/src/fileops.rs
 #: crates/core/src/commands.rs
 msgid "Alt+Enter"
@@ -243,6 +248,10 @@ msgstr "复制路径"
 #: crates/app/src/fileops.rs
 msgid "Copying {0} to “{1}”"
 msgstr "正在将 {0} 复制到“{1}”"
+
+#: crates/ops/src/newitem.rs
+msgid "Could not run the command for this item: {0}"
+msgstr "无法运行此项的命令: {0}"
 
 #: crates/ops/src/exec.rs
 msgid "Couldn't move the existing item to the Recycle Bin: {0}"
@@ -508,6 +517,10 @@ msgstr "错误：{0} – 请手动删除程序文件夹：{1}"
 #: crates/app/src/fileops.rs
 msgid "Existing: {0}"
 msgstr "现有：{0}"
+
+#: crates/app/ui/tray.slint
+msgid "Exit"
+msgstr "退出"
 
 #: crates/core/src/guard.rs
 msgid "Explorer 2.0 closed unexpectedly last time."
@@ -879,6 +892,15 @@ msgid "Network shares are only available on Windows"
 msgstr "网络共享仅在 Windows 上可用"
 
 #: crates/app/src/fileops.rs
+#: crates/core/src/newmenu.rs
+msgid "New"
+msgstr "新建"
+
+#: crates/core/src/newmenu.rs
+msgid "New Text Document"
+msgstr "新建文本文档"
+
+#: crates/app/src/fileops.rs
 #: crates/app/ui/main.slint
 #: crates/core/src/commands.rs
 #: crates/ops/src/names.rs
@@ -889,6 +911,14 @@ msgstr "新建文件夹"
 #: crates/core/src/commands.rs
 msgid "New tab"
 msgstr "新建标签页"
+
+#: crates/core/src/commands.rs
+msgid "New text document"
+msgstr "新建文本文档"
+
+#: crates/app/ui/tray.slint
+msgid "New window"
+msgstr "新建窗口"
 
 #: crates/app/src/fileops.rs
 msgid "New: {0} (from {1})"
@@ -1218,6 +1248,7 @@ msgid "Select all"
 msgstr "全选"
 
 #: crates/app/ui/main.slint
+#: crates/app/ui/tray.slint
 #: crates/core/src/commands.rs
 msgid "Settings"
 msgstr "设置"
@@ -1261,6 +1292,10 @@ msgstr "显示受保护的操作系统文件"
 #: crates/app/ui/main.slint
 msgid "Show report"
 msgstr "显示报告"
+
+#: crates/app/ui/tray.slint
+msgid "Show window"
+msgstr "显示窗口"
 
 #: crates/fs/src/network.rs
 msgid "Sign-in cancelled"
@@ -1324,6 +1359,11 @@ msgstr "按类型排序"
 msgid "Sort descending"
 msgstr "递减排序"
 
+#: crates/app/ui/main.slint
+#: crates/integrate/src/features.rs
+msgid "Start with Windows"
+msgstr "随 Windows 启动"
+
 #: crates/integrate/src/bin/explorer2-recover.rs
 msgid "State: {0}"
 msgstr "状态：{0}"
@@ -1364,9 +1404,25 @@ msgstr "下次启动应用时生效。"
 msgid "Temp folder {0}: {1}"
 msgstr "临时文件夹 {0}：{1}"
 
+#: crates/core/src/newmenu.rs
+msgid "Text Document"
+msgstr "文本文档"
+
+#: crates/app/src/fileops.rs
+msgid "That item can't be created here."
+msgstr "无法在此处创建此项。"
+
 #: crates/app/src/fileops.rs
 msgid "The Recycle Bin is empty."
 msgstr "回收站是空的。"
+
+#: crates/ops/src/newitem.rs
+msgid "The command for this item is empty."
+msgstr "此项的命令为空。"
+
+#: crates/ops/src/newitem.rs
+msgid "The command for this item is still running."
+msgstr "此项的命令仍在运行。"
 
 #: crates/shell/src/menu.rs
 msgid "The context menu is only available on Windows."
@@ -1474,12 +1530,20 @@ msgid "Toggle: Win+E opens Explorer 2.0"
 msgstr "切换：Win+E 打开 Explorer 2.0"
 
 #: crates/core/src/commands.rs
+msgid "Toggle: also handle Open and Explore"
+msgstr "切换：同时接管“打开”和“浏览”"
+
+#: crates/core/src/commands.rs
 msgid "Toggle: open folders in the running window (new tab)"
 msgstr "切换：在正在运行的窗口中打开文件夹（新标签页）"
 
 #: crates/core/src/commands.rs
 msgid "Toggle: open folders with Explorer 2.0"
 msgstr "切换：使用 Explorer 2.0 打开文件夹"
+
+#: crates/core/src/commands.rs
+msgid "Toggle: start with Windows"
+msgstr "切换：随 Windows 启动"
 
 #: crates/core/src/commands.rs
 msgid "Toggle: “Open in Explorer 2.0” in the context menu"

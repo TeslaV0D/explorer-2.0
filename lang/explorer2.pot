@@ -123,6 +123,11 @@ msgstr ""
 msgid "Already exists"
 msgstr ""
 
+#: crates/app/ui/main.slint
+#: crates/integrate/src/features.rs
+msgid "Also handle Open and Explore"
+msgstr ""
+
 #: crates/app/src/fileops.rs
 #: crates/core/src/commands.rs
 msgid "Alt+Enter"
@@ -244,6 +249,10 @@ msgstr ""
 
 #: crates/app/src/fileops.rs
 msgid "Copying {0} to “{1}”"
+msgstr ""
+
+#: crates/ops/src/newitem.rs
+msgid "Could not run the command for this item: {0}"
 msgstr ""
 
 #: crates/ops/src/exec.rs
@@ -504,6 +513,10 @@ msgstr ""
 
 #: crates/app/src/fileops.rs
 msgid "Existing: {0}"
+msgstr ""
+
+#: crates/app/ui/tray.slint
+msgid "Exit"
 msgstr ""
 
 #: crates/core/src/guard.rs
@@ -861,6 +874,15 @@ msgid "Network shares are only available on Windows"
 msgstr ""
 
 #: crates/app/src/fileops.rs
+#: crates/core/src/newmenu.rs
+msgid "New"
+msgstr ""
+
+#: crates/core/src/newmenu.rs
+msgid "New Text Document"
+msgstr ""
+
+#: crates/app/src/fileops.rs
 #: crates/app/ui/main.slint
 #: crates/core/src/commands.rs
 #: crates/ops/src/names.rs
@@ -870,6 +892,14 @@ msgstr ""
 #: crates/app/ui/main.slint
 #: crates/core/src/commands.rs
 msgid "New tab"
+msgstr ""
+
+#: crates/core/src/commands.rs
+msgid "New text document"
+msgstr ""
+
+#: crates/app/ui/tray.slint
+msgid "New window"
 msgstr ""
 
 #: crates/app/src/fileops.rs
@@ -1199,6 +1229,7 @@ msgid "Select all"
 msgstr ""
 
 #: crates/app/ui/main.slint
+#: crates/app/ui/tray.slint
 #: crates/core/src/commands.rs
 msgid "Settings"
 msgstr ""
@@ -1241,6 +1272,10 @@ msgstr ""
 
 #: crates/app/ui/main.slint
 msgid "Show report"
+msgstr ""
+
+#: crates/app/ui/tray.slint
+msgid "Show window"
 msgstr ""
 
 #: crates/fs/src/network.rs
@@ -1305,6 +1340,11 @@ msgstr ""
 msgid "Sort descending"
 msgstr ""
 
+#: crates/app/ui/main.slint
+#: crates/integrate/src/features.rs
+msgid "Start with Windows"
+msgstr ""
+
 #: crates/integrate/src/bin/explorer2-recover.rs
 msgid "State: {0}"
 msgstr ""
@@ -1345,8 +1385,24 @@ msgstr ""
 msgid "Temp folder {0}: {1}"
 msgstr ""
 
+#: crates/core/src/newmenu.rs
+msgid "Text Document"
+msgstr ""
+
+#: crates/app/src/fileops.rs
+msgid "That item can't be created here."
+msgstr ""
+
 #: crates/app/src/fileops.rs
 msgid "The Recycle Bin is empty."
+msgstr ""
+
+#: crates/ops/src/newitem.rs
+msgid "The command for this item is empty."
+msgstr ""
+
+#: crates/ops/src/newitem.rs
+msgid "The command for this item is still running."
 msgstr ""
 
 #: crates/shell/src/menu.rs
@@ -1455,11 +1511,19 @@ msgid "Toggle: Win+E opens Explorer 2.0"
 msgstr ""
 
 #: crates/core/src/commands.rs
+msgid "Toggle: also handle Open and Explore"
+msgstr ""
+
+#: crates/core/src/commands.rs
 msgid "Toggle: open folders in the running window (new tab)"
 msgstr ""
 
 #: crates/core/src/commands.rs
 msgid "Toggle: open folders with Explorer 2.0"
+msgstr ""
+
+#: crates/core/src/commands.rs
+msgid "Toggle: start with Windows"
 msgstr ""
 
 #: crates/core/src/commands.rs

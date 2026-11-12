@@ -22,6 +22,8 @@ mod win_link;
 #[cfg(windows)]
 mod win_menu;
 #[cfg(windows)]
+mod win_shellnew;
+#[cfg(windows)]
 mod win_theme;
 
 pub use dnd::{
@@ -73,3 +75,29 @@ pub fn screen_to_client(hwnd: isize, x: i32, y: i32) -> (i32, i32) {
 
 /// True where real shell icons/type names are available.
 pub const SHELL_SUPPORTED: bool = cfg!(windows);
+
+/// `ShellNew` entries (Windows). Empty where there is no registry.
+pub fn shell_new_records() -> Vec<explorer_core::newmenu::ShellNewRecord> {
+    #[cfg(windows)]
+    {
+        win_shellnew::read()
+    }
+    #[cfg(not(windows))]
+    {
+        Vec::new()
+    }
+}
+
+/// Folder templates from `FileName` are resolved against (`%SystemRoot%\ShellNew`).
+pub fn shell_new_root() -> String {
+    #[cfg(windows)]
+    {
+        std::env::var("SystemRoot")
+            .map(|r| format!(r"{r}\ShellNew"))
+            .unwrap_or_default()
+    }
+    #[cfg(not(windows))]
+    {
+        String::new()
+    }
+}

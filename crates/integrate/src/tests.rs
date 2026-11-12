@@ -611,4 +611,35 @@ mod feature_tests {
             r#""C:\Program Files\Explorer2\explorer2.exe" "%V""#
         );
     }
+
+    #[test]
+    fn open_explore_and_autostart_are_journaled_and_leave_folder_alone() {
+        let exe = Path::new(A);
+        let open = Feature::ExplicitOpen.changes(exe);
+        assert_eq!(open.len(), 4, "Directory+Drive × open+explore");
+        for c in &open {
+            let Change::SetValue { key, name, data } = c else {
+                panic!("not a value");
+            };
+            let p = key.path.to_lowercase();
+            assert!(!p.contains(r"classes\folder"), "{key}");
+            assert!(p.contains(r"\shell\open\command") || p.contains(r"\shell\explore\command"));
+            assert_eq!(name, "");
+            assert_eq!(data.text().unwrap(), features::command(exe, "%1"));
+        }
+        let auto = Feature::Autostart.changes(exe);
+        assert_eq!(auto.len(), 1);
+        let Change::SetValue { key, name, data } = &auto[0] else {
+            panic!("not a value");
+        };
+        assert!(key.path.ends_with(r"\Run"), "{key}");
+        assert_eq!(name, "Explorer2");
+        assert_eq!(
+            data.text().unwrap(),
+            r#""C:\Program Files\Explorer2\explorer2.exe" --background"#
+        );
+        // disable scope is the Run value, not the whole CurrentVersion tree
+        assert!(Feature::Autostart.scopes().iter().all(|s| !s.deep));
+        assert!(Feature::ExplicitOpen.scopes().iter().all(|s| !s.deep));
+    }
 }

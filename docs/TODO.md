@@ -191,19 +191,21 @@ The app UI is German; UI labels are quoted as they appear (with a translation wh
   - [x] Layout robustness when switching: check **all** texts for whether they fit into buttons/menus/columns/dialogs/settings (German/French/Russian long, CJK different font) – shorten, wrap or make widths dynamic; gallery per language + pixel/overflow check in E2E (L5; per new language L6 runs the same gate, CJK fonts are measured there)
   - [x] Language switchable in the settings (default: Windows language), live (L4)
   - [ ] Numbers/dates/sizes according to the locale; mind font coverage (gotcha: missing glyphs cost start time)
-- [ ] **“New” submenu like Windows**: not only folders but all creation options (text document, shortcut, zipped folder, Word/Excel/… from `HKCR\.<ext>\ShellNew` – `NullFile`/`FileName`/`Data`/`Command`), name directly in rename mode, undo like for New folder
-- [ ] **Autostart with Windows** (opt-in, switch in settings + palette)
-  - [ ] Entry `HKCU\Software\Microsoft\Windows\CurrentVersion\Run` (without admin), **only via `integrate::apply`** (journal) + entry in `manifest::points()` → reset/recovery/uninstall remove it (R-001, snapshot test)
-  - [ ] Start in the background (`--background`: no window, instance server + search index warm) → Win+E/open folder shows a window immediately via the single-instance hand-over; closing the window = **keep running in the background + tray icon** (Boss 2026-11-08)
-  - [ ] Tray icon (`Shell_NotifyIconW`): click = open window, menu = new window / settings / exit; keep idle memory small (free the folder data of closed windows), endurance test for leaks
-  - [ ] Mind the start guard (a background start must not count as a crash), measure start costs at Windows login (must not slow down the login), redirect the exe path after update/installation like in M7
-- [ ] **“Open in Explorer” system-wide → Explorer 2.0** (Boss 2026-11-08, example: Steam “Browse local files” still opens Windows Explorer)
+- [x] **“New” submenu like Windows** (D-030): “New” in the background menu lists folder, text document, and `HKCR\.<ext>\ShellNew` (`NullFile` / `FileName` / `Data` / `Command`). Name straight into rename, undo like New folder. A COM-only handler is skipped (nothing to create without it)
+- [~] **Autostart with Windows** (opt-in, switch in settings + palette, D-028)
+  - [x] Entry `HKCU\Software\Microsoft\Windows\CurrentVersion\Run` (without admin), **only via `integrate::apply`** (journal) + entry in `manifest::points()` → reset/recovery/uninstall remove it (R-001). Value `Explorer2` = `"exe" --background`
+  - [x] Start in the background (`--background`: window hidden, instance server + search stay up) → Win+E/open folder shows the window via the single-instance hand-over (`raise` calls `show`); closing the window hides it and the tray keeps the process
+  - [x] Tray icon (Slint `SystemTrayIcon`, which is `Shell_NotifyIconW` on Windows): click = show window, menu = show / new window / settings / exit. Without a tray (Linux CI) hiding the window still quits
+  - [ ] Keep idle memory small (free the folder data while the window is hidden) and an endurance check for that
+  - [x] Start guard: `--background` calls `stable()` immediately, so a tray-less exit is not a crash. The installed exe is re-pointed with the other features (M8)
+  - [ ] Measure the login start on a real Windows machine (must not slow the login down)
+- [~] **“Open in Explorer” system-wide → Explorer 2.0** (Boss 2026-11-08, example: Steam “Browse local files” still opens Windows Explorer)
   - [ ] First measure **how** the affected apps open it (Process Monitor / API trace: Steam, browser downloads “Show in folder”, VS Code, Discord, installers …) and keep a list of the routes
-  - [ ] Route 1 – `ShellExecute` with an explicit verb `open`/`explore` (bypasses our default verb `explorer2open`, D-021): HKCU override of `Directory`/`Drive` `shell\open` + `shell\explore` (without admin), only via `integrate::apply` + `manifest`, individually switchable
+  - [x] Route 1 – `ShellExecute` with an explicit verb `open`/`explore` (bypasses our default verb `explorer2open`, D-021): HKCU override of `Directory`/`Drive` `shell\open` + `shell\explore` (without admin), only via `integrate::apply` + `manifest`, switch of its own (`open-explore`). Never `Folder`
   - [ ] Route 2 – direct call `explorer.exe <path>` or `explorer.exe /select,<file>`: only via IFEO redirection (= M7.3, postponed per D-022) – understand `/select,` (open folder + select file), `/e,`, `/root,`, `shell:` paths and virtual folders or pass them on to the real Explorer
-  - [ ] Route 3 – `SHOpenFolderAndSelectItems` (goes through the running Explorer shell): check feasibility (ShellWindows/DDE), otherwise document as a known gap
-  - [ ] Never break anything: `Folder` (virtual folders, Control Panel, Recycle Bin …) stays with Windows Explorer, fallback to the real Explorer when Explorer 2.0 is missing/crashes; R-001 snapshot test for all new values; Windows E2E per route
-- [ ] **Emergency: Shift + right-click opens the native Windows context menu directly** (instead of our own; including extended verbs like “Copy as path”, Windows behaviour with Shift = extended verbs `CMF_EXTENDEDVERBS`)
+  - [ ] Route 3 – `SHOpenFolderAndSelectItems` (goes through the running Explorer shell): known gap (not implemented)
+  - [x] Never break virtual folders: `Folder` stays with Windows Explorer. R-001 sweep test covers the new values. A Windows E2E for route 1 is still open (needs a real shell)
+- [x] **Emergency: Shift + right-click opens the native Windows context menu directly** (instead of our own; including extended verbs like “Copy as path”, `CMF_EXTENDEDVERBS`). Shift+F10 stays the in-app menu
 
 ## Documentation in English (Boss 2026-11-09) – planned start Thu 12.11. 16:00, brought forward by Boss, done Tue 10.11.
 - [x] Rewrite all docs on GitHub in English (done 2026-11-10): `docs/*.md` (PROJECT, PLAN-*, WINDOWS-INTEGRATION, FIELD-TEST-* (formerly PRAXISTEST-*), STATUS, TODO), `THIRD-PARTY.md`, `scripts/release-notes.md` **and `CLAUDE.md`** (Boss 2026-11-09) – content 1:1, no logic change; D-004 changed accordingly

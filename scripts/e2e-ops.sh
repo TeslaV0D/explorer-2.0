@@ -137,7 +137,11 @@ check "[53] right-click on an unselected row selects it and opens our menu" "las
 xdotool key Escape; sleep 0.4
 check "[53a] Esc closes it" "grep -q 'context menu closed' $LOG && ! ui_has 'Kontextmenü'"
 xdotool mousemove $LIST_X 500 click 3; sleep 0.5
-check "[53b] right-click on empty space = folder background menu" "last 'context menu pane' | grep -q 'row=-1 items=0' && last 'context menu own' | grep -q 'new-folder,paste,refresh,folder-properties'"
+check "[53b] right-click on empty space = folder background menu" "last 'context menu pane' | grep -q 'row=-1 items=0' && last 'context menu own' | grep -q 'new-menu,paste,refresh,folder-properties'"
+ui_click "Neu" last; sleep 0.4
+check "[53g] New lists a folder and a text document" "last 'context menu own' | grep -q 'new:folder,new:txt'"
+xdotool key Escape; sleep 0.3
+xdotool mousemove $LIST_X 500 click 3; sleep 0.5
 N0=$(grep -c 'Refresh' $LOG)
 ui_click "Aktualisieren" last; sleep 0.8
 check "[53e] a click on an entry runs it (Aktualisieren)" "last 'context menu run' | grep -q 'refresh' && [ \$(grep -c 'Refresh' $LOG) -gt $N0 ] && ! ui_has 'Kontextmenü'"

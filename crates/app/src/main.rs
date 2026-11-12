@@ -13,6 +13,7 @@ mod integration;
 mod keys;
 mod lang;
 mod nav;
+mod newmenu;
 mod open;
 mod palette;
 mod quick;
@@ -56,10 +57,11 @@ macro_rules! on {
 fn main() -> Result<(), slint::PlatformError> {
     nav::mark_process_start();
     crash::install();
-    // flags (`--new-instance`) are not the folder to open
+    // flags are not the folder to open
     let arg = std::env::args()
         .skip(1)
-        .find(|a| a != "--new-instance" && a != "--quiet");
+        .find(|a| a != "--new-instance" && a != "--quiet" && a != "--background");
+    let background = std::env::args().any(|a| a == "--background");
     if arg.as_deref() == Some("--version") {
         attach_parent_console();
         // Never panic on a closed/invalid stdout (GUI subsystem, panic=abort).
@@ -284,8 +286,8 @@ fn main() -> Result<(), slint::PlatformError> {
     on!(win, on_ctx_run, |w, id| fileops::ctx_run(&w, &id));
     on!(win, on_ctx_close, |w| fileops::ctx_close(&w));
     on!(win, on_ctx_step, |w, d| fileops::ctx_step(&w, d));
-    on!(win, on_context_menu, |w, pi, row, x, y| {
-        fileops::context_menu(&w, pi as usize, row, x, y)
+    on!(win, on_context_menu, |w, pi, row, x, y, shift| {
+        fileops::context_menu(&w, pi as usize, row, x, y, shift)
     });
     on!(win, on_os_drag, |w, pi, row| dnd::os_drag(
         &w,
@@ -444,10 +446,13 @@ fn main() -> Result<(), slint::PlatformError> {
         },
     );
 
+    // Closing the window hides it. A visible tray keeps the process (D-028);
+    // without a tray (Linux CI, tray failed) Slint quits the loop and the
+    // shutdown below runs. Jobs are not cancelled on hide.
     win.window().on_close_requested(|| {
         crash::stable();
-        fileops::shutdown();
         nav::save_session_now();
+        nav::trace_line("window close: hide");
         slint::CloseRequestResponse::HideWindow
     });
 
@@ -461,11 +466,64 @@ fn main() -> Result<(), slint::PlatformError> {
     });
     gfx::probe_in_background(&renderer);
     instance::serve(&win);
+    let tray = match AppTray::new() {
+        Ok(tray) => {
+            let weak = win.as_weak();
+            tray.on_show_window({
+                let weak = weak.clone();
+                move || {
+                    if let Some(w) = weak.upgrade() {
+                        instance::raise(&w);
+                    }
+                }
+            });
+            tray.on_new_window(|| {
+                if let Ok(exe) = std::env::current_exe() {
+                    let _ = std::process::Command::new(exe)
+                        .arg("--new-instance")
+                        .spawn();
+                }
+            });
+            tray.on_open_settings({
+                let weak = weak.clone();
+                move || {
+                    if let Some(w) = weak.upgrade() {
+                        instance::raise(&w);
+                        w.set_settings_open(true);
+                    }
+                }
+            });
+            tray.on_quit(|| {
+                nav::trace_line("tray: exit");
+                let _ = slint::quit_event_loop();
+            });
+            let _ = tray.show();
+            Some(tray)
+        }
+        Err(e) => {
+            nav::trace_line(&format!("tray: not available: {e}"));
+            None
+        }
+    };
+    if background {
+        // a start that exits at once (no tray) must not count as a crash
+        crash::stable();
+        nav::trace_line("background: start hidden");
+        let weak = win.as_weak();
+        slint::Timer::single_shot(std::time::Duration::ZERO, move || {
+            if let Some(w) = weak.upgrade() {
+                let _ = w.hide();
+                nav::trace_line("background: window hidden");
+            }
+        });
+    }
     // startup phases for the first-start gate: init done -> run -> event loop running
     nav::trace_line(&format!("run at={:.1}ms", nav::since_start_ms()));
     let res = win.run();
+    drop(tray);
     crash::stable();
     instance::shutdown();
+    fileops::shutdown();
     nav::save_session_now();
     // window is gone: wait for the index saves (cut-off changes are never saved)
     search::shutdown();

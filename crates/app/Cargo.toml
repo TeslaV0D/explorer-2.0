@@ -24,7 +24,7 @@ explorer-shell = { path = "../shell" }
 # item tree walk (accessible labels + geometry) for the UI dump test mode;
 # exact version = the one Slint itself uses (internal API, no debug info needed)
 i-slint-core = { version = "=1.18.1", default-features = false, features = ["std"] }
-slint = { version = "1", default-features = false, features = ["std", "compat-1-2", "backend-winit", "renderer-software", "raw-window-handle-06"] }
+slint = { version = "1", default-features = false, features = ["std", "compat-1-2", "backend-winit", "renderer-software", "raw-window-handle-06", "system-tray"] }
 
 [target.'cfg(unix)'.dependencies]
 libc = "0.2"

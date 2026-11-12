@@ -14,8 +14,8 @@ use windows::Win32::UI::Shell::{
     DefSubclassProc, IContextMenu, IContextMenu2, IContextMenu3, ILFindLastID, ILFree,
     IShellFolder, RemoveWindowSubclass, SHGetDesktopFolder, SHMultiFileProperties,
     SHObjectProperties, SHParseDisplayName, SetWindowSubclass, CMF_CANRENAME, CMF_EXPLORE,
-    CMF_NORMAL, CMIC_MASK_PTINVOKE, CMINVOKECOMMANDINFO, CMINVOKECOMMANDINFOEX, GCS_VERBW,
-    SHOP_FILEPATH,
+    CMF_EXTENDEDVERBS, CMF_NORMAL, CMIC_MASK_PTINVOKE, CMINVOKECOMMANDINFO, CMINVOKECOMMANDINFOEX,
+    GCS_VERBW, SHOP_FILEPATH,
 };
 use windows::Win32::UI::WindowsAndMessaging::{
     CreatePopupMenu, DestroyMenu, GetMenuItemCount, GetMenuItemID, GetMenuStringW,
@@ -131,17 +131,16 @@ fn verb_of(cm: &IContextMenu, cmd: u32) -> String {
     String::from_utf16_lossy(&buf[..n])
 }
 
-fn build(cm: &IContextMenu) -> Result<HMENU, String> {
+fn build(cm: &IContextMenu, extended: bool) -> Result<HMENU, String> {
+    // Shift+right-click: the verbs Windows hides until Shift (`Copy as path`, …).
+    let mut flags = CMF_NORMAL | CMF_EXPLORE | CMF_CANRENAME;
+    if extended {
+        flags |= CMF_EXTENDEDVERBS;
+    }
     // SAFETY: fresh menu handed to the shell to fill.
     unsafe {
         let menu = CreatePopupMenu().map_err(|e| e.message())?;
-        let hr = cm.QueryContextMenu(
-            menu,
-            0,
-            FIRST_CMD,
-            LAST_CMD,
-            CMF_NORMAL | CMF_EXPLORE | CMF_CANRENAME,
-        );
+        let hr = cm.QueryContextMenu(menu, 0, FIRST_CMD, LAST_CMD, flags);
         if hr.is_err() {
             let _ = DestroyMenu(menu);
             return Err(hr.message());
@@ -191,13 +190,19 @@ unsafe extern "system" fn subclass(
     unsafe { DefSubclassProc(hwnd, msg, wp, lp) }
 }
 
-pub fn show(hwnd: isize, dir: &Path, items: &[PathBuf], at: (i32, i32)) -> MenuOutcome {
+pub fn show(
+    hwnd: isize,
+    dir: &Path,
+    items: &[PathBuf],
+    at: (i32, i32),
+    extended: bool,
+) -> MenuOutcome {
     let hwnd = HWND(hwnd as *mut _);
     let cm = match context_menu(hwnd, dir, items) {
         Ok(cm) => cm,
         Err(e) => return MenuOutcome::Failed(e),
     };
-    let menu = match build(&cm) {
+    let menu = match build(&cm, extended) {
         Ok(m) => m,
         Err(e) => return MenuOutcome::Failed(e),
     };
@@ -266,7 +271,7 @@ pub fn client_to_screen(hwnd: isize, x: i32, y: i32) -> (i32, i32) {
 
 pub fn entries(dir: &Path, items: &[PathBuf]) -> Result<Vec<MenuEntry>, String> {
     let cm = context_menu(HWND::default(), dir, items)?;
-    let menu = build(&cm)?;
+    let menu = build(&cm, false)?;
     let mut out = Vec::new();
     // SAFETY: reading our own menu.
     unsafe {
