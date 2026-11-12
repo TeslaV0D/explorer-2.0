@@ -294,6 +294,18 @@ pub const ALL: &[Command] = &[
         Need::Always,
     ),
     c(
+        "language-zh",
+        tr_noop!("Language: 中文（简体）"),
+        "",
+        Need::Always,
+    ),
+    c(
+        "language-ja",
+        tr_noop!("Language: 日本語"),
+        "",
+        Need::Always,
+    ),
+    c(
         "toggle-folder-open",
         tr_noop!("Toggle: open folders with Explorer 2.0"),
         "",

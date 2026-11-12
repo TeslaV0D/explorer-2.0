@@ -178,15 +178,16 @@ The app UI is German; UI labels are quoted as they appear (with a translation wh
   - [x] L3 English review + gallery in English: language-neutral test targets (`ui-lang-map.py`), English gallery as CI artifact, ~40 texts improved, German unchanged (CI run #147)
   - [x] L4 language setting in the UI: list in own names at the top of the settings (“System default (…)” first), live switch of Slint + Rust texts, palette `language-*`, restart keeps it, E2E [85] (CI run #149)
   - [x] L5 layout robustness: pseudo-locale `qps` (generated), overflow check in the UI dump (`EXPLORER2_UI_OVERFLOW`), 22 gallery screens per language (de/en/qps) + `scripts/layout-check.sh` gate, Windows gallery check with Segoe UI [G1]; fixes: menus grow with their text, wrapping check boxes (`CheckRow`) (CI run #152)
-  - [~] L6 languages one by one: es, fr, ru, uk, pl, it, zh, ja (glossary per language, native-speaker review of the gallery)
+  - [x] L6 languages: es, fr, ru, uk, pl, it, zh, ja (glossary per language; native-speaker review of each gallery still open)
     - [x] es – Spanish (es-ES): 422 texts, `docs/GLOSSARY-ES.md`, gallery `ui-gallery-linux-l10n/es`, layout check green (CI run #153); native-speaker review open
     - [x] fr – French (fr-FR): 428 texts, `docs/GLOSSARY-FR.md` (typography with no-break spaces, units o/Ko/Mo), layout check green (CI run #154); native-speaker review open
     - [x] ru – Russian (ru-RU): 430 texts, three plural forms, Cyrillic access keys, units Б/КБ/МБ, `docs/GLOSSARY-RU.md`, layout check green (CI run #157); native-speaker review open
     - [x] uk – Ukrainian (uk-UA): 431 texts, three plural forms, Cyrillic access keys, `docs/GLOSSARY-UK.md`, layout check green (CI run #157); native-speaker review open
     - [x] pl – Polish (pl-PL): 432 texts, three plural forms (one = exactly 1), „…” quotes, `docs/GLOSSARY-PL.md`, layout check green (CI run #157); native-speaker review open
     - [x] it – Italian (it-IT): 433 texts, `docs/GLOSSARY-IT.md`, access keys S/U/I/M/t; native-speaker review open
-    - [ ] zh · [ ] ja
-  - [ ] Hit meanings exactly, not confusing: terms as in Windows Explorer of the respective language (Recycle Bin, This PC, Quick access, Properties …), glossary per language
+    - [x] zh – Chinese Simplified (zh-CN): 435 texts, one plural form, `docs/GLOSSARY-ZH.md`, access keys R/M/S/B/A; Traditional Chinese is not mapped here; native-speaker review open
+    - [x] ja – Japanese (ja-JP): 435 texts, one plural form, `docs/GLOSSARY-JA.md`, access keys R/M/S/B/A; native-speaker review open
+  - [x] Hit meanings exactly, not confusing: terms as in Windows Explorer of the respective language (Recycle Bin, This PC, Quick access, Properties …), glossary per language (`docs/GLOSSARY-*.md`; native-speaker review still open on each language)
   - [x] Layout robustness when switching: check **all** texts for whether they fit into buttons/menus/columns/dialogs/settings (German/French/Russian long, CJK different font) – shorten, wrap or make widths dynamic; gallery per language + pixel/overflow check in E2E (L5; per new language L6 runs the same gate, CJK fonts are measured there)
   - [x] Language switchable in the settings (default: Windows language), live (L4)
   - [ ] Numbers/dates/sizes according to the locale; mind font coverage (gotcha: missing glyphs cost start time)

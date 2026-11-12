@@ -1,0 +1,1915 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: explorer2\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: ja\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+
+#: crates/integrate/src/bin/explorer2-recover.rs
+msgid "  error: {0}"
+msgstr "  エラー: {0}"
+
+#: crates/integrate/src/bin/explorer2-recover.rs
+msgid "  left unchanged: {0}"
+msgstr "  変更せずに残しました: {0}"
+
+#: crates/app/src/fileops.rs
+msgid " (+{n} more error)"
+msgid_plural " (+{n} more errors)"
+msgstr[0] "（ほかに {n} 件のエラー）"
+
+#: crates/app/src/search.rs
+msgid " (built in {0})"
+msgstr "（{0} で作成）"
+
+#: crates/app/src/nav.rs
+msgid " (folder searched, without index)"
+msgstr "（フォルダーを検索、インデックスなし）"
+
+#: crates/integrate/src/lib.rs
+msgid " (journal was damaged, known locations checked)"
+msgstr "（ジャーナルが破損していたため、既知の場所を確認しました）"
+
+#: crates/app/src/inspector.rs
+msgid " (more – counting stopped at {0} entries)"
+msgstr "（続きあり、{0} 件でカウントを停止）"
+
+#: crates/app/src/quick.rs
+msgid " (still being built)"
+msgstr "（まだ作成中）"
+
+#: crates/app/src/nav.rs
+msgid " ({0} hidden)"
+msgid_plural " ({0} hidden)"
+msgstr[0] "（{0} 件非表示）"
+
+#: crates/app/src/integration.rs
+msgid " Emergency tool: {0}"
+msgstr "緊急ツール: {0}"
+
+#: crates/app/src/nav.rs
+msgid " · {0} ms"
+msgstr " · {0} ms"
+
+#: crates/app/src/search.rs
+msgid " – changes missed {n} time, re-synced afterwards ({0})"
+msgid_plural " – changes missed {n} times, re-synced afterwards ({0})"
+msgstr[0] " – 変更を {n} 回取りこぼし、その後再同期しました（{0}）"
+
+#: crates/integrate/src/lib.rs
+msgid " – journal damaged, reset recommended"
+msgstr " – ジャーナルが破損しています。リセットを推奨します"
+
+#: crates/app/src/search.rs
+msgid " – network drive"
+msgstr " – ネットワーク ドライブ"
+
+#: crates/app/src/search.rs
+msgid " – other drive"
+msgstr " – その他のドライブ"
+
+#: crates/app/src/search.rs
+msgid " – removable drive"
+msgstr " – リムーバブル ドライブ"
+
+#: crates/app/src/search.rs
+msgid " – saving failed: {0}"
+msgstr " – 保存に失敗しました: {0}"
+
+#: crates/app/src/search.rs
+msgid " – without live updates"
+msgstr " – ライブ更新なし"
+
+#: crates/core/src/mnemonic.rs
+msgid "&Replace"
+msgstr "置き換え(&R)"
+
+#: crates/core/src/mnemonic.rs
+msgid "&Skip"
+msgstr "スキップ(&S)"
+
+#: crates/app/src/installer.rs
+msgid ", redirected: {0}"
+msgstr "、リダイレクト済み: {0}"
+
+#: crates/integrate/src/lib.rs
+msgid ", {n} integration point active"
+msgid_plural ", {n} integration points active"
+msgstr[0] "、{n} 件の統合が有効"
+
+#: crates/ops/src/names.rs
+msgid "A file name can't contain {0}: \\ / : * ? \" < > |"
+msgstr "ファイル名に {0} は使えません: \\ / : * ? \" < > |"
+
+#: crates/ops/src/exec.rs
+msgid "A folder and a file can't replace each other."
+msgstr "フォルダーとファイルは互いに置き換えられません。"
+
+#: crates/fs/src/lib.rs
+#: crates/ops/src/exec.rs
+#: crates/ops/src/simple.rs
+msgid "Access denied"
+msgstr "アクセスが拒否されました"
+
+#: crates/app/ui/main.slint
+msgid "Address bar"
+msgstr "アドレス バー"
+
+#: crates/ops/src/exec.rs
+msgid "Already exists"
+msgstr "既に存在します"
+
+#: crates/app/src/fileops.rs
+#: crates/core/src/commands.rs
+msgid "Alt+Enter"
+msgstr "Alt+Enter"
+
+#: crates/app/ui/main.slint
+msgid "Alt+Left"
+msgstr "Alt+左"
+
+#: crates/app/ui/main.slint
+msgid "Alt+Right"
+msgstr "Alt+右"
+
+#: crates/app/ui/main.slint
+msgid "Alt+Up"
+msgstr "Alt+上"
+
+#: crates/ops/src/trashview.rs
+#: crates/ops/src/undo.rs
+msgid "An item already exists at the original location: {0}"
+msgstr "元の場所に項目が既にあります: {0}"
+
+#: crates/app/ui/main.slint
+msgid "Ascending"
+msgstr "昇順"
+
+#: crates/app/src/inspector.rs
+msgid "Attributes"
+msgstr "属性"
+
+#: crates/core/src/lib.rs
+msgid "B"
+msgstr "B"
+
+#: crates/app/ui/main.slint
+#: crates/core/src/commands.rs
+msgid "Back"
+msgstr "戻る"
+
+#: crates/ops/src/undo.rs
+msgid "Can't move back, the target exists: {0}"
+msgstr "戻せません。移動先が既にあります: {0}"
+
+#: crates/app/ui/main.slint
+msgid "Cancel"
+msgstr "キャンセル"
+
+#: crates/integrate/src/bin/explorer2-recover.rs
+msgid "Cancelled – nothing changed."
+msgstr "キャンセルしました。何も変更されていません。"
+
+#: crates/setup/src/main.rs
+msgid "Cancelled."
+msgstr "キャンセルしました。"
+
+#: crates/app/ui/main.slint
+msgid "Close"
+msgstr "閉じる"
+
+#: crates/app/ui/main.slint
+#: crates/core/src/commands.rs
+msgid "Close tab"
+msgstr "タブを閉じる"
+
+#: crates/app/ui/main.slint
+msgid "Color scheme"
+msgstr "配色"
+
+#: crates/core/src/commands.rs
+msgid "Color scheme: Dark"
+msgstr "配色: ダーク"
+
+#: crates/core/src/commands.rs
+msgid "Color scheme: Light"
+msgstr "配色: ライト"
+
+#: crates/core/src/commands.rs
+msgid "Color scheme: System default"
+msgstr "配色: システムの既定"
+
+#: crates/app/ui/main.slint
+msgid "Command palette"
+msgstr "コマンド パレット"
+
+#: crates/app/src/installer.rs
+msgid "Configuration folder not found"
+msgstr "構成フォルダーが見つかりません"
+
+#: crates/app/src/integration.rs
+msgid "Configuration folder not found."
+msgstr "構成フォルダーが見つかりません。"
+
+#: crates/app/src/inspector.rs
+msgid "Contents"
+msgstr "内容"
+
+#: crates/app/ui/main.slint
+#: crates/core/src/commands.rs
+msgid "Context menu"
+msgstr "コンテキスト メニュー"
+
+#: crates/app/src/fileops.rs
+msgid "Context menu: {0}"
+msgstr "コンテキスト メニュー: {0}"
+
+#: crates/ops/src/exec.rs
+msgid "Copied, but the source was not deleted: {0}"
+msgstr "コピーしましたが、元は削除されませんでした: {0}"
+
+#: crates/app/src/fileops.rs
+#: crates/app/ui/main.slint
+#: crates/core/src/commands.rs
+msgid "Copy"
+msgstr "コピー"
+
+#: crates/app/ui/main.slint
+msgid "Copy path"
+msgstr "パスをコピー"
+
+#: crates/app/src/fileops.rs
+msgid "Copying {0} to “{1}”"
+msgstr "{0} を「{1}」にコピーしています"
+
+#: crates/ops/src/exec.rs
+msgid "Couldn't move the existing item to the Recycle Bin: {0}"
+msgstr "既存の項目をごみ箱に移動できませんでした: {0}"
+
+#: crates/app/src/open.rs
+msgid "Couldn't open (code {0})"
+msgstr "開けませんでした（コード {0}）"
+
+#: crates/app/src/open.rs
+msgid "Couldn't open ({0}): {1}"
+msgstr "開けませんでした（{0}）: {1}"
+
+#: crates/app/src/inspector.rs
+msgid "Created"
+msgstr "作成日時"
+
+#: crates/core/src/commands.rs
+msgid "Ctrl+A"
+msgstr "Ctrl+A"
+
+#: crates/app/src/fileops.rs
+#: crates/app/ui/main.slint
+#: crates/core/src/commands.rs
+msgid "Ctrl+C"
+msgstr "Ctrl+C"
+
+#: crates/core/src/commands.rs
+msgid "Ctrl+F"
+msgstr "Ctrl+F"
+
+#: crates/core/src/commands.rs
+msgid "Ctrl+L"
+msgstr "Ctrl+L"
+
+#: crates/core/src/commands.rs
+msgid "Ctrl+Shift+1"
+msgstr "Ctrl+Shift+1"
+
+#: crates/app/ui/main.slint
+#: crates/core/src/commands.rs
+msgid "Ctrl+Shift+2"
+msgstr "Ctrl+Shift+2"
+
+#: crates/core/src/commands.rs
+msgid "Ctrl+Shift+3"
+msgstr "Ctrl+Shift+3"
+
+#: crates/app/ui/main.slint
+#: crates/core/src/commands.rs
+msgid "Ctrl+Shift+6"
+msgstr "Ctrl+Shift+6"
+
+#: crates/core/src/commands.rs
+msgid "Ctrl+Shift+F"
+msgstr "Ctrl+Shift+F"
+
+#: crates/app/src/fileops.rs
+#: crates/app/ui/main.slint
+#: crates/core/src/commands.rs
+msgid "Ctrl+Shift+N"
+msgstr "Ctrl+Shift+N"
+
+#: crates/app/ui/main.slint
+msgid "Ctrl+Shift+P"
+msgstr "Ctrl+Shift+P"
+
+#: crates/core/src/commands.rs
+msgid "Ctrl+Shift+Tab"
+msgstr "Ctrl+Shift+Tab"
+
+#: crates/app/ui/main.slint
+#: crates/core/src/commands.rs
+msgid "Ctrl+T"
+msgstr "Ctrl+T"
+
+#: crates/core/src/commands.rs
+msgid "Ctrl+Tab"
+msgstr "Ctrl+Tab"
+
+#: crates/app/src/fileops.rs
+#: crates/app/ui/main.slint
+#: crates/core/src/commands.rs
+msgid "Ctrl+V"
+msgstr "Ctrl+V"
+
+#: crates/core/src/commands.rs
+msgid "Ctrl+W"
+msgstr "Ctrl+W"
+
+#: crates/app/src/fileops.rs
+#: crates/app/ui/main.slint
+#: crates/core/src/commands.rs
+msgid "Ctrl+X"
+msgstr "Ctrl+X"
+
+#: crates/app/ui/main.slint
+#: crates/core/src/commands.rs
+msgid "Ctrl+Y"
+msgstr "Ctrl+Y"
+
+#: crates/app/ui/main.slint
+#: crates/core/src/commands.rs
+msgid "Ctrl+Z"
+msgstr "Ctrl+Z"
+
+#: crates/app/ui/main.slint
+#: crates/core/src/commands.rs
+msgid "Ctrl+\\"
+msgstr "Ctrl+\\"
+
+#: crates/core/src/renderer.rs
+msgid "Currently: {0} ({1})"
+msgstr "現在: {0}（{1}）"
+
+#: crates/app/src/fileops.rs
+#: crates/app/ui/main.slint
+#: crates/core/src/commands.rs
+msgid "Cut"
+msgstr "切り取り"
+
+#: crates/app/src/inspector.rs
+msgid "DATE"
+msgstr "日付"
+
+#: crates/fs/src/places.rs
+msgid "DVD Drive"
+msgstr "DVD ドライブ"
+
+#: crates/app/ui/main.slint
+msgid "Dark"
+msgstr "ダーク"
+
+#: crates/app/ui/main.slint
+#: crates/core/src/places.rs
+msgid "Date deleted"
+msgstr "削除日"
+
+#: crates/app/src/nav.rs
+#: crates/app/ui/main.slint
+msgid "Date modified"
+msgstr "更新日時"
+
+#: crates/app/src/fileops.rs
+#: crates/app/ui/main.slint
+#: crates/core/src/commands.rs
+msgid "Del"
+msgstr "Del"
+
+#: crates/app/src/fileops.rs
+#: crates/app/ui/main.slint
+msgid "Delete"
+msgstr "削除"
+
+#: crates/core/src/commands.rs
+msgid "Delete (to Recycle Bin)"
+msgstr "削除（ごみ箱へ）"
+
+#: crates/app/src/fileops.rs
+#: crates/app/ui/main.slint
+#: crates/core/src/commands.rs
+msgid "Delete permanently"
+msgstr "完全に削除"
+
+#: crates/ops/src/trashview.rs
+msgid "Delete permanently failed: {0}"
+msgstr "完全な削除に失敗しました: {0}"
+
+#: crates/app/src/fileops.rs
+msgid ""
+"Delete this {n} item permanently?\n"
+"This can't be undone."
+msgid_plural ""
+"Delete these {n} items permanently?\n"
+"This can't be undone."
+msgstr[0] ""
+"この {n} 個の項目を完全に削除しますか？\n"
+"元に戻せません。"
+
+#: crates/app/src/fileops.rs
+msgid ""
+"Delete {0} permanently?\n"
+"This can't be undone."
+msgstr ""
+"{0} を完全に削除しますか？\n"
+"元に戻せません。"
+
+#: crates/app/src/fileops.rs
+msgid ""
+"Delete “{0}” permanently?\n"
+"This can't be undone."
+msgstr ""
+"「{0}」を完全に削除しますか？\n"
+"元に戻せません。"
+
+#: crates/app/src/fileops.rs
+msgid "Deleting {0} permanently"
+msgstr "{0} を完全に削除しています"
+
+#: crates/app/ui/main.slint
+msgid "Descending"
+msgstr "降順"
+
+#: crates/fs/src/places.rs
+msgid "Desktop"
+msgstr "デスクトップ"
+
+#: crates/app/ui/main.slint
+#: crates/core/src/view.rs
+msgid "Details"
+msgstr "詳細"
+
+#: crates/app/src/inspector.rs
+msgid "Dimensions"
+msgstr "大きさ"
+
+#: crates/core/src/mnemonic.rs
+msgid "Do this for &all remaining conflicts"
+msgstr "残りの競合すべてに適用(&A)"
+
+#: crates/app/ui/main.slint
+msgid "Do this for all remaining conflicts"
+msgstr "残りの競合すべてに適用(A)"
+
+#: crates/fs/src/places.rs
+msgid "Documents"
+msgstr "ドキュメント"
+
+#: crates/fs/src/places.rs
+msgid "Downloads"
+msgstr "ダウンロード"
+
+#: crates/fs/src/places.rs
+msgid "Drive"
+msgstr "ドライブ"
+
+#: crates/core/src/commands.rs
+msgid "Edit address"
+msgstr "アドレスを編集"
+
+#: crates/app/ui/main.slint
+#: crates/core/src/commands.rs
+msgid "Empty Recycle Bin"
+msgstr "ごみ箱を空にする"
+
+#: crates/app/src/fileops.rs
+#: crates/core/src/commands.rs
+msgid "Enter"
+msgstr "Enter"
+
+#: crates/integrate/src/bin/explorer2-recover.rs
+msgid "Error: configuration folder not found (APPDATA missing)."
+msgstr "エラー: 構成フォルダーが見つかりません（APPDATA がありません）。"
+
+#: crates/integrate/src/bin/explorer2-recover.rs
+msgid "Error: installation folder cannot be determined (LOCALAPPDATA missing)."
+msgstr "エラー: インストール フォルダーを特定できません（LOCALAPPDATA がありません）。"
+
+#: crates/integrate/src/bin/explorer2-recover.rs
+msgid "Error: {0} – please delete the program folder by hand: {1}"
+msgstr "エラー: {0} – プログラム フォルダーを手動で削除してください: {1}"
+
+#: crates/app/src/fileops.rs
+msgid "Existing: {0}"
+msgstr "既存: {0}"
+
+#: crates/core/src/guard.rs
+msgid "Explorer 2.0 closed unexpectedly last time."
+msgstr "Explorer 2.0 は前回予期せず終了しました。"
+
+#: crates/core/src/guard.rs
+msgid "Explorer 2.0 closed unexpectedly {n} time."
+msgid_plural "Explorer 2.0 closed unexpectedly {n} times."
+msgstr[0] "Explorer 2.0 が予期せず {n} 回終了しました。"
+
+#: crates/app/src/installer.rs
+msgid "Explorer 2.0 installed: {0} ({1} Start menu shortcuts{2})"
+msgstr "Explorer 2.0 をインストールしました: {0}（スタート メニューのショートカット {1} 個{2}）"
+
+#: crates/setup/src/main.rs
+msgid "Explorer 2.0 is already installed. Update to version {0}?"
+msgstr "Explorer 2.0 は既にインストールされています。バージョン {0} に更新しますか？"
+
+#: crates/integrate/src/bin/explorer2-recover.rs
+msgid "Explorer 2.0 was removed. Your settings stay in %APPDATA%\\Explorer2."
+msgstr "Explorer 2.0 を削除しました。設定は %APPDATA%\\Explorer2 に残ります。"
+
+#: crates/setup/src/main.rs
+msgid ""
+"Explorer 2.0 {0} is installed.\n"
+"\n"
+"You'll find it in the Start menu under “Explorer 2.0”. To uninstall, use “Settings → Apps” or the Start menu entry “Explorer 2.0 – Windows-Standard wiederherstellen”.\n"
+"\n"
+"Start it now?"
+msgstr ""
+"Explorer 2.0 {0} をインストールしました。\n"
+"\n"
+"スタート メニューの「Explorer 2.0」にあります。アンインストールするには、「設定 → アプリ」か、スタート メニューの「Explorer 2.0 – Windows-Standard wiederherstellen」を使います。\n"
+"\n"
+"今すぐ起動しますか？"
+
+#: crates/integrate/src/bin/explorer2-recover.rs
+msgid "Explorer 2.0 – restore the Windows default"
+msgstr "Explorer 2.0 – Windows の既定に戻す"
+
+#: crates/integrate/src/bin/explorer2-recover.rs
+msgid ""
+"Explorer 2.0 – restore the Windows default\n"
+"\n"
+"  explorer2-recover                  shows the state, asks and resets\n"
+"  explorer2-recover --yes            resets without asking\n"
+"  explorer2-recover --status         only shows the state (exit code 1 = active)\n"
+"  explorer2-recover --uninstall      resets and removes Explorer 2.0\n"
+"  explorer2-recover --uninstall --quiet   the same without asking\n"
+"\n"
+"Removes all Windows integrations of Explorer 2.0 (folder verbs, Win+E,\n"
+"context menu, environment variables, shortcuts …) and restores the previous\n"
+"values exactly. Values that other software has changed meanwhile stay\n"
+"untouched. Your settings (%APPDATA%\\Explorer2) are kept when uninstalling."
+msgstr ""
+"Explorer 2.0 – Windows の既定に戻す\n"
+"\n"
+"  explorer2-recover                  状態を表示し、確認してからリセットします\n"
+"  explorer2-recover --yes            確認せずにリセットします\n"
+"  explorer2-recover --status         状態だけを表示します（終了コード 1 = 有効）\n"
+"  explorer2-recover --uninstall      リセットして Explorer 2.0 を削除します\n"
+"  explorer2-recover --uninstall --quiet   確認せずに同じことをします\n"
+"\n"
+"Explorer 2.0 の Windows 統合（フォルダーの動詞、Win+E、\n"
+"コンテキスト メニュー、環境変数、ショートカット…）をすべて削除し、以前の\n"
+"値をそのまま戻します。その間に他のソフトウェアが変えた値はそのままです。アンインストールしても設定（%APPDATA%\\Explorer2）は残ります。"
+
+#: crates/core/src/view.rs
+msgid "Extra large icons"
+msgstr "特大アイコン"
+
+#: crates/core/src/lib.rs
+msgid "File"
+msgstr "ファイル"
+
+#: crates/app/ui/main.slint
+#: crates/core/src/lib.rs
+msgid "File folder"
+msgstr "ファイル フォルダー"
+
+#: crates/fs/src/places.rs
+msgid "File system"
+msgstr "ファイル システム"
+
+#: crates/app/src/inspector.rs
+#: crates/app/src/nav.rs
+#: crates/core/src/places.rs
+msgid "Folder"
+msgstr "フォルダー"
+
+#: crates/fs/src/lib.rs
+#: crates/search/src/watch.rs
+msgid "Folder not found"
+msgstr "フォルダーが見つかりません"
+
+#: crates/app/ui/main.slint
+msgid "Folder options"
+msgstr "フォルダー オプション"
+
+#: crates/app/src/fileops.rs
+msgid "Folder · {0}"
+msgstr "フォルダー · {0}"
+
+#: crates/app/ui/main.slint
+#: crates/core/src/commands.rs
+msgid "Forward"
+msgstr "進む"
+
+#: crates/core/src/lib.rs
+msgid "GB"
+msgstr "GB"
+
+#: crates/app/src/inspector.rs
+msgid "GENERAL"
+msgstr "全般"
+
+#: crates/core/src/renderer.rs
+msgid "GPU acceleration"
+msgstr "GPU アクセラレーション"
+
+#: crates/core/src/renderer.rs
+msgid "GPU check running in the background – applies from the next start"
+msgstr "GPU の確認をバックグラウンドで実行中 – 次回の起動から適用されます"
+
+#: crates/core/src/commands.rs
+msgid "Go to parent folder"
+msgstr "親フォルダーへ"
+
+#: crates/core/src/inspect.rs
+msgid "Hidden"
+msgstr "隠し"
+
+#: crates/fs/src/places.rs
+msgid "Home"
+msgstr "個人用フォルダー"
+
+#: crates/app/src/search.rs
+msgid "Home ({0})"
+msgstr "個人用フォルダー（{0}）"
+
+#: crates/app/ui/main.slint
+msgid "Icons"
+msgstr "アイコン"
+
+#: crates/app/ui/main.slint
+msgid "Index drives for search"
+msgstr "検索用にドライブをインデックス"
+
+#: crates/app/ui/main.slint
+msgid "Inspector"
+msgstr "インスペクター"
+
+#: crates/app/src/installer.rs
+msgid "Install"
+msgstr "インストール"
+
+#: crates/core/src/commands.rs
+msgid "Install / update Explorer 2.0"
+msgstr "Explorer 2.0 をインストールまたは更新"
+
+#: crates/setup/src/main.rs
+msgid "Install Explorer 2.0 {0} for this user?"
+msgstr "このユーザーに Explorer 2.0 {0} をインストールしますか？"
+
+#: crates/app/ui/main.slint
+msgid "Installation"
+msgstr "インストール"
+
+#: crates/app/src/installer.rs
+#: crates/setup/src/main.rs
+msgid "Installation failed: {0}"
+msgstr "インストールに失敗しました: {0}"
+
+#: crates/app/src/installer.rs
+msgid "Installation folder cannot be determined"
+msgstr "インストール フォルダーを特定できません"
+
+#: crates/setup/src/main.rs
+msgid "Installation folder cannot be determined (LOCALAPPDATA/APPDATA missing)."
+msgstr "インストール フォルダーを特定できません（LOCALAPPDATA/APPDATA がありません）。"
+
+#: crates/integrate/src/bin/explorer2-recover.rs
+msgid "Installation: {0}"
+msgstr "インストール: {0}"
+
+#: crates/app/src/installer.rs
+msgid "Installed (version {0}) in {1}. Uninstall via “Apps & Features” or the Start menu."
+msgstr "{1} にインストール済み（バージョン {0}）。「アプリと機能」またはスタート メニューからアンインストールできます。"
+
+#: crates/app/src/installer.rs
+msgid "Installed in {0}; this copy is running from {1}."
+msgstr "{0} にインストール済みです。このコピーは {1} から実行しています。"
+
+#: crates/app/src/installer.rs
+#: crates/setup/src/main.rs
+msgid "Installed, but starting failed: {0}"
+msgstr "インストールしましたが、起動に失敗しました: {0}"
+
+#: crates/app/src/installer.rs
+msgid "Installed, but the installed copy did not start – this window stays open."
+msgstr "インストールしましたが、インストールしたコピーは起動しませんでした。このウィンドウは開いたままです。"
+
+#: crates/app/src/installer.rs
+msgid "Installed, but the start could not be checked: {0}"
+msgstr "インストールしましたが、起動を確認できませんでした: {0}"
+
+#: crates/setup/src/main.rs
+msgid "Installer ended with {0}"
+msgstr "インストーラーが終了しました（コード {0}）"
+
+#: crates/integrate/src/lib.rs
+msgid "Integration journal damaged – please reset first"
+msgstr "統合ジャーナルが破損しています。先にリセットしてください"
+
+#: crates/ops/src/exec.rs
+msgid "Invalid path"
+msgstr "パスが無効です"
+
+#: crates/integrate/src/bin/explorer2-recover.rs
+msgid "Journal: {0}"
+msgstr "ジャーナル: {0}"
+
+#: crates/core/src/lib.rs
+msgid "KB"
+msgstr "KB"
+
+#: crates/core/src/mnemonic.rs
+msgid "Keep &both"
+msgstr "両方保持(&B)"
+
+#: crates/app/ui/main.slint
+msgid "Keep both"
+msgstr "両方保持(B)"
+
+#: crates/app/src/inspector.rs
+msgid "LOCATION"
+msgstr "場所"
+
+#: crates/app/ui/main.slint
+msgid "Language"
+msgstr "言語"
+
+#: crates/core/src/commands.rs
+msgid "Language: Deutsch"
+msgstr "言語: Deutsch"
+
+#: crates/core/src/commands.rs
+msgid "Language: English"
+msgstr "言語: English"
+
+#: crates/core/src/commands.rs
+msgid "Language: Español"
+msgstr "言語: Español"
+
+#: crates/core/src/commands.rs
+msgid "Language: Français"
+msgstr "言語: Français"
+
+#: crates/core/src/commands.rs
+msgid "Language: Italiano"
+msgstr "言語: Italiano"
+
+#: crates/core/src/commands.rs
+msgid "Language: Polski"
+msgstr "言語: Polski"
+
+#: crates/core/src/commands.rs
+msgid "Language: System default"
+msgstr "言語: システムの既定"
+
+#: crates/core/src/commands.rs
+msgid "Language: Русский"
+msgstr "言語: Русский"
+
+#: crates/core/src/commands.rs
+msgid "Language: Українська"
+msgstr "言語: Українська"
+
+#: crates/core/src/commands.rs
+msgid "Language: 中文（简体）"
+msgstr "言語: 中文（简体）"
+
+#: crates/core/src/commands.rs
+msgid "Language: 日本語"
+msgstr "言語: 日本語"
+
+#: crates/core/src/view.rs
+msgid "Large icons"
+msgstr "大アイコン"
+
+#: crates/core/src/places.rs
+msgid "Libraries"
+msgstr "ライブラリ"
+
+#: crates/app/src/nav.rs
+msgid "Libraries are only available on Windows"
+msgstr "ライブラリは Windows でのみ利用できます"
+
+#: crates/app/src/nav.rs
+msgid "Library not found: {0}"
+msgstr "ライブラリが見つかりません: {0}"
+
+#: crates/app/ui/main.slint
+msgid "Light"
+msgstr "ライト"
+
+#: crates/app/src/nav.rs
+msgid "Loading …"
+msgstr "読み込み中…"
+
+#: crates/app/src/nav.rs
+msgid "Loading … {0}"
+msgstr "読み込み中… {0}"
+
+#: crates/fs/src/places.rs
+msgid "Local Disk"
+msgstr "ローカル ディスク"
+
+#: crates/core/src/lib.rs
+msgid "MB"
+msgstr "MB"
+
+#: crates/core/src/mnemonic.rs
+msgid "Me&rge"
+msgstr "結合(&M)"
+
+#: crates/core/src/view.rs
+msgid "Medium icons"
+msgstr "中アイコン"
+
+#: crates/app/ui/main.slint
+msgid "Merge"
+msgstr "結合(M)"
+
+#: crates/app/src/inspector.rs
+msgid "Modified"
+msgstr "更新日時"
+
+#: crates/app/ui/main.slint
+msgid "More"
+msgstr "その他"
+
+#: crates/app/src/fileops.rs
+msgid "Moving {0} to the Recycle Bin"
+msgstr "{0} をごみ箱に移動しています"
+
+#: crates/app/src/fileops.rs
+msgid "Moving {0} to “{1}”"
+msgstr "{0} を「{1}」に移動しています"
+
+#: crates/fs/src/places.rs
+msgid "Music"
+msgstr "ミュージック"
+
+#: crates/app/ui/main.slint
+msgid "Name"
+msgstr "名前"
+
+#: crates/fs/src/places.rs
+msgid "Network Drive"
+msgstr "ネットワーク ドライブ"
+
+#: crates/fs/src/network.rs
+msgid "Network path not found"
+msgstr "ネットワーク パスが見つかりません"
+
+#: crates/fs/src/network.rs
+msgid "Network shares are only available on Windows"
+msgstr "ネットワーク共有は Windows でのみ利用できます"
+
+#: crates/app/src/fileops.rs
+#: crates/app/ui/main.slint
+#: crates/core/src/commands.rs
+#: crates/ops/src/names.rs
+msgid "New folder"
+msgstr "新しいフォルダー"
+
+#: crates/app/ui/main.slint
+#: crates/core/src/commands.rs
+msgid "New tab"
+msgstr "新しいタブ"
+
+#: crates/app/src/fileops.rs
+msgid "New: {0} (from {1})"
+msgstr "新規: {0}（{1} から）"
+
+#: crates/core/src/commands.rs
+msgid "Next tab"
+msgstr "次のタブ"
+
+#: crates/integrate/src/lib.rs
+msgid "No Windows integration active – nothing to do."
+msgstr "有効な Windows 統合はありません。何もする必要はありません。"
+
+#: crates/integrate/src/lib.rs
+msgid "No Windows integration active."
+msgstr "有効な Windows 統合はありません。"
+
+#: crates/integrate/src/bin/explorer2-recover.rs
+msgid "No console to ask – start it with --quiet."
+msgstr "確認するコンソールがありません。--quiet を付けて起動してください。"
+
+#: crates/integrate/src/bin/explorer2-recover.rs
+msgid "No console to ask – start it with --yes."
+msgstr "確認するコンソールがありません。--yes を付けて起動してください。"
+
+#: crates/app/src/nav.rs
+msgid "No results"
+msgstr "結果なし"
+
+#: crates/fs/src/lib.rs
+#: crates/shell/src/win_menu.rs
+msgid "Not a folder"
+msgstr "フォルダーではありません"
+
+#: crates/app/src/palette.rs
+msgid "Not available here"
+msgstr "ここでは利用できません"
+
+#: crates/app/src/fileops.rs
+msgid "Not available here ({0})."
+msgstr "ここでは利用できません（{0}）。"
+
+#: crates/ops/src/exec.rs
+msgid "Not enough disk space"
+msgstr "ディスク領域が不足しています"
+
+#: crates/ops/src/exec.rs
+#: crates/ops/src/simple.rs
+msgid "Not found"
+msgstr "見つかりません"
+
+#: crates/ops/src/undo.rs
+msgid "Not found in the Recycle Bin: {0}"
+msgstr "ごみ箱に見つかりません: {0}"
+
+#: crates/app/src/installer.rs
+msgid "Not installed – running from {0}. Installing copies Explorer 2.0 to {1} (no administrator rights needed) and adds it to the Start menu."
+msgstr "未インストール – {0} から実行しています。インストールすると Explorer 2.0 を {1} にコピーし（管理者権限は不要）、スタート メニューに追加します。"
+
+#: crates/app/src/inspector.rs
+msgid "Not readable"
+msgstr "読み取れません"
+
+#: crates/app/src/quick.rs
+#: crates/app/ui/main.slint
+msgid "Nothing found"
+msgstr "何も見つかりませんでした"
+
+#: crates/app/ui/main.slint
+msgid "OK"
+msgstr "OK"
+
+#: crates/app/ui/main.slint
+msgid "One view"
+msgstr "1 つのビュー"
+
+#: crates/app/src/fileops.rs
+#: crates/core/src/commands.rs
+msgid "Open"
+msgstr "開く"
+
+#: crates/core/src/commands.rs
+msgid "Open Libraries"
+msgstr "ライブラリを開く"
+
+#: crates/core/src/commands.rs
+msgid "Open Recycle Bin"
+msgstr "ごみ箱を開く"
+
+#: crates/core/src/commands.rs
+msgid "Open This PC"
+msgstr "PC を開く"
+
+#: crates/app/ui/main.slint
+msgid "Open folders in the running window (as a new tab)"
+msgstr "実行中のウィンドウでフォルダーを開く（新しいタブ）"
+
+#: crates/integrate/src/features.rs
+msgid "Open folders with Explorer 2.0"
+msgstr "Explorer 2.0 でフォルダーを開く"
+
+#: crates/app/ui/main.slint
+msgid "Open folders with Explorer 2.0 (double-click, “Open folder”)"
+msgstr "Explorer 2.0 でフォルダーを開く（ダブルクリック、「フォルダーを開く」）"
+
+#: crates/app/src/fileops.rs
+msgid "Operation cancelled."
+msgstr "操作はキャンセルされました。"
+
+#: crates/core/src/places.rs
+msgid "Original location"
+msgstr "元の場所"
+
+#: crates/app/src/fileops.rs
+#: crates/app/ui/main.slint
+#: crates/core/src/commands.rs
+msgid "Paste"
+msgstr "貼り付け"
+
+#: crates/app/src/inspector.rs
+msgid "Path"
+msgstr "パス"
+
+#: crates/app/ui/main.slint
+msgid "Pause"
+msgstr "一時停止"
+
+#: crates/app/src/fileops.rs
+msgid "Paused"
+msgstr "一時停止中"
+
+#: crates/app/src/fileops.rs
+msgid ""
+"Permanently delete the {n} item in the Recycle Bin?\n"
+"This can't be undone."
+msgid_plural ""
+"Permanently delete all {n} items in the Recycle Bin?\n"
+"This can't be undone."
+msgstr[0] ""
+"ごみ箱の {n} 個の項目を完全に削除しますか？\n"
+"元に戻せません。"
+
+#: crates/fs/src/places.rs
+msgid "Pictures"
+msgstr "ピクチャ"
+
+#: crates/core/src/commands.rs
+msgid "Previous tab"
+msgstr "前のタブ"
+
+#: crates/app/src/installer.rs
+msgid "Program folder cannot be determined"
+msgstr "プログラム フォルダーを特定できません"
+
+#: crates/integrate/src/bin/explorer2-recover.rs
+msgid "Program folder not removed ({0}) – is Explorer 2.0 still open? Folder: {1}"
+msgstr "プログラム フォルダーを削除できませんでした（{0}）。Explorer 2.0 はまだ開いていますか？フォルダー: {1}"
+
+#: crates/app/src/fileops.rs
+#: crates/core/src/commands.rs
+msgid "Properties"
+msgstr "プロパティ"
+
+#: crates/shell/src/win_menu.rs
+msgid "Properties not available: {0}"
+msgstr "プロパティは利用できません: {0}"
+
+#: crates/app/ui/main.slint
+msgid "Quick access"
+msgstr "クイック アクセス"
+
+#: crates/core/src/commands.rs
+msgid "Re-sync search index with disk"
+msgstr "検索インデックスをディスクと再同期"
+
+#: crates/app/ui/main.slint
+msgid "Re-sync with disk"
+msgstr "ディスクと再同期"
+
+#: crates/core/src/inspect.rs
+msgid "Read-only"
+msgstr "読み取り専用"
+
+#: crates/core/src/places.rs
+msgid "Recycle Bin"
+msgstr "ごみ箱"
+
+#: crates/ops/src/undo.rs
+msgid "Recycle Bin not available"
+msgstr "ごみ箱は利用できません"
+
+#: crates/ops/src/trashview.rs
+#: crates/ops/src/undo.rs
+msgid "Recycle Bin not readable: {0}"
+msgstr "ごみ箱を読み取れません: {0}"
+
+#: crates/ops/src/exec.rs
+msgid "Recycle Bin: {0}"
+msgstr "ごみ箱: {0}"
+
+#: crates/app/ui/main.slint
+#: crates/core/src/commands.rs
+msgid "Redo"
+msgstr "やり直し"
+
+#: crates/app/src/fileops.rs
+msgid "Redo: {0}"
+msgstr "やり直し: {0}"
+
+#: crates/app/src/fileops.rs
+#: crates/core/src/commands.rs
+msgid "Refresh"
+msgstr "最新の情報に更新"
+
+#: crates/integrate/src/bin/explorer2-recover.rs
+msgid "Removing the program folder …"
+msgstr "プログラム フォルダーを削除しています…"
+
+#: crates/app/src/fileops.rs
+#: crates/app/ui/main.slint
+#: crates/core/src/commands.rs
+msgid "Rename"
+msgstr "名前の変更"
+
+#: crates/app/ui/main.slint
+msgid "Replace"
+msgstr "置き換え(R)"
+
+#: crates/app/src/fileops.rs
+msgid "Reset"
+msgstr "リセット"
+
+#: crates/app/ui/main.slint
+#: crates/core/src/commands.rs
+msgid "Reset all Windows integrations"
+msgstr "すべての Windows 統合をリセット"
+
+#: crates/integrate/src/bin/explorer2-recover.rs
+msgid "Reset everything to the Windows default now?"
+msgstr "すべてを今すぐ Windows の既定に戻しますか？"
+
+#: crates/app/src/integration.rs
+msgid "Reset incomplete: {0}"
+msgstr "リセットが完了していません: {0}"
+
+#: crates/app/ui/main.slint
+msgid "Restore"
+msgstr "復元"
+
+#: crates/ops/src/trashview.rs
+#: crates/ops/src/undo.rs
+msgid "Restore failed: {0}"
+msgstr "復元に失敗しました: {0}"
+
+#: crates/core/src/commands.rs
+msgid "Restore from the Recycle Bin"
+msgstr "ごみ箱から復元"
+
+#: crates/app/ui/main.slint
+msgid "Resume"
+msgstr "再開"
+
+#: crates/core/src/guard.rs
+msgid "Safe start: the last {0} starts were aborted, so Explorer 2.0 uses software rendering and does not restore the session. If it runs stably, the next start is normal again."
+msgstr "セーフ スタート: 直前の {0} 回の起動が中止されたため、Explorer 2.0 はソフトウェア描画を使い、セッションを復元しません。安定して動作すれば、次の起動は通常どおりです。"
+
+#: crates/app/ui/main.slint
+msgid "Search"
+msgstr "検索"
+
+#: crates/core/src/commands.rs
+msgid "Search (in the current folder)"
+msgstr "検索（現在のフォルダー）"
+
+#: crates/app/src/nav.rs
+#: crates/core/src/commands.rs
+msgid "Search all drives"
+msgstr "すべてのドライブを検索"
+
+#: crates/app/ui/main.slint
+msgid "Search all drives …"
+msgstr "すべてのドライブを検索…"
+
+#: crates/app/ui/main.slint
+msgid "Search commands …   (type > for places)"
+msgstr "コマンドを検索…   （> で場所へ）"
+
+#: crates/app/src/search.rs
+msgid "Search index off (EXPLORER2_INDEX=off)."
+msgstr "検索インデックスはオフです（EXPLORER2_INDEX=off）。"
+
+#: crates/app/src/search.rs
+msgid "Search index off: searches only go through the current folder."
+msgstr "検索インデックスはオフです: 現在のフォルダーだけを検索します。"
+
+#: crates/app/src/search.rs
+msgid "Search index restarting …"
+msgstr "検索インデックスを再起動しています…"
+
+#: crates/app/src/search.rs
+msgid "Search index starting shortly …"
+msgstr "検索インデックスはまもなく開始します…"
+
+#: crates/app/src/search.rs
+msgid "Search index starting …"
+msgstr "検索インデックスを開始しています…"
+
+#: crates/app/src/search.rs
+msgid "Search index: no folder for the index files."
+msgstr "検索インデックス: インデックス ファイル用のフォルダーがありません。"
+
+#: crates/app/src/nav.rs
+msgid "Search {0}"
+msgstr "{0} を検索"
+
+#: crates/app/src/nav.rs
+msgid "Search “{0}”"
+msgstr "「{0}」を検索"
+
+#: crates/app/src/nav.rs
+#: crates/app/src/search.rs
+msgid "Search: {0}"
+msgstr "検索: {0}"
+
+#: crates/core/src/commands.rs
+msgid "Select all"
+msgstr "すべて選択"
+
+#: crates/app/ui/main.slint
+#: crates/core/src/commands.rs
+msgid "Settings"
+msgstr "設定"
+
+#: crates/app/src/config.rs
+msgid "Settings not saved: {0}"
+msgstr "設定を保存できませんでした: {0}"
+
+#: crates/app/src/nav.rs
+msgid "Shared folder"
+msgstr "共有フォルダー"
+
+#: crates/core/src/commands.rs
+msgid "Shift+Del"
+msgstr "Shift+Del"
+
+#: crates/core/src/commands.rs
+msgid "Shift+F10"
+msgstr "Shift+F10"
+
+#: crates/core/src/inspect.rs
+msgid "Shortcut or link"
+msgstr "ショートカットまたはリンク"
+
+#: crates/app/ui/main.slint
+msgid "Show file name extensions"
+msgstr "ファイルの拡張子を表示する"
+
+#: crates/app/ui/main.slint
+msgid "Show hidden items"
+msgstr "隠し項目を表示する"
+
+#: crates/app/src/fileops.rs
+msgid "Show more options"
+msgstr "その他のオプションを表示"
+
+#: crates/app/ui/main.slint
+msgid "Show protected operating system files"
+msgstr "保護されたオペレーティング システム ファイルを表示する"
+
+#: crates/app/ui/main.slint
+msgid "Show report"
+msgstr "レポートを表示"
+
+#: crates/fs/src/network.rs
+msgid "Sign-in cancelled"
+msgstr "サインインをキャンセルしました"
+
+#: crates/fs/src/lib.rs
+#: crates/fs/src/network.rs
+msgid "Sign-in required"
+msgstr "サインインが必要です"
+
+#: crates/fs/src/network.rs
+msgid "Signing in is only available on Windows"
+msgstr "サインインは Windows でのみ利用できます"
+
+#: crates/app/ui/main.slint
+msgid "Single-click to open an item (point to select)"
+msgstr "シングルクリックで開く（ポイントで選択）"
+
+#: crates/app/src/inspector.rs
+#: crates/app/ui/main.slint
+msgid "Size"
+msgstr "サイズ"
+
+#: crates/app/src/inspector.rs
+msgid "Size of files"
+msgstr "ファイルのサイズ"
+
+#: crates/app/ui/main.slint
+msgid "Skip"
+msgstr "スキップ(S)"
+
+#: crates/core/src/renderer.rs
+msgid "Software rendering"
+msgstr "ソフトウェア描画"
+
+#: crates/app/ui/main.slint
+msgid "Sort"
+msgstr "並べ替え"
+
+#: crates/core/src/commands.rs
+msgid "Sort ascending"
+msgstr "昇順に並べ替え"
+
+#: crates/core/src/commands.rs
+msgid "Sort by date modified"
+msgstr "更新日時で並べ替え"
+
+#: crates/core/src/commands.rs
+msgid "Sort by name"
+msgstr "名前で並べ替え"
+
+#: crates/core/src/commands.rs
+msgid "Sort by size"
+msgstr "サイズで並べ替え"
+
+#: crates/core/src/commands.rs
+msgid "Sort by type"
+msgstr "種類で並べ替え"
+
+#: crates/core/src/commands.rs
+msgid "Sort descending"
+msgstr "降順に並べ替え"
+
+#: crates/integrate/src/bin/explorer2-recover.rs
+msgid "State: {0}"
+msgstr "状態: {0}"
+
+#: crates/core/src/places.rs
+msgid "Storage"
+msgstr "記憶域"
+
+#: crates/core/src/commands.rs
+msgid "Switch to the other view"
+msgstr "もう一方のビューに切り替え"
+
+#: crates/core/src/inspect.rs
+msgid "System"
+msgstr "システム"
+
+#: crates/app/ui/main.slint
+msgid "System default"
+msgstr "システムの既定"
+
+#: crates/app/src/lang.rs
+msgid "System default ({0})"
+msgstr "システムの既定（{0}）"
+
+#: crates/core/src/renderer.rs
+msgid "System default renderer"
+msgstr "システムの既定のレンダラー"
+
+#: crates/core/src/lib.rs
+msgid "TB"
+msgstr "TB"
+
+#: crates/app/ui/main.slint
+msgid "Takes effect the next time the app starts."
+msgstr "次にアプリを起動したときに有効になります。"
+
+#: crates/setup/src/main.rs
+msgid "Temp folder {0}: {1}"
+msgstr "一時フォルダー {0}: {1}"
+
+#: crates/app/src/fileops.rs
+msgid "The Recycle Bin is empty."
+msgstr "ごみ箱は空です。"
+
+#: crates/shell/src/menu.rs
+msgid "The context menu is only available on Windows."
+msgstr "コンテキスト メニューは Windows でのみ利用できます。"
+
+#: crates/app/src/fileops.rs
+msgid "The destination already has a folder named “{0}”."
+msgstr "移動先には「{0}」という名前のフォルダーが既にあります。"
+
+#: crates/app/src/fileops.rs
+msgid "The destination already has an item named “{0}”."
+msgstr "移動先には「{0}」という名前の項目が既にあります。"
+
+#: crates/ops/src/exec.rs
+msgid "The destination folder is a subfolder of the source folder."
+msgstr "移動先のフォルダーは移動元のサブフォルダーです。"
+
+#: crates/ops/src/exec.rs
+msgid "The file is being used by another process"
+msgstr "ファイルは別のプロセスで使用中です"
+
+#: crates/app/src/nav.rs
+msgid "The folder no longer exists: {0}"
+msgstr "フォルダーはもう存在しません: {0}"
+
+#: crates/ops/src/names.rs
+msgid "The name can't be empty."
+msgstr "名前を空にすることはできません。"
+
+#: crates/ops/src/names.rs
+msgid "The name can't end with a period or a space."
+msgstr "名前の末尾をピリオドまたはスペースにすることはできません。"
+
+#: crates/ops/src/names.rs
+msgid "The name contains an invalid character."
+msgstr "名前に無効な文字が含まれています。"
+
+#: crates/ops/src/names.rs
+msgid "The name is too long (at most 255 characters)."
+msgstr "名前が長すぎます（最大 255 文字）。"
+
+#: crates/app/src/search.rs
+msgid "The search index could not start."
+msgstr "検索インデックスを開始できませんでした。"
+
+#: crates/app/src/quick.rs
+msgid "The search index is being prepared …"
+msgstr "検索インデックスを準備しています…"
+
+#: crates/app/src/search.rs
+msgid "The search index is kept by another Explorer 2.0 window."
+msgstr "検索インデックスは別の Explorer 2.0 ウィンドウが保持しています。"
+
+#: crates/app/src/search.rs
+msgid "The search index is not running yet."
+msgstr "検索インデックスはまだ実行されていません。"
+
+#: crates/app/src/quick.rs
+msgid "The search index is off (Settings → Search)."
+msgstr "検索インデックスはオフです（設定 → 検索）。"
+
+#: crates/app/ui/main.slint
+msgid "The view is remembered per folder."
+msgstr "ビューはフォルダーごとに記憶されます。"
+
+#: crates/ops/src/simple.rs
+msgid "There is already an item named “{0}”."
+msgstr "「{0}」という名前の項目が既にあります。"
+
+#: crates/app/ui/main.slint
+#: crates/core/src/places.rs
+msgid "This PC"
+msgstr "PC"
+
+#: crates/app/src/nav.rs
+msgid "This location doesn't exist on this system: {0}"
+msgstr "この場所はこのシステムにありません: {0}"
+
+#: crates/setup/src/main.rs
+msgid "This setup was built without the program files."
+msgstr "このセットアップはプログラム ファイルなしでビルドされました。"
+
+#: crates/core/src/commands.rs
+msgid "Toggle details pane"
+msgstr "詳細ペインの表示を切り替える"
+
+#: crates/core/src/commands.rs
+msgid "Toggle file name extensions"
+msgstr "ファイル名拡張子の表示を切り替える"
+
+#: crates/core/src/commands.rs
+msgid "Toggle hidden items"
+msgstr "隠し項目の表示を切り替える"
+
+#: crates/core/src/commands.rs
+msgid "Toggle search index"
+msgstr "検索インデックスのオンとオフを切り替える"
+
+#: crates/core/src/commands.rs
+msgid "Toggle two views"
+msgstr "2 つのビューのオンとオフを切り替える"
+
+#: crates/core/src/commands.rs
+msgid "Toggle: Win+E opens Explorer 2.0"
+msgstr "切り替え: Win+E で Explorer 2.0 を開く"
+
+#: crates/core/src/commands.rs
+msgid "Toggle: open folders in the running window (new tab)"
+msgstr "切り替え: 実行中のウィンドウでフォルダーを開く（新しいタブ）"
+
+#: crates/core/src/commands.rs
+msgid "Toggle: open folders with Explorer 2.0"
+msgstr "切り替え: Explorer 2.0 でフォルダーを開く"
+
+#: crates/core/src/commands.rs
+msgid "Toggle: “Open in Explorer 2.0” in the context menu"
+msgstr "切り替え: コンテキスト メニューの「Explorer 2.0 で開く」"
+
+#: crates/app/src/inspector.rs
+msgid "Total"
+msgstr "合計"
+
+#: crates/app/src/inspector.rs
+msgid "Total size"
+msgstr "合計サイズ"
+
+#: crates/app/ui/main.slint
+msgid "Two views"
+msgstr "2 つのビュー"
+
+#: crates/app/src/nav.rs
+#: crates/app/ui/main.slint
+msgid "Type"
+msgstr "種類"
+
+#: crates/app/src/quick.rs
+msgid "Type to search all drives"
+msgstr "すべてのドライブを検索"
+
+#: crates/fs/src/places.rs
+msgid "USB Drive"
+msgstr "USB ドライブ"
+
+#: crates/app/ui/main.slint
+#: crates/core/src/commands.rs
+msgid "Undo"
+msgstr "元に戻す"
+
+#: crates/app/src/fileops.rs
+msgid "Undo: {0}"
+msgstr "元に戻す: {0}"
+
+#: crates/integrate/src/bin/explorer2-recover.rs
+msgid "Uninstall Explorer 2.0 and reset all Windows integrations?"
+msgstr "Explorer 2.0 をアンインストールし、すべての Windows 統合をリセットしますか？"
+
+#: crates/app/src/nav.rs
+msgid "Unknown shell location: shell:{0}"
+msgstr "不明なシェルの場所です: shell:{0}"
+
+#: crates/app/ui/main.slint
+msgid "Up"
+msgstr "上へ"
+
+#: crates/app/src/installer.rs
+msgid "Update the installation with this copy"
+msgstr "このコピーでインストールを更新"
+
+#: crates/app/ui/main.slint
+msgid "Use hardware acceleration when available"
+msgstr "利用できる場合はハードウェア アクセラレーションを使う"
+
+#: crates/app/ui/main.slint
+msgid "Use the Windows accent color"
+msgstr "Windows のアクセント カラーを使う"
+
+#: crates/app/ui/main.slint
+#: crates/core/src/commands.rs
+msgid "Use the current view for all folders"
+msgstr "現在のビューをすべてのフォルダーに使う"
+
+#: crates/fs/src/places.rs
+msgid "Videos"
+msgstr "ビデオ"
+
+#: crates/app/src/nav.rs
+msgid "View not saved: {0}"
+msgstr "ビューを保存できませんでした: {0}"
+
+#: crates/core/src/commands.rs
+msgid "View: Details"
+msgstr "ビュー: 詳細"
+
+#: crates/core/src/commands.rs
+msgid "View: Extra large icons"
+msgstr "ビュー: 特大アイコン"
+
+#: crates/core/src/commands.rs
+msgid "View: Large icons"
+msgstr "ビュー: 大アイコン"
+
+#: crates/core/src/commands.rs
+msgid "View: Medium icons"
+msgstr "ビュー: 中アイコン"
+
+#: crates/app/ui/main.slint
+#: crates/integrate/src/features.rs
+msgid "Win+E opens Explorer 2.0"
+msgstr "Win+E で Explorer 2.0 を開く"
+
+#: crates/integrate/src/lib.rs
+msgid "Windows default restored: {0} values/files, {1} keys removed{2}."
+msgstr "Windows の既定に戻しました: 値/ファイル {0} 件、キー {1} 個を削除{2}。"
+
+#: crates/app/ui/main.slint
+msgid "Windows integration"
+msgstr "Windows 統合"
+
+#: crates/app/src/integration.rs
+msgid "Windows integration is only available on Windows."
+msgstr "Windows 統合は Windows でのみ利用できます。"
+
+#: crates/app/src/quick.rs
+msgid "Without the search index there is nothing to find here (Settings → Search)."
+msgstr "検索インデックスがないと、ここでは何も見つかりません（設定 → 検索）。"
+
+#: crates/integrate/src/bin/explorer2-recover.rs
+msgid "[y/N]"
+msgstr "[y/N]"
+
+#: crates/ops/src/names.rs
+msgid "control characters"
+msgstr "制御文字"
+
+#: crates/app/src/inspector.rs
+msgid "counting …"
+msgstr "カウントしています…"
+
+#: crates/index/src/query.rs
+msgid "date not understood: {0}"
+msgstr "日付を解釈できません: {0}"
+
+#: crates/core/src/renderer.rs
+msgid "disabled in the settings"
+msgstr "設定で無効"
+
+#: crates/core/src/inspect.rs
+msgid "empty"
+msgstr "空"
+
+#: crates/core/src/renderer.rs
+msgid "forced by EXPLORER2_RENDERER"
+msgstr "EXPLORER2_RENDERER により強制"
+
+#: crates/index/src/persist.rs
+msgid "index belongs to another drive ({0})"
+msgstr "インデックスは別のドライブのものです（{0}）"
+
+#: crates/search/src/service.rs
+msgid "index belongs to another folder"
+msgstr "インデックスは別のフォルダーのものです"
+
+#: crates/index/src/persist.rs
+msgid "index damaged: {0}"
+msgstr "インデックスが破損しています: {0}"
+
+#: crates/index/src/persist.rs
+msgid "index from another version ({0})"
+msgstr "インデックスは別のバージョンのものです（{0}）"
+
+#: crates/index/src/persist.rs
+msgid "index not readable: {0}"
+msgstr "インデックスを読み取れません: {0}"
+
+#: crates/search/src/watch.rs
+msgid "input/output error: {0}"
+msgstr "入出力エラー: {0}"
+
+#: crates/index/src/query.rs
+msgid "invalid regular expression: {0}"
+msgstr "正規表現が無効です: {0}"
+
+#: crates/core/src/renderer.rs
+msgid "no GPU check on this system"
+msgstr "このシステムでは GPU を確認しません"
+
+#: crates/app/src/config.rs
+msgid "no configuration folder"
+msgstr "構成フォルダーがありません"
+
+#: crates/index/src/persist.rs
+msgid "no saved index"
+msgstr "保存されたインデックスがありません"
+
+#: crates/core/src/renderer.rs
+msgid "no suitable GPU found"
+msgstr "適切な GPU が見つかりません"
+
+#: crates/core/src/renderer.rs
+msgid "safe start after aborted starts"
+msgstr "中止された起動のあとのセーフ スタート"
+
+#: crates/app/src/quick.rs
+msgid "searched recently"
+msgstr "最近の検索"
+
+#: crates/core/src/renderer.rs
+msgid "set by SLINT_BACKEND"
+msgstr "SLINT_BACKEND により設定"
+
+#: crates/index/src/query.rs
+msgid "size not understood: {0}"
+msgstr "サイズを解釈できません: {0}"
+
+#: crates/core/src/renderer.rs
+msgid "suitable GPU found"
+msgstr "適切な GPU が見つかりました"
+
+#: crates/search/src/watch.rs
+msgid "too many changes at once"
+msgstr "一度に変更が多すぎます"
+
+#: crates/search/src/watch.rs
+msgid "too many folders for the Linux watcher (raise fs.inotify.max_user_watches)"
+msgstr "フォルダーが多すぎて Linux の監視の上限を超えています（fs.inotify.max_user_watches を上げてください）"
+
+#: crates/app/src/search.rs
+msgid "unknown"
+msgstr "不明"
+
+#: crates/integrate/src/bin/explorer2-recover.rs
+msgid "yes"
+msgstr "はい"
+
+#: crates/app/src/integration.rs
+msgid ""
+"{0}\n"
+"\n"
+"Afterwards Explorer 2.0 continues from the installation folder (this window closes)."
+msgstr ""
+"{0}\n"
+"\n"
+"そのあと Explorer 2.0 はインストール フォルダーから続行します（このウィンドウは閉じます）。"
+
+#: crates/setup/src/main.rs
+msgid ""
+"{0}\n"
+"\n"
+"Target: {1}\n"
+"\n"
+"No administrator rights needed; a Start menu entry and an “Apps & Features” entry are created. Windows integrations (open folders, Win+E) can be switched on afterwards in the settings – undoable at any time with one button."
+msgstr ""
+"{0}\n"
+"\n"
+"対象: {1}\n"
+"\n"
+"管理者権限は不要です。スタート メニューの項目と「アプリと機能」の項目を作成します。Windows 統合（フォルダーを開く、Win+E）は、あとから設定でオンにでき、いつでもボタン 1 つで元に戻せます。"
+
+#: crates/integrate/src/lib.rs
+msgid "{0} (not empty)"
+msgstr "{0}（空ではありません）"
+
+#: crates/app/src/inspector.rs
+msgid "{0} ({1} bytes)"
+msgstr "{0}（{1} バイト）"
+
+#: crates/ops/src/names.rs
+msgid "{0} - Copy ({1}){2}"
+msgstr "{0} - コピー ({1}){2}"
+
+#: crates/ops/src/names.rs
+msgid "{0} - Copy{1}"
+msgstr "{0} - コピー{1}"
+
+#: crates/core/src/guard.rs
+msgid "{0} A report is in the “crash” folder."
+msgstr "{0} レポートは「crash」フォルダーにあります。"
+
+#: crates/setup/src/main.rs
+msgid "{0} cannot be started: {1}"
+msgstr "{0} を起動できません: {1}"
+
+#: crates/integrate/src/lib.rs
+msgid "{0} changed by other software – left unchanged."
+msgstr "{0} は他のソフトウェアによって変更されているため、そのままにします。"
+
+#: crates/integrate/src/install.rs
+msgid "{0} contains foreign files – not deleted"
+msgstr "{0} には別のファイルが含まれているため、削除しませんでした"
+
+#: crates/integrate/src/lib.rs
+msgid "{0} errors: {1}"
+msgstr "エラー {0} 件: {1}"
+
+#: crates/core/src/inspect.rs
+msgid "{0} file"
+msgid_plural "{0} files"
+msgstr[0] "{0} 個のファイル"
+
+#: crates/app/src/nav.rs
+#: crates/core/src/inspect.rs
+msgid "{0} folder"
+msgid_plural "{0} folders"
+msgstr[0] "{0} 個のフォルダー"
+
+#: crates/app/src/inspector.rs
+msgid "{0} folder (not counted)"
+msgid_plural "{0} folders (not counted)"
+msgstr[0] "{0} 個のフォルダー（未カウント）"
+
+#: crates/core/src/lib.rs
+msgid "{0} free of {1}"
+msgstr "{1} 中 {0} 空き"
+
+#: crates/app/src/fileops.rs
+msgid "{0} h {1} min left"
+msgstr "残り {0} 時間 {1} 分"
+
+#: crates/app/src/nav.rs
+msgid "{0} item"
+msgid_plural "{0} items"
+msgstr[0] "{0} 個の項目"
+
+#: crates/app/src/inspector.rs
+#: crates/app/src/nav.rs
+msgid "{0} item selected"
+msgid_plural "{0} items selected"
+msgstr[0] "{0} 個の項目を選択"
+
+#: crates/app/src/fileops.rs
+msgid "{0} min left"
+msgstr "残り {0} 分"
+
+#: crates/app/src/fileops.rs
+msgid "{0} of {1}"
+msgstr "{0} / {1}"
+
+#: crates/app/src/quick.rs
+msgid "{0} of {1} result · Enter opens · Ctrl+Enter shows it in its folder"
+msgid_plural "{0} of {1} results · Enter opens · Ctrl+Enter shows it in its folder"
+msgstr[0] "{0} / {1} 件の結果 · Enter で開く · Ctrl+Enter でフォルダーに表示"
+
+#: crates/app/src/nav.rs
+msgid "{0} of {1} result – refine the search"
+msgid_plural "{0} of {1} results – refine the search"
+msgstr[0] "{0} / {1} 件の結果 – 検索を絞り込んでください"
+
+#: crates/app/src/fileops.rs
+msgid "{0} of {n} item"
+msgid_plural "{0} of {n} items"
+msgstr[0] "{n} 個中 {0} 個"
+
+#: crates/app/src/nav.rs
+msgid "{0} result"
+msgid_plural "{0} results"
+msgstr[0] "{0} 件の結果"
+
+#: crates/app/src/quick.rs
+msgid "{0} result · Enter opens · Ctrl+Enter shows it in its folder"
+msgid_plural "{0} results · Enter opens · Ctrl+Enter shows it in its folder"
+msgstr[0] "{0} 件の結果 · Enter で開く · Ctrl+Enter でフォルダーに表示"
+
+#: crates/app/src/fileops.rs
+msgid "{0} s left"
+msgstr "残り {0} 秒"
+
+#: crates/app/src/quick.rs
+msgid "{0} · Enter picks an earlier search"
+msgstr "{0} · Enter で前の検索を選ぶ"
+
+#: crates/app/src/inspector.rs
+msgid "{0} × {1} pixels"
+msgstr "{0} × {1} ピクセル"
+
+#: crates/app/src/integration.rs
+msgid "{0} – off, the Windows default is active again."
+msgstr "{0}: オフです。Windows の既定が再び有効です。"
+
+#: crates/app/src/integration.rs
+msgid "{0} – on. Please don't move Explorer 2.0 (reset first if you need to).{1}"
+msgstr "{0}: オンです。Explorer 2.0 を移動しないでください（移動する前にリセットしてください）。{1}"
+
+#: crates/app/src/quick.rs
+msgid "{0}, {1} entry"
+msgid_plural "{0}, {1} entries"
+msgstr[0] "{0}、{1} 件"
+
+#: crates/app/src/search.rs
+msgid "{0}: building … {1} entry"
+msgid_plural "{0}: building … {1} entries"
+msgstr[0] "{0}: 作成中… {1} 件"
+
+#: crates/app/src/search.rs
+msgid "{0}: loading …"
+msgstr "{0}: 読み込み中…"
+
+#: crates/app/src/search.rs
+msgid "{0}: ready, {1} entry{2}"
+msgid_plural "{0}: ready, {1} entries{2}"
+msgstr[0] "{0}: 準備完了、{1} 件{2}"
+
+#: crates/app/src/search.rs
+msgid "{0}: stopped"
+msgstr "{0}: 停止"
+
+#: crates/app/src/search.rs
+msgid "{0}: {1} entry, re-syncing with the disk …"
+msgid_plural "{0}: {1} entries, re-syncing with the disk …"
+msgstr[0] "{0}: {1} 件、ディスクと再同期中…"
+
+#: crates/integrate/src/lib.rs
+msgid "{n} change in the journal"
+msgid_plural "{n} changes in the journal"
+msgstr[0] "ジャーナルに {n} 件の変更"
+
+#: crates/app/src/quick.rs
+msgid "{n} drive"
+msgid_plural "{n} drives"
+msgstr[0] "{n} 台のドライブ"
+
+#: crates/app/src/fileops.rs
+msgid "{n} item"
+msgid_plural "{n} items"
+msgstr[0] "{n} 個の項目"
+
+#: crates/core/src/lib.rs
+msgid "{} File"
+msgstr "{} ファイル"
+
+#: crates/ops/src/names.rs
+msgid "“.” and “..” are not allowed as a name."
+msgstr "「.」と「..」は名前に使えません。"
+
+#: crates/app/ui/main.slint
+#: crates/integrate/src/features.rs
+msgid "“Open in Explorer 2.0” in the context menu"
+msgstr "コンテキスト メニューの「Explorer 2.0 で開く」"
+
+#: crates/app/src/fileops.rs
+#: crates/ops/src/names.rs
+msgid "“{0}”"
+msgstr "「{0}」"
+
+#: crates/ops/src/names.rs
+msgid "“{0}” is a reserved device name on Windows."
+msgstr "「{0}」は Windows の予約済みデバイス名です。"

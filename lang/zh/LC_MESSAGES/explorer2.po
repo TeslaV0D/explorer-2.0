@@ -1,0 +1,1915 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: explorer2\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: zh\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+
+#: crates/integrate/src/bin/explorer2-recover.rs
+msgid "  error: {0}"
+msgstr "  错误：{0}"
+
+#: crates/integrate/src/bin/explorer2-recover.rs
+msgid "  left unchanged: {0}"
+msgstr "  保持不变：{0}"
+
+#: crates/app/src/fileops.rs
+msgid " (+{n} more error)"
+msgid_plural " (+{n} more errors)"
+msgstr[0] "（另有 {n} 个错误）"
+
+#: crates/app/src/search.rs
+msgid " (built in {0})"
+msgstr "（用时 {0}）"
+
+#: crates/app/src/nav.rs
+msgid " (folder searched, without index)"
+msgstr "（已搜索文件夹，无索引）"
+
+#: crates/integrate/src/lib.rs
+msgid " (journal was damaged, known locations checked)"
+msgstr "（日志已损坏，已检查已知位置）"
+
+#: crates/app/src/inspector.rs
+msgid " (more – counting stopped at {0} entries)"
+msgstr "（还有更多，计数在 {0} 个条目处停止）"
+
+#: crates/app/src/quick.rs
+msgid " (still being built)"
+msgstr "（仍在建立）"
+
+#: crates/app/src/nav.rs
+msgid " ({0} hidden)"
+msgid_plural " ({0} hidden)"
+msgstr[0] "（{0} 个隐藏）"
+
+#: crates/app/src/integration.rs
+msgid " Emergency tool: {0}"
+msgstr "紧急工具：{0}"
+
+#: crates/app/src/nav.rs
+msgid " · {0} ms"
+msgstr " · {0} 毫秒"
+
+#: crates/app/src/search.rs
+msgid " – changes missed {n} time, re-synced afterwards ({0})"
+msgid_plural " – changes missed {n} times, re-synced afterwards ({0})"
+msgstr[0] " – 错过 {n} 次更改，之后已重新同步（{0}）"
+
+#: crates/integrate/src/lib.rs
+msgid " – journal damaged, reset recommended"
+msgstr " – 日志已损坏，建议重置"
+
+#: crates/app/src/search.rs
+msgid " – network drive"
+msgstr " – 网络驱动器"
+
+#: crates/app/src/search.rs
+msgid " – other drive"
+msgstr " – 其他驱动器"
+
+#: crates/app/src/search.rs
+msgid " – removable drive"
+msgstr " – 可移动驱动器"
+
+#: crates/app/src/search.rs
+msgid " – saving failed: {0}"
+msgstr " – 保存失败：{0}"
+
+#: crates/app/src/search.rs
+msgid " – without live updates"
+msgstr " – 无实时更新"
+
+#: crates/core/src/mnemonic.rs
+msgid "&Replace"
+msgstr "替换(&R)"
+
+#: crates/core/src/mnemonic.rs
+msgid "&Skip"
+msgstr "跳过(&S)"
+
+#: crates/app/src/installer.rs
+msgid ", redirected: {0}"
+msgstr "，已重定向：{0}"
+
+#: crates/integrate/src/lib.rs
+msgid ", {n} integration point active"
+msgid_plural ", {n} integration points active"
+msgstr[0] "，{n} 个集成点处于活动状态"
+
+#: crates/ops/src/names.rs
+msgid "A file name can't contain {0}: \\ / : * ? \" < > |"
+msgstr "文件名不能包含{0}：\\ / : * ? \" < > |"
+
+#: crates/ops/src/exec.rs
+msgid "A folder and a file can't replace each other."
+msgstr "文件夹和文件不能互相替换。"
+
+#: crates/fs/src/lib.rs
+#: crates/ops/src/exec.rs
+#: crates/ops/src/simple.rs
+msgid "Access denied"
+msgstr "访问被拒绝"
+
+#: crates/app/ui/main.slint
+msgid "Address bar"
+msgstr "地址栏"
+
+#: crates/ops/src/exec.rs
+msgid "Already exists"
+msgstr "已存在"
+
+#: crates/app/src/fileops.rs
+#: crates/core/src/commands.rs
+msgid "Alt+Enter"
+msgstr "Alt+Enter"
+
+#: crates/app/ui/main.slint
+msgid "Alt+Left"
+msgstr "Alt+左"
+
+#: crates/app/ui/main.slint
+msgid "Alt+Right"
+msgstr "Alt+右"
+
+#: crates/app/ui/main.slint
+msgid "Alt+Up"
+msgstr "Alt+上"
+
+#: crates/ops/src/trashview.rs
+#: crates/ops/src/undo.rs
+msgid "An item already exists at the original location: {0}"
+msgstr "原始位置已存在项目：{0}"
+
+#: crates/app/ui/main.slint
+msgid "Ascending"
+msgstr "递增"
+
+#: crates/app/src/inspector.rs
+msgid "Attributes"
+msgstr "属性"
+
+#: crates/core/src/lib.rs
+msgid "B"
+msgstr "B"
+
+#: crates/app/ui/main.slint
+#: crates/core/src/commands.rs
+msgid "Back"
+msgstr "后退"
+
+#: crates/ops/src/undo.rs
+msgid "Can't move back, the target exists: {0}"
+msgstr "无法移回，目标已存在：{0}"
+
+#: crates/app/ui/main.slint
+msgid "Cancel"
+msgstr "取消"
+
+#: crates/integrate/src/bin/explorer2-recover.rs
+msgid "Cancelled – nothing changed."
+msgstr "已取消，未做任何更改。"
+
+#: crates/setup/src/main.rs
+msgid "Cancelled."
+msgstr "已取消。"
+
+#: crates/app/ui/main.slint
+msgid "Close"
+msgstr "关闭"
+
+#: crates/app/ui/main.slint
+#: crates/core/src/commands.rs
+msgid "Close tab"
+msgstr "关闭标签页"
+
+#: crates/app/ui/main.slint
+msgid "Color scheme"
+msgstr "颜色方案"
+
+#: crates/core/src/commands.rs
+msgid "Color scheme: Dark"
+msgstr "颜色方案：深色"
+
+#: crates/core/src/commands.rs
+msgid "Color scheme: Light"
+msgstr "颜色方案：浅色"
+
+#: crates/core/src/commands.rs
+msgid "Color scheme: System default"
+msgstr "颜色方案：系统默认"
+
+#: crates/app/ui/main.slint
+msgid "Command palette"
+msgstr "命令面板"
+
+#: crates/app/src/installer.rs
+msgid "Configuration folder not found"
+msgstr "找不到配置文件夹"
+
+#: crates/app/src/integration.rs
+msgid "Configuration folder not found."
+msgstr "找不到配置文件夹。"
+
+#: crates/app/src/inspector.rs
+msgid "Contents"
+msgstr "内容"
+
+#: crates/app/ui/main.slint
+#: crates/core/src/commands.rs
+msgid "Context menu"
+msgstr "快捷菜单"
+
+#: crates/app/src/fileops.rs
+msgid "Context menu: {0}"
+msgstr "快捷菜单：{0}"
+
+#: crates/ops/src/exec.rs
+msgid "Copied, but the source was not deleted: {0}"
+msgstr "已复制，但未删除源：{0}"
+
+#: crates/app/src/fileops.rs
+#: crates/app/ui/main.slint
+#: crates/core/src/commands.rs
+msgid "Copy"
+msgstr "复制"
+
+#: crates/app/ui/main.slint
+msgid "Copy path"
+msgstr "复制路径"
+
+#: crates/app/src/fileops.rs
+msgid "Copying {0} to “{1}”"
+msgstr "正在将 {0} 复制到“{1}”"
+
+#: crates/ops/src/exec.rs
+msgid "Couldn't move the existing item to the Recycle Bin: {0}"
+msgstr "无法将现有项目移到回收站：{0}"
+
+#: crates/app/src/open.rs
+msgid "Couldn't open (code {0})"
+msgstr "无法打开（代码 {0}）"
+
+#: crates/app/src/open.rs
+msgid "Couldn't open ({0}): {1}"
+msgstr "无法打开（{0}）：{1}"
+
+#: crates/app/src/inspector.rs
+msgid "Created"
+msgstr "创建时间"
+
+#: crates/core/src/commands.rs
+msgid "Ctrl+A"
+msgstr "Ctrl+A"
+
+#: crates/app/src/fileops.rs
+#: crates/app/ui/main.slint
+#: crates/core/src/commands.rs
+msgid "Ctrl+C"
+msgstr "Ctrl+C"
+
+#: crates/core/src/commands.rs
+msgid "Ctrl+F"
+msgstr "Ctrl+F"
+
+#: crates/core/src/commands.rs
+msgid "Ctrl+L"
+msgstr "Ctrl+L"
+
+#: crates/core/src/commands.rs
+msgid "Ctrl+Shift+1"
+msgstr "Ctrl+Shift+1"
+
+#: crates/app/ui/main.slint
+#: crates/core/src/commands.rs
+msgid "Ctrl+Shift+2"
+msgstr "Ctrl+Shift+2"
+
+#: crates/core/src/commands.rs
+msgid "Ctrl+Shift+3"
+msgstr "Ctrl+Shift+3"
+
+#: crates/app/ui/main.slint
+#: crates/core/src/commands.rs
+msgid "Ctrl+Shift+6"
+msgstr "Ctrl+Shift+6"
+
+#: crates/core/src/commands.rs
+msgid "Ctrl+Shift+F"
+msgstr "Ctrl+Shift+F"
+
+#: crates/app/src/fileops.rs
+#: crates/app/ui/main.slint
+#: crates/core/src/commands.rs
+msgid "Ctrl+Shift+N"
+msgstr "Ctrl+Shift+N"
+
+#: crates/app/ui/main.slint
+msgid "Ctrl+Shift+P"
+msgstr "Ctrl+Shift+P"
+
+#: crates/core/src/commands.rs
+msgid "Ctrl+Shift+Tab"
+msgstr "Ctrl+Shift+Tab"
+
+#: crates/app/ui/main.slint
+#: crates/core/src/commands.rs
+msgid "Ctrl+T"
+msgstr "Ctrl+T"
+
+#: crates/core/src/commands.rs
+msgid "Ctrl+Tab"
+msgstr "Ctrl+Tab"
+
+#: crates/app/src/fileops.rs
+#: crates/app/ui/main.slint
+#: crates/core/src/commands.rs
+msgid "Ctrl+V"
+msgstr "Ctrl+V"
+
+#: crates/core/src/commands.rs
+msgid "Ctrl+W"
+msgstr "Ctrl+W"
+
+#: crates/app/src/fileops.rs
+#: crates/app/ui/main.slint
+#: crates/core/src/commands.rs
+msgid "Ctrl+X"
+msgstr "Ctrl+X"
+
+#: crates/app/ui/main.slint
+#: crates/core/src/commands.rs
+msgid "Ctrl+Y"
+msgstr "Ctrl+Y"
+
+#: crates/app/ui/main.slint
+#: crates/core/src/commands.rs
+msgid "Ctrl+Z"
+msgstr "Ctrl+Z"
+
+#: crates/app/ui/main.slint
+#: crates/core/src/commands.rs
+msgid "Ctrl+\\"
+msgstr "Ctrl+\\"
+
+#: crates/core/src/renderer.rs
+msgid "Currently: {0} ({1})"
+msgstr "当前：{0}（{1}）"
+
+#: crates/app/src/fileops.rs
+#: crates/app/ui/main.slint
+#: crates/core/src/commands.rs
+msgid "Cut"
+msgstr "剪切"
+
+#: crates/app/src/inspector.rs
+msgid "DATE"
+msgstr "日期"
+
+#: crates/fs/src/places.rs
+msgid "DVD Drive"
+msgstr "DVD 驱动器"
+
+#: crates/app/ui/main.slint
+msgid "Dark"
+msgstr "深色"
+
+#: crates/app/ui/main.slint
+#: crates/core/src/places.rs
+msgid "Date deleted"
+msgstr "删除日期"
+
+#: crates/app/src/nav.rs
+#: crates/app/ui/main.slint
+msgid "Date modified"
+msgstr "修改日期"
+
+#: crates/app/src/fileops.rs
+#: crates/app/ui/main.slint
+#: crates/core/src/commands.rs
+msgid "Del"
+msgstr "Del"
+
+#: crates/app/src/fileops.rs
+#: crates/app/ui/main.slint
+msgid "Delete"
+msgstr "删除"
+
+#: crates/core/src/commands.rs
+msgid "Delete (to Recycle Bin)"
+msgstr "删除（移到回收站）"
+
+#: crates/app/src/fileops.rs
+#: crates/app/ui/main.slint
+#: crates/core/src/commands.rs
+msgid "Delete permanently"
+msgstr "永久删除"
+
+#: crates/ops/src/trashview.rs
+msgid "Delete permanently failed: {0}"
+msgstr "永久删除失败：{0}"
+
+#: crates/app/src/fileops.rs
+msgid ""
+"Delete this {n} item permanently?\n"
+"This can't be undone."
+msgid_plural ""
+"Delete these {n} items permanently?\n"
+"This can't be undone."
+msgstr[0] ""
+"永久删除这 {n} 个项目？\n"
+"此操作无法撤销。"
+
+#: crates/app/src/fileops.rs
+msgid ""
+"Delete {0} permanently?\n"
+"This can't be undone."
+msgstr ""
+"永久删除 {0}？\n"
+"此操作无法撤销。"
+
+#: crates/app/src/fileops.rs
+msgid ""
+"Delete “{0}” permanently?\n"
+"This can't be undone."
+msgstr ""
+"永久删除“{0}”？\n"
+"此操作无法撤销。"
+
+#: crates/app/src/fileops.rs
+msgid "Deleting {0} permanently"
+msgstr "正在永久删除 {0}"
+
+#: crates/app/ui/main.slint
+msgid "Descending"
+msgstr "递减"
+
+#: crates/fs/src/places.rs
+msgid "Desktop"
+msgstr "桌面"
+
+#: crates/app/ui/main.slint
+#: crates/core/src/view.rs
+msgid "Details"
+msgstr "详细信息"
+
+#: crates/app/src/inspector.rs
+msgid "Dimensions"
+msgstr "尺寸"
+
+#: crates/core/src/mnemonic.rs
+msgid "Do this for &all remaining conflicts"
+msgstr "对剩余冲突全部执行(&A)"
+
+#: crates/app/ui/main.slint
+msgid "Do this for all remaining conflicts"
+msgstr "对剩余冲突全部执行(A)"
+
+#: crates/fs/src/places.rs
+msgid "Documents"
+msgstr "文档"
+
+#: crates/fs/src/places.rs
+msgid "Downloads"
+msgstr "下载"
+
+#: crates/fs/src/places.rs
+msgid "Drive"
+msgstr "驱动器"
+
+#: crates/core/src/commands.rs
+msgid "Edit address"
+msgstr "编辑地址"
+
+#: crates/app/ui/main.slint
+#: crates/core/src/commands.rs
+msgid "Empty Recycle Bin"
+msgstr "清空回收站"
+
+#: crates/app/src/fileops.rs
+#: crates/core/src/commands.rs
+msgid "Enter"
+msgstr "Enter"
+
+#: crates/integrate/src/bin/explorer2-recover.rs
+msgid "Error: configuration folder not found (APPDATA missing)."
+msgstr "错误：找不到配置文件夹（缺少 APPDATA）。"
+
+#: crates/integrate/src/bin/explorer2-recover.rs
+msgid "Error: installation folder cannot be determined (LOCALAPPDATA missing)."
+msgstr "错误：无法确定安装文件夹（缺少 LOCALAPPDATA）。"
+
+#: crates/integrate/src/bin/explorer2-recover.rs
+msgid "Error: {0} – please delete the program folder by hand: {1}"
+msgstr "错误：{0} – 请手动删除程序文件夹：{1}"
+
+#: crates/app/src/fileops.rs
+msgid "Existing: {0}"
+msgstr "现有：{0}"
+
+#: crates/core/src/guard.rs
+msgid "Explorer 2.0 closed unexpectedly last time."
+msgstr "Explorer 2.0 上次意外关闭。"
+
+#: crates/core/src/guard.rs
+msgid "Explorer 2.0 closed unexpectedly {n} time."
+msgid_plural "Explorer 2.0 closed unexpectedly {n} times."
+msgstr[0] "Explorer 2.0 意外关闭了 {n} 次。"
+
+#: crates/app/src/installer.rs
+msgid "Explorer 2.0 installed: {0} ({1} Start menu shortcuts{2})"
+msgstr "Explorer 2.0 已安装：{0}（{1} 个开始菜单快捷方式{2}）"
+
+#: crates/setup/src/main.rs
+msgid "Explorer 2.0 is already installed. Update to version {0}?"
+msgstr "Explorer 2.0 已安装。更新到版本 {0}？"
+
+#: crates/integrate/src/bin/explorer2-recover.rs
+msgid "Explorer 2.0 was removed. Your settings stay in %APPDATA%\\Explorer2."
+msgstr "已删除 Explorer 2.0。你的设置保留在 %APPDATA%\\Explorer2。"
+
+#: crates/setup/src/main.rs
+msgid ""
+"Explorer 2.0 {0} is installed.\n"
+"\n"
+"You'll find it in the Start menu under “Explorer 2.0”. To uninstall, use “Settings → Apps” or the Start menu entry “Explorer 2.0 – Windows-Standard wiederherstellen”.\n"
+"\n"
+"Start it now?"
+msgstr ""
+"已安装 Explorer 2.0 {0}。\n"
+"\n"
+"可在开始菜单的“Explorer 2.0”下找到它。要卸载，请使用“设置 → 应用”，或开始菜单项“Explorer 2.0 – Windows-Standard wiederherstellen”。\n"
+"\n"
+"现在启动它？"
+
+#: crates/integrate/src/bin/explorer2-recover.rs
+msgid "Explorer 2.0 – restore the Windows default"
+msgstr "Explorer 2.0 – 还原 Windows 默认设置"
+
+#: crates/integrate/src/bin/explorer2-recover.rs
+msgid ""
+"Explorer 2.0 – restore the Windows default\n"
+"\n"
+"  explorer2-recover                  shows the state, asks and resets\n"
+"  explorer2-recover --yes            resets without asking\n"
+"  explorer2-recover --status         only shows the state (exit code 1 = active)\n"
+"  explorer2-recover --uninstall      resets and removes Explorer 2.0\n"
+"  explorer2-recover --uninstall --quiet   the same without asking\n"
+"\n"
+"Removes all Windows integrations of Explorer 2.0 (folder verbs, Win+E,\n"
+"context menu, environment variables, shortcuts …) and restores the previous\n"
+"values exactly. Values that other software has changed meanwhile stay\n"
+"untouched. Your settings (%APPDATA%\\Explorer2) are kept when uninstalling."
+msgstr ""
+"Explorer 2.0 – 还原 Windows 默认设置\n"
+"\n"
+"  explorer2-recover                  显示状态、询问并重置\n"
+"  explorer2-recover --yes            不询问直接重置\n"
+"  explorer2-recover --status         仅显示状态（退出代码 1 = 活动）\n"
+"  explorer2-recover --uninstall      重置并删除 Explorer 2.0\n"
+"  explorer2-recover --uninstall --quiet   同样，但不询问\n"
+"\n"
+"删除 Explorer 2.0 的所有 Windows 集成（文件夹谓词、Win+E、\n"
+"快捷菜单、环境变量、快捷方式…），并精确还原先前的\n"
+"值。其间被其他软件更改的值保持不变。卸载时会保留你的设置（%APPDATA%\\Explorer2）。"
+
+#: crates/core/src/view.rs
+msgid "Extra large icons"
+msgstr "超大图标"
+
+#: crates/core/src/lib.rs
+msgid "File"
+msgstr "文件"
+
+#: crates/app/ui/main.slint
+#: crates/core/src/lib.rs
+msgid "File folder"
+msgstr "文件夹"
+
+#: crates/fs/src/places.rs
+msgid "File system"
+msgstr "文件系统"
+
+#: crates/app/src/inspector.rs
+#: crates/app/src/nav.rs
+#: crates/core/src/places.rs
+msgid "Folder"
+msgstr "文件夹"
+
+#: crates/fs/src/lib.rs
+#: crates/search/src/watch.rs
+msgid "Folder not found"
+msgstr "找不到文件夹"
+
+#: crates/app/ui/main.slint
+msgid "Folder options"
+msgstr "文件夹选项"
+
+#: crates/app/src/fileops.rs
+msgid "Folder · {0}"
+msgstr "文件夹 · {0}"
+
+#: crates/app/ui/main.slint
+#: crates/core/src/commands.rs
+msgid "Forward"
+msgstr "前进"
+
+#: crates/core/src/lib.rs
+msgid "GB"
+msgstr "GB"
+
+#: crates/app/src/inspector.rs
+msgid "GENERAL"
+msgstr "常规"
+
+#: crates/core/src/renderer.rs
+msgid "GPU acceleration"
+msgstr "GPU 加速"
+
+#: crates/core/src/renderer.rs
+msgid "GPU check running in the background – applies from the next start"
+msgstr "GPU 检查正在后台运行，下次启动时生效"
+
+#: crates/core/src/commands.rs
+msgid "Go to parent folder"
+msgstr "转到上级文件夹"
+
+#: crates/core/src/inspect.rs
+msgid "Hidden"
+msgstr "隐藏"
+
+#: crates/fs/src/places.rs
+msgid "Home"
+msgstr "个人文件夹"
+
+#: crates/app/src/search.rs
+msgid "Home ({0})"
+msgstr "个人文件夹（{0}）"
+
+#: crates/app/ui/main.slint
+msgid "Icons"
+msgstr "图标"
+
+#: crates/app/ui/main.slint
+msgid "Index drives for search"
+msgstr "为搜索编制驱动器索引"
+
+#: crates/app/ui/main.slint
+msgid "Inspector"
+msgstr "检查器"
+
+#: crates/app/src/installer.rs
+msgid "Install"
+msgstr "安装"
+
+#: crates/core/src/commands.rs
+msgid "Install / update Explorer 2.0"
+msgstr "安装或更新 Explorer 2.0"
+
+#: crates/setup/src/main.rs
+msgid "Install Explorer 2.0 {0} for this user?"
+msgstr "为该用户安装 Explorer 2.0 {0}？"
+
+#: crates/app/ui/main.slint
+msgid "Installation"
+msgstr "安装"
+
+#: crates/app/src/installer.rs
+#: crates/setup/src/main.rs
+msgid "Installation failed: {0}"
+msgstr "安装失败：{0}"
+
+#: crates/app/src/installer.rs
+msgid "Installation folder cannot be determined"
+msgstr "无法确定安装文件夹"
+
+#: crates/setup/src/main.rs
+msgid "Installation folder cannot be determined (LOCALAPPDATA/APPDATA missing)."
+msgstr "无法确定安装文件夹（缺少 LOCALAPPDATA/APPDATA）。"
+
+#: crates/integrate/src/bin/explorer2-recover.rs
+msgid "Installation: {0}"
+msgstr "安装：{0}"
+
+#: crates/app/src/installer.rs
+msgid "Installed (version {0}) in {1}. Uninstall via “Apps & Features” or the Start menu."
+msgstr "已安装（版本 {0}）于 {1}。可通过“应用和功能”或开始菜单卸载。"
+
+#: crates/app/src/installer.rs
+msgid "Installed in {0}; this copy is running from {1}."
+msgstr "已安装在 {0}；此副本从 {1} 运行。"
+
+#: crates/app/src/installer.rs
+#: crates/setup/src/main.rs
+msgid "Installed, but starting failed: {0}"
+msgstr "已安装，但启动失败：{0}"
+
+#: crates/app/src/installer.rs
+msgid "Installed, but the installed copy did not start – this window stays open."
+msgstr "已安装，但已安装的副本未能启动，此窗口保持打开。"
+
+#: crates/app/src/installer.rs
+msgid "Installed, but the start could not be checked: {0}"
+msgstr "已安装，但无法检查启动：{0}"
+
+#: crates/setup/src/main.rs
+msgid "Installer ended with {0}"
+msgstr "安装程序已结束，代码 {0}"
+
+#: crates/integrate/src/lib.rs
+msgid "Integration journal damaged – please reset first"
+msgstr "集成日志已损坏，请先重置"
+
+#: crates/ops/src/exec.rs
+msgid "Invalid path"
+msgstr "路径无效"
+
+#: crates/integrate/src/bin/explorer2-recover.rs
+msgid "Journal: {0}"
+msgstr "日志：{0}"
+
+#: crates/core/src/lib.rs
+msgid "KB"
+msgstr "KB"
+
+#: crates/core/src/mnemonic.rs
+msgid "Keep &both"
+msgstr "保留两者(&B)"
+
+#: crates/app/ui/main.slint
+msgid "Keep both"
+msgstr "保留两者(B)"
+
+#: crates/app/src/inspector.rs
+msgid "LOCATION"
+msgstr "位置"
+
+#: crates/app/ui/main.slint
+msgid "Language"
+msgstr "语言"
+
+#: crates/core/src/commands.rs
+msgid "Language: Deutsch"
+msgstr "语言：Deutsch"
+
+#: crates/core/src/commands.rs
+msgid "Language: English"
+msgstr "语言：English"
+
+#: crates/core/src/commands.rs
+msgid "Language: Español"
+msgstr "语言：Español"
+
+#: crates/core/src/commands.rs
+msgid "Language: Français"
+msgstr "语言：Français"
+
+#: crates/core/src/commands.rs
+msgid "Language: Italiano"
+msgstr "语言：Italiano"
+
+#: crates/core/src/commands.rs
+msgid "Language: Polski"
+msgstr "语言：Polski"
+
+#: crates/core/src/commands.rs
+msgid "Language: System default"
+msgstr "语言：系统默认"
+
+#: crates/core/src/commands.rs
+msgid "Language: Русский"
+msgstr "语言：Русский"
+
+#: crates/core/src/commands.rs
+msgid "Language: Українська"
+msgstr "语言：Українська"
+
+#: crates/core/src/commands.rs
+msgid "Language: 中文（简体）"
+msgstr "语言：中文（简体）"
+
+#: crates/core/src/commands.rs
+msgid "Language: 日本語"
+msgstr "语言：日本語"
+
+#: crates/core/src/view.rs
+msgid "Large icons"
+msgstr "大图标"
+
+#: crates/core/src/places.rs
+msgid "Libraries"
+msgstr "库"
+
+#: crates/app/src/nav.rs
+msgid "Libraries are only available on Windows"
+msgstr "库仅在 Windows 上可用"
+
+#: crates/app/src/nav.rs
+msgid "Library not found: {0}"
+msgstr "找不到库：{0}"
+
+#: crates/app/ui/main.slint
+msgid "Light"
+msgstr "浅色"
+
+#: crates/app/src/nav.rs
+msgid "Loading …"
+msgstr "正在加载…"
+
+#: crates/app/src/nav.rs
+msgid "Loading … {0}"
+msgstr "正在加载… {0}"
+
+#: crates/fs/src/places.rs
+msgid "Local Disk"
+msgstr "本地磁盘"
+
+#: crates/core/src/lib.rs
+msgid "MB"
+msgstr "MB"
+
+#: crates/core/src/mnemonic.rs
+msgid "Me&rge"
+msgstr "合并(&M)"
+
+#: crates/core/src/view.rs
+msgid "Medium icons"
+msgstr "中等图标"
+
+#: crates/app/ui/main.slint
+msgid "Merge"
+msgstr "合并(M)"
+
+#: crates/app/src/inspector.rs
+msgid "Modified"
+msgstr "修改时间"
+
+#: crates/app/ui/main.slint
+msgid "More"
+msgstr "更多"
+
+#: crates/app/src/fileops.rs
+msgid "Moving {0} to the Recycle Bin"
+msgstr "正在将 {0} 移到回收站"
+
+#: crates/app/src/fileops.rs
+msgid "Moving {0} to “{1}”"
+msgstr "正在将 {0} 移动到“{1}”"
+
+#: crates/fs/src/places.rs
+msgid "Music"
+msgstr "音乐"
+
+#: crates/app/ui/main.slint
+msgid "Name"
+msgstr "名称"
+
+#: crates/fs/src/places.rs
+msgid "Network Drive"
+msgstr "网络驱动器"
+
+#: crates/fs/src/network.rs
+msgid "Network path not found"
+msgstr "找不到网络路径"
+
+#: crates/fs/src/network.rs
+msgid "Network shares are only available on Windows"
+msgstr "网络共享仅在 Windows 上可用"
+
+#: crates/app/src/fileops.rs
+#: crates/app/ui/main.slint
+#: crates/core/src/commands.rs
+#: crates/ops/src/names.rs
+msgid "New folder"
+msgstr "新建文件夹"
+
+#: crates/app/ui/main.slint
+#: crates/core/src/commands.rs
+msgid "New tab"
+msgstr "新建标签页"
+
+#: crates/app/src/fileops.rs
+msgid "New: {0} (from {1})"
+msgstr "新：{0}（来自 {1}）"
+
+#: crates/core/src/commands.rs
+msgid "Next tab"
+msgstr "下一个标签页"
+
+#: crates/integrate/src/lib.rs
+msgid "No Windows integration active – nothing to do."
+msgstr "没有活动的 Windows 集成，无需操作。"
+
+#: crates/integrate/src/lib.rs
+msgid "No Windows integration active."
+msgstr "没有活动的 Windows 集成。"
+
+#: crates/integrate/src/bin/explorer2-recover.rs
+msgid "No console to ask – start it with --quiet."
+msgstr "没有控制台可询问，请使用 --quiet 启动。"
+
+#: crates/integrate/src/bin/explorer2-recover.rs
+msgid "No console to ask – start it with --yes."
+msgstr "没有控制台可询问，请使用 --yes 启动。"
+
+#: crates/app/src/nav.rs
+msgid "No results"
+msgstr "无结果"
+
+#: crates/fs/src/lib.rs
+#: crates/shell/src/win_menu.rs
+msgid "Not a folder"
+msgstr "不是文件夹"
+
+#: crates/app/src/palette.rs
+msgid "Not available here"
+msgstr "此处不可用"
+
+#: crates/app/src/fileops.rs
+msgid "Not available here ({0})."
+msgstr "此处不可用（{0}）。"
+
+#: crates/ops/src/exec.rs
+msgid "Not enough disk space"
+msgstr "磁盘空间不足"
+
+#: crates/ops/src/exec.rs
+#: crates/ops/src/simple.rs
+msgid "Not found"
+msgstr "未找到"
+
+#: crates/ops/src/undo.rs
+msgid "Not found in the Recycle Bin: {0}"
+msgstr "在回收站中未找到：{0}"
+
+#: crates/app/src/installer.rs
+msgid "Not installed – running from {0}. Installing copies Explorer 2.0 to {1} (no administrator rights needed) and adds it to the Start menu."
+msgstr "未安装 – 从 {0} 运行。安装会把 Explorer 2.0 复制到 {1}（不需要管理员权限）并加入开始菜单。"
+
+#: crates/app/src/inspector.rs
+msgid "Not readable"
+msgstr "无法读取"
+
+#: crates/app/src/quick.rs
+#: crates/app/ui/main.slint
+msgid "Nothing found"
+msgstr "未找到任何内容"
+
+#: crates/app/ui/main.slint
+msgid "OK"
+msgstr "确定"
+
+#: crates/app/ui/main.slint
+msgid "One view"
+msgstr "一个视图"
+
+#: crates/app/src/fileops.rs
+#: crates/core/src/commands.rs
+msgid "Open"
+msgstr "打开"
+
+#: crates/core/src/commands.rs
+msgid "Open Libraries"
+msgstr "打开库"
+
+#: crates/core/src/commands.rs
+msgid "Open Recycle Bin"
+msgstr "打开回收站"
+
+#: crates/core/src/commands.rs
+msgid "Open This PC"
+msgstr "打开此电脑"
+
+#: crates/app/ui/main.slint
+msgid "Open folders in the running window (as a new tab)"
+msgstr "在正在运行的窗口中打开文件夹（作为新标签页）"
+
+#: crates/integrate/src/features.rs
+msgid "Open folders with Explorer 2.0"
+msgstr "使用 Explorer 2.0 打开文件夹"
+
+#: crates/app/ui/main.slint
+msgid "Open folders with Explorer 2.0 (double-click, “Open folder”)"
+msgstr "使用 Explorer 2.0 打开文件夹（双击，“打开文件夹”）"
+
+#: crates/app/src/fileops.rs
+msgid "Operation cancelled."
+msgstr "操作已取消。"
+
+#: crates/core/src/places.rs
+msgid "Original location"
+msgstr "原始位置"
+
+#: crates/app/src/fileops.rs
+#: crates/app/ui/main.slint
+#: crates/core/src/commands.rs
+msgid "Paste"
+msgstr "粘贴"
+
+#: crates/app/src/inspector.rs
+msgid "Path"
+msgstr "路径"
+
+#: crates/app/ui/main.slint
+msgid "Pause"
+msgstr "暂停"
+
+#: crates/app/src/fileops.rs
+msgid "Paused"
+msgstr "已暂停"
+
+#: crates/app/src/fileops.rs
+msgid ""
+"Permanently delete the {n} item in the Recycle Bin?\n"
+"This can't be undone."
+msgid_plural ""
+"Permanently delete all {n} items in the Recycle Bin?\n"
+"This can't be undone."
+msgstr[0] ""
+"永久删除回收站中的 {n} 个项目？\n"
+"此操作无法撤销。"
+
+#: crates/fs/src/places.rs
+msgid "Pictures"
+msgstr "图片"
+
+#: crates/core/src/commands.rs
+msgid "Previous tab"
+msgstr "上一个标签页"
+
+#: crates/app/src/installer.rs
+msgid "Program folder cannot be determined"
+msgstr "无法确定程序文件夹"
+
+#: crates/integrate/src/bin/explorer2-recover.rs
+msgid "Program folder not removed ({0}) – is Explorer 2.0 still open? Folder: {1}"
+msgstr "未删除程序文件夹（{0}）。Explorer 2.0 是否仍在运行？文件夹：{1}"
+
+#: crates/app/src/fileops.rs
+#: crates/core/src/commands.rs
+msgid "Properties"
+msgstr "属性"
+
+#: crates/shell/src/win_menu.rs
+msgid "Properties not available: {0}"
+msgstr "属性不可用：{0}"
+
+#: crates/app/ui/main.slint
+msgid "Quick access"
+msgstr "快速访问"
+
+#: crates/core/src/commands.rs
+msgid "Re-sync search index with disk"
+msgstr "重新将搜索索引与磁盘同步"
+
+#: crates/app/ui/main.slint
+msgid "Re-sync with disk"
+msgstr "与磁盘重新同步"
+
+#: crates/core/src/inspect.rs
+msgid "Read-only"
+msgstr "只读"
+
+#: crates/core/src/places.rs
+msgid "Recycle Bin"
+msgstr "回收站"
+
+#: crates/ops/src/undo.rs
+msgid "Recycle Bin not available"
+msgstr "回收站不可用"
+
+#: crates/ops/src/trashview.rs
+#: crates/ops/src/undo.rs
+msgid "Recycle Bin not readable: {0}"
+msgstr "无法读取回收站：{0}"
+
+#: crates/ops/src/exec.rs
+msgid "Recycle Bin: {0}"
+msgstr "回收站：{0}"
+
+#: crates/app/ui/main.slint
+#: crates/core/src/commands.rs
+msgid "Redo"
+msgstr "重做"
+
+#: crates/app/src/fileops.rs
+msgid "Redo: {0}"
+msgstr "重做：{0}"
+
+#: crates/app/src/fileops.rs
+#: crates/core/src/commands.rs
+msgid "Refresh"
+msgstr "刷新"
+
+#: crates/integrate/src/bin/explorer2-recover.rs
+msgid "Removing the program folder …"
+msgstr "正在删除程序文件夹…"
+
+#: crates/app/src/fileops.rs
+#: crates/app/ui/main.slint
+#: crates/core/src/commands.rs
+msgid "Rename"
+msgstr "重命名"
+
+#: crates/app/ui/main.slint
+msgid "Replace"
+msgstr "替换(R)"
+
+#: crates/app/src/fileops.rs
+msgid "Reset"
+msgstr "重置"
+
+#: crates/app/ui/main.slint
+#: crates/core/src/commands.rs
+msgid "Reset all Windows integrations"
+msgstr "重置所有 Windows 集成"
+
+#: crates/integrate/src/bin/explorer2-recover.rs
+msgid "Reset everything to the Windows default now?"
+msgstr "立即将一切重置为 Windows 默认设置？"
+
+#: crates/app/src/integration.rs
+msgid "Reset incomplete: {0}"
+msgstr "重置未完成：{0}"
+
+#: crates/app/ui/main.slint
+msgid "Restore"
+msgstr "还原"
+
+#: crates/ops/src/trashview.rs
+#: crates/ops/src/undo.rs
+msgid "Restore failed: {0}"
+msgstr "还原失败：{0}"
+
+#: crates/core/src/commands.rs
+msgid "Restore from the Recycle Bin"
+msgstr "从回收站还原"
+
+#: crates/app/ui/main.slint
+msgid "Resume"
+msgstr "继续"
+
+#: crates/core/src/guard.rs
+msgid "Safe start: the last {0} starts were aborted, so Explorer 2.0 uses software rendering and does not restore the session. If it runs stably, the next start is normal again."
+msgstr "安全启动：最近 {0} 次启动被中止，因此 Explorer 2.0 使用软件渲染，并且不还原会话。如果运行稳定，下次启动将恢复正常。"
+
+#: crates/app/ui/main.slint
+msgid "Search"
+msgstr "搜索"
+
+#: crates/core/src/commands.rs
+msgid "Search (in the current folder)"
+msgstr "搜索（在当前文件夹中）"
+
+#: crates/app/src/nav.rs
+#: crates/core/src/commands.rs
+msgid "Search all drives"
+msgstr "搜索所有驱动器"
+
+#: crates/app/ui/main.slint
+msgid "Search all drives …"
+msgstr "搜索所有驱动器…"
+
+#: crates/app/ui/main.slint
+msgid "Search commands …   (type > for places)"
+msgstr "搜索命令…   （输入 > 跳转到位置）"
+
+#: crates/app/src/search.rs
+msgid "Search index off (EXPLORER2_INDEX=off)."
+msgstr "搜索索引已关闭（EXPLORER2_INDEX=off）。"
+
+#: crates/app/src/search.rs
+msgid "Search index off: searches only go through the current folder."
+msgstr "搜索索引已关闭：只搜索当前文件夹。"
+
+#: crates/app/src/search.rs
+msgid "Search index restarting …"
+msgstr "正在重启搜索索引…"
+
+#: crates/app/src/search.rs
+msgid "Search index starting shortly …"
+msgstr "搜索索引即将启动…"
+
+#: crates/app/src/search.rs
+msgid "Search index starting …"
+msgstr "正在启动搜索索引…"
+
+#: crates/app/src/search.rs
+msgid "Search index: no folder for the index files."
+msgstr "搜索索引：没有存放索引文件的文件夹。"
+
+#: crates/app/src/nav.rs
+msgid "Search {0}"
+msgstr "在 {0} 中搜索"
+
+#: crates/app/src/nav.rs
+msgid "Search “{0}”"
+msgstr "搜索“{0}”"
+
+#: crates/app/src/nav.rs
+#: crates/app/src/search.rs
+msgid "Search: {0}"
+msgstr "搜索：{0}"
+
+#: crates/core/src/commands.rs
+msgid "Select all"
+msgstr "全选"
+
+#: crates/app/ui/main.slint
+#: crates/core/src/commands.rs
+msgid "Settings"
+msgstr "设置"
+
+#: crates/app/src/config.rs
+msgid "Settings not saved: {0}"
+msgstr "设置未保存：{0}"
+
+#: crates/app/src/nav.rs
+msgid "Shared folder"
+msgstr "共享文件夹"
+
+#: crates/core/src/commands.rs
+msgid "Shift+Del"
+msgstr "Shift+Del"
+
+#: crates/core/src/commands.rs
+msgid "Shift+F10"
+msgstr "Shift+F10"
+
+#: crates/core/src/inspect.rs
+msgid "Shortcut or link"
+msgstr "快捷方式或链接"
+
+#: crates/app/ui/main.slint
+msgid "Show file name extensions"
+msgstr "显示文件扩展名"
+
+#: crates/app/ui/main.slint
+msgid "Show hidden items"
+msgstr "显示隐藏的项目"
+
+#: crates/app/src/fileops.rs
+msgid "Show more options"
+msgstr "显示更多选项"
+
+#: crates/app/ui/main.slint
+msgid "Show protected operating system files"
+msgstr "显示受保护的操作系统文件"
+
+#: crates/app/ui/main.slint
+msgid "Show report"
+msgstr "显示报告"
+
+#: crates/fs/src/network.rs
+msgid "Sign-in cancelled"
+msgstr "已取消登录"
+
+#: crates/fs/src/lib.rs
+#: crates/fs/src/network.rs
+msgid "Sign-in required"
+msgstr "需要登录"
+
+#: crates/fs/src/network.rs
+msgid "Signing in is only available on Windows"
+msgstr "登录仅在 Windows 上可用"
+
+#: crates/app/ui/main.slint
+msgid "Single-click to open an item (point to select)"
+msgstr "单击打开（指向即选中）"
+
+#: crates/app/src/inspector.rs
+#: crates/app/ui/main.slint
+msgid "Size"
+msgstr "大小"
+
+#: crates/app/src/inspector.rs
+msgid "Size of files"
+msgstr "文件大小"
+
+#: crates/app/ui/main.slint
+msgid "Skip"
+msgstr "跳过(S)"
+
+#: crates/core/src/renderer.rs
+msgid "Software rendering"
+msgstr "软件渲染"
+
+#: crates/app/ui/main.slint
+msgid "Sort"
+msgstr "排序"
+
+#: crates/core/src/commands.rs
+msgid "Sort ascending"
+msgstr "递增排序"
+
+#: crates/core/src/commands.rs
+msgid "Sort by date modified"
+msgstr "按修改日期排序"
+
+#: crates/core/src/commands.rs
+msgid "Sort by name"
+msgstr "按名称排序"
+
+#: crates/core/src/commands.rs
+msgid "Sort by size"
+msgstr "按大小排序"
+
+#: crates/core/src/commands.rs
+msgid "Sort by type"
+msgstr "按类型排序"
+
+#: crates/core/src/commands.rs
+msgid "Sort descending"
+msgstr "递减排序"
+
+#: crates/integrate/src/bin/explorer2-recover.rs
+msgid "State: {0}"
+msgstr "状态：{0}"
+
+#: crates/core/src/places.rs
+msgid "Storage"
+msgstr "存储"
+
+#: crates/core/src/commands.rs
+msgid "Switch to the other view"
+msgstr "切换到另一个视图"
+
+#: crates/core/src/inspect.rs
+msgid "System"
+msgstr "系统"
+
+#: crates/app/ui/main.slint
+msgid "System default"
+msgstr "系统默认"
+
+#: crates/app/src/lang.rs
+msgid "System default ({0})"
+msgstr "系统默认（{0}）"
+
+#: crates/core/src/renderer.rs
+msgid "System default renderer"
+msgstr "系统默认渲染器"
+
+#: crates/core/src/lib.rs
+msgid "TB"
+msgstr "TB"
+
+#: crates/app/ui/main.slint
+msgid "Takes effect the next time the app starts."
+msgstr "下次启动应用时生效。"
+
+#: crates/setup/src/main.rs
+msgid "Temp folder {0}: {1}"
+msgstr "临时文件夹 {0}：{1}"
+
+#: crates/app/src/fileops.rs
+msgid "The Recycle Bin is empty."
+msgstr "回收站是空的。"
+
+#: crates/shell/src/menu.rs
+msgid "The context menu is only available on Windows."
+msgstr "快捷菜单仅在 Windows 上可用。"
+
+#: crates/app/src/fileops.rs
+msgid "The destination already has a folder named “{0}”."
+msgstr "目标位置已有名为“{0}”的文件夹。"
+
+#: crates/app/src/fileops.rs
+msgid "The destination already has an item named “{0}”."
+msgstr "目标位置已有名为“{0}”的项目。"
+
+#: crates/ops/src/exec.rs
+msgid "The destination folder is a subfolder of the source folder."
+msgstr "目标文件夹是源文件夹的子文件夹。"
+
+#: crates/ops/src/exec.rs
+msgid "The file is being used by another process"
+msgstr "文件正被另一个进程使用"
+
+#: crates/app/src/nav.rs
+msgid "The folder no longer exists: {0}"
+msgstr "文件夹已不存在：{0}"
+
+#: crates/ops/src/names.rs
+msgid "The name can't be empty."
+msgstr "名称不能为空。"
+
+#: crates/ops/src/names.rs
+msgid "The name can't end with a period or a space."
+msgstr "名称不能以句点或空格结尾。"
+
+#: crates/ops/src/names.rs
+msgid "The name contains an invalid character."
+msgstr "名称包含无效字符。"
+
+#: crates/ops/src/names.rs
+msgid "The name is too long (at most 255 characters)."
+msgstr "名称过长（最多 255 个字符）。"
+
+#: crates/app/src/search.rs
+msgid "The search index could not start."
+msgstr "搜索索引无法启动。"
+
+#: crates/app/src/quick.rs
+msgid "The search index is being prepared …"
+msgstr "正在准备搜索索引…"
+
+#: crates/app/src/search.rs
+msgid "The search index is kept by another Explorer 2.0 window."
+msgstr "搜索索引由另一个 Explorer 2.0 窗口维护。"
+
+#: crates/app/src/search.rs
+msgid "The search index is not running yet."
+msgstr "搜索索引尚未运行。"
+
+#: crates/app/src/quick.rs
+msgid "The search index is off (Settings → Search)."
+msgstr "搜索索引已关闭（设置 → 搜索）。"
+
+#: crates/app/ui/main.slint
+msgid "The view is remembered per folder."
+msgstr "每个文件夹都会记住视图。"
+
+#: crates/ops/src/simple.rs
+msgid "There is already an item named “{0}”."
+msgstr "已存在名为“{0}”的项目。"
+
+#: crates/app/ui/main.slint
+#: crates/core/src/places.rs
+msgid "This PC"
+msgstr "此电脑"
+
+#: crates/app/src/nav.rs
+msgid "This location doesn't exist on this system: {0}"
+msgstr "此系统上不存在该位置：{0}"
+
+#: crates/setup/src/main.rs
+msgid "This setup was built without the program files."
+msgstr "此安装程序在生成时未包含程序文件。"
+
+#: crates/core/src/commands.rs
+msgid "Toggle details pane"
+msgstr "显示或隐藏详细信息窗格"
+
+#: crates/core/src/commands.rs
+msgid "Toggle file name extensions"
+msgstr "显示或隐藏文件扩展名"
+
+#: crates/core/src/commands.rs
+msgid "Toggle hidden items"
+msgstr "显示或隐藏隐藏的项目"
+
+#: crates/core/src/commands.rs
+msgid "Toggle search index"
+msgstr "打开或关闭搜索索引"
+
+#: crates/core/src/commands.rs
+msgid "Toggle two views"
+msgstr "打开或关闭两个视图"
+
+#: crates/core/src/commands.rs
+msgid "Toggle: Win+E opens Explorer 2.0"
+msgstr "切换：Win+E 打开 Explorer 2.0"
+
+#: crates/core/src/commands.rs
+msgid "Toggle: open folders in the running window (new tab)"
+msgstr "切换：在正在运行的窗口中打开文件夹（新标签页）"
+
+#: crates/core/src/commands.rs
+msgid "Toggle: open folders with Explorer 2.0"
+msgstr "切换：使用 Explorer 2.0 打开文件夹"
+
+#: crates/core/src/commands.rs
+msgid "Toggle: “Open in Explorer 2.0” in the context menu"
+msgstr "切换：快捷菜单中的“在 Explorer 2.0 中打开”"
+
+#: crates/app/src/inspector.rs
+msgid "Total"
+msgstr "总计"
+
+#: crates/app/src/inspector.rs
+msgid "Total size"
+msgstr "总大小"
+
+#: crates/app/ui/main.slint
+msgid "Two views"
+msgstr "两个视图"
+
+#: crates/app/src/nav.rs
+#: crates/app/ui/main.slint
+msgid "Type"
+msgstr "类型"
+
+#: crates/app/src/quick.rs
+msgid "Type to search all drives"
+msgstr "搜索所有驱动器"
+
+#: crates/fs/src/places.rs
+msgid "USB Drive"
+msgstr "USB 驱动器"
+
+#: crates/app/ui/main.slint
+#: crates/core/src/commands.rs
+msgid "Undo"
+msgstr "撤消"
+
+#: crates/app/src/fileops.rs
+msgid "Undo: {0}"
+msgstr "撤消：{0}"
+
+#: crates/integrate/src/bin/explorer2-recover.rs
+msgid "Uninstall Explorer 2.0 and reset all Windows integrations?"
+msgstr "卸载 Explorer 2.0 并重置所有 Windows 集成？"
+
+#: crates/app/src/nav.rs
+msgid "Unknown shell location: shell:{0}"
+msgstr "未知的 shell 位置：shell:{0}"
+
+#: crates/app/ui/main.slint
+msgid "Up"
+msgstr "向上"
+
+#: crates/app/src/installer.rs
+msgid "Update the installation with this copy"
+msgstr "用此副本更新安装"
+
+#: crates/app/ui/main.slint
+msgid "Use hardware acceleration when available"
+msgstr "可用时使用硬件加速"
+
+#: crates/app/ui/main.slint
+msgid "Use the Windows accent color"
+msgstr "使用 Windows 主题色"
+
+#: crates/app/ui/main.slint
+#: crates/core/src/commands.rs
+msgid "Use the current view for all folders"
+msgstr "对所有文件夹使用当前视图"
+
+#: crates/fs/src/places.rs
+msgid "Videos"
+msgstr "视频"
+
+#: crates/app/src/nav.rs
+msgid "View not saved: {0}"
+msgstr "视图未保存：{0}"
+
+#: crates/core/src/commands.rs
+msgid "View: Details"
+msgstr "视图：详细信息"
+
+#: crates/core/src/commands.rs
+msgid "View: Extra large icons"
+msgstr "视图：超大图标"
+
+#: crates/core/src/commands.rs
+msgid "View: Large icons"
+msgstr "视图：大图标"
+
+#: crates/core/src/commands.rs
+msgid "View: Medium icons"
+msgstr "视图：中等图标"
+
+#: crates/app/ui/main.slint
+#: crates/integrate/src/features.rs
+msgid "Win+E opens Explorer 2.0"
+msgstr "Win+E 打开 Explorer 2.0"
+
+#: crates/integrate/src/lib.rs
+msgid "Windows default restored: {0} values/files, {1} keys removed{2}."
+msgstr "已还原 Windows 默认设置：{0} 个值/文件，删除了 {1} 个项{2}。"
+
+#: crates/app/ui/main.slint
+msgid "Windows integration"
+msgstr "Windows 集成"
+
+#: crates/app/src/integration.rs
+msgid "Windows integration is only available on Windows."
+msgstr "Windows 集成仅在 Windows 上可用。"
+
+#: crates/app/src/quick.rs
+msgid "Without the search index there is nothing to find here (Settings → Search)."
+msgstr "没有搜索索引，这里找不到任何内容（设置 → 搜索）。"
+
+#: crates/integrate/src/bin/explorer2-recover.rs
+msgid "[y/N]"
+msgstr "[y/N]"
+
+#: crates/ops/src/names.rs
+msgid "control characters"
+msgstr "控制字符"
+
+#: crates/app/src/inspector.rs
+msgid "counting …"
+msgstr "正在计数…"
+
+#: crates/index/src/query.rs
+msgid "date not understood: {0}"
+msgstr "无法识别的日期：{0}"
+
+#: crates/core/src/renderer.rs
+msgid "disabled in the settings"
+msgstr "已在设置中禁用"
+
+#: crates/core/src/inspect.rs
+msgid "empty"
+msgstr "空"
+
+#: crates/core/src/renderer.rs
+msgid "forced by EXPLORER2_RENDERER"
+msgstr "由 EXPLORER2_RENDERER 强制指定"
+
+#: crates/index/src/persist.rs
+msgid "index belongs to another drive ({0})"
+msgstr "索引属于另一个驱动器（{0}）"
+
+#: crates/search/src/service.rs
+msgid "index belongs to another folder"
+msgstr "索引属于另一个文件夹"
+
+#: crates/index/src/persist.rs
+msgid "index damaged: {0}"
+msgstr "索引已损坏：{0}"
+
+#: crates/index/src/persist.rs
+msgid "index from another version ({0})"
+msgstr "索引来自另一个版本（{0}）"
+
+#: crates/index/src/persist.rs
+msgid "index not readable: {0}"
+msgstr "无法读取索引：{0}"
+
+#: crates/search/src/watch.rs
+msgid "input/output error: {0}"
+msgstr "输入/输出错误：{0}"
+
+#: crates/index/src/query.rs
+msgid "invalid regular expression: {0}"
+msgstr "正则表达式无效：{0}"
+
+#: crates/core/src/renderer.rs
+msgid "no GPU check on this system"
+msgstr "此系统上不检查 GPU"
+
+#: crates/app/src/config.rs
+msgid "no configuration folder"
+msgstr "没有配置文件夹"
+
+#: crates/index/src/persist.rs
+msgid "no saved index"
+msgstr "没有已保存的索引"
+
+#: crates/core/src/renderer.rs
+msgid "no suitable GPU found"
+msgstr "未找到合适的 GPU"
+
+#: crates/core/src/renderer.rs
+msgid "safe start after aborted starts"
+msgstr "中止启动后的安全启动"
+
+#: crates/app/src/quick.rs
+msgid "searched recently"
+msgstr "最近搜索"
+
+#: crates/core/src/renderer.rs
+msgid "set by SLINT_BACKEND"
+msgstr "由 SLINT_BACKEND 设置"
+
+#: crates/index/src/query.rs
+msgid "size not understood: {0}"
+msgstr "无法识别的大小：{0}"
+
+#: crates/core/src/renderer.rs
+msgid "suitable GPU found"
+msgstr "已找到合适的 GPU"
+
+#: crates/search/src/watch.rs
+msgid "too many changes at once"
+msgstr "一次更改太多"
+
+#: crates/search/src/watch.rs
+msgid "too many folders for the Linux watcher (raise fs.inotify.max_user_watches)"
+msgstr "文件夹过多，超出 Linux 监视器限制（请提高 fs.inotify.max_user_watches）"
+
+#: crates/app/src/search.rs
+msgid "unknown"
+msgstr "未知"
+
+#: crates/integrate/src/bin/explorer2-recover.rs
+msgid "yes"
+msgstr "是"
+
+#: crates/app/src/integration.rs
+msgid ""
+"{0}\n"
+"\n"
+"Afterwards Explorer 2.0 continues from the installation folder (this window closes)."
+msgstr ""
+"{0}\n"
+"\n"
+"之后 Explorer 2.0 从安装文件夹继续运行（此窗口将关闭）。"
+
+#: crates/setup/src/main.rs
+msgid ""
+"{0}\n"
+"\n"
+"Target: {1}\n"
+"\n"
+"No administrator rights needed; a Start menu entry and an “Apps & Features” entry are created. Windows integrations (open folders, Win+E) can be switched on afterwards in the settings – undoable at any time with one button."
+msgstr ""
+"{0}\n"
+"\n"
+"目标：{1}\n"
+"\n"
+"不需要管理员权限；将创建开始菜单项和“应用和功能”项。之后可在设置中打开 Windows 集成（打开文件夹、Win+E），随时可用一个按钮撤销。"
+
+#: crates/integrate/src/lib.rs
+msgid "{0} (not empty)"
+msgstr "{0}（非空）"
+
+#: crates/app/src/inspector.rs
+msgid "{0} ({1} bytes)"
+msgstr "{0}（{1} 字节）"
+
+#: crates/ops/src/names.rs
+msgid "{0} - Copy ({1}){2}"
+msgstr "{0} - 副本 ({1}){2}"
+
+#: crates/ops/src/names.rs
+msgid "{0} - Copy{1}"
+msgstr "{0} - 副本{1}"
+
+#: crates/core/src/guard.rs
+msgid "{0} A report is in the “crash” folder."
+msgstr "{0} 报告位于“crash”文件夹中。"
+
+#: crates/setup/src/main.rs
+msgid "{0} cannot be started: {1}"
+msgstr "无法启动 {0}：{1}"
+
+#: crates/integrate/src/lib.rs
+msgid "{0} changed by other software – left unchanged."
+msgstr "{0} 已被其他软件更改，保持不变。"
+
+#: crates/integrate/src/install.rs
+msgid "{0} contains foreign files – not deleted"
+msgstr "{0} 含有外来文件，未删除"
+
+#: crates/integrate/src/lib.rs
+msgid "{0} errors: {1}"
+msgstr "{0} 个错误：{1}"
+
+#: crates/core/src/inspect.rs
+msgid "{0} file"
+msgid_plural "{0} files"
+msgstr[0] "{0} 个文件"
+
+#: crates/app/src/nav.rs
+#: crates/core/src/inspect.rs
+msgid "{0} folder"
+msgid_plural "{0} folders"
+msgstr[0] "{0} 个文件夹"
+
+#: crates/app/src/inspector.rs
+msgid "{0} folder (not counted)"
+msgid_plural "{0} folders (not counted)"
+msgstr[0] "{0} 个文件夹（未计数）"
+
+#: crates/core/src/lib.rs
+msgid "{0} free of {1}"
+msgstr "{0} 可用，共 {1}"
+
+#: crates/app/src/fileops.rs
+msgid "{0} h {1} min left"
+msgstr "剩余 {0} 小时 {1} 分钟"
+
+#: crates/app/src/nav.rs
+msgid "{0} item"
+msgid_plural "{0} items"
+msgstr[0] "{0} 个项目"
+
+#: crates/app/src/inspector.rs
+#: crates/app/src/nav.rs
+msgid "{0} item selected"
+msgid_plural "{0} items selected"
+msgstr[0] "已选择 {0} 个项目"
+
+#: crates/app/src/fileops.rs
+msgid "{0} min left"
+msgstr "剩余 {0} 分钟"
+
+#: crates/app/src/fileops.rs
+msgid "{0} of {1}"
+msgstr "{0} / {1}"
+
+#: crates/app/src/quick.rs
+msgid "{0} of {1} result · Enter opens · Ctrl+Enter shows it in its folder"
+msgid_plural "{0} of {1} results · Enter opens · Ctrl+Enter shows it in its folder"
+msgstr[0] "{0} / {1} 个结果 · Enter 打开 · Ctrl+Enter 在其所在文件夹中显示"
+
+#: crates/app/src/nav.rs
+msgid "{0} of {1} result – refine the search"
+msgid_plural "{0} of {1} results – refine the search"
+msgstr[0] "{0} / {1} 个结果，请缩小搜索范围"
+
+#: crates/app/src/fileops.rs
+msgid "{0} of {n} item"
+msgid_plural "{0} of {n} items"
+msgstr[0] "{n} 个中的 {0} 个"
+
+#: crates/app/src/nav.rs
+msgid "{0} result"
+msgid_plural "{0} results"
+msgstr[0] "{0} 个结果"
+
+#: crates/app/src/quick.rs
+msgid "{0} result · Enter opens · Ctrl+Enter shows it in its folder"
+msgid_plural "{0} results · Enter opens · Ctrl+Enter shows it in its folder"
+msgstr[0] "{0} 个结果 · Enter 打开 · Ctrl+Enter 在其所在文件夹中显示"
+
+#: crates/app/src/fileops.rs
+msgid "{0} s left"
+msgstr "剩余 {0} 秒"
+
+#: crates/app/src/quick.rs
+msgid "{0} · Enter picks an earlier search"
+msgstr "{0} · Enter 选用更早的搜索"
+
+#: crates/app/src/inspector.rs
+msgid "{0} × {1} pixels"
+msgstr "{0} × {1} 像素"
+
+#: crates/app/src/integration.rs
+msgid "{0} – off, the Windows default is active again."
+msgstr "{0}：已关闭，Windows 默认设置再次生效。"
+
+#: crates/app/src/integration.rs
+msgid "{0} – on. Please don't move Explorer 2.0 (reset first if you need to).{1}"
+msgstr "{0}：已打开。请不要移动 Explorer 2.0（如需移动，请先重置）。{1}"
+
+#: crates/app/src/quick.rs
+msgid "{0}, {1} entry"
+msgid_plural "{0}, {1} entries"
+msgstr[0] "{0}，{1} 项"
+
+#: crates/app/src/search.rs
+msgid "{0}: building … {1} entry"
+msgid_plural "{0}: building … {1} entries"
+msgstr[0] "{0}：正在建立… {1} 项"
+
+#: crates/app/src/search.rs
+msgid "{0}: loading …"
+msgstr "{0}：正在加载…"
+
+#: crates/app/src/search.rs
+msgid "{0}: ready, {1} entry{2}"
+msgid_plural "{0}: ready, {1} entries{2}"
+msgstr[0] "{0}：就绪，{1} 项{2}"
+
+#: crates/app/src/search.rs
+msgid "{0}: stopped"
+msgstr "{0}：已停止"
+
+#: crates/app/src/search.rs
+msgid "{0}: {1} entry, re-syncing with the disk …"
+msgid_plural "{0}: {1} entries, re-syncing with the disk …"
+msgstr[0] "{0}：{1} 项，正在与磁盘重新同步…"
+
+#: crates/integrate/src/lib.rs
+msgid "{n} change in the journal"
+msgid_plural "{n} changes in the journal"
+msgstr[0] "日志中有 {n} 处更改"
+
+#: crates/app/src/quick.rs
+msgid "{n} drive"
+msgid_plural "{n} drives"
+msgstr[0] "{n} 个驱动器"
+
+#: crates/app/src/fileops.rs
+msgid "{n} item"
+msgid_plural "{n} items"
+msgstr[0] "{n} 个项目"
+
+#: crates/core/src/lib.rs
+msgid "{} File"
+msgstr "{} 文件"
+
+#: crates/ops/src/names.rs
+msgid "“.” and “..” are not allowed as a name."
+msgstr "“.”和“..”不能用作名称。"
+
+#: crates/app/ui/main.slint
+#: crates/integrate/src/features.rs
+msgid "“Open in Explorer 2.0” in the context menu"
+msgstr "快捷菜单中的“在 Explorer 2.0 中打开”"
+
+#: crates/app/src/fileops.rs
+#: crates/ops/src/names.rs
+msgid "“{0}”"
+msgstr "“{0}”"
+
+#: crates/ops/src/names.rs
+msgid "“{0}” is a reserved device name on Windows."
+msgstr "“{0}”是 Windows 上的保留设备名。"

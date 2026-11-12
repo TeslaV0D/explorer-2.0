@@ -1,6 +1,6 @@
 # Plan: localisation (i18n)
 
-As of 2026-11-10 · Boss: “mach die Lokalisation weiter” · decisions in D-029 (supersedes D-007) · **L0 ✅ (CI #141), L1 ✅ (CI #144), L2 ✅ (CI #146), L3 ✅ (CI #147), L4 ✅ (CI #149), L5 ✅ (CI #152), L6: es ✅ (CI #153), fr ✅ (CI #154), ru ✅ (CI #157), uk ✅ (CI #157), pl ✅ (CI #157), it ✅**, next zh.
+As of 2026-11-12 · Boss: “mach die Lokalisation weiter” · decisions in D-029 (supersedes D-007) · **L0 ✅ (CI #141), L1 ✅ (CI #144), L2 ✅ (CI #146), L3 ✅ (CI #147), L4 ✅ (CI #149), L5 ✅ (CI #152), L6 ✅: es (CI #153), fr (CI #154), ru/uk/pl (CI #157), it, zh, ja**. All ten languages are complete and offered. Native-speaker review of the galleries stays open.
 Wish list from 2026-11-08 (`docs/TODO.md`): exact meanings like Windows Explorer in each language, layout robustness, language switchable in the settings (default: Windows language), numbers/dates per locale, mind font coverage.
 
 ## 1. Current state (inventory)
@@ -17,7 +17,7 @@ Wish list from 2026-11-08 (`docs/TODO.md`): exact meanings like Windows Explorer
 - **Rust:** the same `.po` files, read at build time by a small `build.rs` step into a static table; `tr!("…")` / `tr_n!(n, "…", "…")` macro in a new tiny crate `explorer-i18n` (lookup by source string + optional context, current language in an atomic). No new runtime dependency. Rust-built texts (status line, models) are re-sent on a language switch (`sync_window` + model refresh).
 - **Extraction/check:** `slint-tr-extractor` for `.slint`, an own scanner for `tr!` in Rust → one `.pot`; CI test: every `.po` complete (no missing/fuzzy entry), placeholders `{0}`/`{n}` identical, no unused entries.
 - **Formatting:** `core::locale` (number grouping/decimal separator, date order, size units) chosen by language; plural rules per language from the `.po` header.
-- **Fonts:** no new font. Latin/Cyrillic/Greek are covered by Segoe UI; CJK would need Windows' own fonts (Yu Gothic/Microsoft YaHei, fallback cost at the first frame → measure in the first-start gate, gotcha from M6.1b).
+- **Fonts:** no font bundled in the exe. Latin/Cyrillic/Greek are covered by Segoe UI; zh/ja use Windows' own fonts (Microsoft YaHei / Yu Gothic). The Linux layout job installs `fonts-noto-cjk` so the overflow check sees real glyph widths. E2E stays on German, so that fallback is not on the default start path.
 - **Tests:** E2E pin German (`EXPLORER2_LANG=de`), so the existing 270 checks stay valid; new E2E per language: every screen of the gallery in every language + an **overflow check** (UI dump: no text box wider than its parent / clipped) + pseudo-localisation (`EXPLORER2_LANG=qps`: every text +40 % length with accents) to find layout breaks before real translations exist.
 
 ## 3. Stages
@@ -42,3 +42,4 @@ Wish list from 2026-11-08 (`docs/TODO.md`): exact meanings like Windows Explorer
 - **Tests:** if German stops being the source, any forgotten test that matches a text breaks → `EXPLORER2_LANG=de` everywhere in CI/E2E first (L0), then convert.
 - **Texts in traces:** traces stay English/neutral, never translated (tests rely on them).
 - **Placeholders:** `{0}` order differs between languages → Slint supports positional `{0}`/`{1}`; Rust `tr!` the same.
+- **CJK layout:** without a CJK font the Linux gallery measures missing glyphs and can miss an overflow. `e2e-linux` installs `fonts-noto-cjk` for that reason.

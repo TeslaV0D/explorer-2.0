@@ -2,18 +2,24 @@
 
 **As of:** 2026-11-07 · **Phase:** 1 · M0–M7 ✅ (M7.3 postponed) · R-001 ✅ · **M8.1/M8.2 installer ✅ (run #69)** · **M8.3 hardening ✅ (runs #70–#73)** · **Phase 2 search: S1.1 ✅ (run #78), S1.2 ✅ (run #80), S1.3 ✅ (run #83), S1.4 ✅ (run #90), S1.5 ✅ (runs #91/#93) → **S1 complete**, field test ✅ (Boss: “es funktioniert” – it works) · **Redesign: R0 ✅ (run #101), R1 ✅ (run #104), R2 ✅ (run #110), R3 ✅ (run #115), R4 ✅ (run #120), R5 ✅ (run #123), R6 ✅ (run #124), R7 ✅ (run #125), R8 ✅ (run #128), R9 ✅ (run #130), R10 ✅ (run #131) → **redesign complete**, next: field test by Boss (`docs/FIELD-TEST-REDESIGN.md`)** (`docs/PLAN-REDESIGN.md`)** (plan `docs/PLAN-SEARCH.md`) · **Branch:** `claude/eloquent-gauss-sd6qhp`
 
-The app UI is German; UI labels and messages are quoted as they appear (with a translation where it helps).
+The app follows the Windows language (D-029). UI labels are quoted as they appear.
 
 ## Documentation in English (2026-11-10, Boss: start brought forward from Thu 12.11.)
 - All documentation translated to English, content 1:1 (D-004): `docs/*.md`, `CLAUDE.md`, `THIRD-PARTY.md`, `scripts/release-notes.md` (the next GitHub release gets English notes), README completed with five screenshots from the Linux gallery (`docs/screenshots/`, taken from a neutral path `/home/explorer`).
 - Field-test checklists renamed: `PRAXISTEST-SUCHE.md` → `FIELD-TEST-SEARCH.md`, `PRAXISTEST-REDESIGN.md` → `FIELD-TEST-REDESIGN.md`.
 - No code change; CI ignores doc-only commits (`paths-ignore`).
 
+## Localisation L6 – Chinese (Simplified) and Japanese ✅ (2026-11-12)
+- **中文（简体） (zh-CN)** and **日本語 (ja-JP)** complete: all 435 texts. Glossaries **`docs/GLOSSARY-ZH.md`** and **`docs/GLOSSARY-JA.md`**. Offered as “中文（简体）” / “日本語”, palette commands `language-zh` / `language-ja`. One plural form each (`nplurals=1`: “{n} 个项目”, “{n} 個の項目” works for 0, 1 and 2). Access keys R/M/S/B/A, shown Windows-style as 替换(R) / 置き換え(R). Size units stay B/KB/MB/GB/TB; the spelled unit is “字节” / “バイト”. Numbers `1,234.5` (already the default separators, including `separators("ja")`). Key names stay Latin (Ctrl, Shift, Del, Enter).
+- Undo and Cancel differ: 撤消 / 取消, 元に戻す / キャンセル. This PC is 此电脑 / PC (Windows 11). Home is 个人文件夹 / 個人用フォルダー, not the Windows 11 start page.
+- Traditional Chinese (`zh-Hant`, `zh-TW`, `zh-HK`, `zh-MO`) stays unmapped, so it is not offered as Simplified.
+- The Linux layout job installs `fonts-noto-cjk`, so the zh/ja overflow check measures real glyph widths. Windows already has YaHei / Yu Gothic. E2E stays on German, so that font cost is not on the default start path.
+- **L6 is complete** (de, en, es, fr, ru, uk, pl, it, zh, ja). Native-speaker review of the galleries stays open. Still separate: R-001-safe relabel of the registry texts, and dates beyond the existing local timestamp.
+
 ## Localisation L6 – Italian ✅ (2026-11-12)
 - **Italiano (it-IT)** complete: all 433 texts with the Windows Explorer terms of Italian Windows (Cestino, Questo PC, Accesso rapido, Cartella di file, Data ultima modifica, Rinomina, Svuota Cestino …), informal “tu” in instructions and the infinitive in confirmation questions, like Windows; glossary **`docs/GLOSSARY-IT.md`**. Offered as “Italiano” and palette command “Language: Italiano”. Two plural forms (`n != 1`: “1 elemento”, “0 elementi”, “3 elementi”); “unità” stays the same in both forms. Quotes «…», access keys S/U/I/M/t. Size units stay B/KB/MB/GB/TB; the word is “byte”. Numbers `1.234,5` (already `separators("it")`).
 - Undo and Cancel are both “Annulla”, Redo is “Ripeti”, as in Italian Windows.
 - Local tests: i18n catalog (template, every complete language, compiled tables) and `conflict_keys_match_labels_and_differ` green. The gallery and layout gate run in CI for every language under `lang/`, including `it`. Native-speaker review open.
-- **Next language: Chinese (Simplified).**
 
 ## Localisation L6 – Polish ✅ (CI run #157, 2026-11-11)
 - **Polski (pl-PL)** complete: all 432 texts with the Windows Explorer terms of Polish Windows (Kosz, Ten komputer, Szybki dostęp, Folder plików, Data modyfikacji, Zmień nazwę …), informal “ty” like Windows; glossary **`docs/GLOSSARY-PL.md`**. Offered as “Polski” and palette command “Language: Polski”. Three plural forms with Polish rules (exactly 1 / 2–4 / the rest: “1 ukryty”, “3 170 bajtów”), quotes „…”, access keys Z/S/P/O/W. Layout check: every text fits on all 50 screens. Native-speaker review open.

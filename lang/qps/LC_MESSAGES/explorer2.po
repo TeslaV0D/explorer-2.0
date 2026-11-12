@@ -795,6 +795,14 @@ msgstr "[Łåñğüåğé: Русский·······]"
 msgid "Language: Українська"
 msgstr "[Łåñğüåğé: Українська········]"
 
+#: crates/core/src/commands.rs
+msgid "Language: 中文（简体）"
+msgstr "[Łåñğüåğé: 中文（简体）·······]"
+
+#: crates/core/src/commands.rs
+msgid "Language: 日本語"
+msgstr "[Łåñğüåğé: 日本語······]"
+
 #: crates/core/src/view.rs
 msgid "Large icons"
 msgstr "[Łåřğé îçöñš·····]"
