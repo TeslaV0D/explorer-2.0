@@ -106,14 +106,14 @@ pub const LANGS: &[Lang] = &[
         native: "中文（简体）",
         english: "Chinese (Simplified)",
         plural_forms: "nplurals=1; plural=0;",
-        complete: false,
+        complete: true,
     },
     Lang {
         code: "ja",
         native: "日本語",
         english: "Japanese",
         plural_forms: "nplurals=1; plural=0;",
-        complete: false,
+        complete: true,
     },
     // L5 layout test: generated from the English source (`pseudo`), never
     // offered, only via EXPLORER2_LANG=qps or `language = qps`

@@ -271,10 +271,12 @@ fn compiled_german_catalog_is_used() {
         translate_in("de", "not a catalog text"),
         "not a catalog text"
     );
+    assert_eq!(translate_in("ja", "Settings"), "設定");
+    assert_eq!(translate_in("zh", "Settings"), "设置");
     assert_eq!(
-        translate_in("ja", "Settings"),
-        "Settings",
-        "no catalog yet → English"
+        translate_in("qps", "not a catalog text"),
+        "not a catalog text",
+        "unknown source text stays English"
     );
 }
 
@@ -284,6 +286,7 @@ fn numbers_follow_the_language() {
     assert_eq!(separators("de"), ('.', ','));
     assert_eq!(separators("fr"), ('\u{a0}', ','));
     assert_eq!(separators("ja"), (',', '.'));
+    assert_eq!(separators("zh"), (',', '.'));
     // the formatting functions read the current language; this test binary
     // only ever uses English there (other tests run in parallel)
     assert_eq!(format_integer(0), "0");

@@ -4,7 +4,7 @@ A fast, modern, robust replacement for Windows Explorer on Windows 10/11 x64, wr
 
 ![Explorer 2.0 in the dark theme](docs/screenshots/dark-folder.png)
 
-> The interface follows the Windows language and can be switched live (German, English, Spanish, French, Italian, Polish, Russian, Ukrainian). The screenshots come from the Linux UI gallery (`scripts/gallery.sh`), so the font differs from Windows' Segoe UI, and file icons are placeholders there (Windows shows the real shell icons and thumbnails).
+> The interface follows the Windows language and can be switched live (German, English, Spanish, French, Italian, Polish, Russian, Ukrainian, Chinese (Simplified), Japanese). The screenshots come from the Linux UI gallery (`scripts/gallery.sh`), so the font differs from Windows' Segoe UI, and file icons are placeholders there (Windows shows the real shell icons and thumbnails).
 
 ## Features
 

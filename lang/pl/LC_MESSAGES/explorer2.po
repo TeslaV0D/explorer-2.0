@@ -803,6 +803,14 @@ msgstr "Język: Русский"
 msgid "Language: Українська"
 msgstr "Język: Українська"
 
+#: crates/core/src/commands.rs
+msgid "Language: 中文（简体）"
+msgstr "Język: 中文（简体）"
+
+#: crates/core/src/commands.rs
+msgid "Language: 日本語"
+msgstr "Język: 日本語"
+
 #: crates/core/src/view.rs
 msgid "Large icons"
 msgstr "Duże ikony"
