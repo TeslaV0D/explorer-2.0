@@ -39,6 +39,8 @@ fn main() {
     let quiet = std::env::args()
         .skip(1)
         .any(|a| matches!(a.as_str(), "--quiet" | "/quiet" | "/S" | "/s"));
+    // no settings file yet: the Windows language (or EXPLORER2_LANG)
+    explorer_i18n::init("");
     let code = run(quiet);
     std::process::exit(code);
 }
@@ -56,17 +58,23 @@ fn run(quiet: bool) -> i32 {
         1
     };
     let Some(files) = payload() else {
-        say("Dieses Setup wurde ohne Programmdateien gebaut.");
+        say(explorer_i18n::tr!(
+            "This setup was built without the program files."
+        ));
         if !quiet {
-            ui::error("Dieses Setup wurde ohne Programmdateien gebaut.");
+            ui::error(explorer_i18n::tr!(
+                "This setup was built without the program files."
+            ));
         }
         return 2;
     };
     let Some(paths) = InstallPaths::default_paths() else {
-        return fail("Installationsordner nicht bestimmbar (LOCALAPPDATA/APPDATA fehlen).");
+        return fail(explorer_i18n::tr!(
+            "Installation folder cannot be determined (LOCALAPPDATA/APPDATA missing)."
+        ));
     };
     if !quiet && !ui::confirm(&question(&paths)) {
-        say("Abgebrochen.");
+        say(explorer_i18n::tr!("Cancelled."));
         return EXIT_CANCELLED;
     }
 
@@ -75,21 +83,18 @@ fn run(quiet: bool) -> i32 {
     remove_dir(&tmp);
     match result {
         Ok(text) => say(&text),
-        Err(e) => return fail(&format!("Installation fehlgeschlagen: {e}")),
+        Err(e) => return fail(&explorer_i18n::tr!("Installation failed: {0}", e)),
     }
     if !quiet
-        && ui::ask(&format!(
-            "Explorer 2.0 {VERSION} ist installiert.\n\n\
-             Du findest es im Startmenü unter „Explorer 2.0“. Deinstallieren geht über \
-             „Einstellungen → Apps“ oder den Startmenü-Eintrag \
-             „Explorer 2.0 – Windows-Standard wiederherstellen“.\n\n\
-             Jetzt starten?"
+        && ui::ask(&explorer_i18n::tr!(
+            "Explorer 2.0 {0} is installed.\n\nYou'll find it in the Start menu under “Explorer 2.0”. To uninstall, use “Settings → Apps” or the Start menu entry “Explorer 2.0 – Windows-Standard wiederherstellen”.\n\nStart it now?",
+            VERSION
         ))
     {
         // `--new-instance`: an older copy that is still running must not get
         // the window (it would hand over to itself, D-023 update case)
         if let Err(e) = Command::new(paths.app()).arg("--new-instance").spawn() {
-            ui::error(&format!("Installiert, aber der Start schlug fehl: {e}"));
+            ui::error(&explorer_i18n::tr!("Installed, but starting failed: {0}", e));
         }
     }
     0
@@ -99,22 +104,23 @@ fn question(paths: &InstallPaths) -> String {
     let installed = explorer_integrate::system_registry()
         .is_some_and(|reg| install::is_installed(reg.as_ref(), paths));
     let what = if installed {
-        format!("Explorer 2.0 ist bereits installiert. Auf Version {VERSION} aktualisieren?")
+        explorer_i18n::tr!(
+            "Explorer 2.0 is already installed. Update to version {0}?",
+            VERSION
+        )
     } else {
-        format!("Explorer 2.0 {VERSION} für diesen Benutzer installieren?")
+        explorer_i18n::tr!("Install Explorer 2.0 {0} for this user?", VERSION)
     };
-    format!(
-        "{what}\n\n\
-         Ziel: {}\n\n\
-         Ohne Administratorrechte; Startmenü-Eintrag und „Apps & Features“ werden angelegt. \
-         Windows-Integrationen (Ordner öffnen, Win+E) schaltest du danach selbst in den \
-         Einstellungen ein – jederzeit mit einem Knopf rückgängig.",
+    explorer_i18n::tr!(
+        "{0}\n\nTarget: {1}\n\nNo administrator rights needed; a Start menu entry and an “Apps & Features” entry are created. Windows integrations (open folders, Win+E) can be switched on afterwards in the settings – undoable at any time with one button.",
+        what,
         paths.program_dir.display()
     )
 }
 
 fn unpack(dir: &Path, files: &[(&str, &[u8])]) -> Result<(), String> {
-    std::fs::create_dir_all(dir).map_err(|e| format!("Temp-Ordner {}: {e}", dir.display()))?;
+    std::fs::create_dir_all(dir)
+        .map_err(|e| explorer_i18n::tr!("Temp folder {0}: {1}", dir.display(), e))?;
     for (name, bytes) in files {
         let path = dir.join(name);
         std::fs::write(&path, bytes).map_err(|e| format!("{}: {e}", path.display()))?;
@@ -134,12 +140,12 @@ fn install_from(dir: &Path) -> Result<String, String> {
     let out = Command::new(&app)
         .args(["--install", "--quiet"])
         .output()
-        .map_err(|e| format!("{} nicht startbar: {e}", app.display()))?;
+        .map_err(|e| explorer_i18n::tr!("{0} cannot be started: {1}", app.display(), e))?;
     let text = String::from_utf8_lossy(&out.stdout).trim().to_string();
     if out.status.success() {
         Ok(text)
     } else if text.is_empty() {
-        Err(format!("Installer beendet mit {}", out.status))
+        Err(explorer_i18n::tr!("Installer ended with {0}", out.status))
     } else {
         Err(text)
     }

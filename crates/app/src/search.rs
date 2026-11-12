@@ -7,6 +7,7 @@
 //! drives), `EXPLORER2_INDEX_DELAY_MS` (default 3000).
 
 use crate::MainWindow;
+use explorer_i18n::{tr, tr_n};
 use explorer_search::{Origin, Phase, Search, Status, Volume};
 use slint::ComponentHandle;
 use std::cell::RefCell;
@@ -70,7 +71,7 @@ fn candidates() -> Vec<explorer_core::index_roots::Candidate> {
     if !cfg!(windows) {
         if let Some(h) = std::env::var_os("HOME") {
             out.push(Candidate {
-                label: format!("Persönlicher Ordner ({})", PathBuf::from(&h).display()),
+                label: tr!("Home ({0})", PathBuf::from(&h).display()),
                 path: PathBuf::from(h).to_string_lossy().into_owned(),
                 auto: true,
             });
@@ -79,11 +80,11 @@ fn candidates() -> Vec<explorer_core::index_roots::Candidate> {
     for d in explorer_fs::places::drives() {
         let extra = match d.kind {
             DriveKind::Fixed => "",
-            DriveKind::Removable => " – Wechseldatenträger",
-            DriveKind::Network => " – Netzlaufwerk",
+            DriveKind::Removable => tr!(" – removable drive"),
+            DriveKind::Network => tr!(" – network drive"),
             // a disc changes with every insert; not worth an index
             DriveKind::Optical => continue,
-            DriveKind::Other => " – sonstiges Laufwerk",
+            DriveKind::Other => tr!(" – other drive"),
         };
         let path = d.root.to_string_lossy().into_owned();
         if out.iter().any(|c: &Candidate| c.path == path) {
@@ -175,7 +176,7 @@ fn restart(win: &MainWindow) {
     }
     EPOCH.fetch_add(1, Ordering::SeqCst);
     let old = lock().take();
-    win.set_search_status("Suchindex startet neu …".into());
+    fixed(win, || tr!("Search index restarting …"));
     let weak = win.as_weak();
     let _ = std::thread::Builder::new()
         .name("index-restart".into())
@@ -248,14 +249,14 @@ pub fn init(win: &MainWindow, enabled: bool) {
     load_history();
     win.set_opt_index_enabled(enabled);
     if env_off() {
-        win.set_search_status("Suchindex aus (EXPLORER2_INDEX=off).".into());
+        fixed(win, || tr!("Search index off (EXPLORER2_INDEX=off)."));
         return;
     }
     if !enabled {
-        win.set_search_status(off_text().into());
+        fixed(win, off_text);
         return;
     }
-    win.set_search_status("Suchindex startet gleich …".into());
+    fixed(win, || tr!("Search index starting shortly …"));
     let delay = std::env::var("EXPLORER2_INDEX_DELAY_MS")
         .ok()
         .and_then(|v| v.parse().ok())
@@ -268,8 +269,29 @@ pub fn init(win: &MainWindow, enabled: bool) {
     });
 }
 
+thread_local! {
+    /// The status text while no drive reports (redone on a language switch).
+    static FIXED: std::cell::Cell<Option<fn() -> &'static str>> = const { std::cell::Cell::new(None) };
+}
+
+fn fixed(win: &MainWindow, text: fn() -> &'static str) {
+    FIXED.set(Some(text));
+    win.set_search_status(text().into());
+}
+
+/// Language switched (L4): the status text again.
+pub fn relabel(win: &MainWindow) {
+    match FIXED.get() {
+        Some(text) => win.set_search_status(text().into()),
+        None => update_ui(win),
+    }
+    if win.get_settings_open() {
+        refresh_drives(win);
+    }
+}
+
 fn off_text() -> &'static str {
-    "Suchindex aus: die Suche durchsucht dann nur den aktuellen Ordner."
+    tr!("Search index off: searches only go through the current folder.")
 }
 
 fn start(win: &MainWindow) {
@@ -278,7 +300,7 @@ fn start(win: &MainWindow) {
     LAST.with_borrow_mut(|m| m.clear());
     let settings = crate::config::load();
     let Some(dir) = crate::config::config_dir().map(|d| d.join("index")) else {
-        win.set_search_status("Suchindex: kein Ordner für die Indexdateien.".into());
+        fixed(win, || tr!("Search index: no folder for the index files."));
         return;
     };
     let exclusions =
@@ -293,10 +315,9 @@ fn start(win: &MainWindow) {
                 crate::nav::trace_line("search: index kept by another window");
                 let _ = slint::invoke_from_event_loop(move || {
                     if let Some(w) = weak.upgrade() {
-                        w.set_search_status(
-                            "Der Suchindex wird von einem anderen Explorer-2.0-Fenster gepflegt."
-                                .into(),
-                        );
+                        fixed(&w, || {
+                            tr!("The search index is kept by another Explorer 2.0 window.")
+                        });
                     }
                 });
                 return;
@@ -320,7 +341,7 @@ fn start(win: &MainWindow) {
             notify_ui(weak);
         });
     if spawned.is_err() {
-        win.set_search_status("Suchindex konnte nicht starten.".into());
+        fixed(win, || tr!("The search index could not start."));
     }
 }
 
@@ -357,13 +378,13 @@ pub fn set_enabled(win: &MainWindow, on: bool) {
     }
     if on {
         if lock().is_none() {
-            win.set_search_status("Suchindex startet …".into());
+            fixed(win, || tr!("Search index starting …"));
             start(win);
         }
     } else {
         EPOCH.fetch_add(1, Ordering::SeqCst);
         let old = lock().take();
-        win.set_search_status(off_text().into());
+        fixed(win, off_text);
         if let Some(s) = old {
             // stopping saves the index: not on the UI thread
             let _ = std::thread::Builder::new()
@@ -389,14 +410,11 @@ pub fn rescan(win: &MainWindow) {
     });
     crate::nav::trace_line(&format!("search: rescan volumes={n}"));
     if n == 0 {
-        win.set_search_status(
-            if win.get_opt_index_enabled() {
-                "Suchindex läuft noch nicht."
-            } else {
-                off_text()
-            }
-            .into(),
-        );
+        if win.get_opt_index_enabled() {
+            fixed(win, || tr!("The search index is not running yet."));
+        } else {
+            fixed(win, off_text);
+        }
     }
 }
 
@@ -463,6 +481,7 @@ fn update_ui(win: &MainWindow) {
     }
     if !lines.is_empty() {
         let text: Vec<String> = lines.iter().map(|(r, s)| status_line(r, s)).collect();
+        FIXED.set(None);
         win.set_search_status(text.join("\n").into());
     }
     // shown results follow the index (new, renamed, deleted files)
@@ -533,7 +552,7 @@ pub fn find(
             utc_offset: explorer_core::local_offset_at(now),
         },
     )
-    .map_err(|e| format!("Suche: {e}"))?;
+    .map_err(|e| tr!("Search: {0}", e))?;
     let by = sort_by(sort.key);
     let vols: Vec<Arc<Volume>> = with_volumes(|v| v.to_vec());
     let vols: Vec<Arc<Volume>> = vols
@@ -614,44 +633,60 @@ pub(crate) fn sort_found(
 pub(crate) fn status_line(root: &str, st: &Status) -> String {
     let n = explorer_core::format_count(st.entries);
     let mut s = match st.phase {
-        Phase::Waiting | Phase::Loading => format!("{root}: wird geladen …"),
-        Phase::Building => format!("{root}: wird aufgebaut … {n} Einträge"),
-        Phase::Refreshing => format!("{root}: {n} Einträge, wird mit der Platte abgeglichen …"),
+        Phase::Waiting | Phase::Loading => tr!("{0}: loading …", root),
+        Phase::Building => tr_n!(
+            st.entries,
+            "{0}: building … {1} entry",
+            "{0}: building … {1} entries",
+            root,
+            n
+        ),
+        Phase::Refreshing => tr_n!(
+            st.entries,
+            "{0}: {1} entry, re-syncing with the disk …",
+            "{0}: {1} entries, re-syncing with the disk …",
+            root,
+            n
+        ),
         Phase::Ready => {
             let how = match &st.origin {
-                Some(Origin::Built { ms, .. }) => format!(" (aufgebaut in {})", secs(*ms)),
+                Some(Origin::Built { ms, .. }) => tr!(" (built in {0})", secs(*ms)),
                 _ => String::new(),
             };
-            format!("{root}: bereit, {n} Einträge{how}")
+            tr_n!(
+                st.entries,
+                "{0}: ready, {1} entry{2}",
+                "{0}: ready, {1} entries{2}",
+                root,
+                n,
+                how
+            )
         }
-        Phase::Stopped => format!("{root}: angehalten"),
+        Phase::Stopped => tr!("{0}: stopped", root),
     };
     if !st.live && st.phase != Phase::Stopped {
-        s.push_str(" – ohne Live-Aktualisierung");
+        s.push_str(tr!(" – without live updates"));
         if let Some(e) = &st.watch_error {
             s.push_str(&format!(" ({e})"));
         }
     }
     if st.lost_events > 0 {
-        let times = if st.lost_events == 1 {
-            "1-mal".to_string()
-        } else {
-            format!("{}-mal", st.lost_events)
-        };
-        s.push_str(&format!(
-            " – Änderungen {times} verpasst, danach abgeglichen ({})",
-            st.last_loss.as_deref().unwrap_or("unbekannt")
+        s.push_str(&tr_n!(
+            st.lost_events,
+            " – changes missed {n} time, re-synced afterwards ({0})",
+            " – changes missed {n} times, re-synced afterwards ({0})",
+            st.last_loss.as_deref().unwrap_or(tr!("unknown"))
         ));
     }
     if let Some(e) = &st.save_error {
-        s.push_str(&format!(" – Speichern fehlgeschlagen: {e}"));
+        s.push_str(&tr!(" – saving failed: {0}", e));
     }
     s
 }
 
 fn secs(ms: u64) -> String {
     if ms < 10_000 {
-        format!("{:.1} s", ms as f64 / 1000.0).replace('.', ",")
+        format!("{} s", explorer_i18n::format_decimal(ms as f64 / 1000.0, 1))
     } else if ms < 120_000 {
         format!("{} s", ms / 1000)
     } else {
@@ -662,6 +697,7 @@ fn secs(ms: u64) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
+    // tests see the English source texts (German comes from lang/de, D-029)
 
     fn st(phase: Phase, entries: usize) -> Status {
         Status {
@@ -721,7 +757,7 @@ mod tests {
     fn status_lines() {
         assert_eq!(
             status_line("C:\\", &st(Phase::Building, 120_000)),
-            "C:\\: wird aufgebaut … 120.000 Einträge"
+            "C:\\: building … 120,000 entries"
         );
         let mut s = st(Phase::Ready, 1_012_345);
         s.origin = Some(Origin::Built {
@@ -730,27 +766,27 @@ mod tests {
         });
         assert_eq!(
             status_line("C:\\", &s),
-            "C:\\: bereit, 1.012.345 Einträge (aufgebaut in 3,4 s)"
+            "C:\\: ready, 1,012,345 entries (built in 3.4 s)"
         );
         s.origin = Some(Origin::Loaded { ms: 58 });
         s.live = false;
         s.watch_error = Some("zu viele Überwachungen".into());
         assert_eq!(
             status_line("/home/a", &s),
-            "/home/a: bereit, 1.012.345 Einträge – ohne Live-Aktualisierung (zu viele Überwachungen)"
+            "/home/a: ready, 1,012,345 entries – without live updates (zu viele Überwachungen)"
         );
         let mut s = st(Phase::Ready, 7);
         s.lost_events = 2;
         s.last_loss = Some("zu viele Änderungen auf einmal".into());
         assert_eq!(
             status_line("C:\\", &s),
-            "C:\\: bereit, 7 Einträge – Änderungen 2-mal verpasst, danach abgeglichen (zu viele Änderungen auf einmal)"
+            "C:\\: ready, 7 entries – changes missed 2 times, re-synced afterwards (zu viele Änderungen auf einmal)"
         );
         let mut s = st(Phase::Refreshing, 5);
         s.save_error = Some("voll".into());
         assert_eq!(
             status_line("D:\\", &s),
-            "D:\\: 5 Einträge, wird mit der Platte abgeglichen … – Speichern fehlgeschlagen: voll"
+            "D:\\: 5 entries, re-syncing with the disk … – saving failed: voll"
         );
         assert_eq!(secs(95_000), "95 s");
         assert_eq!(secs(600_000), "10 min");

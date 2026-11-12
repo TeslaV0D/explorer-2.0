@@ -12,7 +12,7 @@ check() { if eval "$2"; then pass "$1"; else fail "$1"; fi; }
 LIST_X=500
 row_y() { echo $(( $(ui_list_top) + 24 * $1 + 12 )); }
 
-export EXPLORER2_TRACE=1 SLINT_BACKEND=winit-software EXPLORER2_CONFIG_DIR=$W/config-ops HOME=$W/home-ops
+export EXPLORER2_TRACE=1 EXPLORER2_TRACE_KEYS=1 SLINT_BACKEND=winit-software EXPLORER2_CONFIG_DIR=$W/config-ops HOME=$W/home-ops
 mkdir -p "$HOME"
 shot() { command -v import >/dev/null && import -window root "$W/$1.png" || true; }
 focus() { xdotool windowfocus --sync "$(xdotool search --name 'Explorer 2.0' | head -1)"; }
@@ -198,7 +198,11 @@ check "[57a] the current place carries the accent mark (redesign R3: $MKP)" "[ '
 xdotool type --delay 40 "y.txt"; sleep 0.4; xdotool key Delete; sleep 0.6
 xdotool key Return; sleep 1.5
 check "[57b] Del in the trash = delete for good (after confirmation)" "last 'trash Purge done' | grep -q 'ok=true' && ! ls $TRASH | grep -qx y.txt && [ ! -e '$T/y.txt' ]"
-ui_action "Papierkorb leeren"; sleep 0.6; xdotool key Return; sleep 2
+# wait for the purge to finish instead of a fixed time (CI #142: 5 items incl. the
+# 60 000-file job folder took longer than 2 s)
+PURGED=$(grep -c 'trash Purge done' $LOG)
+ui_action "Papierkorb leeren"; sleep 0.6; xdotool key Return
+for i in $(seq 1 100); do [ "$(grep -c 'trash Purge done' $LOG)" -gt "$PURGED" ] && break; sleep 0.1; done; sleep 0.3
 check "[57c] empty the trash" "[ -z \"\$(ls -A $TRASH 2>/dev/null)\" ]"
 ui_click "Dieser PC"; sleep 1.5   # sidebar heading
 check "[58] 'Dieser PC' lists the drives" "last 'navigate tab' | grep -q ' ::dieser-pc ' && last 'done tab' | grep -qE 'total=[1-9]'"
@@ -342,7 +346,7 @@ xdotool key ctrl+f; sleep 0.3; xdotool key ctrl+v; sleep 1.2
 check "[68i] 'Pfad kopieren' puts the path on the clipboard (pasted into the search field)" "grep -qF 'query=\"$I/bild.png\"' $LOG"
 xdotool key Escape; sleep 1; focus
 xdotool mousemove $LIST_X $(row_y 0) click 1; sleep 1.2
-check "[68d] folder: files, subfolders and total size" "last 'inspector done' | grep -q 'Inhalt=2 Dateien, 1 Ordner' && last 'inspector done' | grep -q 'Gesamtgröße=9.8 KB'"
+check "[68d] folder: files, subfolders and total size" "last 'inspector done' | grep -q 'Inhalt=2 Dateien, 1 Ordner' && last 'inspector done' | grep -q 'Gesamtgröße=9,8 KB'"
 xdotool key ctrl+a; sleep 1.2
 check "[68e] multi-selection: totals incl. the selected folder" "last 'inspector gen' | grep -q '3 Elemente' && last 'inspector done' | grep -q 'Gesamt=4 Dateien, 2 Ordner'"
 check "[68f] the inspector state is saved" "grep -q 'inspector = true' $W/config-ops/settings.ini"
@@ -481,7 +485,7 @@ mkdir -p "$CC" "$TW/safe-sub"
 printf '[pane]\nactive_tab = 0\ntab = %s\n' "$TW/safe-sub" > "$CC/session.ini"
 EXPLORER2_CONFIG_DIR=$CC EXPLORER2_TEST_CRASH=panic timeout 20 $EXE > $W/crash-73a.log 2>&1; A=$?
 REP=$(ls $CR/crash-*.txt 2>/dev/null | head -1)
-check "[73] a panic at start writes a report (exit $A)" "[ $A -ne 0 ] && [ -n '$REP' ] && grep -q 'Ursache: Panic' '$REP' && grep -q 'test crash requested' '$REP' && grep -q 'start guard' '$REP'"
+check "[73] a panic at start writes a report (exit $A)" "[ $A -ne 0 ] && [ -n '$REP' ] && grep -q 'Cause: Panic' '$REP' && grep -q 'test crash requested' '$REP' && grep -q 'start guard' '$REP'"
 EXPLORER2_CONFIG_DIR=$CC EXPLORER2_TEST_CRASH=native timeout 20 $EXE > $W/crash-73b.log 2>&1
 check "[73b] two dead starts are counted" "grep -q 'failed=1' $CC/start-guard.txt"
 EXPLORER2_CONFIG_DIR=$CC env -u SLINT_BACKEND $EXE > $LOG 2>&1 & PID=$!

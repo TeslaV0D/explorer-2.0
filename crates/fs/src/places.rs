@@ -17,15 +17,17 @@ pub enum PlaceKind {
 }
 
 impl PlaceKind {
-    pub fn label_de(self) -> &'static str {
+    /// Name in the current language (Explorer's names for the known folders).
+    pub fn label(self) -> &'static str {
+        use explorer_i18n::tr;
         match self {
-            PlaceKind::Home => "Persönlicher Ordner",
-            PlaceKind::Desktop => "Desktop",
-            PlaceKind::Downloads => "Downloads",
-            PlaceKind::Documents => "Dokumente",
-            PlaceKind::Pictures => "Bilder",
-            PlaceKind::Music => "Musik",
-            PlaceKind::Videos => "Videos",
+            PlaceKind::Home => tr!("Home"),
+            PlaceKind::Desktop => tr!("Desktop"),
+            PlaceKind::Downloads => tr!("Downloads"),
+            PlaceKind::Documents => tr!("Documents"),
+            PlaceKind::Pictures => tr!("Pictures"),
+            PlaceKind::Music => tr!("Music"),
+            PlaceKind::Videos => tr!("Videos"),
         }
     }
 }
@@ -55,14 +57,14 @@ pub struct Drive {
     pub space: Option<(u64, u64)>,
 }
 
-/// Explorer-style display name: "System (C:)", "Lokaler Datenträger (C:)", "USB-Laufwerk (E:)".
+/// Explorer-style display name: "System (C:)", "Local Disk (C:)", "USB Drive (E:)" (translated).
 pub fn drive_display_name(d: &Drive) -> String {
     let root = d.root.to_string_lossy();
     let letter = root.trim_end_matches(['\\', '/']);
     if letter.is_empty() || !letter.ends_with(':') {
         // non-Windows roots ("/")
         return if d.label.is_empty() {
-            "Dateisystem".to_string()
+            explorer_i18n::tr!("File system").to_string()
         } else {
             d.label.clone()
         };
@@ -71,11 +73,11 @@ pub fn drive_display_name(d: &Drive) -> String {
         d.label.as_str()
     } else {
         match d.kind {
-            DriveKind::Fixed => "Lokaler Datenträger",
-            DriveKind::Removable => "USB-Laufwerk",
-            DriveKind::Network => "Netzlaufwerk",
-            DriveKind::Optical => "DVD-Laufwerk",
-            DriveKind::Other => "Laufwerk",
+            DriveKind::Fixed => explorer_i18n::tr!("Local Disk"),
+            DriveKind::Removable => explorer_i18n::tr!("USB Drive"),
+            DriveKind::Network => explorer_i18n::tr!("Network Drive"),
+            DriveKind::Optical => explorer_i18n::tr!("DVD Drive"),
+            DriveKind::Other => explorer_i18n::tr!("Drive"),
         }
     };
     format!("{name} ({letter})")
@@ -454,19 +456,19 @@ mod tests {
         );
         assert_eq!(
             drive_display_name(&d(r"C:\", "", DriveKind::Fixed)),
-            "Lokaler Datenträger (C:)"
+            "Local Disk (C:)"
         );
         assert_eq!(
             drive_display_name(&d(r"E:\", "", DriveKind::Removable)),
-            "USB-Laufwerk (E:)"
+            "USB Drive (E:)"
         );
         assert_eq!(
             drive_display_name(&d(r"Z:\", "", DriveKind::Network)),
-            "Netzlaufwerk (Z:)"
+            "Network Drive (Z:)"
         );
         assert_eq!(
             drive_display_name(&d("/", "", DriveKind::Fixed)),
-            "Dateisystem"
+            "File system"
         );
     }
 

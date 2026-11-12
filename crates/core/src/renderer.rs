@@ -114,27 +114,28 @@ impl std::fmt::Display for Reason {
     }
 }
 
-/// German status line for the settings panel.
-pub fn status_de(choice: RendererChoice, reason: &Reason) -> String {
+/// Status line for the settings panel (current language).
+pub fn status_text(choice: RendererChoice, reason: &Reason) -> String {
+    use explorer_i18n::tr;
     let what = match choice {
-        RendererChoice::Gpu => "GPU-Beschleunigung",
-        RendererChoice::Software => "Software-Rendering",
-        RendererChoice::PlatformDefault => "Standard-Renderer des Systems",
+        RendererChoice::Gpu => tr!("GPU acceleration"),
+        RendererChoice::Software => tr!("Software rendering"),
+        RendererChoice::PlatformDefault => tr!("System default renderer"),
     };
     let why = match reason {
-        Reason::Forced => "per EXPLORER2_RENDERER erzwungen".to_string(),
-        Reason::DisabledInSettings => "in den Einstellungen deaktiviert".to_string(),
+        Reason::Forced => tr!("forced by EXPLORER2_RENDERER").to_string(),
+        Reason::DisabledInSettings => tr!("disabled in the settings").to_string(),
         Reason::Gpu { renderer, .. } if renderer != "cached" => renderer.clone(),
-        Reason::Gpu { .. } => "geeignete GPU erkannt".to_string(),
-        Reason::NoUsableGpu(_) => "keine geeignete GPU gefunden".to_string(),
-        Reason::NoProbe => "keine GPU-Prüfung auf diesem System".to_string(),
+        Reason::Gpu { .. } => tr!("suitable GPU found").to_string(),
+        Reason::NoUsableGpu(_) => tr!("no suitable GPU found").to_string(),
+        Reason::NoProbe => tr!("no GPU check on this system").to_string(),
         Reason::ProbePending => {
-            "GPU-Prüfung läuft im Hintergrund – gilt ab dem nächsten Start".to_string()
+            tr!("GPU check running in the background – applies from the next start").to_string()
         }
-        Reason::ToolkitEnv => "per SLINT_BACKEND festgelegt".to_string(),
-        Reason::SafeMode => "sicherer Start nach abgebrochenen Starts".to_string(),
+        Reason::ToolkitEnv => tr!("set by SLINT_BACKEND").to_string(),
+        Reason::SafeMode => tr!("safe start after aborted starts").to_string(),
     };
-    format!("Aktuell: {what} ({why})")
+    tr!("Currently: {0} ({1})", what, why)
 }
 
 /// Final decision + reason (shown in settings and traces).
@@ -253,24 +254,25 @@ mod tests {
     }
 
     #[test]
-    fn german_status() {
+    fn status_line() {
+        // tests see the English source texts (German comes from lang/de)
         assert_eq!(
-            status_de(RendererChoice::Software, &Reason::DisabledInSettings),
-            "Aktuell: Software-Rendering (in den Einstellungen deaktiviert)"
+            status_text(RendererChoice::Software, &Reason::DisabledInSettings),
+            "Currently: Software rendering (disabled in the settings)"
         );
         let gpu = Reason::Gpu {
             renderer: "NVIDIA RTX".into(),
             version: "4.6".into(),
         };
         assert_eq!(
-            status_de(RendererChoice::Gpu, &gpu),
-            "Aktuell: GPU-Beschleunigung (NVIDIA RTX)"
+            status_text(RendererChoice::Gpu, &gpu),
+            "Currently: GPU acceleration (NVIDIA RTX)"
         );
         let cached = Reason::Gpu {
             renderer: "cached".into(),
             version: "cached".into(),
         };
-        assert!(status_de(RendererChoice::Gpu, &cached).contains("geeignete GPU erkannt"));
+        assert!(status_text(RendererChoice::Gpu, &cached).contains("suitable GPU found"));
         assert_eq!(
             Reason::NoUsableGpu("x".into()).to_string(),
             "no usable GPU: x"

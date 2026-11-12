@@ -73,7 +73,7 @@ jobs:
       - name: Benchmark 100k folder (budgets from PLAN-BASICS)
         run: cargo run --release -p explorer-fs --example bench -- --files 100000 --runs 9 --assert
       - name: "Search benchmark: 1 M entries, name queries < 10 ms, index < 100 MB (PLAN-SEARCH)"
-        run: cargo run --release -p explorer-index --example bench -- 1000000 --gate
+        run: cargo run --release -p explorer-index --example index_bench -- 1000000 --gate
       # CI #82: the cold system drive of the Windows VM gave ~1 100 entries/s
       # (C:\ did not finish in 15 min). Measured here, numbers only: cold vs
       # warm (disk) and below-normal vs normal priority + more threads.
@@ -97,10 +97,13 @@ jobs:
         if: runner.os != 'Windows'
         run: cargo run --release -p explorer-search --example drive
   e2e-linux:
-    runs-on: ubuntu-latest
+    # pinned: on ubuntu-26.04 (ubuntu-latest since 2026-11-10) `xdotool key F2`
+    # arrives as Alt+F2 (CI #139/#140) – TODO: move once the tests handle that
+    runs-on: ubuntu-24.04
     needs: test
-    # app tests without the search index (own block e2e-search.sh switches it on)
-    env: { EXPLORER2_INDEX: "off" }
+    # app tests without the search index (own block e2e-search.sh switches it on),
+    # in German: the tests click and check German names (D-029)
+    env: { EXPLORER2_INDEX: "off", EXPLORER2_LANG: "de" }
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
@@ -134,6 +137,42 @@ jobs:
         with:
           name: ui-gallery-linux
           path: ${{ runner.temp }}/gallery/*.png
+      # localisation L3: the same screens in English (UI names translated via the catalogs)
+      - name: UI gallery in English
+        if: always()
+        run: EXPLORER2_LANG=en xvfb-run -a -s "-screen 0 1280x800x24" scripts/gallery.sh "$PWD/target/release/explorer2" "$RUNNER_TEMP/gallery-en"
+      - name: Upload UI gallery in English
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ui-gallery-linux-en
+          path: ${{ runner.temp }}/gallery-en/*.png
+      # localisation L5: pseudo-locale (every text ~40 % longer, accented) + layout check
+      - name: UI gallery in the pseudo-locale (qps)
+        if: always()
+        run: EXPLORER2_LANG=qps xvfb-run -a -s "-screen 0 1280x800x24" scripts/gallery.sh "$PWD/target/release/explorer2" "$RUNNER_TEMP/gallery-qps"
+      - name: Upload UI gallery in the pseudo-locale
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ui-gallery-linux-qps
+          path: ${{ runner.temp }}/gallery-qps/*.png
+      # localisation L6: every further translated language (lang/<code>, not de/qps)
+      - name: UI galleries in the other translated languages
+        if: always()
+        run: |
+          for code in $(ls lang | grep -vxE 'de|qps|explorer2.pot'); do
+            EXPLORER2_LANG=$code xvfb-run -a -s "-screen 0 1280x800x24" scripts/gallery.sh "$PWD/target/release/explorer2" "$RUNNER_TEMP/gallery-l10n/$code"
+          done
+      - name: Upload UI galleries in the other languages
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ui-gallery-linux-l10n
+          path: ${{ runner.temp }}/gallery-l10n/*/*.png
+      - name: Layout check (every text fits, all languages + pseudo-locale)
+        if: always()
+        run: scripts/layout-check.sh "$RUNNER_TEMP/gallery" "$RUNNER_TEMP/gallery-en" "$RUNNER_TEMP/gallery-qps" "$RUNNER_TEMP"/gallery-l10n/*
       - name: Upload screenshots on failure
         if: failure()
         uses: actions/upload-artifact@v4
@@ -145,8 +184,9 @@ jobs:
   build-windows-release:
     runs-on: windows-latest
     needs: test
-    # the index would read all of C:\ during the timing gates and E2E tests
-    env: { EXPLORER2_INDEX: "off" }
+    # the index would read all of C:\ during the timing gates and E2E tests;
+    # German UI: the tests click and check German names (D-029)
+    env: { EXPLORER2_INDEX: "off", EXPLORER2_LANG: "de" }
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable

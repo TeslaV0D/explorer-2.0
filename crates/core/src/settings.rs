@@ -44,6 +44,8 @@ pub struct Settings {
     pub index_enabled: bool,
     /// Which drives (see `index_roots`): "" = automatic, ";"-list otherwise.
     pub index_roots: String,
+    /// UI language code (D-029): "" = like Windows (UI language), else e.g. "de".
+    pub language: String,
 }
 
 impl Default for Settings {
@@ -67,6 +69,7 @@ impl Default for Settings {
             index_exclude: String::new(),
             index_enabled: true,
             index_roots: String::new(),
+            language: String::new(),
         }
     }
 }
@@ -144,6 +147,7 @@ impl Settings {
                 }
                 "index_exclude" => s.index_exclude = v.to_string(),
                 "index_roots" => s.index_roots = v.to_string(),
+                "language" => s.language = v.to_string(),
                 "theme" => {
                     if let Some(t) = crate::theme::ThemeChoice::parse(v) {
                         s.theme = t;
@@ -185,7 +189,8 @@ impl Settings {
              single_instance = {}\n\
              index_exclude = {}\n\
              index_enabled = {}\n\
-             index_roots = {}\n",
+             index_roots = {}\n\
+             language = {}\n",
             self.hardware_acceleration,
             self.show_hidden,
             self.gpu_probe_version,
@@ -202,7 +207,8 @@ impl Settings {
             self.single_instance,
             self.index_exclude,
             self.index_enabled,
-            self.index_roots
+            self.index_roots,
+            self.language
         )
     }
 
@@ -253,6 +259,7 @@ mod tests {
             index_exclude: r"C:\Windows\WinSxS;node_modules;*.tmp".into(),
             index_enabled: false,
             index_roots: r"C:\;Z:\".into(),
+            language: "uk".into(),
         };
         assert_eq!(Settings::parse(&s.serialize()), s);
     }

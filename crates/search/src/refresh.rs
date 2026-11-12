@@ -253,6 +253,9 @@ mod tests {
         let w = Walker::new(&ex);
         let (mut ix, _) = build(d.path(), &w);
         let root = ix.roots()[0];
+        // NTFS may update a folder's last-write time a moment after files were
+        // created in it (CI #155): a first pass takes such late times in
+        let _ = refresh(&mut ix, root, &w, i64::MAX / 2);
         // exact "since" later than every folder time: only times are compared
         let rep = refresh(&mut ix, root, &w, i64::MAX / 2);
         assert!(!rep.changed(), "{rep:?}");

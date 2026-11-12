@@ -39,11 +39,11 @@ $rep = @(NewReports)
 Write-Host "    exit code: $code, reports: $($rep.Count)"
 if ($rep.Count) { Get-Content $rep[0].FullName -TotalCount 12 | ForEach-Object { Write-Host "    | $_" } }
 Check "[C1] the process ends by itself (no error dialog)" { $null -ne $code }
-Check "[C2] report: Windows exception with code and exe offset" { $rep.Count -eq 1 -and (Select-String -Path $rep[0].FullName -Pattern 'Ursache: Windows-Ausnahme' -SimpleMatch) -and (Select-String -Path $rep[0].FullName -Pattern '0xe0002001' -SimpleMatch) -and (Select-String -Path $rep[0].FullName -Pattern 'Exe-Basis' -SimpleMatch) }
+Check "[C2] report: Windows exception with code and exe offset" { $rep.Count -eq 1 -and (Select-String -Path $rep[0].FullName -Pattern 'Cause: Windows exception' -SimpleMatch) -and (Select-String -Path $rep[0].FullName -Pattern '0xe0002001' -SimpleMatch) -and (Select-String -Path $rep[0].FullName -Pattern 'Exe base' -SimpleMatch) }
 
 Write-Host "== panic at start"
 $code = RunCrash 'panic'
-$rep = @(NewReports | Where-Object { Select-String -Path $_.FullName -Pattern 'Ursache: Panic' -SimpleMatch })
+$rep = @(NewReports | Where-Object { Select-String -Path $_.FullName -Pattern 'Cause: Panic' -SimpleMatch })
 Write-Host "    exit code: $code"
 Check "[C3] a panic writes a report with message and the last trace lines" { $null -ne $code -and $rep.Count -eq 1 -and (Select-String -Path $rep[0].FullName -Pattern 'test crash requested' -SimpleMatch) -and (Select-String -Path $rep[0].FullName -Pattern 'start guard' -SimpleMatch) }
 Check "[C4] both dead starts counted" { (Get-Content (Join-Path $cfg 'start-guard.txt') -Raw) -match 'failed=1' }

@@ -1,0 +1,1960 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: explorer2\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: uk\n"
+"Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2);\n"
+
+#: crates/integrate/src/bin/explorer2-recover.rs
+msgid "  error: {0}"
+msgstr "  помилка: {0}"
+
+#: crates/integrate/src/bin/explorer2-recover.rs
+msgid "  left unchanged: {0}"
+msgstr "  залишено без змін: {0}"
+
+#: crates/app/src/fileops.rs
+msgid " (+{n} more error)"
+msgid_plural " (+{n} more errors)"
+msgstr[0] " (+{n} помилка)"
+msgstr[1] " (+{n} помилки)"
+msgstr[2] " (+{n} помилок)"
+
+#: crates/app/src/search.rs
+msgid " (built in {0})"
+msgstr " (створено за {0})"
+
+#: crates/app/src/nav.rs
+msgid " (folder searched, without index)"
+msgstr " (пошук у папці, без індексу)"
+
+#: crates/integrate/src/lib.rs
+msgid " (journal was damaged, known locations checked)"
+msgstr " (журнал був пошкоджений, перевірено відомі розташування)"
+
+#: crates/app/src/inspector.rs
+msgid " (more – counting stopped at {0} entries)"
+msgstr " (більше – підрахунок зупинено на {0} записах)"
+
+#: crates/app/src/quick.rs
+msgid " (still being built)"
+msgstr " (ще створюється)"
+
+#: crates/app/src/nav.rs
+msgid " ({0} hidden)"
+msgid_plural " ({0} hidden)"
+msgstr[0] " ({0} прихований)"
+msgstr[1] " ({0} приховані)"
+msgstr[2] " ({0} прихованих)"
+
+#: crates/app/src/integration.rs
+msgid " Emergency tool: {0}"
+msgstr " Засіб відновлення: {0}"
+
+#: crates/app/src/nav.rs
+msgid " · {0} ms"
+msgstr " · {0} мс"
+
+#: crates/app/src/search.rs
+msgid " – changes missed {n} time, re-synced afterwards ({0})"
+msgid_plural " – changes missed {n} times, re-synced afterwards ({0})"
+msgstr[0] " – зміни пропущено {n} раз, потім синхронізовано ({0})"
+msgstr[1] " – зміни пропущено {n} рази, потім синхронізовано ({0})"
+msgstr[2] " – зміни пропущено {n} разів, потім синхронізовано ({0})"
+
+#: crates/integrate/src/lib.rs
+msgid " – journal damaged, reset recommended"
+msgstr " – журнал пошкоджено, рекомендовано скидання"
+
+#: crates/app/src/search.rs
+msgid " – network drive"
+msgstr " – мережний диск"
+
+#: crates/app/src/search.rs
+msgid " – other drive"
+msgstr " – інший диск"
+
+#: crates/app/src/search.rs
+msgid " – removable drive"
+msgstr " – знімний диск"
+
+#: crates/app/src/search.rs
+msgid " – saving failed: {0}"
+msgstr " – помилка збереження: {0}"
+
+#: crates/app/src/search.rs
+msgid " – without live updates"
+msgstr " – без оновлення в реальному часі"
+
+#: crates/core/src/mnemonic.rs
+msgid "&Replace"
+msgstr "&Замінити"
+
+#: crates/core/src/mnemonic.rs
+msgid "&Skip"
+msgstr "&Пропустити"
+
+#: crates/app/src/installer.rs
+msgid ", redirected: {0}"
+msgstr ", переспрямовано: {0}"
+
+#: crates/integrate/src/lib.rs
+msgid ", {n} integration point active"
+msgid_plural ", {n} integration points active"
+msgstr[0] ", активна {n} точка інтеграції"
+msgstr[1] ", активні {n} точки інтеграції"
+msgstr[2] ", активно {n} точок інтеграції"
+
+#: crates/ops/src/names.rs
+msgid "A file name can't contain {0}: \\ / : * ? \" < > |"
+msgstr "Ім'я файлу не може містити {0}: \\ / : * ? \" < > |"
+
+#: crates/ops/src/exec.rs
+msgid "A folder and a file can't replace each other."
+msgstr "Папка й файл не можуть замінити одне одного."
+
+#: crates/fs/src/lib.rs
+#: crates/ops/src/exec.rs
+#: crates/ops/src/simple.rs
+msgid "Access denied"
+msgstr "Доступ заборонено"
+
+#: crates/app/ui/main.slint
+msgid "Address bar"
+msgstr "Адресний рядок"
+
+#: crates/ops/src/exec.rs
+msgid "Already exists"
+msgstr "Уже існує"
+
+#: crates/app/src/fileops.rs
+#: crates/core/src/commands.rs
+msgid "Alt+Enter"
+msgstr "Alt+Enter"
+
+#: crates/app/ui/main.slint
+msgid "Alt+Left"
+msgstr "Alt+Вліво"
+
+#: crates/app/ui/main.slint
+msgid "Alt+Right"
+msgstr "Alt+Вправо"
+
+#: crates/app/ui/main.slint
+msgid "Alt+Up"
+msgstr "Alt+Вгору"
+
+#: crates/ops/src/trashview.rs
+#: crates/ops/src/undo.rs
+msgid "An item already exists at the original location: {0}"
+msgstr "У початковому розташуванні вже є елемент: {0}"
+
+#: crates/app/ui/main.slint
+msgid "Ascending"
+msgstr "За зростанням"
+
+#: crates/app/src/inspector.rs
+msgid "Attributes"
+msgstr "Атрибути"
+
+#: crates/core/src/lib.rs
+msgid "B"
+msgstr "Б"
+
+#: crates/app/ui/main.slint
+#: crates/core/src/commands.rs
+msgid "Back"
+msgstr "Назад"
+
+#: crates/ops/src/undo.rs
+msgid "Can't move back, the target exists: {0}"
+msgstr "Не вдається повернути: цільовий елемент існує: {0}"
+
+#: crates/app/ui/main.slint
+msgid "Cancel"
+msgstr "Скасувати"
+
+#: crates/integrate/src/bin/explorer2-recover.rs
+msgid "Cancelled – nothing changed."
+msgstr "Скасовано – нічого не змінено."
+
+#: crates/setup/src/main.rs
+msgid "Cancelled."
+msgstr "Скасовано."
+
+#: crates/app/ui/main.slint
+msgid "Close"
+msgstr "Закрити"
+
+#: crates/app/ui/main.slint
+#: crates/core/src/commands.rs
+msgid "Close tab"
+msgstr "Закрити вкладку"
+
+#: crates/app/ui/main.slint
+msgid "Color scheme"
+msgstr "Колірна схема"
+
+#: crates/core/src/commands.rs
+msgid "Color scheme: Dark"
+msgstr "Колірна схема: темна"
+
+#: crates/core/src/commands.rs
+msgid "Color scheme: Light"
+msgstr "Колірна схема: світла"
+
+#: crates/core/src/commands.rs
+msgid "Color scheme: System default"
+msgstr "Колірна схема: як у системі"
+
+#: crates/app/ui/main.slint
+msgid "Command palette"
+msgstr "Палітра команд"
+
+#: crates/app/src/installer.rs
+msgid "Configuration folder not found"
+msgstr "Папку конфігурації не знайдено"
+
+#: crates/app/src/integration.rs
+msgid "Configuration folder not found."
+msgstr "Папку конфігурації не знайдено."
+
+#: crates/app/src/inspector.rs
+msgid "Contents"
+msgstr "Вміст"
+
+#: crates/app/ui/main.slint
+#: crates/core/src/commands.rs
+msgid "Context menu"
+msgstr "Контекстне меню"
+
+#: crates/app/src/fileops.rs
+msgid "Context menu: {0}"
+msgstr "Контекстне меню: {0}"
+
+#: crates/ops/src/exec.rs
+msgid "Copied, but the source was not deleted: {0}"
+msgstr "Скопійовано, але джерело не видалено: {0}"
+
+#: crates/app/src/fileops.rs
+#: crates/app/ui/main.slint
+#: crates/core/src/commands.rs
+msgid "Copy"
+msgstr "Копіювати"
+
+#: crates/app/ui/main.slint
+msgid "Copy path"
+msgstr "Копіювати шлях"
+
+#: crates/app/src/fileops.rs
+msgid "Copying {0} to “{1}”"
+msgstr "Копіювання: {0} до «{1}»"
+
+#: crates/ops/src/exec.rs
+msgid "Couldn't move the existing item to the Recycle Bin: {0}"
+msgstr "Не вдалося перемістити наявний елемент до кошика: {0}"
+
+#: crates/app/src/open.rs
+msgid "Couldn't open (code {0})"
+msgstr "Не вдалося відкрити (код {0})"
+
+#: crates/app/src/open.rs
+msgid "Couldn't open ({0}): {1}"
+msgstr "Не вдалося відкрити ({0}): {1}"
+
+#: crates/app/src/inspector.rs
+msgid "Created"
+msgstr "Створено"
+
+#: crates/core/src/commands.rs
+msgid "Ctrl+A"
+msgstr "Ctrl+A"
+
+#: crates/app/src/fileops.rs
+#: crates/app/ui/main.slint
+#: crates/core/src/commands.rs
+msgid "Ctrl+C"
+msgstr "Ctrl+C"
+
+#: crates/core/src/commands.rs
+msgid "Ctrl+F"
+msgstr "Ctrl+F"
+
+#: crates/core/src/commands.rs
+msgid "Ctrl+L"
+msgstr "Ctrl+L"
+
+#: crates/core/src/commands.rs
+msgid "Ctrl+Shift+1"
+msgstr "Ctrl+Shift+1"
+
+#: crates/app/ui/main.slint
+#: crates/core/src/commands.rs
+msgid "Ctrl+Shift+2"
+msgstr "Ctrl+Shift+2"
+
+#: crates/core/src/commands.rs
+msgid "Ctrl+Shift+3"
+msgstr "Ctrl+Shift+3"
+
+#: crates/app/ui/main.slint
+#: crates/core/src/commands.rs
+msgid "Ctrl+Shift+6"
+msgstr "Ctrl+Shift+6"
+
+#: crates/core/src/commands.rs
+msgid "Ctrl+Shift+F"
+msgstr "Ctrl+Shift+F"
+
+#: crates/app/src/fileops.rs
+#: crates/app/ui/main.slint
+#: crates/core/src/commands.rs
+msgid "Ctrl+Shift+N"
+msgstr "Ctrl+Shift+N"
+
+#: crates/app/ui/main.slint
+msgid "Ctrl+Shift+P"
+msgstr "Ctrl+Shift+P"
+
+#: crates/core/src/commands.rs
+msgid "Ctrl+Shift+Tab"
+msgstr "Ctrl+Shift+Tab"
+
+#: crates/app/ui/main.slint
+#: crates/core/src/commands.rs
+msgid "Ctrl+T"
+msgstr "Ctrl+T"
+
+#: crates/core/src/commands.rs
+msgid "Ctrl+Tab"
+msgstr "Ctrl+Tab"
+
+#: crates/app/src/fileops.rs
+#: crates/app/ui/main.slint
+#: crates/core/src/commands.rs
+msgid "Ctrl+V"
+msgstr "Ctrl+V"
+
+#: crates/core/src/commands.rs
+msgid "Ctrl+W"
+msgstr "Ctrl+W"
+
+#: crates/app/src/fileops.rs
+#: crates/app/ui/main.slint
+#: crates/core/src/commands.rs
+msgid "Ctrl+X"
+msgstr "Ctrl+X"
+
+#: crates/app/ui/main.slint
+#: crates/core/src/commands.rs
+msgid "Ctrl+Y"
+msgstr "Ctrl+Y"
+
+#: crates/app/ui/main.slint
+#: crates/core/src/commands.rs
+msgid "Ctrl+Z"
+msgstr "Ctrl+Z"
+
+#: crates/app/ui/main.slint
+#: crates/core/src/commands.rs
+msgid "Ctrl+\\"
+msgstr "Ctrl+\\"
+
+#: crates/core/src/renderer.rs
+msgid "Currently: {0} ({1})"
+msgstr "Зараз: {0} ({1})"
+
+#: crates/app/src/fileops.rs
+#: crates/app/ui/main.slint
+#: crates/core/src/commands.rs
+msgid "Cut"
+msgstr "Вирізати"
+
+#: crates/app/src/inspector.rs
+msgid "DATE"
+msgstr "ДАТА"
+
+#: crates/fs/src/places.rs
+msgid "DVD Drive"
+msgstr "DVD-дисковод"
+
+#: crates/app/ui/main.slint
+msgid "Dark"
+msgstr "Темна"
+
+#: crates/app/ui/main.slint
+#: crates/core/src/places.rs
+msgid "Date deleted"
+msgstr "Дата видалення"
+
+#: crates/app/src/nav.rs
+#: crates/app/ui/main.slint
+msgid "Date modified"
+msgstr "Дата змінення"
+
+#: crates/app/src/fileops.rs
+#: crates/app/ui/main.slint
+#: crates/core/src/commands.rs
+msgid "Del"
+msgstr "Del"
+
+#: crates/app/src/fileops.rs
+#: crates/app/ui/main.slint
+msgid "Delete"
+msgstr "Видалити"
+
+#: crates/core/src/commands.rs
+msgid "Delete (to Recycle Bin)"
+msgstr "Видалити (до кошика)"
+
+#: crates/app/src/fileops.rs
+#: crates/app/ui/main.slint
+#: crates/core/src/commands.rs
+msgid "Delete permanently"
+msgstr "Видалити остаточно"
+
+#: crates/ops/src/trashview.rs
+msgid "Delete permanently failed: {0}"
+msgstr "Не вдалося видалити остаточно: {0}"
+
+#: crates/app/src/fileops.rs
+msgid ""
+"Delete this {n} item permanently?\n"
+"This can't be undone."
+msgid_plural ""
+"Delete these {n} items permanently?\n"
+"This can't be undone."
+msgstr[0] ""
+"Видалити {n} елемент остаточно?\n"
+"Цю дію не можна скасувати."
+msgstr[1] ""
+"Видалити {n} елементи остаточно?\n"
+"Цю дію не можна скасувати."
+msgstr[2] ""
+"Видалити {n} елементів остаточно?\n"
+"Цю дію не можна скасувати."
+
+#: crates/app/src/fileops.rs
+msgid ""
+"Delete {0} permanently?\n"
+"This can't be undone."
+msgstr ""
+"Видалити {0} остаточно?\n"
+"Цю дію не можна скасувати."
+
+#: crates/app/src/fileops.rs
+msgid ""
+"Delete “{0}” permanently?\n"
+"This can't be undone."
+msgstr ""
+"Видалити «{0}» остаточно?\n"
+"Цю дію не можна скасувати."
+
+#: crates/app/src/fileops.rs
+msgid "Deleting {0} permanently"
+msgstr "Остаточне видалення: {0}"
+
+#: crates/app/ui/main.slint
+msgid "Descending"
+msgstr "За спаданням"
+
+#: crates/fs/src/places.rs
+msgid "Desktop"
+msgstr "Робочий стіл"
+
+#: crates/app/ui/main.slint
+#: crates/core/src/view.rs
+msgid "Details"
+msgstr "Таблиця"
+
+#: crates/app/src/inspector.rs
+msgid "Dimensions"
+msgstr "Розміри"
+
+#: crates/core/src/mnemonic.rs
+msgid "Do this for &all remaining conflicts"
+msgstr "Застосувати до &всіх решти конфліктів"
+
+#: crates/app/ui/main.slint
+msgid "Do this for all remaining conflicts"
+msgstr "Застосувати до всіх решти конфліктів"
+
+#: crates/fs/src/places.rs
+msgid "Documents"
+msgstr "Документи"
+
+#: crates/fs/src/places.rs
+msgid "Downloads"
+msgstr "Завантаження"
+
+#: crates/fs/src/places.rs
+msgid "Drive"
+msgstr "Диск"
+
+#: crates/core/src/commands.rs
+msgid "Edit address"
+msgstr "Змінити адресу"
+
+#: crates/app/ui/main.slint
+#: crates/core/src/commands.rs
+msgid "Empty Recycle Bin"
+msgstr "Очистити кошик"
+
+#: crates/app/src/fileops.rs
+#: crates/core/src/commands.rs
+msgid "Enter"
+msgstr "Enter"
+
+#: crates/integrate/src/bin/explorer2-recover.rs
+msgid "Error: configuration folder not found (APPDATA missing)."
+msgstr "Помилка: папку конфігурації не знайдено (немає APPDATA)."
+
+#: crates/integrate/src/bin/explorer2-recover.rs
+msgid "Error: installation folder cannot be determined (LOCALAPPDATA missing)."
+msgstr "Помилка: не вдається визначити папку інсталяції (немає LOCALAPPDATA)."
+
+#: crates/integrate/src/bin/explorer2-recover.rs
+msgid "Error: {0} – please delete the program folder by hand: {1}"
+msgstr "Помилка: {0} – видаліть папку програми вручну: {1}"
+
+#: crates/app/src/fileops.rs
+msgid "Existing: {0}"
+msgstr "Наявний: {0}"
+
+#: crates/core/src/guard.rs
+msgid "Explorer 2.0 closed unexpectedly last time."
+msgstr "Минулого разу Explorer 2.0 неочікувано закрився."
+
+#: crates/core/src/guard.rs
+msgid "Explorer 2.0 closed unexpectedly {n} time."
+msgid_plural "Explorer 2.0 closed unexpectedly {n} times."
+msgstr[0] "Explorer 2.0 неочікувано закрився {n} раз."
+msgstr[1] "Explorer 2.0 неочікувано закрився {n} рази."
+msgstr[2] "Explorer 2.0 неочікувано закрився {n} разів."
+
+#: crates/app/src/installer.rs
+msgid "Explorer 2.0 installed: {0} ({1} Start menu shortcuts{2})"
+msgstr "Explorer 2.0 інстальовано: {0} (ярликів у меню «Пуск»: {1}{2})"
+
+#: crates/setup/src/main.rs
+msgid "Explorer 2.0 is already installed. Update to version {0}?"
+msgstr "Explorer 2.0 уже інстальовано. Оновити до версії {0}?"
+
+#: crates/integrate/src/bin/explorer2-recover.rs
+msgid "Explorer 2.0 was removed. Your settings stay in %APPDATA%\\Explorer2."
+msgstr "Explorer 2.0 видалено. Ваші параметри залишаються в %APPDATA%\\Explorer2."
+
+#: crates/setup/src/main.rs
+msgid ""
+"Explorer 2.0 {0} is installed.\n"
+"\n"
+"You'll find it in the Start menu under “Explorer 2.0”. To uninstall, use “Settings → Apps” or the Start menu entry “Explorer 2.0 – Windows-Standard wiederherstellen”.\n"
+"\n"
+"Start it now?"
+msgstr ""
+"Explorer 2.0 {0} інстальовано.\n"
+"\n"
+"Ви знайдете його в меню «Пуск» під назвою «Explorer 2.0». Щоб видалити його, скористайтеся «Параметри → Програми» або пунктом меню «Пуск» «Explorer 2.0 – Windows-Standard wiederherstellen».\n"
+"\n"
+"Запустити зараз?"
+
+#: crates/integrate/src/bin/explorer2-recover.rs
+msgid "Explorer 2.0 – restore the Windows default"
+msgstr "Explorer 2.0 – відновлення стандартних налаштувань Windows"
+
+#: crates/integrate/src/bin/explorer2-recover.rs
+msgid ""
+"Explorer 2.0 – restore the Windows default\n"
+"\n"
+"  explorer2-recover                  shows the state, asks and resets\n"
+"  explorer2-recover --yes            resets without asking\n"
+"  explorer2-recover --status         only shows the state (exit code 1 = active)\n"
+"  explorer2-recover --uninstall      resets and removes Explorer 2.0\n"
+"  explorer2-recover --uninstall --quiet   the same without asking\n"
+"\n"
+"Removes all Windows integrations of Explorer 2.0 (folder verbs, Win+E,\n"
+"context menu, environment variables, shortcuts …) and restores the previous\n"
+"values exactly. Values that other software has changed meanwhile stay\n"
+"untouched. Your settings (%APPDATA%\\Explorer2) are kept when uninstalling."
+msgstr ""
+"Explorer 2.0 – відновлення стандартних налаштувань Windows\n"
+"\n"
+"  explorer2-recover                  показує стан, запитує й скидає\n"
+"  explorer2-recover --yes            скидає без запитання\n"
+"  explorer2-recover --status         лише показує стан (код виходу 1 = активно)\n"
+"  explorer2-recover --uninstall      скидає та видаляє Explorer 2.0\n"
+"  explorer2-recover --uninstall --quiet   те саме без запитання\n"
+"\n"
+"Видаляє всі інтеграції Explorer 2.0 з Windows (команди папок, Win+E,\n"
+"контекстне меню, змінні середовища, ярлики…) і точно відновлює\n"
+"попередні значення. Значення, які тим часом змінило інше ПЗ,\n"
+"не змінюються. Ваші параметри (%APPDATA%\\Explorer2) під час видалення зберігаються."
+
+#: crates/core/src/view.rs
+msgid "Extra large icons"
+msgstr "Величезні значки"
+
+#: crates/core/src/lib.rs
+msgid "File"
+msgstr "Файл"
+
+#: crates/app/ui/main.slint
+#: crates/core/src/lib.rs
+msgid "File folder"
+msgstr "Папка файлів"
+
+#: crates/fs/src/places.rs
+msgid "File system"
+msgstr "Файлова система"
+
+#: crates/app/src/inspector.rs
+#: crates/app/src/nav.rs
+#: crates/core/src/places.rs
+msgid "Folder"
+msgstr "Папка"
+
+#: crates/fs/src/lib.rs
+#: crates/search/src/watch.rs
+msgid "Folder not found"
+msgstr "Папку не знайдено"
+
+#: crates/app/ui/main.slint
+msgid "Folder options"
+msgstr "Параметри папок"
+
+#: crates/app/src/fileops.rs
+msgid "Folder · {0}"
+msgstr "Папка · {0}"
+
+#: crates/app/ui/main.slint
+#: crates/core/src/commands.rs
+msgid "Forward"
+msgstr "Вперед"
+
+#: crates/core/src/lib.rs
+msgid "GB"
+msgstr "ГБ"
+
+#: crates/app/src/inspector.rs
+msgid "GENERAL"
+msgstr "ЗАГАЛЬНІ"
+
+#: crates/core/src/renderer.rs
+msgid "GPU acceleration"
+msgstr "Прискорення на GPU"
+
+#: crates/core/src/renderer.rs
+msgid "GPU check running in the background – applies from the next start"
+msgstr "Перевірка GPU виконується у фоні – застосується під час наступного запуску"
+
+#: crates/core/src/commands.rs
+msgid "Go to parent folder"
+msgstr "На рівень вище"
+
+#: crates/core/src/inspect.rs
+msgid "Hidden"
+msgstr "Прихований"
+
+#: crates/fs/src/places.rs
+msgid "Home"
+msgstr "Особиста папка"
+
+#: crates/app/src/search.rs
+msgid "Home ({0})"
+msgstr "Особиста папка ({0})"
+
+#: crates/app/ui/main.slint
+msgid "Icons"
+msgstr "Значки"
+
+#: crates/app/ui/main.slint
+msgid "Index drives for search"
+msgstr "Індексувати диски для пошуку"
+
+#: crates/app/ui/main.slint
+msgid "Inspector"
+msgstr "Інспектор"
+
+#: crates/app/src/installer.rs
+msgid "Install"
+msgstr "Інсталювати"
+
+#: crates/core/src/commands.rs
+msgid "Install / update Explorer 2.0"
+msgstr "Інсталювати або оновити Explorer 2.0"
+
+#: crates/setup/src/main.rs
+msgid "Install Explorer 2.0 {0} for this user?"
+msgstr "Інсталювати Explorer 2.0 {0} для цього користувача?"
+
+#: crates/app/ui/main.slint
+msgid "Installation"
+msgstr "Інсталяція"
+
+#: crates/app/src/installer.rs
+#: crates/setup/src/main.rs
+msgid "Installation failed: {0}"
+msgstr "Помилка інсталяції: {0}"
+
+#: crates/app/src/installer.rs
+msgid "Installation folder cannot be determined"
+msgstr "Не вдається визначити папку інсталяції"
+
+#: crates/setup/src/main.rs
+msgid "Installation folder cannot be determined (LOCALAPPDATA/APPDATA missing)."
+msgstr "Не вдається визначити папку інсталяції (немає LOCALAPPDATA/APPDATA)."
+
+#: crates/integrate/src/bin/explorer2-recover.rs
+msgid "Installation: {0}"
+msgstr "Інсталяція: {0}"
+
+#: crates/app/src/installer.rs
+msgid "Installed (version {0}) in {1}. Uninstall via “Apps & Features” or the Start menu."
+msgstr "Інстальовано (версія {0}) у {1}. Видалення – через «Програми та компоненти» або меню «Пуск»."
+
+#: crates/app/src/installer.rs
+msgid "Installed in {0}; this copy is running from {1}."
+msgstr "Інстальовано в {0}; цю копію запущено з {1}."
+
+#: crates/app/src/installer.rs
+#: crates/setup/src/main.rs
+msgid "Installed, but starting failed: {0}"
+msgstr "Інстальовано, але запуск не вдався: {0}"
+
+#: crates/app/src/installer.rs
+msgid "Installed, but the installed copy did not start – this window stays open."
+msgstr "Інстальовано, але інстальована копія не запустилася – це вікно залишається відкритим."
+
+#: crates/app/src/installer.rs
+msgid "Installed, but the start could not be checked: {0}"
+msgstr "Інстальовано, але перевірити запуск не вдалося: {0}"
+
+#: crates/setup/src/main.rs
+msgid "Installer ended with {0}"
+msgstr "Інсталятор завершився з кодом {0}"
+
+#: crates/integrate/src/lib.rs
+msgid "Integration journal damaged – please reset first"
+msgstr "Журнал інтеграції пошкоджено – спершу виконайте скидання"
+
+#: crates/ops/src/exec.rs
+msgid "Invalid path"
+msgstr "Неприпустимий шлях"
+
+#: crates/integrate/src/bin/explorer2-recover.rs
+msgid "Journal: {0}"
+msgstr "Журнал: {0}"
+
+#: crates/core/src/lib.rs
+msgid "KB"
+msgstr "КБ"
+
+#: crates/core/src/mnemonic.rs
+msgid "Keep &both"
+msgstr "Зберегти о&бидва"
+
+#: crates/app/ui/main.slint
+msgid "Keep both"
+msgstr "Зберегти обидва"
+
+#: crates/app/src/inspector.rs
+msgid "LOCATION"
+msgstr "РОЗТАШУВАННЯ"
+
+#: crates/app/ui/main.slint
+msgid "Language"
+msgstr "Мова"
+
+#: crates/core/src/commands.rs
+msgid "Language: Deutsch"
+msgstr "Мова: Deutsch"
+
+#: crates/core/src/commands.rs
+msgid "Language: English"
+msgstr "Мова: English"
+
+#: crates/core/src/commands.rs
+msgid "Language: Español"
+msgstr "Мова: Español"
+
+#: crates/core/src/commands.rs
+msgid "Language: Français"
+msgstr "Мова: Français"
+
+#: crates/core/src/commands.rs
+msgid "Language: Polski"
+msgstr "Мова: Polski"
+
+#: crates/core/src/commands.rs
+msgid "Language: System default"
+msgstr "Мова: як у системі"
+
+#: crates/core/src/commands.rs
+msgid "Language: Русский"
+msgstr "Мова: Русский"
+
+#: crates/core/src/commands.rs
+msgid "Language: Українська"
+msgstr "Мова: Українська"
+
+#: crates/core/src/view.rs
+msgid "Large icons"
+msgstr "Великі значки"
+
+#: crates/core/src/places.rs
+msgid "Libraries"
+msgstr "Бібліотеки"
+
+#: crates/app/src/nav.rs
+msgid "Libraries are only available on Windows"
+msgstr "Бібліотеки доступні лише в Windows"
+
+#: crates/app/src/nav.rs
+msgid "Library not found: {0}"
+msgstr "Бібліотеку не знайдено: {0}"
+
+#: crates/app/ui/main.slint
+msgid "Light"
+msgstr "Світла"
+
+#: crates/app/src/nav.rs
+msgid "Loading …"
+msgstr "Завантаження…"
+
+#: crates/app/src/nav.rs
+msgid "Loading … {0}"
+msgstr "Завантаження… {0}"
+
+#: crates/fs/src/places.rs
+msgid "Local Disk"
+msgstr "Локальний диск"
+
+#: crates/core/src/lib.rs
+msgid "MB"
+msgstr "МБ"
+
+#: crates/core/src/mnemonic.rs
+msgid "Me&rge"
+msgstr "&Об'єднати"
+
+#: crates/core/src/view.rs
+msgid "Medium icons"
+msgstr "Звичайні значки"
+
+#: crates/app/ui/main.slint
+msgid "Merge"
+msgstr "Об'єднати"
+
+#: crates/app/src/inspector.rs
+msgid "Modified"
+msgstr "Змінено"
+
+#: crates/app/ui/main.slint
+msgid "More"
+msgstr "Більше"
+
+#: crates/app/src/fileops.rs
+msgid "Moving {0} to the Recycle Bin"
+msgstr "Переміщення до кошика: {0}"
+
+#: crates/app/src/fileops.rs
+msgid "Moving {0} to “{1}”"
+msgstr "Переміщення: {0} до «{1}»"
+
+#: crates/fs/src/places.rs
+msgid "Music"
+msgstr "Музика"
+
+#: crates/app/ui/main.slint
+msgid "Name"
+msgstr "Ім'я"
+
+#: crates/fs/src/places.rs
+msgid "Network Drive"
+msgstr "Мережний диск"
+
+#: crates/fs/src/network.rs
+msgid "Network path not found"
+msgstr "Мережний шлях не знайдено"
+
+#: crates/fs/src/network.rs
+msgid "Network shares are only available on Windows"
+msgstr "Спільні мережні ресурси доступні лише в Windows"
+
+#: crates/app/src/fileops.rs
+#: crates/app/ui/main.slint
+#: crates/core/src/commands.rs
+#: crates/ops/src/names.rs
+msgid "New folder"
+msgstr "Нова папка"
+
+#: crates/app/ui/main.slint
+#: crates/core/src/commands.rs
+msgid "New tab"
+msgstr "Нова вкладка"
+
+#: crates/app/src/fileops.rs
+msgid "New: {0} (from {1})"
+msgstr "Новий: {0} (від {1})"
+
+#: crates/core/src/commands.rs
+msgid "Next tab"
+msgstr "Наступна вкладка"
+
+#: crates/integrate/src/lib.rs
+msgid "No Windows integration active – nothing to do."
+msgstr "Немає активних інтеграцій з Windows – нічого робити."
+
+#: crates/integrate/src/lib.rs
+msgid "No Windows integration active."
+msgstr "Немає активних інтеграцій з Windows."
+
+#: crates/integrate/src/bin/explorer2-recover.rs
+msgid "No console to ask – start it with --quiet."
+msgstr "Немає консолі для запитання – запустіть із --quiet."
+
+#: crates/integrate/src/bin/explorer2-recover.rs
+msgid "No console to ask – start it with --yes."
+msgstr "Немає консолі для запитання – запустіть із --yes."
+
+#: crates/app/src/nav.rs
+msgid "No results"
+msgstr "Немає результатів"
+
+#: crates/fs/src/lib.rs
+#: crates/shell/src/win_menu.rs
+msgid "Not a folder"
+msgstr "Це не папка"
+
+#: crates/app/src/palette.rs
+msgid "Not available here"
+msgstr "Тут недоступно"
+
+#: crates/app/src/fileops.rs
+msgid "Not available here ({0})."
+msgstr "Тут недоступно ({0})."
+
+#: crates/ops/src/exec.rs
+msgid "Not enough disk space"
+msgstr "Недостатньо місця на диску"
+
+#: crates/ops/src/exec.rs
+#: crates/ops/src/simple.rs
+msgid "Not found"
+msgstr "Не знайдено"
+
+#: crates/ops/src/undo.rs
+msgid "Not found in the Recycle Bin: {0}"
+msgstr "Не знайдено в кошику: {0}"
+
+#: crates/app/src/installer.rs
+msgid "Not installed – running from {0}. Installing copies Explorer 2.0 to {1} (no administrator rights needed) and adds it to the Start menu."
+msgstr "Не інстальовано – запущено з {0}. Під час інсталяції Explorer 2.0 копіюється до {1} (права адміністратора не потрібні) і додається до меню «Пуск»."
+
+#: crates/app/src/inspector.rs
+msgid "Not readable"
+msgstr "Не вдається прочитати"
+
+#: crates/app/src/quick.rs
+#: crates/app/ui/main.slint
+msgid "Nothing found"
+msgstr "Нічого не знайдено"
+
+#: crates/app/ui/main.slint
+msgid "OK"
+msgstr "OK"
+
+#: crates/app/ui/main.slint
+msgid "One view"
+msgstr "Одна панель"
+
+#: crates/app/src/fileops.rs
+#: crates/core/src/commands.rs
+msgid "Open"
+msgstr "Відкрити"
+
+#: crates/core/src/commands.rs
+msgid "Open Libraries"
+msgstr "Відкрити «Бібліотеки»"
+
+#: crates/core/src/commands.rs
+msgid "Open Recycle Bin"
+msgstr "Відкрити кошик"
+
+#: crates/core/src/commands.rs
+msgid "Open This PC"
+msgstr "Відкрити «Цей ПК»"
+
+#: crates/app/ui/main.slint
+msgid "Open folders in the running window (as a new tab)"
+msgstr "Відкривати папки в запущеному вікні (у новій вкладці)"
+
+#: crates/integrate/src/features.rs
+msgid "Open folders with Explorer 2.0"
+msgstr "Відкривати папки в Explorer 2.0"
+
+#: crates/app/ui/main.slint
+msgid "Open folders with Explorer 2.0 (double-click, “Open folder”)"
+msgstr "Відкривати папки в Explorer 2.0 (подвійне клацання, «Відкрити папку»)"
+
+#: crates/app/src/fileops.rs
+msgid "Operation cancelled."
+msgstr "Операцію скасовано."
+
+#: crates/core/src/places.rs
+msgid "Original location"
+msgstr "Початкове розташування"
+
+#: crates/app/src/fileops.rs
+#: crates/app/ui/main.slint
+#: crates/core/src/commands.rs
+msgid "Paste"
+msgstr "Вставити"
+
+#: crates/app/src/inspector.rs
+msgid "Path"
+msgstr "Шлях"
+
+#: crates/app/ui/main.slint
+msgid "Pause"
+msgstr "Призупинити"
+
+#: crates/app/src/fileops.rs
+msgid "Paused"
+msgstr "Призупинено"
+
+#: crates/app/src/fileops.rs
+msgid ""
+"Permanently delete the {n} item in the Recycle Bin?\n"
+"This can't be undone."
+msgid_plural ""
+"Permanently delete all {n} items in the Recycle Bin?\n"
+"This can't be undone."
+msgstr[0] ""
+"Остаточно видалити {n} елемент із кошика?\n"
+"Цю дію не можна скасувати."
+msgstr[1] ""
+"Остаточно видалити {n} елементи з кошика?\n"
+"Цю дію не можна скасувати."
+msgstr[2] ""
+"Остаточно видалити {n} елементів із кошика?\n"
+"Цю дію не можна скасувати."
+
+#: crates/fs/src/places.rs
+msgid "Pictures"
+msgstr "Зображення"
+
+#: crates/core/src/commands.rs
+msgid "Previous tab"
+msgstr "Попередня вкладка"
+
+#: crates/app/src/installer.rs
+msgid "Program folder cannot be determined"
+msgstr "Не вдається визначити папку програми"
+
+#: crates/integrate/src/bin/explorer2-recover.rs
+msgid "Program folder not removed ({0}) – is Explorer 2.0 still open? Folder: {1}"
+msgstr "Папку програми не видалено ({0}) – Explorer 2.0 ще відкрито? Папка: {1}"
+
+#: crates/app/src/fileops.rs
+#: crates/core/src/commands.rs
+msgid "Properties"
+msgstr "Властивості"
+
+#: crates/shell/src/win_menu.rs
+msgid "Properties not available: {0}"
+msgstr "Властивості недоступні: {0}"
+
+#: crates/app/ui/main.slint
+msgid "Quick access"
+msgstr "Швидкий доступ"
+
+#: crates/core/src/commands.rs
+msgid "Re-sync search index with disk"
+msgstr "Повторно синхронізувати індекс пошуку з диском"
+
+#: crates/app/ui/main.slint
+msgid "Re-sync with disk"
+msgstr "Синхронізувати з диском"
+
+#: crates/core/src/inspect.rs
+msgid "Read-only"
+msgstr "Лише читання"
+
+#: crates/core/src/places.rs
+msgid "Recycle Bin"
+msgstr "Кошик"
+
+#: crates/ops/src/undo.rs
+msgid "Recycle Bin not available"
+msgstr "Кошик недоступний"
+
+#: crates/ops/src/trashview.rs
+#: crates/ops/src/undo.rs
+msgid "Recycle Bin not readable: {0}"
+msgstr "Не вдається прочитати кошик: {0}"
+
+#: crates/ops/src/exec.rs
+msgid "Recycle Bin: {0}"
+msgstr "Кошик: {0}"
+
+#: crates/app/ui/main.slint
+#: crates/core/src/commands.rs
+msgid "Redo"
+msgstr "Повторити"
+
+#: crates/app/src/fileops.rs
+msgid "Redo: {0}"
+msgstr "Повторити: {0}"
+
+#: crates/app/src/fileops.rs
+#: crates/core/src/commands.rs
+msgid "Refresh"
+msgstr "Оновити"
+
+#: crates/integrate/src/bin/explorer2-recover.rs
+msgid "Removing the program folder …"
+msgstr "Видалення папки програми…"
+
+#: crates/app/src/fileops.rs
+#: crates/app/ui/main.slint
+#: crates/core/src/commands.rs
+msgid "Rename"
+msgstr "Перейменувати"
+
+#: crates/app/ui/main.slint
+msgid "Replace"
+msgstr "Замінити"
+
+#: crates/app/src/fileops.rs
+msgid "Reset"
+msgstr "Скинути"
+
+#: crates/app/ui/main.slint
+#: crates/core/src/commands.rs
+msgid "Reset all Windows integrations"
+msgstr "Скинути всі інтеграції з Windows"
+
+#: crates/integrate/src/bin/explorer2-recover.rs
+msgid "Reset everything to the Windows default now?"
+msgstr "Скинути все до стандартних налаштувань Windows зараз?"
+
+#: crates/app/src/integration.rs
+msgid "Reset incomplete: {0}"
+msgstr "Скидання виконано не повністю: {0}"
+
+#: crates/app/ui/main.slint
+msgid "Restore"
+msgstr "Відновити"
+
+#: crates/ops/src/trashview.rs
+#: crates/ops/src/undo.rs
+msgid "Restore failed: {0}"
+msgstr "Не вдалося відновити: {0}"
+
+#: crates/core/src/commands.rs
+msgid "Restore from the Recycle Bin"
+msgstr "Відновити з кошика"
+
+#: crates/app/ui/main.slint
+msgid "Resume"
+msgstr "Продовжити"
+
+#: crates/core/src/guard.rs
+msgid "Safe start: the last {0} starts were aborted, so Explorer 2.0 uses software rendering and does not restore the session. If it runs stably, the next start is normal again."
+msgstr "Безпечний запуск: останні запуски ({0}) було перервано, тому Explorer 2.0 використовує програмне відображення й не відновлює сеанс. Якщо робота буде стабільною, наступний запуск знову буде звичайним."
+
+#: crates/app/ui/main.slint
+msgid "Search"
+msgstr "Пошук"
+
+#: crates/core/src/commands.rs
+msgid "Search (in the current folder)"
+msgstr "Пошук (у поточній папці)"
+
+#: crates/app/src/nav.rs
+#: crates/core/src/commands.rs
+msgid "Search all drives"
+msgstr "Пошук на всіх дисках"
+
+#: crates/app/ui/main.slint
+msgid "Search all drives …"
+msgstr "Пошук на всіх дисках…"
+
+#: crates/app/ui/main.slint
+msgid "Search commands …   (type > for places)"
+msgstr "Пошук команд…   (введіть > для розташувань)"
+
+#: crates/app/src/search.rs
+msgid "Search index off (EXPLORER2_INDEX=off)."
+msgstr "Індекс пошуку вимкнено (EXPLORER2_INDEX=off)."
+
+#: crates/app/src/search.rs
+msgid "Search index off: searches only go through the current folder."
+msgstr "Індекс пошуку вимкнено: пошук виконується лише в поточній папці."
+
+#: crates/app/src/search.rs
+msgid "Search index restarting …"
+msgstr "Перезапуск індексу пошуку…"
+
+#: crates/app/src/search.rs
+msgid "Search index starting shortly …"
+msgstr "Індекс пошуку незабаром запуститься…"
+
+#: crates/app/src/search.rs
+msgid "Search index starting …"
+msgstr "Запуск індексу пошуку…"
+
+#: crates/app/src/search.rs
+msgid "Search index: no folder for the index files."
+msgstr "Індекс пошуку: немає папки для файлів індексу."
+
+#: crates/app/src/nav.rs
+msgid "Search {0}"
+msgstr "Пошук: {0}"
+
+#: crates/app/src/nav.rs
+msgid "Search “{0}”"
+msgstr "Пошук «{0}»"
+
+#: crates/app/src/nav.rs
+#: crates/app/src/search.rs
+msgid "Search: {0}"
+msgstr "Пошук: {0}"
+
+#: crates/core/src/commands.rs
+msgid "Select all"
+msgstr "Виділити все"
+
+#: crates/app/ui/main.slint
+#: crates/core/src/commands.rs
+msgid "Settings"
+msgstr "Параметри"
+
+#: crates/app/src/config.rs
+msgid "Settings not saved: {0}"
+msgstr "Параметри не збережено: {0}"
+
+#: crates/app/src/nav.rs
+msgid "Shared folder"
+msgstr "Спільна папка"
+
+#: crates/core/src/commands.rs
+msgid "Shift+Del"
+msgstr "Shift+Del"
+
+#: crates/core/src/commands.rs
+msgid "Shift+F10"
+msgstr "Shift+F10"
+
+#: crates/core/src/inspect.rs
+msgid "Shortcut or link"
+msgstr "Ярлик або посилання"
+
+#: crates/app/ui/main.slint
+msgid "Show file name extensions"
+msgstr "Показувати розширення імен файлів"
+
+#: crates/app/ui/main.slint
+msgid "Show hidden items"
+msgstr "Показувати приховані елементи"
+
+#: crates/app/src/fileops.rs
+msgid "Show more options"
+msgstr "Показати додаткові параметри"
+
+#: crates/app/ui/main.slint
+msgid "Show protected operating system files"
+msgstr "Показувати захищені системні файли"
+
+#: crates/app/ui/main.slint
+msgid "Show report"
+msgstr "Показати звіт"
+
+#: crates/fs/src/network.rs
+msgid "Sign-in cancelled"
+msgstr "Вхід скасовано"
+
+#: crates/fs/src/lib.rs
+#: crates/fs/src/network.rs
+msgid "Sign-in required"
+msgstr "Потрібно ввійти"
+
+#: crates/fs/src/network.rs
+msgid "Signing in is only available on Windows"
+msgstr "Вхід доступний лише в Windows"
+
+#: crates/app/ui/main.slint
+msgid "Single-click to open an item (point to select)"
+msgstr "Відкривати одним клацанням, виділяти вказівником"
+
+#: crates/app/src/inspector.rs
+#: crates/app/ui/main.slint
+msgid "Size"
+msgstr "Розмір"
+
+#: crates/app/src/inspector.rs
+msgid "Size of files"
+msgstr "Розмір файлів"
+
+#: crates/app/ui/main.slint
+msgid "Skip"
+msgstr "Пропустити"
+
+#: crates/core/src/renderer.rs
+msgid "Software rendering"
+msgstr "Програмне відображення"
+
+#: crates/app/ui/main.slint
+msgid "Sort"
+msgstr "Сортування"
+
+#: crates/core/src/commands.rs
+msgid "Sort ascending"
+msgstr "За зростанням"
+
+#: crates/core/src/commands.rs
+msgid "Sort by date modified"
+msgstr "Сортувати за датою змінення"
+
+#: crates/core/src/commands.rs
+msgid "Sort by name"
+msgstr "Сортувати за іменем"
+
+#: crates/core/src/commands.rs
+msgid "Sort by size"
+msgstr "Сортувати за розміром"
+
+#: crates/core/src/commands.rs
+msgid "Sort by type"
+msgstr "Сортувати за типом"
+
+#: crates/core/src/commands.rs
+msgid "Sort descending"
+msgstr "За спаданням"
+
+#: crates/integrate/src/bin/explorer2-recover.rs
+msgid "State: {0}"
+msgstr "Стан: {0}"
+
+#: crates/core/src/places.rs
+msgid "Storage"
+msgstr "Місце"
+
+#: crates/core/src/commands.rs
+msgid "Switch to the other view"
+msgstr "Перейти на іншу панель"
+
+#: crates/core/src/inspect.rs
+msgid "System"
+msgstr "Системний"
+
+#: crates/app/ui/main.slint
+msgid "System default"
+msgstr "Як у системі"
+
+#: crates/app/src/lang.rs
+msgid "System default ({0})"
+msgstr "Як у системі ({0})"
+
+#: crates/core/src/renderer.rs
+msgid "System default renderer"
+msgstr "Відображення за замовчуванням"
+
+#: crates/core/src/lib.rs
+msgid "TB"
+msgstr "ТБ"
+
+#: crates/app/ui/main.slint
+msgid "Takes effect the next time the app starts."
+msgstr "Набуде чинності під час наступного запуску програми."
+
+#: crates/setup/src/main.rs
+msgid "Temp folder {0}: {1}"
+msgstr "Тимчасова папка {0}: {1}"
+
+#: crates/app/src/fileops.rs
+msgid "The Recycle Bin is empty."
+msgstr "Кошик порожній."
+
+#: crates/shell/src/menu.rs
+msgid "The context menu is only available on Windows."
+msgstr "Контекстне меню доступне лише в Windows."
+
+#: crates/app/src/fileops.rs
+msgid "The destination already has a folder named “{0}”."
+msgstr "У папці призначення вже є папка з іменем «{0}»."
+
+#: crates/app/src/fileops.rs
+msgid "The destination already has an item named “{0}”."
+msgstr "У папці призначення вже є елемент з іменем «{0}»."
+
+#: crates/ops/src/exec.rs
+msgid "The destination folder is a subfolder of the source folder."
+msgstr "Папка призначення є підпапкою вихідної папки."
+
+#: crates/ops/src/exec.rs
+msgid "The file is being used by another process"
+msgstr "Файл використовується іншим процесом"
+
+#: crates/app/src/nav.rs
+msgid "The folder no longer exists: {0}"
+msgstr "Папка більше не існує: {0}"
+
+#: crates/ops/src/names.rs
+msgid "The name can't be empty."
+msgstr "Ім'я не може бути порожнім."
+
+#: crates/ops/src/names.rs
+msgid "The name can't end with a period or a space."
+msgstr "Ім'я не може закінчуватися крапкою або пробілом."
+
+#: crates/ops/src/names.rs
+msgid "The name contains an invalid character."
+msgstr "Ім'я містить неприпустимий символ."
+
+#: crates/ops/src/names.rs
+msgid "The name is too long (at most 255 characters)."
+msgstr "Ім'я задовге (не більше 255 символів)."
+
+#: crates/app/src/search.rs
+msgid "The search index could not start."
+msgstr "Не вдалося запустити індекс пошуку."
+
+#: crates/app/src/quick.rs
+msgid "The search index is being prepared …"
+msgstr "Підготовка індексу пошуку…"
+
+#: crates/app/src/search.rs
+msgid "The search index is kept by another Explorer 2.0 window."
+msgstr "Індексом пошуку керує інше вікно Explorer 2.0."
+
+#: crates/app/src/search.rs
+msgid "The search index is not running yet."
+msgstr "Індекс пошуку ще не запущено."
+
+#: crates/app/src/quick.rs
+msgid "The search index is off (Settings → Search)."
+msgstr "Індекс пошуку вимкнено (Параметри → Пошук)."
+
+#: crates/app/ui/main.slint
+msgid "The view is remembered per folder."
+msgstr "Вигляд запам'ятовується для кожної папки."
+
+#: crates/ops/src/simple.rs
+msgid "There is already an item named “{0}”."
+msgstr "Елемент з іменем «{0}» уже існує."
+
+#: crates/app/ui/main.slint
+#: crates/core/src/places.rs
+msgid "This PC"
+msgstr "Цей ПК"
+
+#: crates/app/src/nav.rs
+msgid "This location doesn't exist on this system: {0}"
+msgstr "Це розташування не існує в цій системі: {0}"
+
+#: crates/setup/src/main.rs
+msgid "This setup was built without the program files."
+msgstr "Цей інсталятор зібрано без файлів програми."
+
+#: crates/core/src/commands.rs
+msgid "Toggle details pane"
+msgstr "Показати або сховати область відомостей"
+
+#: crates/core/src/commands.rs
+msgid "Toggle file name extensions"
+msgstr "Показати або сховати розширення імен файлів"
+
+#: crates/core/src/commands.rs
+msgid "Toggle hidden items"
+msgstr "Показати або сховати приховані елементи"
+
+#: crates/core/src/commands.rs
+msgid "Toggle search index"
+msgstr "Увімкнути або вимкнути індекс пошуку"
+
+#: crates/core/src/commands.rs
+msgid "Toggle two views"
+msgstr "Увімкнути або вимкнути дві панелі"
+
+#: crates/core/src/commands.rs
+msgid "Toggle: Win+E opens Explorer 2.0"
+msgstr "Увімкнути або вимкнути: Win+E відкриває Explorer 2.0"
+
+#: crates/core/src/commands.rs
+msgid "Toggle: open folders in the running window (new tab)"
+msgstr "Увімкнути або вимкнути: відкривати папки в запущеному вікні (нова вкладка)"
+
+#: crates/core/src/commands.rs
+msgid "Toggle: open folders with Explorer 2.0"
+msgstr "Увімкнути або вимкнути: відкривати папки в Explorer 2.0"
+
+#: crates/core/src/commands.rs
+msgid "Toggle: “Open in Explorer 2.0” in the context menu"
+msgstr "Увімкнути або вимкнути: «Відкрити в Explorer 2.0» у контекстному меню"
+
+#: crates/app/src/inspector.rs
+msgid "Total"
+msgstr "Усього"
+
+#: crates/app/src/inspector.rs
+msgid "Total size"
+msgstr "Загальний розмір"
+
+#: crates/app/ui/main.slint
+msgid "Two views"
+msgstr "Дві панелі"
+
+#: crates/app/src/nav.rs
+#: crates/app/ui/main.slint
+msgid "Type"
+msgstr "Тип"
+
+#: crates/app/src/quick.rs
+msgid "Type to search all drives"
+msgstr "Введіть текст для пошуку на всіх дисках"
+
+#: crates/fs/src/places.rs
+msgid "USB Drive"
+msgstr "USB-накопичувач"
+
+#: crates/app/ui/main.slint
+#: crates/core/src/commands.rs
+msgid "Undo"
+msgstr "Скасувати"
+
+#: crates/app/src/fileops.rs
+msgid "Undo: {0}"
+msgstr "Скасувати: {0}"
+
+#: crates/integrate/src/bin/explorer2-recover.rs
+msgid "Uninstall Explorer 2.0 and reset all Windows integrations?"
+msgstr "Видалити Explorer 2.0 і скинути всі інтеграції з Windows?"
+
+#: crates/app/src/nav.rs
+msgid "Unknown shell location: shell:{0}"
+msgstr "Невідоме розташування оболонки: shell:{0}"
+
+#: crates/app/ui/main.slint
+msgid "Up"
+msgstr "Вгору"
+
+#: crates/app/src/installer.rs
+msgid "Update the installation with this copy"
+msgstr "Оновити інсталяцію цією копією"
+
+#: crates/app/ui/main.slint
+msgid "Use hardware acceleration when available"
+msgstr "Використовувати апаратне прискорення (за наявності)"
+
+#: crates/app/ui/main.slint
+msgid "Use the Windows accent color"
+msgstr "Використовувати колір елементів Windows"
+
+#: crates/app/ui/main.slint
+#: crates/core/src/commands.rs
+msgid "Use the current view for all folders"
+msgstr "Застосувати поточний вигляд до всіх папок"
+
+#: crates/fs/src/places.rs
+msgid "Videos"
+msgstr "Відео"
+
+#: crates/app/src/nav.rs
+msgid "View not saved: {0}"
+msgstr "Вигляд не збережено: {0}"
+
+#: crates/core/src/commands.rs
+msgid "View: Details"
+msgstr "Вигляд: таблиця"
+
+#: crates/core/src/commands.rs
+msgid "View: Extra large icons"
+msgstr "Вигляд: величезні значки"
+
+#: crates/core/src/commands.rs
+msgid "View: Large icons"
+msgstr "Вигляд: великі значки"
+
+#: crates/core/src/commands.rs
+msgid "View: Medium icons"
+msgstr "Вигляд: звичайні значки"
+
+#: crates/app/ui/main.slint
+#: crates/integrate/src/features.rs
+msgid "Win+E opens Explorer 2.0"
+msgstr "Win+E відкриває Explorer 2.0"
+
+#: crates/integrate/src/lib.rs
+msgid "Windows default restored: {0} values/files, {1} keys removed{2}."
+msgstr "Стандартні налаштування Windows відновлено: значень/файлів – {0}, видалено розділів – {1}{2}."
+
+#: crates/app/ui/main.slint
+msgid "Windows integration"
+msgstr "Інтеграція з Windows"
+
+#: crates/app/src/integration.rs
+msgid "Windows integration is only available on Windows."
+msgstr "Інтеграція з Windows доступна лише в Windows."
+
+#: crates/app/src/quick.rs
+msgid "Without the search index there is nothing to find here (Settings → Search)."
+msgstr "Без індексу пошуку тут нічого не знайти (Параметри → Пошук)."
+
+#: crates/integrate/src/bin/explorer2-recover.rs
+msgid "[y/N]"
+msgstr "[т/Н]"
+
+#: crates/ops/src/names.rs
+msgid "control characters"
+msgstr "керівні символи"
+
+#: crates/app/src/inspector.rs
+msgid "counting …"
+msgstr "підрахунок…"
+
+#: crates/index/src/query.rs
+msgid "date not understood: {0}"
+msgstr "не вдалося розпізнати дату: {0}"
+
+#: crates/core/src/renderer.rs
+msgid "disabled in the settings"
+msgstr "вимкнено в параметрах"
+
+#: crates/core/src/inspect.rs
+msgid "empty"
+msgstr "порожньо"
+
+#: crates/core/src/renderer.rs
+msgid "forced by EXPLORER2_RENDERER"
+msgstr "задано через EXPLORER2_RENDERER"
+
+#: crates/index/src/persist.rs
+msgid "index belongs to another drive ({0})"
+msgstr "індекс належить іншому диску ({0})"
+
+#: crates/search/src/service.rs
+msgid "index belongs to another folder"
+msgstr "індекс належить іншій папці"
+
+#: crates/index/src/persist.rs
+msgid "index damaged: {0}"
+msgstr "індекс пошкоджено: {0}"
+
+#: crates/index/src/persist.rs
+msgid "index from another version ({0})"
+msgstr "індекс іншої версії ({0})"
+
+#: crates/index/src/persist.rs
+msgid "index not readable: {0}"
+msgstr "не вдається прочитати індекс: {0}"
+
+#: crates/search/src/watch.rs
+msgid "input/output error: {0}"
+msgstr "помилка введення-виведення: {0}"
+
+#: crates/index/src/query.rs
+msgid "invalid regular expression: {0}"
+msgstr "неприпустимий регулярний вираз: {0}"
+
+#: crates/core/src/renderer.rs
+msgid "no GPU check on this system"
+msgstr "перевірка GPU в цій системі не виконується"
+
+#: crates/app/src/config.rs
+msgid "no configuration folder"
+msgstr "немає папки конфігурації"
+
+#: crates/index/src/persist.rs
+msgid "no saved index"
+msgstr "немає збереженого індексу"
+
+#: crates/core/src/renderer.rs
+msgid "no suitable GPU found"
+msgstr "придатний GPU не знайдено"
+
+#: crates/core/src/renderer.rs
+msgid "safe start after aborted starts"
+msgstr "безпечний запуск після перерваних запусків"
+
+#: crates/app/src/quick.rs
+msgid "searched recently"
+msgstr "нещодавні запити"
+
+#: crates/core/src/renderer.rs
+msgid "set by SLINT_BACKEND"
+msgstr "задано через SLINT_BACKEND"
+
+#: crates/index/src/query.rs
+msgid "size not understood: {0}"
+msgstr "не вдалося розпізнати розмір: {0}"
+
+#: crates/core/src/renderer.rs
+msgid "suitable GPU found"
+msgstr "знайдено придатний GPU"
+
+#: crates/search/src/watch.rs
+msgid "too many changes at once"
+msgstr "забагато змін одночасно"
+
+#: crates/search/src/watch.rs
+msgid "too many folders for the Linux watcher (raise fs.inotify.max_user_watches)"
+msgstr "забагато папок для відстеження в Linux (збільште fs.inotify.max_user_watches)"
+
+#: crates/app/src/search.rs
+msgid "unknown"
+msgstr "невідомо"
+
+#: crates/integrate/src/bin/explorer2-recover.rs
+msgid "yes"
+msgstr "так"
+
+#: crates/app/src/integration.rs
+msgid ""
+"{0}\n"
+"\n"
+"Afterwards Explorer 2.0 continues from the installation folder (this window closes)."
+msgstr ""
+"{0}\n"
+"\n"
+"Потім Explorer 2.0 продовжить роботу з папки інсталяції (це вікно закриється)."
+
+#: crates/setup/src/main.rs
+msgid ""
+"{0}\n"
+"\n"
+"Target: {1}\n"
+"\n"
+"No administrator rights needed; a Start menu entry and an “Apps & Features” entry are created. Windows integrations (open folders, Win+E) can be switched on afterwards in the settings – undoable at any time with one button."
+msgstr ""
+"{0}\n"
+"\n"
+"Папка: {1}\n"
+"\n"
+"Права адміністратора не потрібні; створюються пункт у меню «Пуск» і запис у «Програми та компоненти». Інтеграції з Windows (відкриття папок, Win+E) можна потім увімкнути в параметрах – їх можна будь-коли скасувати однією кнопкою."
+
+#: crates/integrate/src/lib.rs
+msgid "{0} (not empty)"
+msgstr "{0} (не порожня)"
+
+#: crates/app/src/inspector.rs
+msgid "{0} ({1} bytes)"
+msgstr "{0} ({1} байт)"
+
+#: crates/ops/src/names.rs
+msgid "{0} - Copy ({1}){2}"
+msgstr "{0} — копія ({1}){2}"
+
+#: crates/ops/src/names.rs
+msgid "{0} - Copy{1}"
+msgstr "{0} — копія{1}"
+
+#: crates/core/src/guard.rs
+msgid "{0} A report is in the “crash” folder."
+msgstr "{0} Звіт міститься в папці «crash»."
+
+#: crates/setup/src/main.rs
+msgid "{0} cannot be started: {1}"
+msgstr "Не вдається запустити {0}: {1}"
+
+#: crates/integrate/src/lib.rs
+msgid "{0} changed by other software – left unchanged."
+msgstr "{0} змінено іншим ПЗ – залишено без змін."
+
+#: crates/integrate/src/install.rs
+msgid "{0} contains foreign files – not deleted"
+msgstr "{0} містить сторонні файли – не видалено"
+
+#: crates/integrate/src/lib.rs
+msgid "{0} errors: {1}"
+msgstr "Помилки ({0}): {1}"
+
+#: crates/core/src/inspect.rs
+msgid "{0} file"
+msgid_plural "{0} files"
+msgstr[0] "{0} файл"
+msgstr[1] "{0} файли"
+msgstr[2] "{0} файлів"
+
+#: crates/app/src/nav.rs
+#: crates/core/src/inspect.rs
+msgid "{0} folder"
+msgid_plural "{0} folders"
+msgstr[0] "{0} папка"
+msgstr[1] "{0} папки"
+msgstr[2] "{0} папок"
+
+#: crates/app/src/inspector.rs
+msgid "{0} folder (not counted)"
+msgid_plural "{0} folders (not counted)"
+msgstr[0] "{0} папка (не підраховано)"
+msgstr[1] "{0} папки (не підраховано)"
+msgstr[2] "{0} папок (не підраховано)"
+
+#: crates/core/src/lib.rs
+msgid "{0} free of {1}"
+msgstr "{0} вільно з {1}"
+
+#: crates/app/src/fileops.rs
+msgid "{0} h {1} min left"
+msgstr "Залишилося {0} год {1} хв"
+
+#: crates/app/src/nav.rs
+msgid "{0} item"
+msgid_plural "{0} items"
+msgstr[0] "{0} елемент"
+msgstr[1] "{0} елементи"
+msgstr[2] "{0} елементів"
+
+#: crates/app/src/inspector.rs
+#: crates/app/src/nav.rs
+msgid "{0} item selected"
+msgid_plural "{0} items selected"
+msgstr[0] "Вибрано {0} елемент"
+msgstr[1] "Вибрано {0} елементи"
+msgstr[2] "Вибрано {0} елементів"
+
+#: crates/app/src/fileops.rs
+msgid "{0} min left"
+msgstr "Залишилося {0} хв"
+
+#: crates/app/src/fileops.rs
+msgid "{0} of {1}"
+msgstr "{0} з {1}"
+
+#: crates/app/src/quick.rs
+msgid "{0} of {1} result · Enter opens · Ctrl+Enter shows it in its folder"
+msgid_plural "{0} of {1} results · Enter opens · Ctrl+Enter shows it in its folder"
+msgstr[0] "{0} з {1} результату · Enter відкриває · Ctrl+Enter показує в папці"
+msgstr[1] "{0} з {1} результатів · Enter відкриває · Ctrl+Enter показує в папці"
+msgstr[2] "{0} з {1} результатів · Enter відкриває · Ctrl+Enter показує в папці"
+
+#: crates/app/src/nav.rs
+msgid "{0} of {1} result – refine the search"
+msgid_plural "{0} of {1} results – refine the search"
+msgstr[0] "{0} з {1} результату – уточніть запит"
+msgstr[1] "{0} з {1} результатів – уточніть запит"
+msgstr[2] "{0} з {1} результатів – уточніть запит"
+
+#: crates/app/src/fileops.rs
+msgid "{0} of {n} item"
+msgid_plural "{0} of {n} items"
+msgstr[0] "{0} з {n} елемента"
+msgstr[1] "{0} з {n} елементів"
+msgstr[2] "{0} з {n} елементів"
+
+#: crates/app/src/nav.rs
+msgid "{0} result"
+msgid_plural "{0} results"
+msgstr[0] "{0} результат"
+msgstr[1] "{0} результати"
+msgstr[2] "{0} результатів"
+
+#: crates/app/src/quick.rs
+msgid "{0} result · Enter opens · Ctrl+Enter shows it in its folder"
+msgid_plural "{0} results · Enter opens · Ctrl+Enter shows it in its folder"
+msgstr[0] "{0} результат · Enter відкриває · Ctrl+Enter показує в папці"
+msgstr[1] "{0} результати · Enter відкриває · Ctrl+Enter показує в папці"
+msgstr[2] "{0} результатів · Enter відкриває · Ctrl+Enter показує в папці"
+
+#: crates/app/src/fileops.rs
+msgid "{0} s left"
+msgstr "Залишилося {0} с"
+
+#: crates/app/src/quick.rs
+msgid "{0} · Enter picks an earlier search"
+msgstr "{0} · Enter вибирає попередній запит"
+
+#: crates/app/src/inspector.rs
+msgid "{0} × {1} pixels"
+msgstr "{0} × {1} пікселів"
+
+#: crates/app/src/integration.rs
+msgid "{0} – off, the Windows default is active again."
+msgstr "{0} – вимкнено, знову діє стандартна поведінка Windows."
+
+#: crates/app/src/integration.rs
+msgid "{0} – on. Please don't move Explorer 2.0 (reset first if you need to).{1}"
+msgstr "{0} – увімкнено. Не переміщуйте Explorer 2.0 (за потреби спершу виконайте скидання).{1}"
+
+#: crates/app/src/quick.rs
+msgid "{0}, {1} entry"
+msgid_plural "{0}, {1} entries"
+msgstr[0] "{0}, {1} запис"
+msgstr[1] "{0}, {1} записи"
+msgstr[2] "{0}, {1} записів"
+
+#: crates/app/src/search.rs
+msgid "{0}: building … {1} entry"
+msgid_plural "{0}: building … {1} entries"
+msgstr[0] "{0}: створення… {1} запис"
+msgstr[1] "{0}: створення… {1} записи"
+msgstr[2] "{0}: створення… {1} записів"
+
+#: crates/app/src/search.rs
+msgid "{0}: loading …"
+msgstr "{0}: завантаження…"
+
+#: crates/app/src/search.rs
+msgid "{0}: ready, {1} entry{2}"
+msgid_plural "{0}: ready, {1} entries{2}"
+msgstr[0] "{0}: готово, {1} запис{2}"
+msgstr[1] "{0}: готово, {1} записи{2}"
+msgstr[2] "{0}: готово, {1} записів{2}"
+
+#: crates/app/src/search.rs
+msgid "{0}: stopped"
+msgstr "{0}: зупинено"
+
+#: crates/app/src/search.rs
+msgid "{0}: {1} entry, re-syncing with the disk …"
+msgid_plural "{0}: {1} entries, re-syncing with the disk …"
+msgstr[0] "{0}: {1} запис, синхронізація з диском…"
+msgstr[1] "{0}: {1} записи, синхронізація з диском…"
+msgstr[2] "{0}: {1} записів, синхронізація з диском…"
+
+#: crates/integrate/src/lib.rs
+msgid "{n} change in the journal"
+msgid_plural "{n} changes in the journal"
+msgstr[0] "{n} зміна в журналі"
+msgstr[1] "{n} зміни в журналі"
+msgstr[2] "{n} змін у журналі"
+
+#: crates/app/src/quick.rs
+msgid "{n} drive"
+msgid_plural "{n} drives"
+msgstr[0] "{n} диск"
+msgstr[1] "{n} диски"
+msgstr[2] "{n} дисків"
+
+#: crates/app/src/fileops.rs
+msgid "{n} item"
+msgid_plural "{n} items"
+msgstr[0] "{n} елемент"
+msgstr[1] "{n} елементи"
+msgstr[2] "{n} елементів"
+
+#: crates/core/src/lib.rs
+msgid "{} File"
+msgstr "Файл {}"
+
+#: crates/ops/src/names.rs
+msgid "“.” and “..” are not allowed as a name."
+msgstr "«.» і «..» не можна використовувати як ім'я."
+
+#: crates/app/ui/main.slint
+#: crates/integrate/src/features.rs
+msgid "“Open in Explorer 2.0” in the context menu"
+msgstr "«Відкрити в Explorer 2.0» у контекстному меню"
+
+#: crates/app/src/fileops.rs
+#: crates/ops/src/names.rs
+msgid "“{0}”"
+msgstr "«{0}»"
+
+#: crates/ops/src/names.rs
+msgid "“{0}” is a reserved device name on Windows."
+msgstr "«{0}» – зарезервоване ім'я пристрою у Windows."

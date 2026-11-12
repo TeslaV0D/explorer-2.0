@@ -125,6 +125,7 @@ The app UI is German; UI labels are quoted as they appear (with a translation wh
 - [x] Renderer decision: option 2 (GPU probe) + setting (D-009)
 - [ ] Measure `NtQueryDirectoryFile` as an alternative to FindFirstFileExW (only if the Windows bench gets tight)
 - [ ] Raise GitHub Actions to Node 24 versions (checkout@v4 → v5 etc., deprecation warning in CI)
+- [ ] Move job `e2e-linux` from `ubuntu-24.04` to 26.04 (`ubuntu-latest` since 2026-11-10): `xdotool key F2` arrives as Alt+F2 there (CI #139/#140) – send F2 another way or work around xdotool, then unpin
 
 - [ ] Real hardware GPU probe only verifiable by a Boss test (CI has no GPU) → test the artifact on your own PC: settings panel shows “GPU-Beschleunigung (<GPU name>)”
 - [ ] Linux: no GPU probe (platform default) – dev platform only, ok
@@ -168,10 +169,25 @@ The app UI is German; UI labels are quoted as they appear (with a translation wh
 - [ ] Watch E2E flakes: [49] first drag after the full run ([72c] fixed: installer waits for the running copy, CI #128)
 
 ## Boss wishes (2026-11-08) – for later, not planned yet
-- [ ] **Localisation (i18n)**: translate the UI into further languages (supersedes D-007, e.g. Slint `@tr` + Rust texts)
+- [~] **Localisation (i18n)**: translate the UI into further languages (supersedes D-007) – plan `docs/PLAN-I18N.md`, D-029 (Boss 2026-11-10: de, en, es, fr, ru, uk, pl, it, zh, ja; English source; live switch)
+  - [x] L0 Basics (CI run #141): crate `explorer-i18n` (`tr!`/`tr_n!`, plural rules, `.po` reader, build-time tables, `extract` tool, catalog test), setting `language`, Windows/POSIX system language, Slint bundled translations, tests pinned to `de`, E2E [84]
+  - [x] L1 Slint texts → `@tr` (English source) + `de.po` filled, German UI unchanged – 89 texts, `de` complete, E2E [84a]/[84d] (CI run #144)
+  - [x] L2 Rust texts → `tr!`/`tr_n!` + numbers per language; 411 texts, `de` complete; Inspector + job labels by id (CI run #146)
+  - [x] Conflict dialog letter keys per language: access keys from the catalog (`&Reemplazar`), `core::mnemonic`, test `tests/mnemonics.rs` (label = text without `&`, keys unique per dialog); German keeps r/s/b/a (L6)
+  - [ ] R-001-safe relabel of the texts written to Windows (folder verb texts “Öffnen (Explorer 2.0)”, Start menu `.lnk` names + descriptions): written in the language at switch-on time, state/reset must not depend on the text (today fixed German, compared by the journal)
+  - [x] L3 English review + gallery in English: language-neutral test targets (`ui-lang-map.py`), English gallery as CI artifact, ~40 texts improved, German unchanged (CI run #147)
+  - [x] L4 language setting in the UI: list in own names at the top of the settings (“System default (…)” first), live switch of Slint + Rust texts, palette `language-*`, restart keeps it, E2E [85] (CI run #149)
+  - [x] L5 layout robustness: pseudo-locale `qps` (generated), overflow check in the UI dump (`EXPLORER2_UI_OVERFLOW`), 22 gallery screens per language (de/en/qps) + `scripts/layout-check.sh` gate, Windows gallery check with Segoe UI [G1]; fixes: menus grow with their text, wrapping check boxes (`CheckRow`) (CI run #152)
+  - [~] L6 languages one by one: es, fr, ru, uk, pl, it, zh, ja (glossary per language, native-speaker review of the gallery)
+    - [x] es – Spanish (es-ES): 422 texts, `docs/GLOSSARY-ES.md`, gallery `ui-gallery-linux-l10n/es`, layout check green (CI run #153); native-speaker review open
+    - [x] fr – French (fr-FR): 428 texts, `docs/GLOSSARY-FR.md` (typography with no-break spaces, units o/Ko/Mo), layout check green (CI run #154); native-speaker review open
+    - [x] ru – Russian (ru-RU): 430 texts, three plural forms, Cyrillic access keys, units Б/КБ/МБ, `docs/GLOSSARY-RU.md`, layout check green (CI run #157); native-speaker review open
+    - [x] uk – Ukrainian (uk-UA): 431 texts, three plural forms, Cyrillic access keys, `docs/GLOSSARY-UK.md`, layout check green (CI run #157); native-speaker review open
+    - [x] pl – Polish (pl-PL): 432 texts, three plural forms (one = exactly 1), „…” quotes, `docs/GLOSSARY-PL.md`, layout check green (CI run #157); native-speaker review open
+    - [ ] it · [ ] zh · [ ] ja
   - [ ] Hit meanings exactly, not confusing: terms as in Windows Explorer of the respective language (Recycle Bin, This PC, Quick access, Properties …), glossary per language
-  - [ ] Layout robustness when switching: check **all** texts for whether they fit into buttons/menus/columns/dialogs/settings (German/French/Russian long, CJK different font) – shorten, wrap or make widths dynamic; gallery per language + pixel/overflow check in E2E
-  - [ ] Language switchable in the settings (default: Windows language), live or with a restart notice
+  - [x] Layout robustness when switching: check **all** texts for whether they fit into buttons/menus/columns/dialogs/settings (German/French/Russian long, CJK different font) – shorten, wrap or make widths dynamic; gallery per language + pixel/overflow check in E2E (L5; per new language L6 runs the same gate, CJK fonts are measured there)
+  - [x] Language switchable in the settings (default: Windows language), live (L4)
   - [ ] Numbers/dates/sizes according to the locale; mind font coverage (gotcha: missing glyphs cost start time)
 - [ ] **“New” submenu like Windows**: not only folders but all creation options (text document, shortcut, zipped folder, Word/Excel/… from `HKCR\.<ext>\ShellNew` – `NullFile`/`FileName`/`Data`/`Command`), name directly in rename mode, undo like for New folder
 - [ ] **Autostart with Windows** (opt-in, switch in settings + palette)
@@ -187,9 +203,9 @@ The app UI is German; UI labels are quoted as they appear (with a translation wh
   - [ ] Never break anything: `Folder` (virtual folders, Control Panel, Recycle Bin …) stays with Windows Explorer, fallback to the real Explorer when Explorer 2.0 is missing/crashes; R-001 snapshot test for all new values; Windows E2E per route
 - [ ] **Emergency: Shift + right-click opens the native Windows context menu directly** (instead of our own; including extended verbs like “Copy as path”, Windows behaviour with Shift = extended verbs `CMF_EXTENDEDVERBS`)
 
-## Documentation in English (Boss 2026-11-09) – planned start Thu 12.11. 16:00, brought forward by Boss to Tue 10.11.
-- [~] Rewrite all docs on GitHub in English: `docs/*.md` (PROJECT, PLAN-*, WINDOWS-INTEGRATION, FIELD-TEST-* (formerly PRAXISTEST-*), STATUS, TODO), `THIRD-PARTY.md`, `scripts/release-notes.md` **and `CLAUDE.md`** (Boss 2026-11-09) – content 1:1, no logic change; D-004 changed accordingly
-- [ ] Complete the README (currently 11 lines): what Explorer 2.0 is, features (panes/tabs, search, Inspector, palette, colour schemes), screenshots from the gallery, download/installation (setup/portable, SmartScreen notice), emergency exit/reset (R-001), building from source, tests/CI, project structure, license
+## Documentation in English (Boss 2026-11-09) – planned start Thu 12.11. 16:00, brought forward by Boss, done Tue 10.11.
+- [x] Rewrite all docs on GitHub in English (done 2026-11-10): `docs/*.md` (PROJECT, PLAN-*, WINDOWS-INTEGRATION, FIELD-TEST-* (formerly PRAXISTEST-*), STATUS, TODO), `THIRD-PARTY.md`, `scripts/release-notes.md` **and `CLAUDE.md`** (Boss 2026-11-09) – content 1:1, no logic change; D-004 changed accordingly
+- [x] Complete the README (done 2026-11-10, screenshots in `docs/screenshots/` from the Linux gallery): what Explorer 2.0 is, features (panes/tabs, search, Inspector, palette, colour schemes), screenshots from the gallery, download/installation (setup/portable, SmartScreen notice), emergency exit/reset (R-001), building from source, tests/CI, project structure, license
 
 ## Phase 3 – File action shortcuts (Sweetch style)  *(later, described only)*
 - [ ] Tray helper with radial menu: drag files onto a sector or hotkey (Sweetch: Ctrl+Alt+Space)

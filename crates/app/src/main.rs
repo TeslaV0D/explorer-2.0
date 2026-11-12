@@ -11,6 +11,7 @@ mod installer;
 mod instance;
 mod integration;
 mod keys;
+mod lang;
 mod nav;
 mod open;
 mod palette;
@@ -67,6 +68,8 @@ fn main() -> Result<(), slint::PlatformError> {
     }
     if arg.as_deref() == Some("--install") {
         attach_parent_console();
+        // console output in the user's language too
+        lang::init(&config::load().language);
         let quiet = std::env::args().any(|a| a == "--quiet");
         std::process::exit(installer::cli(quiet));
     }
@@ -114,6 +117,7 @@ fn main() -> Result<(), slint::PlatformError> {
     // Must run before the first window exists (renderer is chosen per process).
     let renderer = gfx::select(safe);
     let settings = config::load();
+    let language = lang::init(&settings.language);
     let session = if start.is_none() && !safe {
         config::load_session()
     } else {
@@ -122,6 +126,12 @@ fn main() -> Result<(), slint::PlatformError> {
 
     let win = MainWindow::new()?;
     nav::trace_line(&format!("window created at={:.1}ms", nav::since_start_ms()));
+    lang::apply_ui(language);
+    lang::offer(&win);
+    on!(win, on_set_language, |w, i| lang::choose(
+        &w,
+        i.max(0) as usize
+    ));
     theme::init(&win, settings.theme, settings.system_accent);
     on!(win, on_set_theme, |w, t| theme::set_choice(&w, t.as_str()));
     on!(win, on_settings_opened, |w| {
@@ -140,10 +150,17 @@ fn main() -> Result<(), slint::PlatformError> {
             explorer_core::guard::Verdict::Skip => 0,
         };
         let reports = crash::take_new_reports();
-        if let Some(text) = explorer_core::guard::notice_de(reports, safe, failed) {
+        if let Some(text) = explorer_core::guard::notice_text(reports, safe, failed) {
             nav::trace_line(&format!("notice reports={reports} safe={safe}"));
             win.set_notice(text.into());
             win.set_notice_folder(reports > 0);
+            lang::keep(&win, "notice", move |w| {
+                // again after a language switch, as long as it is shown
+                if !w.get_notice().is_empty() {
+                    let text = explorer_core::guard::notice_text(reports, safe, failed);
+                    w.set_notice(text.unwrap_or_default().into());
+                }
+            });
         }
     }
     on!(win, on_notice_open, |w| {
@@ -161,7 +178,13 @@ fn main() -> Result<(), slint::PlatformError> {
         },
     );
     win.set_hw_accel(settings.hardware_acceleration);
-    win.set_renderer_status(gfx::status_text(&renderer).into());
+    {
+        let (choice, reason) = (renderer.choice, renderer.reason.clone());
+        lang::keep(&win, "renderer", move |w| {
+            let text = explorer_core::renderer::status_text(choice, &reason);
+            w.set_renderer_status(text.into())
+        });
+    }
     win.on_toggle_hw_accel({
         let w = win.as_weak();
         move |on| {
@@ -285,6 +308,20 @@ fn main() -> Result<(), slint::PlatformError> {
     on!(win, on_conflict_answer, |w, n| fileops::conflict_answer(
         &w, n
     ));
+    win.on_conflict_key({
+        let w = win.as_weak();
+        move |typed| {
+            use explorer_core::mnemonic::{conflict_key, ConflictKey};
+            let dirs = w.upgrade().is_some_and(|w| w.get_conflict_dirs());
+            match conflict_key(typed.as_str(), dirs) {
+                Some(ConflictKey::Replace) => 0,
+                Some(ConflictKey::Skip) => 1,
+                Some(ConflictKey::KeepBoth) => 2,
+                Some(ConflictKey::All) => 4,
+                None => -1,
+            }
+        }
+    });
     on!(win, on_confirm_answer, |w, ok| fileops::confirm_answer(
         &w, ok
     ));

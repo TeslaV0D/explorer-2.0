@@ -79,6 +79,8 @@ pub struct Shortcut {
 
 pub fn shortcuts(p: &InstallPaths) -> Vec<Shortcut> {
     vec![
+        // Start menu names/descriptions live in the journal (R-001) → fixed,
+        // NOT translated (D-029; a language-safe relabel is its own TODO).
         Shortcut {
             file: p.start_menu_dir.join("Explorer 2.0.lnk"),
             target: p.app(),
@@ -266,8 +268,8 @@ pub fn remove_program_dir(dir: &Path, attempts: u32) -> io::Result<()> {
         return Ok(());
     }
     if !is_our_program_dir(dir) {
-        return Err(io::Error::other(format!(
-            "{} enthält fremde Dateien – nicht gelöscht",
+        return Err(io::Error::other(explorer_i18n::tr!(
+            "{0} contains foreign files – not deleted",
             dir.display()
         )));
     }

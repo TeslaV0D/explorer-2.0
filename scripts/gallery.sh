@@ -7,6 +7,7 @@ set -u
 EXE=$1; OUT=$2; W=$OUT/work
 mkdir -p "$OUT" "$W"
 . "$(dirname "$0")/ui-lib.sh"
+export EXPLORER2_UI_OVERFLOW=1 # L5: texts that do not fit are marked in the dump
 command -v import >/dev/null || { echo "imagemagick (import) missing"; exit 1; }
 
 # a folder that looks like real use
@@ -18,13 +19,19 @@ head -c 2400000 /dev/zero > "$D/video-schnitt.mp4"
 convert -size 640x400 gradient:'#3a7bd5-#00d2ff' "$D/Titelbild.png" 2>/dev/null
 convert -size 400x400 plasma:fractal "$D/Assets/foto.jpg" 2>/dev/null
 for i in $(seq 1 30); do echo $i > "$D/Quellcode/src/modul_$i.rs"; done
+echo alt > "$D/Dokumente/notizen.txt" # conflict when notizen.txt is pasted there (L5)
 
 shot() { # name: hides the mouse in a corner first
   xdotool mousemove 1279 799; sleep 0.4
   import -window root -crop 1200x720+0+0 "$OUT/$THEME-$1.png"
   echo "$THEME-$1" >> "$OUT/index.txt"
+  overflow "$THEME-$1"
+}
+overflow() { # L5: texts that do not fit their box (6th column of the UI dump)
+  awk -F'\t' -v S="$1" 'NF >= 6 { print S "\t" $0 }' "$UI_DUMP" >> "$OUT/overflow.txt"
 }
 focus() { xdotool windowfocus --sync "$(xdotool search --name 'Explorer 2.0' | head -1)"; }
+goto() { xdotool key ctrl+l; sleep 0.3; xdotool key ctrl+a; xdotool type --delay 5 "$1"; xdotool key Return; sleep 1.2; }
 
 run_theme() {
   THEME=$1
@@ -38,7 +45,7 @@ run_theme() {
   sleep 1; focus
   shot 01-ordner
   ui_click "Mehr"; sleep 0.6; shot 01b-menue-mehr; xdotool key Escape; sleep 0.3
-  xdotool mousemove $(ui_xy "Kopieren"); sleep 1.4; import -window root -crop 1200x720+0+0 "$OUT/$THEME-01c-tooltip.png"; echo "$THEME-01c-tooltip" >> "$OUT/index.txt"
+  xdotool mousemove $(ui_xy "Kopieren"); sleep 1.4; import -window root -crop 1200x720+0+0 "$OUT/$THEME-01c-tooltip.png"; echo "$THEME-01c-tooltip" >> "$OUT/index.txt"; overflow "$THEME-01c-tooltip"
   xdotool mousemove $(ui_xy "Titelbild.png") click 1; sleep 0.3
   xdotool key alt+p; sleep 1.2; shot 02-inspector-bild
   xdotool key alt+p; sleep 0.4
@@ -59,6 +66,21 @@ run_theme() {
   ui_click "Schließen" last; sleep 0.4
   xdotool mousemove $(ui_xy "notizen.txt") click 1; xdotool key shift+Delete; sleep 0.8; shot 10-bestaetigung
   xdotool key Escape; sleep 0.4
+  # L5: the rarer screens too, so the layout check sees every text
+  ui_click "Sortieren"; sleep 0.6; shot 14-sortieren; xdotool key Escape; sleep 0.3
+  xdotool mousemove $(ui_xy "notizen.txt") click 1; sleep 0.2; xdotool key F2; sleep 0.6; shot 15-umbenennen
+  xdotool key Escape; sleep 0.3; xdotool key ctrl+c; sleep 0.3
+  goto "$D/Dokumente"; xdotool key ctrl+v; sleep 1.2; shot 16-konflikt; xdotool key Escape; sleep 0.6
+  goto "$D/gibt es nicht"; sleep 0.4; shot 17-fehler
+  goto "$D"; xdotool key alt+p; sleep 1.2; shot 18-inspector-ordner; xdotool key alt+p; sleep 0.4
+  ui_click "Dieser PC"; sleep 1.5; shot 19-dieser-pc
+  ui_click "Papierkorb"; sleep 1.2; shot 20-papierkorb
+  goto "$D"; focus
+  for i in 1 2 3 4 5 6; do xdotool key ctrl+t; sleep 0.4; done; sleep 0.8; shot 21-viele-tabs
+  for i in 1 2 3 4 5 6; do xdotool key ctrl+w; sleep 0.3; done; sleep 0.5
+  ui_click "Einstellungen"; sleep 1
+  xdotool mousemove $(ui_xy "Farbschema"); for i in $(seq 1 15); do xdotool click 5; sleep 0.05; done
+  sleep 0.6; shot 22-einstellungen-unten; ui_click "Schließen" last; sleep 0.4
   WID=$(xdotool search --name 'Explorer 2.0' | head -1)
   xdotool windowsize "$WID" 820 560; sleep 1.2; shot 11-schmal
   kill $PID; wait $PID 2>/dev/null
@@ -76,7 +98,7 @@ run_theme() {
   kill $PID; wait $PID 2>/dev/null
 }
 
-: > "$OUT/index.txt"
+: > "$OUT/index.txt"; : > "$OUT/overflow.txt"
 run_theme light
 run_theme dark
 echo "gallery: $(wc -l < "$OUT/index.txt") screenshots in $OUT"

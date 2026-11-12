@@ -65,7 +65,9 @@ pub fn apply<R: Registry + ?Sized>(
         Loaded::None => Journal::default(),
         Loaded::Ok(j) => j,
         Loaded::Damaged(_) => {
-            return Err("Integrations-Journal beschädigt – bitte zuerst zurücksetzen".into())
+            return Err(
+                explorer_i18n::tr!("Integration journal damaged – please reset first").into(),
+            )
         }
     };
     let save_j = |j: &Journal| save(paths, j).map_err(|e| format!("Journal schreiben: {e}"));
@@ -163,30 +165,34 @@ impl ResetReport {
         self.restored + self.keys_removed + self.swept
     }
 
-    pub fn summary_de(&self) -> String {
+    /// One line for the app and the recovery tool (current language).
+    pub fn summary(&self) -> String {
         let mut s = if self.changed() == 0 && self.errors.is_empty() {
-            "Keine Windows-Integration aktiv – nichts zu tun.".to_string()
+            explorer_i18n::tr!("No Windows integration active – nothing to do.").to_string()
         } else {
-            format!(
-                "Windows-Standard wiederhergestellt: {} Werte/Dateien, {} Schlüssel entfernt{}.",
+            let damaged = if self.journal == JournalState::Damaged {
+                explorer_i18n::tr!(" (journal was damaged, known locations checked)")
+            } else {
+                ""
+            };
+            explorer_i18n::tr!(
+                "Windows default restored: {0} values/files, {1} keys removed{2}.",
                 self.restored + self.swept,
                 self.keys_removed,
-                if self.journal == JournalState::Damaged {
-                    " (Journal war beschädigt, bekannte Stellen geprüft)"
-                } else {
-                    ""
-                }
+                damaged
             )
         };
         if !self.kept.is_empty() {
-            s.push_str(&format!(
-                " {} von anderer Software geändert – belassen.",
+            s.push(' ');
+            s.push_str(&explorer_i18n::tr!(
+                "{0} changed by other software – left unchanged.",
                 self.kept.len()
             ));
         }
         if !self.errors.is_empty() {
-            s.push_str(&format!(
-                " {} Fehler: {}",
+            s.push(' ');
+            s.push_str(&explorer_i18n::tr!(
+                "{0} errors: {1}",
                 self.errors.len(),
                 self.errors.join("; ")
             ));
@@ -376,7 +382,7 @@ fn revert<R: Registry + ?Sized>(
                 {
                     unresolved.push(e.clone())
                 }
-                (Ok(true), Ok(false)) => r.kept.push(format!("{key} (nicht leer)")),
+                (Ok(true), Ok(false)) => r.kept.push(explorer_i18n::tr!("{0} (not empty)", key)),
                 (Err(err), _) | (_, Err(err)) => {
                     r.errors.push(format!("{key}: {err}"));
                     unresolved.push(e.clone());
@@ -516,23 +522,25 @@ impl Status {
         self.entries > 0 || self.active_points > 0 || self.journal == JournalState::Damaged
     }
 
-    pub fn summary_de(&self) -> String {
+    /// One line for the settings and `--status` (current language).
+    pub fn summary(&self) -> String {
         if !self.any() {
-            return "Keine Windows-Integration aktiv.".into();
+            return explorer_i18n::tr!("No Windows integration active.").into();
         }
-        let mut s = format!(
-            "{} Änderung{} im Journal",
+        let mut s = explorer_i18n::tr_n!(
             self.entries,
-            if self.entries == 1 { "" } else { "en" }
+            "{n} change in the journal",
+            "{n} changes in the journal"
         );
         if self.active_points > 0 {
-            s.push_str(&format!(
-                ", {} Integrationsstelle(n) aktiv",
-                self.active_points
+            s.push_str(&explorer_i18n::tr_n!(
+                self.active_points,
+                ", {n} integration point active",
+                ", {n} integration points active"
             ));
         }
         if self.journal == JournalState::Damaged {
-            s.push_str(" – Journal beschädigt, Zurücksetzen empfohlen");
+            s.push_str(explorer_i18n::tr!(" – journal damaged, reset recommended"));
         }
         s.push('.');
         s

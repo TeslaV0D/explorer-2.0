@@ -130,23 +130,27 @@ pub fn surplus_reports(mut names: Vec<String>) -> Vec<String> {
     names
 }
 
-/// The notice shown after a crash / in safe mode (German UI text).
-pub fn notice_de(new_reports: usize, safe_mode: bool, failed: u32) -> Option<String> {
+/// The notice shown after a crash / in safe mode (current language).
+pub fn notice_text(new_reports: usize, safe_mode: bool, failed: u32) -> Option<String> {
+    use explorer_i18n::{tr, tr_n};
     let crash = match new_reports {
         0 => None,
-        1 => Some("Explorer 2.0 wurde beim letzten Mal unerwartet beendet.".to_string()),
-        n => Some(format!("Explorer 2.0 wurde {n}-mal unerwartet beendet.")),
+        1 => Some(tr!("Explorer 2.0 closed unexpectedly last time.").to_string()),
+        n => Some(tr_n!(
+            n,
+            "Explorer 2.0 closed unexpectedly {n} time.",
+            "Explorer 2.0 closed unexpectedly {n} times."
+        )),
     };
     let safe = safe_mode.then(|| {
-        format!(
-            "Sicherer Start: die letzten {failed} Starts sind abgebrochen – daher Software-Darstellung \
-             und keine wiederhergestellte Sitzung. Bleibt es stabil, startet Explorer 2.0 \
-             beim nächsten Mal wieder normal."
+        tr!(
+            "Safe start: the last {0} starts were aborted, so Explorer 2.0 uses software rendering and does not restore the session. If it runs stably, the next start is normal again.",
+            failed
         )
     });
     match (crash, safe) {
         (None, None) => None,
-        (Some(c), None) => Some(format!("{c} Ein Bericht liegt im Ordner „crash“.")),
+        (Some(c), None) => Some(tr!("{0} A report is in the “crash” folder.", c)),
         (None, Some(s)) => Some(s),
         (Some(c), Some(s)) => Some(format!("{c} {s}")),
     }
@@ -223,14 +227,15 @@ mod tests {
 
     #[test]
     fn notices() {
-        assert_eq!(notice_de(0, false, 0), None);
-        assert!(notice_de(1, false, 0)
+        // tests see the English source texts (German comes from lang/de)
+        assert_eq!(notice_text(0, false, 0), None);
+        assert!(notice_text(1, false, 0)
             .unwrap()
-            .contains("unerwartet beendet"));
-        assert!(notice_de(3, false, 0).unwrap().contains("3-mal"));
-        let s = notice_de(0, true, 2).unwrap();
-        assert!(s.contains("Sicherer Start") && s.contains("2 Starts"));
-        let both = notice_de(1, true, 2).unwrap();
-        assert!(both.contains("unerwartet") && both.contains("Sicherer Start"));
+            .contains("closed unexpectedly"));
+        assert!(notice_text(3, false, 0).unwrap().contains("3 times"));
+        let s = notice_text(0, true, 2).unwrap();
+        assert!(s.contains("Safe start") && s.contains("2 starts"));
+        let both = notice_text(1, true, 2).unwrap();
+        assert!(both.contains("unexpectedly") && both.contains("Safe start"));
     }
 }

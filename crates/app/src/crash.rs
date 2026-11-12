@@ -54,7 +54,7 @@ fn write_report(cause: &str, detail: &str) -> Option<PathBuf> {
     let mut f = std::fs::File::create(&path).ok()?;
     let _ = writeln!(
         f,
-        "Explorer 2.0 {} – Absturzbericht\nZeit: {}\nSystem: {} {}\nUrsache: {cause}\n\n{detail}\n",
+        "Explorer 2.0 {} – crash report\nTime: {}\nSystem: {} {}\nCause: {cause}\n\n{detail}\n",
         env!("CARGO_PKG_VERSION"),
         guard::utc_text(secs),
         std::env::consts::OS,
@@ -62,7 +62,7 @@ fn write_report(cause: &str, detail: &str) -> Option<PathBuf> {
     );
     // try_lock: the panic may have happened while the ring was locked
     if let Ok(r) = RING.try_lock() {
-        let _ = writeln!(f, "Letzte Protokollzeilen ({}):", r.len());
+        let _ = writeln!(f, "Last log lines ({}):", r.len());
         for l in r.iter() {
             let _ = writeln!(f, "  {l}");
         }
@@ -82,7 +82,7 @@ fn backtrace_text(bt: &str) -> String {
         bt.to_string()
     } else {
         format!(
-            "(ohne Symbole in der Release-Exe, {} Frames)",
+            "(no symbols in the release exe, {} frames)",
             bt.lines().count()
         )
     }
@@ -97,19 +97,19 @@ pub fn install() {
             .downcast_ref::<&str>()
             .map(|s| s.to_string())
             .or_else(|| info.payload().downcast_ref::<String>().cloned())
-            .unwrap_or_else(|| "(keine Meldung)".into());
+            .unwrap_or_else(|| "(no message)".into());
         let loc = info
             .location()
             .map(|l| format!("{}:{}", l.file(), l.line()))
             .unwrap_or_default();
         let thread = std::thread::current()
             .name()
-            .unwrap_or("(ohne Namen)")
+            .unwrap_or("(unnamed)")
             .to_string();
         let bt = backtrace_text(&std::backtrace::Backtrace::force_capture().to_string());
         let path = write_report(
             "Panic",
-            &format!("Thread: {thread}\nMeldung: {msg}\nOrt: {loc}\n\nBacktrace:\n{bt}"),
+            &format!("Thread: {thread}\nMessage: {msg}\nLocation: {loc}\n\nBacktrace:\n{bt}"),
         );
         let _ = writeln!(
             std::io::stderr(),
@@ -177,15 +177,15 @@ mod win {
         let base = unsafe { GetModuleHandleW(std::ptr::null()) } as usize;
         let rva = addr
             .checked_sub(base)
-            .map_or("außerhalb der Exe".to_string(), |r| format!("exe+{r:#x}"));
+            .map_or("outside the exe".to_string(), |r| format!("exe+{r:#x}"));
         let thread = std::thread::current()
             .name()
-            .unwrap_or("(ohne Namen)")
+            .unwrap_or("(unnamed)")
             .to_string();
         let _ = super::write_report(
-            "Windows-Ausnahme",
+            "Windows exception",
             &format!(
-                "Thread: {thread}\nCode: {code:#010x}\nAdresse: {addr:#x} ({rva})\nExe-Basis: {base:#x}"
+                "Thread: {thread}\nCode: {code:#010x}\nAddress: {addr:#x} ({rva})\nExe base: {base:#x}"
             ),
         );
         // EXCEPTION_EXECUTE_HANDLER: end the process quietly (the report is
@@ -415,12 +415,13 @@ pub fn test_hook() {
 #[cfg(test)]
 mod tests {
     use super::*;
+    // tests see the English source texts (German comes from lang/de, D-029)
 
     #[test]
     fn backtraces() {
         assert_eq!(
             backtrace_text("   0: <unknown>\n   1: <unknown>\n"),
-            "(ohne Symbole in der Release-Exe, 2 Frames)"
+            "(no symbols in the release exe, 2 frames)"
         );
         let real = "   0: explorer2::main\n             at src/main.rs:5\n";
         assert_eq!(backtrace_text(real), real);

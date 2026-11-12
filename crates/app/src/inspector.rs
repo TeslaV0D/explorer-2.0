@@ -7,8 +7,9 @@
 //! folder count is cancelled.
 
 use crate::{InfoRow, MainWindow};
-use explorer_core::inspect::{attributes_de, count_de, image_size, text_preview, totals};
+use explorer_core::inspect::{attributes, count_text, image_size, text_preview, totals};
 use explorer_core::{format_local, format_size};
+use explorer_i18n::{tr, tr_n};
 use slint::{ComponentHandle, ModelRc, VecModel};
 use std::cell::RefCell;
 use std::io::Read;
@@ -38,39 +39,69 @@ thread_local! {
     static ST: RefCell<State> = RefCell::new(State::default());
 }
 
-fn row(key: &str, value: impl Into<String>) -> InfoRow {
+/// A fact: `id` is fixed (logic, grouping), the label is translated (D-029).
+fn row(id: &str, value: impl Into<String>) -> InfoRow {
+    let gid = group_of(id);
     InfoRow {
-        key: key.into(),
+        id: id.into(),
+        key: label_of(id).into(),
         value: value.into().into(),
-        group: group_of(key).into(),
+        gid: gid.into(),
+        group: group_label(gid).into(),
         first: false,
     }
 }
 
-/// Group heading of a fact in the inspector (redesign R7).
-fn group_of(key: &str) -> &'static str {
-    match key {
-        "Geändert" | "Erstellt" => "DATUM",
-        "Pfad" => "ORT",
-        _ => "ALLGEMEIN",
+/// Label of a fact id in the current language.
+fn label_of(id: &str) -> &'static str {
+    match id {
+        "size" => tr!("Size"),
+        "modified" => tr!("Modified"),
+        "created" => tr!("Created"),
+        "attributes" => tr!("Attributes"),
+        "dimensions" => tr!("Dimensions"),
+        "contents" => tr!("Contents"),
+        "files-size" => tr!("Size of files"),
+        "total" => tr!("Total"),
+        "total-size" => tr!("Total size"),
+        "unreadable" => tr!("Not readable"),
+        "path" => tr!("Path"),
+        _ => "",
     }
 }
 
-fn group_rank(group: &str) -> u8 {
-    match group {
-        "ALLGEMEIN" => 0,
-        "DATUM" => 1,
+/// Group of a fact in the inspector (redesign R7): general / date / location.
+fn group_of(id: &str) -> &'static str {
+    match id {
+        "modified" | "created" => "date",
+        "path" => "location",
+        _ => "general",
+    }
+}
+
+fn group_label(gid: &str) -> &'static str {
+    match gid {
+        "date" => tr!("DATE"),
+        "location" => tr!("LOCATION"),
+        _ => tr!("GENERAL"),
+    }
+}
+
+fn group_rank(gid: &str) -> u8 {
+    match gid {
+        "general" => 0,
+        "date" => 1,
         _ => 2,
     }
 }
 
 /// Facts grouped (stable within a group); the first of each group carries the heading.
 fn arrange(rows: &mut [InfoRow]) {
-    rows.sort_by_key(|r| group_rank(r.group.as_str()));
+    rows.sort_by_key(|r| group_rank(r.gid.as_str()));
     let mut last = String::new();
     for r in rows.iter_mut() {
-        r.first = r.group.as_str() != last;
-        last = r.group.to_string();
+        r.first = r.gid.as_str() != last;
+        last = r.gid.to_string();
     }
 }
 
@@ -130,6 +161,12 @@ pub fn changed(win: &MainWindow) {
     }
 }
 
+/// Language switched (L4): build the shown facts again.
+pub fn relabel(win: &MainWindow) {
+    ST.with_borrow_mut(|s| s.shown_key = Default::default());
+    changed(win);
+}
+
 /// Results of the background part.
 #[derive(Default)]
 struct Extra {
@@ -168,14 +205,14 @@ fn update(win: &MainWindow) {
     match t.items.as_slice() {
         [] => {
             win.set_insp_title(t.title.as_str().into());
-            win.set_insp_subtitle("Ordner".into());
+            win.set_insp_subtitle(tr!("Folder").into());
             // the open folder: its direct content (already loaded) – walking
             // the tree just because a folder (or C:\) is open would be costly
             let (files, folders, bytes) = t.direct;
-            rows.push(row("Inhalt", count_de(files, folders)));
-            rows.push(row("Größe der Dateien", format_size(bytes)));
+            rows.push(row("contents", count_text(files, folders)));
+            rows.push(row("files-size", format_size(bytes)));
             if let Some(d) = &t.dir {
-                rows.push(row("Pfad", d.display().to_string()));
+                rows.push(row("path", d.display().to_string()));
             }
         }
         [(path, e, shown, kind)] => {
@@ -183,21 +220,21 @@ fn update(win: &MainWindow) {
             win.set_insp_subtitle(kind.as_str().into());
             if !e.is_dir() {
                 let size = if e.size >= 1024 {
-                    format!("{} ({} Bytes)", format_size(e.size), group(e.size))
+                    tr!("{0} ({1} bytes)", format_size(e.size), group(e.size))
                 } else {
                     format_size(e.size)
                 };
-                rows.push(row("Größe", size));
+                rows.push(row("size", size));
             }
             if let Some(m) = e.modified {
-                rows.push(row("Geändert", format_local(m)));
+                rows.push(row("modified", format_local(m)));
             }
-            rows.push(row("Attribute", attributes_de(e)));
+            rows.push(row("attributes", attributes(e)));
             if let Some(p) = path {
                 if e.is_dir() && p.parent().is_some_and(|q| !q.as_os_str().is_empty()) {
-                    rows.push(row("Inhalt", "wird gezählt …"));
+                    rows.push(row("contents", tr!("counting …")));
                 }
-                rows.push(row("Pfad", p.display().to_string()));
+                rows.push(row("path", p.display().to_string()));
                 // a whole drive is never counted automatically
                 let drive_root = p.parent().is_none_or(|q| q.as_os_str().is_empty());
                 job = Some(if e.is_dir() && drive_root {
@@ -215,21 +252,23 @@ fn update(win: &MainWindow) {
         many => {
             let (files, folders, bytes) = totals(many.iter().map(|(_, e, _, _)| e));
             win.set_insp_title(
-                format!(
-                    "{} Elemente ausgewählt",
+                tr_n!(
+                    many.len(),
+                    "{0} item selected",
+                    "{0} items selected",
                     explorer_core::format_count(many.len())
                 )
                 .into(),
             );
-            win.set_insp_subtitle(count_de(files, folders).into());
-            rows.push(row("Größe der Dateien", format_size(bytes)));
+            win.set_insp_subtitle(count_text(files, folders).into());
+            rows.push(row("files-size", format_size(bytes)));
             let dirs: Vec<PathBuf> = many
                 .iter()
                 .filter(|(p, e, _, _)| e.is_dir() && p.is_some())
                 .filter_map(|(p, _, _, _)| p.clone())
                 .collect();
             if !dirs.is_empty() {
-                rows.push(row("Gesamt", "wird gezählt …"));
+                rows.push(row("total", tr!("counting …")));
                 job = Some(Job::Folders(dirs, files as u64, folders as u64, bytes));
             }
         }
@@ -311,8 +350,8 @@ fn add(sum: &mut explorer_fs::DirStats, s: &explorer_fs::DirStats) {
     sum.unreadable += s.unreadable;
 }
 
-/// "Inhalt: 1.234 Dateien, 56 Ordner" + "Gesamtgröße" for one folder;
-/// "Gesamt" for a multi-selection (incl. the selected files and folders).
+/// ("contents", "1,234 files, 56 folders") + "total-size" for one folder;
+/// "total" for a multi-selection (incl. the selected files and folders).
 fn folder_rows(
     s: &explorer_fs::DirStats,
     (files0, folders0, bytes0): (u64, u64, u64),
@@ -322,27 +361,35 @@ fn folder_rows(
     let files = (s.files + files0) as usize;
     let folders = (s.folders + folders0) as usize;
     let more = if complete {
-        ""
+        String::new()
     } else if s.truncated {
-        " (mehr – Zählung bei 500.000 Einträgen beendet)"
+        tr!(
+            " (more – counting stopped at {0} entries)",
+            explorer_core::format_count(explorer_fs::MAX_ENTRIES as usize)
+        )
     } else {
-        " …"
+        " …".to_string()
     };
-    let label = if multi { "Gesamt" } else { "Inhalt" };
+    let id = if multi { "total" } else { "contents" };
     let mut v = vec![
         (
-            label.to_string(),
-            format!("{}{more}", count_de(files, folders)),
+            id.to_string(),
+            format!("{}{more}", count_text(files, folders)),
         ),
         (
-            "Gesamtgröße".to_string(),
+            "total-size".to_string(),
             format!("{}{more}", format_size(s.bytes + bytes0)),
         ),
     ];
     if s.unreadable > 0 {
         v.push((
-            "Nicht lesbar".into(),
-            format!("{} Ordner (nicht mitgezählt)", s.unreadable),
+            "unreadable".into(),
+            tr_n!(
+                s.unreadable,
+                "{0} folder (not counted)",
+                "{0} folders (not counted)",
+                explorer_core::format_count(s.unreadable as usize)
+            ),
         ));
     }
     v
@@ -358,7 +405,7 @@ fn file_facts(p: &Path, px: u32) -> Extra {
             .ok()
             .and_then(|t| t.duration_since(std::time::UNIX_EPOCH).ok())
         {
-            rows.push(("Erstellt".to_string(), format_local(secs.as_secs() as i64)));
+            rows.push(("created".to_string(), format_local(secs.as_secs() as i64)));
         }
     }
     let mut head = Vec::with_capacity(HEAD_BYTES);
@@ -367,7 +414,7 @@ fn file_facts(p: &Path, px: u32) -> Extra {
     }
     let dims = image_size(&head);
     if let Some((w, h)) = dims {
-        rows.push(("Abmessungen".to_string(), format!("{w} × {h} Pixel")));
+        rows.push(("dimensions".to_string(), tr!("{0} × {1} pixels", w, h)));
     }
     let text = if dims.is_none() {
         text_preview(&head, 40, 200).filter(|t| !t.is_empty())
@@ -398,11 +445,11 @@ fn apply(win: &MainWindow, gen: u64, extra: Extra) {
             .filter_map(|i| slint::Model::row_data(&*s.rows, i))
             .collect();
         for (k, val) in &extra.rows {
-            match v.iter_mut().find(|r| r.key == k.as_str()) {
+            match v.iter_mut().find(|r| r.id == k.as_str()) {
                 Some(r) => r.value = val.as_str().into(),
                 None => {
-                    // insert new facts before "Pfad" (path stays last-ish)
-                    let at = v.iter().position(|r| r.key == "Pfad").unwrap_or(v.len());
+                    // insert new facts before the path (path stays last-ish)
+                    let at = v.iter().position(|r| r.id == "path").unwrap_or(v.len());
                     v.insert(at, row(k, val.as_str()));
                 }
             }
@@ -432,17 +479,9 @@ fn apply(win: &MainWindow, gen: u64, extra: Extra) {
     }
 }
 
-/// 1234567 → "1.234.567" (German grouping).
+/// 1234567 → "1,234,567" (grouping of the current language).
 fn group(n: u64) -> String {
-    let s = n.to_string();
-    let mut out = String::new();
-    for (i, c) in s.chars().enumerate() {
-        if i > 0 && (s.len() - i).is_multiple_of(3) {
-            out.push('.');
-        }
-        out.push(c);
-    }
-    out
+    explorer_i18n::format_integer(n)
 }
 
 #[cfg(test)]
@@ -452,26 +491,32 @@ mod tests {
     #[test]
     fn facts_are_grouped_with_one_heading_each() {
         let mut v = vec![
-            row("Größe", "1 KB"),
-            row("Geändert", "heute"),
-            row("Attribute", "-"),
-            row("Erstellt", "gestern"),
-            row("Abmessungen", "2 × 2 Pixel"),
-            row("Pfad", "/x"),
+            row("size", "1 KB"),
+            row("modified", "today"),
+            row("attributes", "-"),
+            row("created", "yesterday"),
+            row("dimensions", "2 × 2 pixels"),
+            row("path", "/x"),
         ];
         arrange(&mut v);
-        let keys: Vec<&str> = v.iter().map(|r| r.key.as_str()).collect();
+        let ids: Vec<&str> = v.iter().map(|r| r.id.as_str()).collect();
         assert_eq!(
-            keys,
+            ids,
             [
-                "Größe",
-                "Attribute",
-                "Abmessungen",
-                "Geändert",
-                "Erstellt",
-                "Pfad"
+                "size",
+                "attributes",
+                "dimensions",
+                "modified",
+                "created",
+                "path"
             ]
         );
+        // tests see the English source texts (German comes from lang/de)
+        assert_eq!(
+            (v[0].key.as_str(), v[0].group.as_str()),
+            ("Size", "GENERAL")
+        );
+        assert_eq!(v[5].gid.as_str(), "location");
         let firsts: Vec<bool> = v.iter().map(|r| r.first).collect();
         assert_eq!(firsts, [true, false, false, true, false, true]);
     }
@@ -479,8 +524,8 @@ mod tests {
     #[test]
     fn grouping_and_folder_rows() {
         assert_eq!(group(0), "0");
-        assert_eq!(group(1234), "1.234");
-        assert_eq!(group(1234567), "1.234.567");
+        assert_eq!(group(1234), "1,234");
+        assert_eq!(group(1234567), "1,234,567");
         let s = explorer_fs::DirStats {
             files: 3,
             folders: 1,
@@ -492,14 +537,14 @@ mod tests {
         let r = folder_rows(&s, (0, 0, 0), true);
         assert_eq!(
             r[0],
-            ("Inhalt".to_string(), "3 Dateien, 1 Ordner".to_string())
+            ("contents".to_string(), "3 files, 1 folder".to_string())
         );
-        assert_eq!(r[1].0, "Gesamtgröße");
-        assert!(r[2].1.starts_with("1 Ordner"));
+        assert_eq!(r[1].0, "total-size");
+        assert!(r[2].1.starts_with("1 folder"));
         let partial = folder_rows(&s, (2, 1, 10), false);
         assert_eq!(
             partial[0],
-            ("Gesamt".to_string(), "5 Dateien, 2 Ordner …".to_string())
+            ("total".to_string(), "5 files, 2 folders …".to_string())
         );
     }
 }

@@ -261,6 +261,7 @@ pub fn visible_range(first: i32, count: i32, len: usize) -> std::ops::Range<usiz
 #[cfg(test)]
 mod tests {
     use super::*;
+    // tests see the English source texts (German comes from lang/de, D-029)
     use explorer_core::EntryKind;
 
     fn entry(name: &str, dir: bool) -> Entry {
@@ -304,8 +305,8 @@ mod tests {
     fn type_names_fall_back_without_shell() {
         let mut l = RowLabels::default();
         if !SHELL_SUPPORTED {
-            assert_eq!(l.type_name(&entry("a.txt", false)), "TXT-Datei");
-            assert_eq!(l.type_name(&entry("d", true)), "Dateiordner");
+            assert_eq!(l.type_name(&entry("a.txt", false)), "TXT File");
+            assert_eq!(l.type_name(&entry("d", true)), "File folder");
         }
     }
 

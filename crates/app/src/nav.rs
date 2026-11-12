@@ -20,6 +20,7 @@ use explorer_core::{
 };
 use explorer_fs::places::{drive_display_name, used_fraction};
 use explorer_fs::{load_dir, watch_dir, DirWatcher, FsError, FsErrorKind, LoadEvent, LoadHandle};
+use explorer_i18n::{tr, tr_n};
 use explorer_shell::IconKey;
 use slint::{ComponentHandle, Model, ModelRc, VecModel};
 use std::cell::RefCell;
@@ -136,7 +137,7 @@ impl Tab {
             .as_deref()
             .and_then(explorer_core::places::search_of)
         {
-            return format!("Suche: {q}");
+            return tr!("Search: {0}", q);
         }
         if let VirtualData::Library(display, _) = &self.virtual_data {
             return display.clone();
@@ -272,21 +273,24 @@ pub fn refresh_cooldown(last_load: Duration) -> Duration {
 /// Minimum time between the starts of two watcher refreshes of the same tab.
 pub const MIN_REFRESH_GAP: Duration = Duration::from_millis(500);
 
-/// "1 Element" / "3 Elemente" with German thousands separator.
+/// "1 item" / "3 items" ("1 Element" / "3 Elemente") with the language's digit grouping.
 pub fn count_label(n: usize) -> String {
-    if n == 1 {
-        "1 Element".to_string()
-    } else {
-        format!("{} Elemente", format_count(n))
-    }
+    tr_n!(n, "{0} item", "{0} items", format_count(n))
 }
 
-/// Status bar text: base + selection info ("3 Elemente ausgewählt").
+/// Status bar text: base + selection info ("3 items selected").
 pub fn status_with_selection(base: &str, selected: usize) -> String {
     match selected {
         0 => base.to_string(),
-        1 => format!("{base}  |  1 Element ausgewählt"),
-        n => format!("{base}  |  {} Elemente ausgewählt", format_count(n)),
+        n => format!(
+            "{base}  |  {}",
+            tr_n!(
+                n,
+                "{0} item selected",
+                "{0} items selected",
+                format_count(n)
+            )
+        ),
     }
 }
 
@@ -454,7 +458,7 @@ fn load_virtual(v: VirtualPlace, filter: ViewFilter, sort: SortSpec) -> Update {
             if !explorer_shell::SHELL_SUPPORTED {
                 return Update::Failed(FsError {
                     kind: FsErrorKind::Other,
-                    message: "Bibliotheken gibt es nur unter Windows".into(),
+                    message: tr!("Libraries are only available on Windows").into(),
                 });
             }
             let mut kinds = HashMap::new();
@@ -611,20 +615,20 @@ pub(crate) fn folder_label(dir: &Path, scope: Option<&Path>) -> String {
 /// Status line of search results.
 pub(crate) fn search_status(shown: usize, total: usize, walked: bool) -> String {
     let mut s = if total == 0 {
-        "Keine Treffer".to_string()
+        tr!("No results").to_string()
     } else if shown < total {
-        format!(
-            "{} von {} Treffern – Suche verfeinern",
+        tr_n!(
+            total,
+            "{0} of {1} result – refine the search",
+            "{0} of {1} results – refine the search",
             format_count(shown),
             format_count(total)
         )
-    } else if total == 1 {
-        "1 Treffer".to_string()
     } else {
-        format!("{} Treffer", format_count(total))
+        tr_n!(total, "{0} result", "{0} results", format_count(total))
     };
     if walked {
-        s.push_str(" (Ordner durchsucht, ohne Index)");
+        s.push_str(tr!(" (folder searched, without index)"));
     }
     s
 }
@@ -643,11 +647,7 @@ fn dir_entry(name: String) -> Entry {
 }
 
 fn folder_count(n: usize) -> String {
-    if n == 1 {
-        "1 Ordner".into()
-    } else {
-        format!("{n} Ordner")
-    }
+    tr_n!(n, "{0} folder", "{0} folders", format_count(n))
 }
 
 /// `name`, or `name (2)`, `name (3)` … if a row with that name exists.
@@ -668,7 +668,7 @@ fn load_library(stem: &str, filter: ViewFilter, sort: SortSpec) -> Update {
     let Some(lib) = explorer_shell::library(stem) else {
         return Update::Failed(FsError {
             kind: FsErrorKind::NotFound,
-            message: format!("Bibliothek nicht gefunden: {stem}"),
+            message: tr!("Library not found: {0}", stem),
         });
     };
     if let [one] = lib.folders.as_slice() {
@@ -737,7 +737,7 @@ fn load_shares(
         .iter()
         .map(|s| {
             let k = if s.remark.is_empty() {
-                "Freigegebener Ordner".to_string()
+                tr!("Shared folder").to_string()
             } else {
                 s.remark.clone()
             };
@@ -880,12 +880,12 @@ fn sync_pane(pi: usize) {
             menu_row: p.menu_row,
             date_label: place
                 .map(|v| v.columns().0)
-                .unwrap_or("Änderungsdatum")
+                .unwrap_or(tr!("Date modified"))
                 .into(),
             type_label: if search.is_some() {
-                "Ordner".into()
+                tr!("Folder").into()
             } else {
-                place.map(|v| v.columns().1).unwrap_or("Typ").into()
+                place.map(|v| v.columns().1).unwrap_or(tr!("Type")).into()
             },
             search_query: search.map(|(_, q)| q).unwrap_or_default().into(),
             search_seq: p.search_seq,
@@ -1126,7 +1126,7 @@ pub fn refresh_places(win: &MainWindow) {
     let places: Vec<PlaceItem> = explorer_fs::places::known_folders()
         .into_iter()
         .map(|p| PlaceItem {
-            label: p.kind.label_de().into(),
+            label: p.kind.label().into(),
             path: p.path.to_string_lossy().as_ref().into(),
             is_drive: false,
             detail: Default::default(),
@@ -1296,7 +1296,7 @@ fn navigate_tab(win: &MainWindow, id: TabId, target: PathBuf, reason: Reason, hi
         return;
     };
     if reason == Reason::User {
-        set_tab_status(win, id, "Lädt …".into());
+        set_tab_status(win, id, tr!("Loading …").into());
         win.set_error("".into());
     }
     trace(&format!(
@@ -1562,7 +1562,7 @@ fn apply(
             }
             match done {
                 None => {
-                    set_tab_status(win, id, format!("Lädt … {}", format_count(n)));
+                    set_tab_status(win, id, tr!("Loading … {0}", format_count(n)));
                     trace(&format!(
                         "first paint tab={id} gen={gen} rows={n} after {:?} data_ready={:.1}ms at={:.1}ms",
                         t0.elapsed(),
@@ -1587,10 +1587,16 @@ fn apply(
                         None => count_label(n),
                     };
                     if hidden > 0 {
-                        st.push_str(&format!(" ({} ausgeblendet)", format_count(hidden)));
+                        st.push_str(&tr_n!(
+                            hidden,
+                            " ({0} hidden)",
+                            " ({0} hidden)",
+                            format_count(hidden)
+                        ));
                     }
                     if reason == Reason::User {
-                        st.push_str(&format!(" · {} ms", took.as_millis()));
+                        // the unit is a text: “мс” in Russian
+                        st.push_str(&tr!(" · {0} ms", took.as_millis()));
                     }
                     set_tab_status(win, id, st);
                     trace(&format!(
@@ -1678,9 +1684,7 @@ fn apply(
                 // Current folder was deleted/renamed → go to the nearest existing parent.
                 if let Some(up) = explorer_fs::nearest_existing_ancestor(&path) {
                     navigate_tab(win, id, up, Reason::User, Hist::Keep);
-                    win.set_error(
-                        format!("Ordner existiert nicht mehr: {}", path.display()).into(),
-                    );
+                    win.set_error(tr!("The folder no longer exists: {0}", path.display()).into());
                     return;
                 }
             }
@@ -1731,7 +1735,7 @@ fn show_crumbs(id: TabId, path: &Path, chars: usize) {
             }],
         };
         list.push(Crumb {
-            label: format!("Suche „{q}“").into(),
+            label: tr!("Search “{0}”", q).into(),
             path: path.to_string_lossy().as_ref().into(),
         });
         with_tab(id, |t, _, _| t.crumbs.set_vec(list));
@@ -1954,6 +1958,18 @@ fn invalidate_all(win: &MainWindow) {
     }
 }
 
+/// Language switched (L4): every Rust-built text again – sidebar, drives,
+/// rows (type names, sizes, dates), status lines, tab titles, Inspector.
+pub fn relabel(win: &MainWindow) {
+    refresh_places(win);
+    invalidate_all(win);
+    let panes = APP.with_borrow(|app| app.panes.len());
+    for pi in 0..panes {
+        sync_pane(pi);
+    }
+    sync_window(win);
+}
+
 // ---------------------------------------------------------------- search (S1.4b)
 
 /// Where a search from this tab looks: a search's own folder, the folder
@@ -1970,13 +1986,13 @@ fn search_scope(t: &Tab) -> Option<PathBuf> {
 /// Hint in the empty search field.
 fn search_scope_label(t: &Tab) -> String {
     match search_scope(t) {
-        Some(s) => format!(
-            "Suchen in {}",
+        Some(s) => tr!(
+            "Search {0}",
             s.file_name()
                 .map(|n| n.to_string_lossy().into_owned())
                 .unwrap_or_else(|| s.to_string_lossy().into_owned())
         ),
-        None => "Alle Laufwerke durchsuchen".into(),
+        None => tr!("Search all drives").into(),
     }
 }
 
@@ -2175,8 +2191,8 @@ pub fn resolve_input(s: &str) -> Result<PathBuf, String> {
         Ok(None) => Ok(PathBuf::from(t)),
         Ok(Some((f, sub))) => explorer_fs::places::known_folder_path(f)
             .map(|p| if sub.is_empty() { p } else { p.join(sub) })
-            .ok_or_else(|| format!("Diesen Ort gibt es hier nicht: {t}")),
-        Err(name) => Err(format!("Unbekannter Shell-Ort: shell:{name}")),
+            .ok_or_else(|| tr!("This location doesn't exist on this system: {0}", t)),
+        Err(name) => Err(tr!("Unknown shell location: shell:{0}", name)),
     }
 }
 
@@ -2445,7 +2461,7 @@ pub fn set_view(win: &MainWindow, m: ViewMode) {
             app.views.clone()
         });
         if let Err(e) = crate::config::save_views(&views) {
-            win.set_error(format!("Ansicht nicht gespeichert: {e}").into());
+            win.set_error(tr!("View not saved: {0}", e).into());
         }
     }
     sync_pane(pi);
@@ -2798,6 +2814,14 @@ pub fn list_key(
     // (rows per page, items per row)
     (page_rows, cols): (i32, i32),
 ) -> bool {
+    if std::env::var_os("EXPLORER2_TRACE_KEYS").is_some() {
+        // raw key (code points), to tell "never arrived" from "not mapped"
+        let codes: Vec<String> = text.chars().map(|c| format!("{:04x}", c as u32)).collect();
+        trace(&format!(
+            "key raw pane={pi} text=[{}] ctrl={ctrl} shift={shift} alt={alt}",
+            codes.join(" ")
+        ));
+    }
     let Some(action) = map_key_grid(text, ctrl, shift, alt, page_rows as isize, cols as isize)
     else {
         return false;
@@ -3296,6 +3320,7 @@ pub(crate) fn refresh_dirs(
 #[cfg(test)]
 mod tests {
     use super::*;
+    // tests see the English source texts (German comes from lang/de, D-029)
     use explorer_core::EntryKind;
 
     #[test]
@@ -3312,16 +3337,16 @@ mod tests {
 
     #[test]
     fn search_status_lines() {
-        assert_eq!(search_status(0, 0, false), "Keine Treffer");
-        assert_eq!(search_status(1, 1, false), "1 Treffer");
-        assert_eq!(search_status(1234, 1234, false), "1.234 Treffer");
+        assert_eq!(search_status(0, 0, false), "No results");
+        assert_eq!(search_status(1, 1, false), "1 result");
+        assert_eq!(search_status(1234, 1234, false), "1,234 results");
         assert_eq!(
             search_status(20_000, 123_456, false),
-            "20.000 von 123.456 Treffern – Suche verfeinern"
+            "20,000 of 123,456 results – refine the search"
         );
         assert_eq!(
             search_status(3, 3, true),
-            "3 Treffer (Ordner durchsucht, ohne Index)"
+            "3 results (folder searched, without index)"
         );
     }
 
@@ -3352,17 +3377,17 @@ mod tests {
 
     #[test]
     fn count_and_status_labels() {
-        assert_eq!(count_label(0), "0 Elemente");
-        assert_eq!(count_label(1), "1 Element");
-        assert_eq!(count_label(100_000), "100.000 Elemente");
-        assert_eq!(status_with_selection("5 Elemente", 0), "5 Elemente");
+        assert_eq!(count_label(0), "0 items");
+        assert_eq!(count_label(1), "1 item");
+        assert_eq!(count_label(100_000), "100,000 items");
+        assert_eq!(status_with_selection("5 items", 0), "5 items");
         assert_eq!(
-            status_with_selection("5 Elemente", 1),
-            "5 Elemente  |  1 Element ausgewählt"
+            status_with_selection("5 items", 1),
+            "5 items  |  1 item selected"
         );
         assert_eq!(
-            status_with_selection("5 Elemente", 1200),
-            "5 Elemente  |  1.200 Elemente ausgewählt"
+            status_with_selection("5 items", 1200),
+            "5 items  |  1,200 items selected"
         );
     }
 
@@ -3395,7 +3420,7 @@ mod tests {
             assert!(resolve_input("shell:Fonts").is_ok());
             assert!(resolve_input("shell:CommonStartup")
                 .unwrap_err()
-                .contains("nicht"));
+                .contains("doesn't exist"));
         }
         assert_eq!(
             resolve_input("Papierkorb").unwrap(),
@@ -3411,8 +3436,8 @@ mod tests {
         m.insert("Fotos".into(), PathBuf::new());
         m.insert("Fotos (2)".into(), PathBuf::new());
         assert_eq!(unique_name(&m, "Fotos"), "Fotos (3)");
-        assert_eq!(folder_count(1), "1 Ordner");
-        assert_eq!(folder_count(3), "3 Ordner");
+        assert_eq!(folder_count(1), "1 folder");
+        assert_eq!(folder_count(3), "3 folders");
         assert_eq!(
             resolve_input("shell:DocumentsLibrary").unwrap(),
             explorer_core::places::library_path("Documents")
@@ -3451,8 +3476,8 @@ mod tests {
             // shell names depend on the Windows display language ("File folder" / "Dateiordner")
             assert!(!rows[0].kind.is_empty() && rows[0].kind != rows[1].kind);
         } else {
-            assert_eq!(rows[0].kind, "Dateiordner");
-            assert_eq!(rows[1].kind, "TXT-Datei");
+            assert_eq!(rows[0].kind, "File folder");
+            assert_eq!(rows[1].kind, "TXT File");
         }
         assert_eq!(rows[1].size, "2 KB");
         assert_eq!(rows[1].modified, "1970-01-01 00:00");

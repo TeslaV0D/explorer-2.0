@@ -25,6 +25,7 @@ jobs:
     runs-on: windows-latest
     env:
       EXPLORER2_INDEX: "off"
+      EXPLORER2_LANG: "de"
       GH_TOKEN: ${{ github.token }}
     steps:
       - uses: actions/checkout@v4

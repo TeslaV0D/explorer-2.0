@@ -58,7 +58,8 @@ pub fn unique_names(names: &[String]) -> Vec<String> {
 
 /// Everything in the trash (blocking: run on a loader thread).
 pub fn list() -> Result<Vec<TrashEntry>, String> {
-    let items = trash::os_limited::list().map_err(|e| format!("Papierkorb nicht lesbar: {e}"))?;
+    let items = trash::os_limited::list()
+        .map_err(|e| explorer_i18n::tr!("Recycle Bin not readable: {0}", e))?;
     let reals: Vec<String> = items
         .iter()
         .map(|i| {
@@ -120,8 +121,8 @@ pub fn restore(entries: &[TrashEntry]) -> Result<(), String> {
     for e in entries {
         let target = e.original_parent.join(&e.real_name);
         if target.exists() {
-            return Err(format!(
-                "Am Originalort existiert bereits ein Element: {}",
+            return Err(explorer_i18n::tr!(
+                "An item already exists at the original location: {0}",
                 target.display()
             ));
         }
@@ -129,13 +130,13 @@ pub fn restore(entries: &[TrashEntry]) -> Result<(), String> {
         let _ = std::fs::create_dir_all(&e.original_parent);
     }
     trash::os_limited::restore_all(with_real_names(entries))
-        .map_err(|e| format!("Wiederherstellen fehlgeschlagen: {e}"))
+        .map_err(|e| explorer_i18n::tr!("Restore failed: {0}", e))
 }
 
 /// Deletes the items for good (cannot be undone).
 pub fn purge(entries: &[TrashEntry]) -> Result<(), String> {
     trash::os_limited::purge_all(entries.iter().map(|e| e.item.clone()))
-        .map_err(|e| format!("Endgültig löschen fehlgeschlagen: {e}"))
+        .map_err(|e| explorer_i18n::tr!("Delete permanently failed: {0}", e))
 }
 
 #[cfg(test)]

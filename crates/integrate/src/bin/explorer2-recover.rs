@@ -19,19 +19,22 @@ use explorer_integrate::{reset, status, JournalPaths, MemRegistry, Registry, Res
 use std::io::{self, BufRead, IsTerminal, Write};
 use std::path::{Path, PathBuf};
 
-const USAGE: &str = "Explorer 2.0 – Windows-Standard wiederherstellen
+fn usage() -> &'static str {
+    explorer_i18n::tr!(
+        "Explorer 2.0 – restore the Windows default
 
-  explorer2-recover                  zeigt den Stand, fragt nach und setzt zurück
-  explorer2-recover --yes            setzt ohne Nachfrage zurück
-  explorer2-recover --status         zeigt nur den Stand (Exit-Code 1 = aktiv)
-  explorer2-recover --uninstall      setzt zurück und entfernt Explorer 2.0
-  explorer2-recover --uninstall --quiet   dasselbe ohne Nachfrage
+  explorer2-recover                  shows the state, asks and resets
+  explorer2-recover --yes            resets without asking
+  explorer2-recover --status         only shows the state (exit code 1 = active)
+  explorer2-recover --uninstall      resets and removes Explorer 2.0
+  explorer2-recover --uninstall --quiet   the same without asking
 
-Entfernt alle Windows-Integrationen von Explorer 2.0 (Ordner-Verben,
-Win+E, Kontextmenü, Umgebungsvariablen, Verknüpfungen …) und stellt die
-vorherigen Werte exakt wieder her. Werte, die inzwischen eine andere
-Software geändert hat, bleiben unangetastet. Ihre Einstellungen
-(%APPDATA%\\Explorer2) bleiben beim Deinstallieren erhalten.";
+Removes all Windows integrations of Explorer 2.0 (folder verbs, Win+E,
+context menu, environment variables, shortcuts …) and restores the previous
+values exactly. Values that other software has changed meanwhile stay
+untouched. Your settings (%APPDATA%\\Explorer2) are kept when uninstalling."
+    )
+}
 
 enum Mode {
     Reset {
@@ -55,27 +58,32 @@ fn ask(question: &str) -> Option<bool> {
     if !io::stdin().is_terminal() {
         return None;
     }
-    let _ = write!(io::stdout(), "{question} [j/N] ");
+    let _ = write!(io::stdout(), "{question} {} ", explorer_i18n::tr!("[y/N]"));
     let _ = io::stdout().flush();
     let mut line = String::new();
     let _ = io::stdin().lock().read_line(&mut line);
-    Some(matches!(
-        line.trim().to_lowercase().as_str(),
-        "j" | "ja" | "y" | "yes"
-    ))
+    // English and German answers always work, plus the current language's word
+    let a = line.trim().to_lowercase();
+    let yes = explorer_i18n::tr!("yes").to_lowercase();
+    Some(
+        matches!(a.as_str(), "j" | "ja" | "y" | "yes")
+            || (!a.is_empty() && (a == yes || yes.starts_with(a.as_str()))),
+    )
 }
 
 fn report(r: &ResetReport) {
-    out(&r.summary_de());
+    out(&r.summary());
     for k in &r.kept {
-        out(&format!("  belassen: {k}"));
+        out(&explorer_i18n::tr!("  left unchanged: {0}", k));
     }
     for e in &r.errors {
-        out(&format!("  Fehler: {e}"));
+        out(&explorer_i18n::tr!("  error: {0}", e));
     }
 }
 
 fn main() {
+    // no settings file here: the Windows language (or EXPLORER2_LANG)
+    explorer_i18n::init("");
     let args: Vec<String> = std::env::args().skip(1).collect();
     let mode = match args
         .iter()
@@ -90,11 +98,11 @@ fn main() {
         ["--uninstall", "--quiet"] | ["--quiet", "--uninstall"] => Mode::Uninstall { quiet: true },
         ["--uninstall-finish", dir] => Mode::UninstallFinish(PathBuf::from(dir)),
         ["--help"] | ["-h"] | ["/?"] => {
-            out(USAGE);
+            out(usage());
             return;
         }
         _ => {
-            out(USAGE);
+            out(usage());
             std::process::exit(2);
         }
     };
@@ -102,7 +110,9 @@ fn main() {
         std::process::exit(finish_uninstall(dir));
     }
     let Some(paths) = JournalPaths::default_paths() else {
-        out("Fehler: Konfigurationsordner nicht gefunden (APPDATA fehlt).");
+        out(explorer_i18n::tr!(
+            "Error: configuration folder not found (APPDATA missing)."
+        ));
         std::process::exit(1);
     };
     let mut reg: Box<dyn Registry> = match explorer_integrate::system_registry() {
@@ -110,22 +120,28 @@ fn main() {
         // other platforms: no registry, files only
         None => Box::new(MemRegistry::new()),
     };
-    out("Explorer 2.0 – Windows-Standard wiederherstellen");
-    out(&format!("Journal: {}", paths.primary.display()));
+    out(explorer_i18n::tr!(
+        "Explorer 2.0 – restore the Windows default"
+    ));
+    out(&explorer_i18n::tr!("Journal: {0}", paths.primary.display()));
     let st = status(reg.as_mut(), &paths);
-    out(&format!("Stand: {}", st.summary_de()));
+    out(&explorer_i18n::tr!("State: {0}", st.summary()));
     match mode {
         Mode::Status => std::process::exit(if st.any() { 1 } else { 0 }),
         Mode::Reset { yes } => {
             if !yes {
-                match ask("Jetzt alles auf Windows-Standard zurücksetzen?") {
+                match ask(explorer_i18n::tr!(
+                    "Reset everything to the Windows default now?"
+                )) {
                     Some(true) => {}
                     Some(false) => {
-                        out("Abgebrochen – nichts geändert.");
+                        out(explorer_i18n::tr!("Cancelled – nothing changed."));
                         return;
                     }
                     None => {
-                        out("Keine Konsole für die Nachfrage – bitte mit --yes starten.");
+                        out(explorer_i18n::tr!(
+                            "No console to ask – start it with --yes."
+                        ));
                         std::process::exit(2);
                     }
                 }
@@ -136,21 +152,28 @@ fn main() {
         }
         Mode::Uninstall { quiet } => {
             let Some(ip) = InstallPaths::default_paths() else {
-                out("Fehler: Installationsordner nicht bestimmbar (LOCALAPPDATA fehlt).");
+                out(explorer_i18n::tr!(
+                    "Error: installation folder cannot be determined (LOCALAPPDATA missing)."
+                ));
                 std::process::exit(1);
             };
-            out(&format!("Installation: {}", ip.program_dir.display()));
+            out(&explorer_i18n::tr!(
+                "Installation: {0}",
+                ip.program_dir.display()
+            ));
             if !quiet {
-                match ask(
-                    "Explorer 2.0 deinstallieren und alle Windows-Integrationen zurücksetzen?",
-                ) {
+                match ask(explorer_i18n::tr!(
+                    "Uninstall Explorer 2.0 and reset all Windows integrations?"
+                )) {
                     Some(true) => {}
                     Some(false) => {
-                        out("Abgebrochen – nichts geändert.");
+                        out(explorer_i18n::tr!("Cancelled – nothing changed."));
                         return;
                     }
                     None => {
-                        out("Keine Konsole für die Nachfrage – bitte mit --quiet starten.");
+                        out(explorer_i18n::tr!(
+                            "No console to ask – start it with --quiet."
+                        ));
                         std::process::exit(2);
                     }
                 }
@@ -182,8 +205,9 @@ fn remove_installation(dir: &Path) -> i32 {
         if cfg!(windows) { ".exe" } else { "" }
     ));
     if let Err(e) = std::fs::copy(&me, &copy) {
-        out(&format!(
-            "Fehler: {e} – Programmordner bitte von Hand löschen: {}",
+        out(&explorer_i18n::tr!(
+            "Error: {0} – please delete the program folder by hand: {1}",
+            e,
             dir.display()
         ));
         return 1;
@@ -194,12 +218,13 @@ fn remove_installation(dir: &Path) -> i32 {
         .spawn()
     {
         Ok(_) => {
-            out("Programmordner wird entfernt …");
+            out(explorer_i18n::tr!("Removing the program folder …"));
             0
         }
         Err(e) => {
-            out(&format!(
-                "Fehler: {e} – Programmordner bitte von Hand löschen: {}",
+            out(&explorer_i18n::tr!(
+                "Error: {0} – please delete the program folder by hand: {1}",
+                e,
                 dir.display()
             ));
             1
@@ -223,12 +248,15 @@ fn same_dir(a: &Path, b: &Path) -> bool {
 fn finish_uninstall(dir: &Path) -> i32 {
     let code = match install::remove_program_dir(dir, 40) {
         Ok(()) => {
-            out("Explorer 2.0 wurde entfernt. Ihre Einstellungen bleiben in %APPDATA%\\Explorer2.");
+            out(explorer_i18n::tr!(
+                "Explorer 2.0 was removed. Your settings stay in %APPDATA%\\Explorer2."
+            ));
             0
         }
         Err(e) => {
-            out(&format!(
-                "Programmordner nicht entfernt ({e}) – ist Explorer 2.0 noch offen? Ordner: {}",
+            out(&explorer_i18n::tr!(
+                "Program folder not removed ({0}) – is Explorer 2.0 still open? Folder: {1}",
+                e,
                 dir.display()
             ));
             1

@@ -4,6 +4,7 @@
 //! Shift+Enter shows it selected in its folder.
 
 use crate::{nav, MainWindow, PaletteItem};
+use explorer_i18n::{tr, tr_n};
 use slint::{ComponentHandle, ModelRc, VecModel};
 use std::cell::RefCell;
 use std::path::{Path, PathBuf};
@@ -78,7 +79,7 @@ fn show_recent(win: &MainWindow) {
         .iter()
         .map(|q| PaletteItem {
             label: q.as_str().into(),
-            detail: "zuletzt gesucht".into(),
+            detail: tr!("searched recently").into(),
             enabled: true,
         })
         .collect();
@@ -93,13 +94,13 @@ fn show_recent(win: &MainWindow) {
     let summary = index_summary(win);
     win.set_qs_footer(
         if any {
-            format!("{summary} · Enter übernimmt eine frühere Suche")
+            tr!("{0} · Enter picks an earlier search", summary)
         } else {
             summary
         }
         .into(),
     );
-    win.set_qs_empty("Tippen, um alle Laufwerke zu durchsuchen".into());
+    win.set_qs_empty(tr!("Type to search all drives").into());
 }
 
 /// What the index covers (footer while nothing is typed).
@@ -113,22 +114,21 @@ fn index_summary(win: &MainWindow) -> String {
     });
     if n == 0 {
         return if win.get_opt_index_enabled() {
-            "Der Suchindex wird vorbereitet …".into()
+            tr!("The search index is being prepared …").into()
         } else {
-            "Der Suchindex ist aus (Einstellungen → Suche).".into()
+            tr!("The search index is off (Settings → Search).").into()
         };
     }
-    let drives = if n == 1 {
-        "1 Laufwerk".to_string()
-    } else {
-        format!("{n} Laufwerke")
-    };
-    let mut s = format!(
-        "{drives}, {} Einträge",
+    let drives = tr_n!(n, "{n} drive", "{n} drives");
+    let mut s = tr_n!(
+        entries,
+        "{0}, {1} entry",
+        "{0}, {1} entries",
+        drives,
         explorer_core::format_count(entries)
     );
     if !ready {
-        s.push_str(" (wird noch aufgebaut)");
+        s.push_str(tr!(" (still being built)"));
     }
     s
 }
@@ -231,9 +231,9 @@ fn show(win: &MainWindow, text: &str, res: Result<crate::search::Found, String>,
     win.set_qs_sel(0);
     win.set_qs_empty(
         if crate::search::with_volumes(|v| v.is_empty()) {
-            "Ohne Suchindex gibt es hier nichts zu finden (Einstellungen → Suche)."
+            tr!("Without the search index there is nothing to find here (Settings → Search).")
         } else {
-            "Nichts gefunden"
+            tr!("Nothing found")
         }
         .into(),
     );
@@ -241,11 +241,19 @@ fn show(win: &MainWindow, text: &str, res: Result<crate::search::Found, String>,
     win.set_qs_footer(
         match found.total {
             0 => String::new(),
-            n if n > items.len() => format!(
-                "{} von {total} Treffern · Enter öffnet · Strg+Enter zeigt im Ordner",
-                items.len()
+            n if n > items.len() => tr_n!(
+                n,
+                "{0} of {1} result · Enter opens · Ctrl+Enter shows it in its folder",
+                "{0} of {1} results · Enter opens · Ctrl+Enter shows it in its folder",
+                items.len(),
+                total
             ),
-            _ => format!("{total} Treffer · Enter öffnet · Strg+Enter zeigt im Ordner"),
+            n => tr_n!(
+                n,
+                "{0} result · Enter opens · Ctrl+Enter shows it in its folder",
+                "{0} results · Enter opens · Ctrl+Enter shows it in its folder",
+                total
+            ),
         }
         .into(),
     );

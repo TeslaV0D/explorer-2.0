@@ -7,20 +7,20 @@ const RESERVED: &[&str] = &[
     "COM9", "LPT1", "LPT2", "LPT3", "LPT4", "LPT5", "LPT6", "LPT7", "LPT8", "LPT9",
 ];
 
-/// Validates a new name (German message on error). `windows` selects the
+/// Validates a new name (message in the current language on error). `windows` selects the
 /// Windows rules; on other platforms only `/`, NUL, "." and ".." are invalid.
 pub fn validate_name_for(name: &str, windows: bool) -> Result<(), String> {
     if name.trim().is_empty() {
-        return Err("Der Name darf nicht leer sein.".into());
+        return Err(explorer_i18n::tr!("The name can't be empty.").into());
     }
     if name == "." || name == ".." {
-        return Err("„.“ und „..“ sind als Name nicht erlaubt.".into());
+        return Err(explorer_i18n::tr!("“.” and “..” are not allowed as a name.").into());
     }
     if name.chars().count() > 255 {
-        return Err("Der Name ist zu lang (maximal 255 Zeichen).".into());
+        return Err(explorer_i18n::tr!("The name is too long (at most 255 characters).").into());
     }
     if name.contains('\0') || name.contains('/') {
-        return Err("Der Name enthält ein ungültiges Zeichen.".into());
+        return Err(explorer_i18n::tr!("The name contains an invalid character.").into());
     }
     if windows {
         if let Some(c) = name
@@ -28,21 +28,23 @@ pub fn validate_name_for(name: &str, windows: bool) -> Result<(), String> {
             .find(|c| WINDOWS_FORBIDDEN.contains(c) || c.is_control())
         {
             let shown = if c.is_control() {
-                "Steuerzeichen".to_string()
+                explorer_i18n::tr!("control characters").to_string()
             } else {
-                format!("„{c}“")
+                explorer_i18n::tr!("“{0}”", c)
             };
-            return Err(format!(
-                "Ein Dateiname darf {shown} nicht enthalten: \\ / : * ? \" < > |"
+            return Err(explorer_i18n::tr!(
+                "A file name can't contain {0}: \\ / : * ? \" < > |",
+                shown
             ));
         }
         if name.ends_with('.') || name.ends_with(' ') {
-            return Err("Der Name darf nicht mit einem Punkt oder Leerzeichen enden.".into());
+            return Err(explorer_i18n::tr!("The name can't end with a period or a space.").into());
         }
         let stem = name.split('.').next().unwrap_or(name).trim_end();
         if RESERVED.iter().any(|r| r.eq_ignore_ascii_case(stem)) {
-            return Err(format!(
-                "„{stem}“ ist ein reservierter Gerätename unter Windows."
+            return Err(explorer_i18n::tr!(
+                "“{0}” is a reserved device name on Windows.",
+                stem
             ));
         }
     }
@@ -64,16 +66,17 @@ fn split_ext(name: &str, is_dir: bool) -> (&str, &str) {
     }
 }
 
-/// Explorer copy name in the same folder: "Bericht - Kopie.docx", then
-/// "Bericht - Kopie (2).docx", … `exists` tells whether a name is taken.
+/// Explorer copy name in the same folder: "Report - Copy.docx" (German
+/// "Bericht - Kopie.docx"), then "… - Copy (2).docx", … `exists` tells whether
+/// a name is taken. Like Explorer, the word follows the UI language.
 pub fn copy_name(name: &str, is_dir: bool, exists: impl Fn(&str) -> bool) -> String {
     let (stem, ext) = split_ext(name, is_dir);
-    let first = format!("{stem} - Kopie{ext}");
+    let first = explorer_i18n::tr!("{0} - Copy{1}", stem, ext);
     if !exists(&first) {
         return first;
     }
     (2..)
-        .map(|n| format!("{stem} - Kopie ({n}){ext}"))
+        .map(|n| explorer_i18n::tr!("{0} - Copy ({1}){2}", stem, n, ext))
         .find(|c| !exists(c))
         .expect("infinite iterator")
 }
@@ -90,7 +93,10 @@ pub fn unique_name(name: &str, is_dir: bool, exists: impl Fn(&str) -> bool) -> S
         .expect("infinite iterator")
 }
 
-pub const NEW_FOLDER: &str = "Neuer Ordner";
+/// Name of a new folder in the current language ("New folder", German "Neuer Ordner").
+pub fn new_folder_name() -> &'static str {
+    explorer_i18n::tr!("New folder")
+}
 
 /// Byte length of the part the rename box pre-selects (name without extension), like Explorer.
 pub fn rename_selection_len(name: &str, is_dir: bool) -> usize {
@@ -134,26 +140,26 @@ mod tests {
 
     #[test]
     fn copy_names() {
-        let taken = ["Bericht - Kopie.docx", "Bericht - Kopie (2).docx"];
+        let taken = ["Bericht - Copy.docx", "Bericht - Copy (2).docx"];
         assert_eq!(
             copy_name("Bericht.docx", false, |_| false),
-            "Bericht - Kopie.docx"
+            "Bericht - Copy.docx"
         );
         assert_eq!(
             copy_name("Bericht.docx", false, |n| taken.contains(&n)),
-            "Bericht - Kopie (3).docx"
+            "Bericht - Copy (3).docx"
         );
         assert_eq!(
             copy_name("Projekt.v2", true, |_| false),
-            "Projekt.v2 - Kopie"
+            "Projekt.v2 - Copy"
         );
         assert_eq!(
             copy_name(".gitignore", false, |_| false),
-            ".gitignore - Kopie"
+            ".gitignore - Copy"
         );
         assert_eq!(
             copy_name("archiv.tar.gz", false, |_| false),
-            "archiv.tar - Kopie.gz"
+            "archiv.tar - Copy.gz"
         );
     }
 
@@ -166,8 +172,8 @@ mod tests {
             "a (3).txt"
         );
         assert_eq!(
-            unique_name(NEW_FOLDER, true, |n| n == NEW_FOLDER),
-            "Neuer Ordner (2)"
+            unique_name(new_folder_name(), true, |n| n == new_folder_name()),
+            "New folder (2)"
         );
     }
 

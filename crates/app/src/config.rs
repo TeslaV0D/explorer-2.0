@@ -2,6 +2,7 @@
 
 use explorer_core::session::Session;
 use explorer_core::settings::Settings;
+use explorer_i18n::tr;
 use std::path::{Path, PathBuf};
 use std::sync::Mutex;
 
@@ -54,10 +55,10 @@ pub fn load() -> Settings {
 /// Load fresh, apply `f`, save. Errors are reported, never fatal.
 pub fn update(f: impl FnOnce(&mut Settings)) -> Result<Settings, String> {
     let _g = LOCK.lock().unwrap_or_else(|e| e.into_inner());
-    let path = settings_path().ok_or("kein Konfigurationsordner")?;
+    let path = settings_path().ok_or(tr!("no configuration folder"))?;
     let mut s = load_from(&path);
     f(&mut s);
-    save_to(&path, &s).map_err(|e| format!("Einstellungen nicht gespeichert: {e}"))?;
+    save_to(&path, &s).map_err(|e| tr!("Settings not saved: {0}", e))?;
     Ok(s)
 }
 
@@ -71,7 +72,7 @@ pub fn load_views() -> explorer_core::views::FolderViews {
 
 pub fn save_views(v: &explorer_core::views::FolderViews) -> Result<(), String> {
     let _g = LOCK.lock().unwrap_or_else(|e| e.into_inner());
-    let dir = config_dir().ok_or("kein Konfigurationsordner")?;
+    let dir = config_dir().ok_or(tr!("no configuration folder"))?;
     std::fs::create_dir_all(&dir).map_err(|e| e.to_string())?;
     let tmp = dir.join("views.ini.tmp");
     std::fs::write(&tmp, v.serialize()).map_err(|e| e.to_string())?;
@@ -85,7 +86,7 @@ pub fn load_session() -> Option<Session> {
 
 pub fn save_session(s: &Session) -> Result<(), String> {
     let _g = LOCK.lock().unwrap_or_else(|e| e.into_inner());
-    let dir = config_dir().ok_or("kein Konfigurationsordner")?;
+    let dir = config_dir().ok_or(tr!("no configuration folder"))?;
     std::fs::create_dir_all(&dir).map_err(|e| e.to_string())?;
     let tmp = dir.join("session.ini.tmp");
     std::fs::write(&tmp, s.serialize()).map_err(|e| e.to_string())?;

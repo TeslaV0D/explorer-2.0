@@ -65,7 +65,9 @@ pub fn show_context_menu(
     #[cfg(not(windows))]
     {
         let _ = (hwnd, dir, items, at);
-        MenuOutcome::Failed("Kontextmenü gibt es nur unter Windows.".into())
+        MenuOutcome::Failed(
+            explorer_i18n::tr!("The context menu is only available on Windows.").into(),
+        )
     }
 }
 

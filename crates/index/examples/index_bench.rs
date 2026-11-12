@@ -1,7 +1,7 @@
 //! Search benchmark (PLAN-SEARCH.md): a synthetic tree like a real drive,
 //! queries typed by a user, best-of-N times.
 //!
-//!   cargo run --release -p explorer-index --example bench -- [entries] [--gate]
+//!   cargo run --release -p explorer-index --example index_bench -- [entries] [--gate]
 //!
 //! `--gate`: exit 1 if a name query exceeds 10 ms (best of 9), `path:`/`regex:`
 //! 60 ms, or the index needs more than 100 MB for 1 M entries.

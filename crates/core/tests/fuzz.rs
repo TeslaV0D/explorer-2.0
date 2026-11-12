@@ -296,7 +296,7 @@ fn text_helpers_never_panic() {
                 assert!(!b.is_empty());
             }
         }
-        let _ = explorer_core::guard::notice_de(r.below(5), r.below(2) == 0, r.below(9) as u32);
+        let _ = explorer_core::guard::notice_text(r.below(5), r.below(2) == 0, r.below(9) as u32);
         let mut bytes = text.into_bytes();
         bytes.extend((0..r.below(64)).map(|_| r.next() as u8));
         let _ = inspect::image_size(&bytes);

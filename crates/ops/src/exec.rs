@@ -311,14 +311,16 @@ fn is_cross_device(e: &io::Error) -> bool {
 
 fn msg(e: &io::Error) -> String {
     match e.kind() {
-        io::ErrorKind::NotFound => "Nicht gefunden".into(),
-        io::ErrorKind::PermissionDenied => "Zugriff verweigert".into(),
-        io::ErrorKind::StorageFull => "Nicht genügend Speicherplatz".into(),
-        io::ErrorKind::AlreadyExists => "Ist bereits vorhanden".into(),
+        io::ErrorKind::NotFound => explorer_i18n::tr!("Not found").into(),
+        io::ErrorKind::PermissionDenied => explorer_i18n::tr!("Access denied").into(),
+        io::ErrorKind::StorageFull => explorer_i18n::tr!("Not enough disk space").into(),
+        io::ErrorKind::AlreadyExists => explorer_i18n::tr!("Already exists").into(),
         _ if e.raw_os_error() == Some(32) && cfg!(windows) => {
-            "Datei wird von einem anderen Prozess verwendet".into()
+            explorer_i18n::tr!("The file is being used by another process").into()
         }
-        _ if e.raw_os_error() == Some(28) && cfg!(unix) => "Nicht genügend Speicherplatz".into(),
+        _ if e.raw_os_error() == Some(28) && cfg!(unix) => {
+            explorer_i18n::tr!("Not enough disk space").into()
+        }
         _ => e.to_string(),
     }
 }
@@ -329,14 +331,17 @@ fn transfer_all(cx: &mut Ctx, sources: &[PathBuf], dest: &Path) {
             return;
         }
         let Some(name) = src.file_name().map(|n| n.to_string_lossy().into_owned()) else {
-            cx.error(src, "Ungültiger Pfad");
+            cx.error(src, explorer_i18n::tr!("Invalid path"));
             continue;
         };
         let src_is_dir = fs::symlink_metadata(src)
             .map(|m| m.is_dir())
             .unwrap_or(false);
         if src_is_dir && (is_inside(dest, src)) {
-            cx.error(src, "Der Zielordner ist ein Unterordner des Quellordners.");
+            cx.error(
+                src,
+                explorer_i18n::tr!("The destination folder is a subfolder of the source folder."),
+            );
             continue;
         }
         let same_folder = src
@@ -407,13 +412,19 @@ fn transfer(cx: &mut Ctx, src: &Path, target: &Path) {
                 } else if src_is_dir != tm.is_dir() {
                     return cx.error(
                         src,
-                        "Ein Ordner und eine Datei können einander nicht ersetzen.",
+                        explorer_i18n::tr!("A folder and a file can't replace each other."),
                     );
                 } else {
                     // Keep the old file recoverable: move it to the trash before replacing.
                     let at = SystemTime::now();
                     if let Err(e) = trash::delete(&target) {
-                        return cx.error(&target, format!("Konnte das vorhandene Element nicht in den Papierkorb verschieben: {e}"));
+                        return cx.error(
+                            &target,
+                            explorer_i18n::tr!(
+                                "Couldn't move the existing item to the Recycle Bin: {0}",
+                                e
+                            ),
+                        );
                     }
                     cx.report.done.push(Done::Trashed {
                         original: target.clone(),
@@ -517,7 +528,7 @@ fn transfer(cx: &mut Ctx, src: &Path, target: &Path) {
                 if let Err(e) = fs::remove_file(src) {
                     cx.error(
                         src,
-                        format!("Kopiert, aber Quelle nicht gelöscht: {}", msg(&e)),
+                        explorer_i18n::tr!("Copied, but the source was not deleted: {0}", msg(&e)),
                     );
                     cx.report.done.push(Done::Created(target));
                 } else {
@@ -627,7 +638,7 @@ fn trash_all(cx: &mut Ctx, sources: &[PathBuf]) {
                 original: src.clone(),
                 at,
             }),
-            Err(e) => cx.error(src, format!("Papierkorb: {e}")),
+            Err(e) => cx.error(src, explorer_i18n::tr!("Recycle Bin: {0}", e)),
         }
         cx.progress.done_items += items;
         cx.progress.done_bytes += bytes;

@@ -1,5 +1,5 @@
 //! Command registry for the command palette (Ctrl+Shift+P): every command
-//! with its German label, shortcut and the condition under which it makes
+//! with its label (English source, translated when shown – D-029), shortcut and the condition under which it makes
 //! sense, plus fuzzy matching and ranking (pure → tested).
 
 /// When a command can run.
@@ -20,10 +20,22 @@ pub enum Need {
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct Command {
     pub id: &'static str,
+    /// English source text; shown via [`Command::title`].
     pub label: &'static str,
-    /// Shortcut as shown ("" = none).
+    /// Shortcut (English source, "" = none); shown via [`Command::shortcut`].
     pub keys: &'static str,
     pub need: Need,
+}
+
+impl Command {
+    /// The label in the current language.
+    pub fn title(&self) -> &'static str {
+        explorer_i18n::translate(self.label)
+    }
+    /// The shortcut in the current language ("Strg+C" in German).
+    pub fn shortcut(&self) -> &'static str {
+        explorer_i18n::translate(self.keys)
+    }
 }
 
 const fn c(id: &'static str, label: &'static str, keys: &'static str, need: Need) -> Command {
@@ -35,187 +47,303 @@ const fn c(id: &'static str, label: &'static str, keys: &'static str, need: Need
     }
 }
 
+use explorer_i18n::tr_noop;
+
 /// All commands, in a sensible default order.
 pub const ALL: &[Command] = &[
-    c("open", "Öffnen", "Eingabe", Need::Selection),
-    c("copy", "Kopieren", "Strg+C", Need::Selection),
-    c("cut", "Ausschneiden", "Strg+X", Need::Selection),
-    c("paste", "Einfügen", "Strg+V", Need::Paste),
-    c("rename", "Umbenennen", "F2", Need::Selection),
-    c("delete", "Löschen (Papierkorb)", "Entf", Need::Selection),
+    c("open", tr_noop!("Open"), tr_noop!("Enter"), Need::Selection),
+    c(
+        "copy",
+        tr_noop!("Copy"),
+        tr_noop!("Ctrl+C"),
+        Need::Selection,
+    ),
+    c("cut", tr_noop!("Cut"), tr_noop!("Ctrl+X"), Need::Selection),
+    c("paste", tr_noop!("Paste"), tr_noop!("Ctrl+V"), Need::Paste),
+    c("rename", tr_noop!("Rename"), "F2", Need::Selection),
+    c(
+        "delete",
+        tr_noop!("Delete (to Recycle Bin)"),
+        tr_noop!("Del"),
+        Need::Selection,
+    ),
     c(
         "delete-permanent",
-        "Endgültig löschen",
-        "Umschalt+Entf",
+        tr_noop!("Delete permanently"),
+        tr_noop!("Shift+Del"),
         Need::Selection,
     ),
     c(
         "new-folder",
-        "Neuer Ordner",
-        "Strg+Umschalt+N",
+        tr_noop!("New folder"),
+        tr_noop!("Ctrl+Shift+N"),
         Need::Folder,
     ),
-    c("undo", "Rückgängig", "Strg+Z", Need::Undo),
-    c("redo", "Wiederholen", "Strg+Y", Need::Redo),
+    c("undo", tr_noop!("Undo"), tr_noop!("Ctrl+Z"), Need::Undo),
+    c("redo", tr_noop!("Redo"), tr_noop!("Ctrl+Y"), Need::Redo),
     c(
         "properties",
-        "Eigenschaften",
-        "Alt+Eingabe",
+        tr_noop!("Properties"),
+        tr_noop!("Alt+Enter"),
         Need::Selection,
     ),
-    c("context-menu", "Kontextmenü", "Umschalt+F10", Need::Always),
-    c("select-all", "Alles auswählen", "Strg+A", Need::Always),
-    c("up", "Übergeordneter Ordner", "Alt+↑", Need::Always),
-    c("back", "Zurück", "Alt+←", Need::Always),
-    c("forward", "Vorwärts", "Alt+→", Need::Always),
-    c("refresh", "Aktualisieren", "F5", Need::Always),
-    c("edit-path", "Adresse bearbeiten", "Strg+L", Need::Always),
-    c("new-tab", "Neuer Tab", "Strg+T", Need::Always),
-    c("close-tab", "Tab schließen", "Strg+W", Need::Always),
-    c("next-tab", "Nächster Tab", "Strg+Tab", Need::Always),
+    c(
+        "context-menu",
+        tr_noop!("Context menu"),
+        tr_noop!("Shift+F10"),
+        Need::Always,
+    ),
+    c(
+        "select-all",
+        tr_noop!("Select all"),
+        tr_noop!("Ctrl+A"),
+        Need::Always,
+    ),
+    c("up", tr_noop!("Go to parent folder"), "Alt+↑", Need::Always),
+    c("back", tr_noop!("Back"), "Alt+←", Need::Always),
+    c("forward", tr_noop!("Forward"), "Alt+→", Need::Always),
+    c("refresh", tr_noop!("Refresh"), "F5", Need::Always),
+    c(
+        "edit-path",
+        tr_noop!("Edit address"),
+        tr_noop!("Ctrl+L"),
+        Need::Always,
+    ),
+    c(
+        "new-tab",
+        tr_noop!("New tab"),
+        tr_noop!("Ctrl+T"),
+        Need::Always,
+    ),
+    c(
+        "close-tab",
+        tr_noop!("Close tab"),
+        tr_noop!("Ctrl+W"),
+        Need::Always,
+    ),
+    c(
+        "next-tab",
+        tr_noop!("Next tab"),
+        tr_noop!("Ctrl+Tab"),
+        Need::Always,
+    ),
     c(
         "prev-tab",
-        "Vorheriger Tab",
-        "Strg+Umschalt+Tab",
+        tr_noop!("Previous tab"),
+        tr_noop!("Ctrl+Shift+Tab"),
         Need::Always,
     ),
     c(
         "toggle-split",
-        "Zwei Ansichten ein/aus",
-        "Strg+\\",
+        tr_noop!("Toggle two views"),
+        tr_noop!("Ctrl+\\"),
         Need::Always,
     ),
     c(
         "switch-pane",
-        "Zur anderen Ansicht wechseln",
+        tr_noop!("Switch to the other view"),
         "F6",
         Need::Always,
     ),
     c(
         "inspector",
-        "Details-Bereich ein/aus",
+        tr_noop!("Toggle details pane"),
         "Alt+P",
         Need::Always,
     ),
     c(
         "view-details",
-        "Ansicht: Details",
-        "Strg+Umschalt+6",
+        tr_noop!("View: Details"),
+        tr_noop!("Ctrl+Shift+6"),
         Need::Always,
     ),
     c(
         "view-medium",
-        "Ansicht: Mittelgroße Symbole",
-        "Strg+Umschalt+3",
+        tr_noop!("View: Medium icons"),
+        tr_noop!("Ctrl+Shift+3"),
         Need::Always,
     ),
     c(
         "view-large",
-        "Ansicht: Große Symbole",
-        "Strg+Umschalt+2",
+        tr_noop!("View: Large icons"),
+        tr_noop!("Ctrl+Shift+2"),
         Need::Always,
     ),
     c(
         "view-xlarge",
-        "Ansicht: Extra große Symbole",
-        "Strg+Umschalt+1",
+        tr_noop!("View: Extra large icons"),
+        tr_noop!("Ctrl+Shift+1"),
         Need::Always,
     ),
     c(
         "view-all",
-        "Aktuelle Ansicht für alle Ordner",
+        tr_noop!("Use the current view for all folders"),
         "",
         Need::Always,
     ),
-    c("sort-name", "Sortieren nach Name", "", Need::Always),
+    c("sort-name", tr_noop!("Sort by name"), "", Need::Always),
     c(
         "sort-modified",
-        "Sortieren nach Änderungsdatum",
+        tr_noop!("Sort by date modified"),
         "",
         Need::Always,
     ),
-    c("sort-type", "Sortieren nach Typ", "", Need::Always),
-    c("sort-size", "Sortieren nach Größe", "", Need::Always),
-    c("sort-asc", "Aufsteigend sortieren", "", Need::Always),
-    c("sort-desc", "Absteigend sortieren", "", Need::Always),
+    c("sort-type", tr_noop!("Sort by type"), "", Need::Always),
+    c("sort-size", tr_noop!("Sort by size"), "", Need::Always),
+    c("sort-asc", tr_noop!("Sort ascending"), "", Need::Always),
+    c("sort-desc", tr_noop!("Sort descending"), "", Need::Always),
     c(
         "toggle-hidden",
-        "Ausgeblendete Elemente ein/aus",
+        tr_noop!("Toggle hidden items"),
         "",
         Need::Always,
     ),
     c(
         "toggle-extensions",
-        "Dateinamenerweiterungen ein/aus",
+        tr_noop!("Toggle file name extensions"),
         "",
         Need::Always,
     ),
-    c("go-trash", "Papierkorb öffnen", "", Need::Always),
-    c("go-thispc", "Dieser PC öffnen", "", Need::Always),
-    c("go-libraries", "Bibliotheken öffnen", "", Need::Always),
+    c("go-trash", tr_noop!("Open Recycle Bin"), "", Need::Always),
+    c("go-thispc", tr_noop!("Open This PC"), "", Need::Always),
+    c("go-libraries", tr_noop!("Open Libraries"), "", Need::Always),
     c(
         "restore",
-        "Aus dem Papierkorb wiederherstellen",
+        tr_noop!("Restore from the Recycle Bin"),
         "",
         Need::Trash,
     ),
-    c("empty-trash", "Papierkorb leeren", "", Need::Trash),
-    c("settings", "Einstellungen", "", Need::Always),
-    c("theme-system", "Farbschema: Wie Windows", "", Need::Always),
-    c("theme-light", "Farbschema: Hell", "", Need::Always),
-    c("theme-dark", "Farbschema: Dunkel", "", Need::Always),
+    c(
+        "empty-trash",
+        tr_noop!("Empty Recycle Bin"),
+        "",
+        Need::Trash,
+    ),
+    c("settings", tr_noop!("Settings"), "", Need::Always),
+    c(
+        "theme-system",
+        tr_noop!("Color scheme: System default"),
+        "",
+        Need::Always,
+    ),
+    c(
+        "theme-light",
+        tr_noop!("Color scheme: Light"),
+        "",
+        Need::Always,
+    ),
+    c(
+        "theme-dark",
+        tr_noop!("Color scheme: Dark"),
+        "",
+        Need::Always,
+    ),
+    // L4: one per offered language (the native name stays in every language)
+    c(
+        "language-system",
+        tr_noop!("Language: System default"),
+        "",
+        Need::Always,
+    ),
+    c(
+        "language-en",
+        tr_noop!("Language: English"),
+        "",
+        Need::Always,
+    ),
+    c(
+        "language-de",
+        tr_noop!("Language: Deutsch"),
+        "",
+        Need::Always,
+    ),
+    c(
+        "language-es",
+        tr_noop!("Language: Español"),
+        "",
+        Need::Always,
+    ),
+    c(
+        "language-fr",
+        tr_noop!("Language: Français"),
+        "",
+        Need::Always,
+    ),
+    c(
+        "language-ru",
+        tr_noop!("Language: Русский"),
+        "",
+        Need::Always,
+    ),
+    c(
+        "language-uk",
+        tr_noop!("Language: Українська"),
+        "",
+        Need::Always,
+    ),
+    c(
+        "language-pl",
+        tr_noop!("Language: Polski"),
+        "",
+        Need::Always,
+    ),
     c(
         "toggle-folder-open",
-        "Ordner mit Explorer 2.0 öffnen ein/aus",
+        tr_noop!("Toggle: open folders with Explorer 2.0"),
         "",
         Need::Always,
     ),
     c(
         "toggle-context-menu",
-        "„In Explorer 2.0 öffnen“ im Kontextmenü ein/aus",
+        tr_noop!("Toggle: “Open in Explorer 2.0” in the context menu"),
         "",
         Need::Always,
     ),
     c(
         "toggle-win-e",
-        "Win+E öffnet Explorer 2.0 ein/aus",
+        tr_noop!("Toggle: Win+E opens Explorer 2.0"),
         "",
         Need::Always,
     ),
     c(
         "toggle-single-instance",
-        "Ordner im offenen Fenster öffnen (neuer Tab) ein/aus",
+        tr_noop!("Toggle: open folders in the running window (new tab)"),
         "",
         Need::Always,
     ),
     c(
         "search",
-        "Suchen (im aktuellen Ordner)",
-        "Strg+F",
+        tr_noop!("Search (in the current folder)"),
+        tr_noop!("Ctrl+F"),
         Need::Always,
     ),
     c(
         "quick-search",
-        "Alle Laufwerke durchsuchen",
-        "Strg+Umschalt+F",
+        tr_noop!("Search all drives"),
+        tr_noop!("Ctrl+Shift+F"),
         Need::Always,
     ),
     c(
         "search-rescan",
-        "Suchindex neu mit der Platte abgleichen",
+        tr_noop!("Re-sync search index with disk"),
         "",
         Need::Always,
     ),
-    c("toggle-index", "Suchindex ein/aus", "", Need::Always),
+    c(
+        "toggle-index",
+        tr_noop!("Toggle search index"),
+        "",
+        Need::Always,
+    ),
     c(
         "install",
-        "Explorer 2.0 installieren / aktualisieren",
+        tr_noop!("Install / update Explorer 2.0"),
         "",
         Need::Always,
     ),
     c(
         "integration-reset",
-        "Alle Windows-Integrationen zurücksetzen",
+        tr_noop!("Reset all Windows integrations"),
         "",
         Need::Always,
     ),
@@ -279,7 +407,12 @@ pub fn rank<'a>(query: &str, recent: &[String], cmds: &'a [Command]) -> Vec<&'a 
     let mut hits: Vec<(i32, usize, &Command)> = cmds
         .iter()
         .enumerate()
-        .filter_map(|(i, c)| fuzzy_score(query, c.label).map(|s| (s, i, c)))
+        // the English source matches too: findable in a language one cannot read
+        .filter_map(|(i, c)| {
+            fuzzy_score(query, c.title())
+                .max(fuzzy_score(query, c.label))
+                .map(|s| (s, i, c))
+        })
         .collect();
     hits.sort_by(|a, b| {
         let ra = recent_pos(a.2.id).map(|p| 100 - p as i32).unwrap_or(0);
@@ -320,6 +453,21 @@ mod tests {
     }
 
     #[test]
+    fn every_offered_language_has_a_command() {
+        for code in explorer_i18n::choices("") {
+            let id = match code {
+                "" => "language-system".to_string(),
+                c => format!("language-{c}"),
+            };
+            assert!(by_id(&id).is_some(), "no palette command {id}");
+        }
+        assert!(ALL
+            .iter()
+            .filter(|c| c.id.starts_with("language-") && c.id != "language-system")
+            .all(|c| explorer_i18n::lang(&c.id["language-".len()..]).is_some()));
+    }
+
+    #[test]
     fn fuzzy_matching() {
         assert!(fuzzy_score("neord", "Neuer Ordner").is_some());
         assert!(
@@ -345,9 +493,13 @@ mod tests {
 
     #[test]
     fn ranking_and_recent() {
-        let r = rank("lösch", &[], ALL);
+        // tests see the English source texts (no language set)
+        let r = rank("del rec", &[], ALL);
         assert_eq!(r[0].id, "delete");
-        assert!(r.iter().any(|c| c.id == "delete-permanent"));
+        assert!(rank("delet", &[], ALL)
+            .iter()
+            .any(|c| c.id == "delete-permanent"));
+        assert_eq!(by_id("copy").unwrap().shortcut(), "Ctrl+C");
         // empty query: recently used first, then the default order
         let recent = vec!["inspector".to_string(), "paste".to_string()];
         let r = rank("", &recent, ALL);

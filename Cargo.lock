@@ -979,6 +979,7 @@ name = "explorer-core"
 version = "0.1.0"
 dependencies = [
  "chrono",
+ "explorer-i18n",
 ]
 
 [[package]]
@@ -986,6 +987,7 @@ name = "explorer-fs"
 version = "0.1.0"
 dependencies = [
  "explorer-core",
+ "explorer-i18n",
  "notify",
  "tempfile",
  "windows-sys 0.60.2",
@@ -1000,10 +1002,18 @@ dependencies = [
 ]
 
 [[package]]
+name = "explorer-i18n"
+version = "0.1.0"
+dependencies = [
+ "windows-sys 0.60.2",
+]
+
+[[package]]
 name = "explorer-index"
 version = "0.1.0"
 dependencies = [
  "explorer-core",
+ "explorer-i18n",
  "memchr",
  "regex",
  "regex-syntax",
@@ -1013,6 +1023,7 @@ dependencies = [
 name = "explorer-integrate"
 version = "0.1.0"
 dependencies = [
+ "explorer-i18n",
  "tempfile",
  "windows-sys 0.60.2",
 ]
@@ -1022,6 +1033,7 @@ name = "explorer-ops"
 version = "0.1.0"
 dependencies = [
  "explorer-core",
+ "explorer-i18n",
  "tempfile",
  "trash",
  "windows-sys 0.60.2",
@@ -1033,6 +1045,7 @@ version = "0.1.0"
 dependencies = [
  "explorer-core",
  "explorer-fs",
+ "explorer-i18n",
  "explorer-index",
  "notify",
  "tempfile",
@@ -1044,6 +1057,7 @@ name = "explorer-shell"
 version = "0.1.0"
 dependencies = [
  "explorer-core",
+ "explorer-i18n",
  "windows",
  "windows-core",
  "windows-sys 0.60.2",
@@ -1057,6 +1071,7 @@ dependencies = [
  "explorer-core",
  "explorer-fs",
  "explorer-gpu",
+ "explorer-i18n",
  "explorer-index",
  "explorer-integrate",
  "explorer-ops",
@@ -1075,6 +1090,7 @@ name = "explorer2-setup"
 version = "0.1.0"
 dependencies = [
  "embed-resource",
+ "explorer-i18n",
  "explorer-integrate",
  "windows-sys 0.60.2",
 ]

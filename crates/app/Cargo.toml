@@ -16,6 +16,7 @@ explorer-core = { path = "../core" }
 explorer-integrate = { path = "../integrate" }
 explorer-fs = { path = "../fs" }
 explorer-gpu = { path = "../gpu" }
+explorer-i18n = { path = "../i18n" }
 explorer-index = { path = "../index" }
 explorer-search = { path = "../search" }
 explorer-ops = { path = "../ops" }

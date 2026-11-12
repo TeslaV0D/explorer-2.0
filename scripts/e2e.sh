@@ -229,6 +229,55 @@ sleep 2
 check "[37] start path opens a single tab" "grep -qF 'layout panes=1 tabs=[1] split=false active_pane=0' $LOG && navigated_to '$W/home/Desktop'"
 kill $PID; wait $PID 2>/dev/null
 
+# ---- L0 language choice (D-029); own config dirs: quick kills must not trip the start guard
+LOG=$W/trace-84.log
+echo "== [84] language: override, setting, system language"
+LC1=$W/lang-cfg1; mkdir -p $LC1
+EXPLORER2_CONFIG_DIR=$LC1 $EXE "$W" > $LOG 2>&1 & PID=$!
+sleep 2
+check "[84] tests run pinned to German (EXPLORER2_LANG=de), bundled into the UI" "grep -q 'language de (setting=\"\" override=Some(\"de\")' $LOG && grep -q 'language ui=de$' $LOG"
+check "[84a] German UI texts come from lang/de (L1: English source)" "ui_has 'Einstellungen' && ! ui_has 'Settings'"
+kill $PID; wait $PID 2>/dev/null
+EXPLORER2_LANG=en EXPLORER2_CONFIG_DIR=$LC1 $EXE "$W" > $LOG.en 2>&1 & PID=$!
+sleep 2
+check "[84d] EXPLORER2_LANG=en shows the English source texts" "grep -q 'language en (' $LOG.en && ui_has 'Settings' && ui_has 'Quick access' && ! ui_has 'Einstellungen'"
+kill $PID; wait $PID 2>/dev/null
+LC2=$W/lang-cfg2; mkdir -p $LC2; printf 'language = pl\n' > $LC2/settings.ini
+env -u EXPLORER2_LANG EXPLORER2_CONFIG_DIR=$LC2 $EXE "$W" > $LOG.2 2>&1 & PID=$!
+sleep 2
+check "[84b] the setting picks the language (pl)" "grep -q 'language pl (setting=\"pl\" override=None' $LOG.2"
+kill $PID; wait $PID 2>/dev/null
+LC3=$W/lang-cfg3; mkdir -p $LC3
+env -u EXPLORER2_LANG -u LANGUAGE -u LC_ALL -u LC_MESSAGES LANG=pt_BR.UTF-8 EXPLORER2_CONFIG_DIR=$LC3 $EXE "$W" > $LOG.3 2>&1 & PID=$!
+sleep 2
+check "[84c] automatic: a system language we don't have (pt-BR) falls back to English" "grep -qF 'language en (setting=\"\" override=None system=[\"pt_BR.UTF-8\"])' $LOG.3"
+kill $PID; wait $PID 2>/dev/null
+env -u EXPLORER2_LANG -u LANGUAGE -u LC_ALL -u LC_MESSAGES LANG=uk_UA.UTF-8 EXPLORER2_CONFIG_DIR=$LC3 $EXE "$W" > $LOG.4 2>&1 & PID=$!
+sleep 2
+check "[84e] automatic: a complete system language (uk, L6) is picked" "grep -qF 'language uk (setting=\"\" override=None system=[\"uk_UA.UTF-8\"])' $LOG.4 && ui_has 'Параметри'"
+kill $PID; wait $PID 2>/dev/null
+
+# ---- L4 language setting: switch live, the restart keeps it
+LOG=$W/trace-85.log
+echo "== [85] language: live switch in the settings + palette"
+LC4=$W/lang-cfg4; mkdir -p $LC4
+env -u LANGUAGE -u LC_ALL -u LC_MESSAGES LANG=C.UTF-8 EXPLORER2_CONFIG_DIR=$LC4 $EXE "$W" > $LOG 2>&1 & PID=$!
+sleep 2
+ui_click "Einstellungen"; sleep 0.8
+check "[85] the language list comes first in the settings, the Windows language preselected" "ui_has 'Sprache · Language' 2 && grep -qF 'language ui=de' $LOG"
+ui_click "Sprache · Language" 2; sleep 0.8
+check "[85a] the list offers the complete languages by their own names" "ui_has 'Deutsch' && ui_has 'English' && ui_has 'Wie Windows (English)'"
+ui_click "English"; sleep 1.5
+check "[85b] picked: switched live (Slint and Rust texts), saved" "grep -qF 'language switched to en' $LOG && ui_has 'Settings' && ui_has 'Recycle Bin' && ! ui_has 'Einstellungen' && ! ui_has 'Papierkorb' && grep -q '^language = en' $LC4/settings.ini"
+check "[85c] the window survives the switch" "kill -0 $PID"
+kill $PID; wait $PID 2>/dev/null
+env -u EXPLORER2_LANG -u LANGUAGE -u LC_ALL -u LC_MESSAGES LANG=C.UTF-8 EXPLORER2_CONFIG_DIR=$LC4 $EXE "$W" > $LOG.2 2>&1 & PID=$!
+sleep 2
+check "[85d] the restart keeps the language" "grep -qF 'language en (setting=\"en\" override=None' $LOG.2 && ui_has 'Settings' && ui_has 'Recycle Bin'"
+focus; xdotool key ctrl+shift+p; sleep 0.4; xdotool type --delay 40 "language deutsch"; sleep 0.5; xdotool key Return; sleep 1.5
+check "[85e] palette command switches back (German)" "grep -qF 'language switched to de' $LOG.2 && ui_has 'Einstellungen' && ui_has 'Papierkorb' && ! ui_has 'Recycle Bin' && grep -q '^language = de' $LC4/settings.ini"
+kill $PID; wait $PID 2>/dev/null
+
 # ---- M4 file operations (own script, runnable alone)
 "$(dirname "$0")/e2e-ops.sh" "$EXE" "$W" || FAIL=1
 # ---- M8.3c endurance (own script, runnable alone)
