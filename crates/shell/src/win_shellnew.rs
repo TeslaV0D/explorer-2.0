@@ -122,9 +122,10 @@ fn query(key: HKEY, name: &str) -> Option<(u32, Vec<u8>)> {
 }
 
 fn decode_sz(bytes: &[u8]) -> String {
-    let u: Vec<u16> = bytes
-        .chunks_exact(2)
-        .map(|c| u16::from_le_bytes([c[0], c[1]]))
+    let (chunks, _) = bytes.as_chunks::<2>();
+    let u: Vec<u16> = chunks
+        .iter()
+        .map(|c| u16::from_le_bytes(*c))
         .take_while(|&c| c != 0)
         .collect();
     let s = String::from_utf16_lossy(&u);
