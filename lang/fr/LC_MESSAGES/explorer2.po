@@ -125,6 +125,11 @@ msgstr "Barre d'adresse"
 msgid "Already exists"
 msgstr "Existe déjà"
 
+#: crates/app/ui/main.slint
+#: crates/integrate/src/features.rs
+msgid "Also handle Open and Explore"
+msgstr "Aussi prendre en charge Ouvrir et Explorer"
+
 #: crates/app/src/fileops.rs
 #: crates/core/src/commands.rs
 msgid "Alt+Enter"
@@ -247,6 +252,10 @@ msgstr "Copier le chemin d'accès"
 #: crates/app/src/fileops.rs
 msgid "Copying {0} to “{1}”"
 msgstr "Copie de {0} vers « {1} »"
+
+#: crates/ops/src/newitem.rs
+msgid "Could not run the command for this item: {0}"
+msgstr "Impossible d’exécuter la commande de cet élément : {0}"
 
 #: crates/ops/src/exec.rs
 msgid "Couldn't move the existing item to the Recycle Bin: {0}"
@@ -515,6 +524,10 @@ msgstr "Erreur : {0} – supprimez le dossier du programme manuellement : {1}"
 #: crates/app/src/fileops.rs
 msgid "Existing: {0}"
 msgstr "Existant : {0}"
+
+#: crates/app/ui/tray.slint
+msgid "Exit"
+msgstr "Quitter"
 
 #: crates/core/src/guard.rs
 msgid "Explorer 2.0 closed unexpectedly last time."
@@ -888,6 +901,15 @@ msgid "Network shares are only available on Windows"
 msgstr "Les partages réseau ne sont disponibles que sous Windows"
 
 #: crates/app/src/fileops.rs
+#: crates/core/src/newmenu.rs
+msgid "New"
+msgstr "Nouveau"
+
+#: crates/core/src/newmenu.rs
+msgid "New Text Document"
+msgstr "Nouveau document texte"
+
+#: crates/app/src/fileops.rs
 #: crates/app/ui/main.slint
 #: crates/core/src/commands.rs
 #: crates/ops/src/names.rs
@@ -898,6 +920,14 @@ msgstr "Nouveau dossier"
 #: crates/core/src/commands.rs
 msgid "New tab"
 msgstr "Nouvel onglet"
+
+#: crates/core/src/commands.rs
+msgid "New text document"
+msgstr "Nouveau document texte"
+
+#: crates/app/ui/tray.slint
+msgid "New window"
+msgstr "Nouvelle fenêtre"
 
 #: crates/app/src/fileops.rs
 msgid "New: {0} (from {1})"
@@ -1230,6 +1260,7 @@ msgid "Select all"
 msgstr "Sélectionner tout"
 
 #: crates/app/ui/main.slint
+#: crates/app/ui/tray.slint
 #: crates/core/src/commands.rs
 msgid "Settings"
 msgstr "Paramètres"
@@ -1273,6 +1304,10 @@ msgstr "Afficher les fichiers protégés du système d'exploitation"
 #: crates/app/ui/main.slint
 msgid "Show report"
 msgstr "Afficher le rapport"
+
+#: crates/app/ui/tray.slint
+msgid "Show window"
+msgstr "Afficher la fenêtre"
 
 #: crates/fs/src/network.rs
 msgid "Sign-in cancelled"
@@ -1336,6 +1371,11 @@ msgstr "Trier par type"
 msgid "Sort descending"
 msgstr "Tri décroissant"
 
+#: crates/app/ui/main.slint
+#: crates/integrate/src/features.rs
+msgid "Start with Windows"
+msgstr "Démarrer avec Windows"
+
 #: crates/integrate/src/bin/explorer2-recover.rs
 msgid "State: {0}"
 msgstr "État : {0}"
@@ -1376,9 +1416,25 @@ msgstr "Prend effet au prochain démarrage de l'application."
 msgid "Temp folder {0}: {1}"
 msgstr "Dossier temporaire {0} : {1}"
 
+#: crates/core/src/newmenu.rs
+msgid "Text Document"
+msgstr "Document texte"
+
+#: crates/app/src/fileops.rs
+msgid "That item can't be created here."
+msgstr "Cet élément ne peut pas être créé ici."
+
 #: crates/app/src/fileops.rs
 msgid "The Recycle Bin is empty."
 msgstr "La Corbeille est vide."
+
+#: crates/ops/src/newitem.rs
+msgid "The command for this item is empty."
+msgstr "La commande de cet élément est vide."
+
+#: crates/ops/src/newitem.rs
+msgid "The command for this item is still running."
+msgstr "La commande de cet élément est encore en cours d’exécution."
 
 #: crates/shell/src/menu.rs
 msgid "The context menu is only available on Windows."
@@ -1486,12 +1542,20 @@ msgid "Toggle: Win+E opens Explorer 2.0"
 msgstr "Activer ou désactiver : Win+E ouvre Explorer 2.0"
 
 #: crates/core/src/commands.rs
+msgid "Toggle: also handle Open and Explore"
+msgstr "Activer ou désactiver : prendre aussi en charge Ouvrir et Explorer"
+
+#: crates/core/src/commands.rs
 msgid "Toggle: open folders in the running window (new tab)"
 msgstr "Activer ou désactiver : ouvrir les dossiers dans la fenêtre ouverte (nouvel onglet)"
 
 #: crates/core/src/commands.rs
 msgid "Toggle: open folders with Explorer 2.0"
 msgstr "Activer ou désactiver : ouvrir les dossiers avec Explorer 2.0"
+
+#: crates/core/src/commands.rs
+msgid "Toggle: start with Windows"
+msgstr "Activer ou désactiver : démarrer avec Windows"
 
 #: crates/core/src/commands.rs
 msgid "Toggle: “Open in Explorer 2.0” in the context menu"

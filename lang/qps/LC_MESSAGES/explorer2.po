@@ -125,6 +125,11 @@ msgstr "[Åďďřéšš båř·····]"
 msgid "Already exists"
 msgstr "[Åłřéåďý éxîšťš······]"
 
+#: crates/app/ui/main.slint
+#: crates/integrate/src/features.rs
+msgid "Also handle Open and Explore"
+msgstr "[Åłšö håñďłé Öpéñ åñď Éxpłöřé············]"
+
 #: crates/app/src/fileops.rs
 #: crates/core/src/commands.rs
 msgid "Alt+Enter"
@@ -247,6 +252,10 @@ msgstr "[Çöpý påťh·····]"
 #: crates/app/src/fileops.rs
 msgid "Copying {0} to “{1}”"
 msgstr "[Çöpýîñğ {0} ťö “{1}”·········]"
+
+#: crates/ops/src/newitem.rs
+msgid "Could not run the command for this item: {0}"
+msgstr "[Çöüłď ñöť řüñ ťhé çömmåñď föř ťhîš îťém: {0}··················]"
 
 #: crates/ops/src/exec.rs
 msgid "Couldn't move the existing item to the Recycle Bin: {0}"
@@ -515,6 +524,10 @@ msgstr "[Éřřöř: {0} – płéåšé ďéłéťé ťhé přöğřåm föłď
 #: crates/app/src/fileops.rs
 msgid "Existing: {0}"
 msgstr "[Éxîšťîñğ: {0}······]"
+
+#: crates/app/ui/tray.slint
+msgid "Exit"
+msgstr "[Éxîť··]"
 
 #: crates/core/src/guard.rs
 msgid "Explorer 2.0 closed unexpectedly last time."
@@ -888,6 +901,15 @@ msgid "Network shares are only available on Windows"
 msgstr "[Ñéťwöřk šhåřéš åřé öñłý åvåîłåbłé öñ Wîñďöwš··················]"
 
 #: crates/app/src/fileops.rs
+#: crates/core/src/newmenu.rs
+msgid "New"
+msgstr "[Ñéw··]"
+
+#: crates/core/src/newmenu.rs
+msgid "New Text Document"
+msgstr "[Ñéw Ťéxť Ďöçüméñť·······]"
+
+#: crates/app/src/fileops.rs
 #: crates/app/ui/main.slint
 #: crates/core/src/commands.rs
 #: crates/ops/src/names.rs
@@ -898,6 +920,14 @@ msgstr "[Ñéw föłďéř·····]"
 #: crates/core/src/commands.rs
 msgid "New tab"
 msgstr "[Ñéw ťåb····]"
+
+#: crates/core/src/commands.rs
+msgid "New text document"
+msgstr "[Ñéw ťéxť ďöçüméñť·······]"
+
+#: crates/app/ui/tray.slint
+msgid "New window"
+msgstr "[Ñéw wîñďöw·····]"
 
 #: crates/app/src/fileops.rs
 msgid "New: {0} (from {1})"
@@ -1230,6 +1260,7 @@ msgid "Select all"
 msgstr "[Šéłéçť åłł·····]"
 
 #: crates/app/ui/main.slint
+#: crates/app/ui/tray.slint
 #: crates/core/src/commands.rs
 msgid "Settings"
 msgstr "[Šéťťîñğš····]"
@@ -1273,6 +1304,10 @@ msgstr "[Šhöw přöťéçťéď öpéřåťîñğ šýšťém fîłéš···�
 #: crates/app/ui/main.slint
 msgid "Show report"
 msgstr "[Šhöw řépöřť·····]"
+
+#: crates/app/ui/tray.slint
+msgid "Show window"
+msgstr "[Šhöw wîñďöw·····]"
 
 #: crates/fs/src/network.rs
 msgid "Sign-in cancelled"
@@ -1336,6 +1371,11 @@ msgstr "[Šöřť bý ťýpé·····]"
 msgid "Sort descending"
 msgstr "[Šöřť ďéšçéñďîñğ······]"
 
+#: crates/app/ui/main.slint
+#: crates/integrate/src/features.rs
+msgid "Start with Windows"
+msgstr "[Šťåřť wîťh Wîñďöwš········]"
+
 #: crates/integrate/src/bin/explorer2-recover.rs
 msgid "State: {0}"
 msgstr "[Šťåťé: {0}·····]"
@@ -1376,9 +1416,25 @@ msgstr "[Ťåkéš éfféçť ťhé ñéxť ťîmé ťhé åpp šťåřťš.··
 msgid "Temp folder {0}: {1}"
 msgstr "[Ťémp föłďéř {0}: {1}·········]"
 
+#: crates/core/src/newmenu.rs
+msgid "Text Document"
+msgstr "[Ťéxť Ďöçüméñť······]"
+
+#: crates/app/src/fileops.rs
+msgid "That item can't be created here."
+msgstr "[Ťhåť îťém çåñ'ť bé çřéåťéď héřé.·············]"
+
 #: crates/app/src/fileops.rs
 msgid "The Recycle Bin is empty."
 msgstr "[Ťhé Řéçýçłé Bîñ îš émpťý.··········]"
+
+#: crates/ops/src/newitem.rs
+msgid "The command for this item is empty."
+msgstr "[Ťhé çömmåñď föř ťhîš îťém îš émpťý.··············]"
+
+#: crates/ops/src/newitem.rs
+msgid "The command for this item is still running."
+msgstr "[Ťhé çömmåñď föř ťhîš îťém îš šťîłł řüññîñğ.··················]"
 
 #: crates/shell/src/menu.rs
 msgid "The context menu is only available on Windows."
@@ -1486,12 +1542,20 @@ msgid "Toggle: Win+E opens Explorer 2.0"
 msgstr "[Ťöğğłé: Wîñ+É öpéñš Éxpłöřéř 2.0·············]"
 
 #: crates/core/src/commands.rs
+msgid "Toggle: also handle Open and Explore"
+msgstr "[Ťöğğłé: åłšö håñďłé Öpéñ åñď Éxpłöřé···············]"
+
+#: crates/core/src/commands.rs
 msgid "Toggle: open folders in the running window (new tab)"
 msgstr "[Ťöğğłé: öpéñ föłďéřš îñ ťhé řüññîñğ wîñďöw (ñéw ťåb)·····················]"
 
 #: crates/core/src/commands.rs
 msgid "Toggle: open folders with Explorer 2.0"
 msgstr "[Ťöğğłé: öpéñ föłďéřš wîťh Éxpłöřéř 2.0················]"
+
+#: crates/core/src/commands.rs
+msgid "Toggle: start with Windows"
+msgstr "[Ťöğğłé: šťåřť wîťh Wîñďöwš···········]"
 
 #: crates/core/src/commands.rs
 msgid "Toggle: “Open in Explorer 2.0” in the context menu"

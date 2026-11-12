@@ -79,6 +79,7 @@ pub const ALL: &[Command] = &[
         tr_noop!("Ctrl+Shift+N"),
         Need::Folder,
     ),
+    c("new-text", tr_noop!("New text document"), "", Need::Folder),
     c("undo", tr_noop!("Undo"), tr_noop!("Ctrl+Z"), Need::Undo),
     c("redo", tr_noop!("Redo"), tr_noop!("Ctrl+Y"), Need::Redo),
     c(
@@ -320,6 +321,18 @@ pub const ALL: &[Command] = &[
     c(
         "toggle-win-e",
         tr_noop!("Toggle: Win+E opens Explorer 2.0"),
+        "",
+        Need::Always,
+    ),
+    c(
+        "toggle-open-explore",
+        tr_noop!("Toggle: also handle Open and Explore"),
+        "",
+        Need::Always,
+    ),
+    c(
+        "toggle-start-with-windows",
+        tr_noop!("Toggle: start with Windows"),
         "",
         Need::Always,
     ),

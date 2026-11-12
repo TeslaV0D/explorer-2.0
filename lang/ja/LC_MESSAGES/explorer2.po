@@ -121,6 +121,11 @@ msgstr "アドレス バー"
 msgid "Already exists"
 msgstr "既に存在します"
 
+#: crates/app/ui/main.slint
+#: crates/integrate/src/features.rs
+msgid "Also handle Open and Explore"
+msgstr "「開く」と「エクスプローラー」も受け取る"
+
 #: crates/app/src/fileops.rs
 #: crates/core/src/commands.rs
 msgid "Alt+Enter"
@@ -243,6 +248,10 @@ msgstr "パスをコピー"
 #: crates/app/src/fileops.rs
 msgid "Copying {0} to “{1}”"
 msgstr "{0} を「{1}」にコピーしています"
+
+#: crates/ops/src/newitem.rs
+msgid "Could not run the command for this item: {0}"
+msgstr "この項目のコマンドを実行できません: {0}"
 
 #: crates/ops/src/exec.rs
 msgid "Couldn't move the existing item to the Recycle Bin: {0}"
@@ -508,6 +517,10 @@ msgstr "エラー: {0} – プログラム フォルダーを手動で削除し�
 #: crates/app/src/fileops.rs
 msgid "Existing: {0}"
 msgstr "既存: {0}"
+
+#: crates/app/ui/tray.slint
+msgid "Exit"
+msgstr "終了"
 
 #: crates/core/src/guard.rs
 msgid "Explorer 2.0 closed unexpectedly last time."
@@ -879,6 +892,15 @@ msgid "Network shares are only available on Windows"
 msgstr "ネットワーク共有は Windows でのみ利用できます"
 
 #: crates/app/src/fileops.rs
+#: crates/core/src/newmenu.rs
+msgid "New"
+msgstr "新規作成"
+
+#: crates/core/src/newmenu.rs
+msgid "New Text Document"
+msgstr "新しいテキスト ドキュメント"
+
+#: crates/app/src/fileops.rs
 #: crates/app/ui/main.slint
 #: crates/core/src/commands.rs
 #: crates/ops/src/names.rs
@@ -889,6 +911,14 @@ msgstr "新しいフォルダー"
 #: crates/core/src/commands.rs
 msgid "New tab"
 msgstr "新しいタブ"
+
+#: crates/core/src/commands.rs
+msgid "New text document"
+msgstr "新しいテキスト ドキュメント"
+
+#: crates/app/ui/tray.slint
+msgid "New window"
+msgstr "新しいウィンドウ"
 
 #: crates/app/src/fileops.rs
 msgid "New: {0} (from {1})"
@@ -1218,6 +1248,7 @@ msgid "Select all"
 msgstr "すべて選択"
 
 #: crates/app/ui/main.slint
+#: crates/app/ui/tray.slint
 #: crates/core/src/commands.rs
 msgid "Settings"
 msgstr "設定"
@@ -1261,6 +1292,10 @@ msgstr "保護されたオペレーティング システム ファイルを表�
 #: crates/app/ui/main.slint
 msgid "Show report"
 msgstr "レポートを表示"
+
+#: crates/app/ui/tray.slint
+msgid "Show window"
+msgstr "ウィンドウを表示"
 
 #: crates/fs/src/network.rs
 msgid "Sign-in cancelled"
@@ -1324,6 +1359,11 @@ msgstr "種類で並べ替え"
 msgid "Sort descending"
 msgstr "降順に並べ替え"
 
+#: crates/app/ui/main.slint
+#: crates/integrate/src/features.rs
+msgid "Start with Windows"
+msgstr "Windows と同時に起動"
+
 #: crates/integrate/src/bin/explorer2-recover.rs
 msgid "State: {0}"
 msgstr "状態: {0}"
@@ -1364,9 +1404,25 @@ msgstr "次にアプリを起動したときに有効になります。"
 msgid "Temp folder {0}: {1}"
 msgstr "一時フォルダー {0}: {1}"
 
+#: crates/core/src/newmenu.rs
+msgid "Text Document"
+msgstr "テキスト ドキュメント"
+
+#: crates/app/src/fileops.rs
+msgid "That item can't be created here."
+msgstr "この項目はここでは作成できません。"
+
 #: crates/app/src/fileops.rs
 msgid "The Recycle Bin is empty."
 msgstr "ごみ箱は空です。"
+
+#: crates/ops/src/newitem.rs
+msgid "The command for this item is empty."
+msgstr "この項目のコマンドが空です。"
+
+#: crates/ops/src/newitem.rs
+msgid "The command for this item is still running."
+msgstr "この項目のコマンドはまだ実行中です。"
 
 #: crates/shell/src/menu.rs
 msgid "The context menu is only available on Windows."
@@ -1474,12 +1530,20 @@ msgid "Toggle: Win+E opens Explorer 2.0"
 msgstr "切り替え: Win+E で Explorer 2.0 を開く"
 
 #: crates/core/src/commands.rs
+msgid "Toggle: also handle Open and Explore"
+msgstr "切り替え: 「開く」と「エクスプローラー」も受け取る"
+
+#: crates/core/src/commands.rs
 msgid "Toggle: open folders in the running window (new tab)"
 msgstr "切り替え: 実行中のウィンドウでフォルダーを開く（新しいタブ）"
 
 #: crates/core/src/commands.rs
 msgid "Toggle: open folders with Explorer 2.0"
 msgstr "切り替え: Explorer 2.0 でフォルダーを開く"
+
+#: crates/core/src/commands.rs
+msgid "Toggle: start with Windows"
+msgstr "切り替え: Windows と同時に起動"
 
 #: crates/core/src/commands.rs
 msgid "Toggle: “Open in Explorer 2.0” in the context menu"

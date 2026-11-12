@@ -15,7 +15,7 @@ use explorer_ops::exec::{
     Choice, Conflict, Done, Event, JobHandle, JobSpec, Kind, Progress, Report,
 };
 use explorer_ops::undo::{entry_from_report, undo, Redo, Revert, UndoEntry, UndoStack};
-use explorer_ops::{names, simple};
+use explorer_ops::{names, newitem, simple};
 use slint::{ComponentHandle, VecModel};
 use std::cell::RefCell;
 use std::collections::VecDeque;
@@ -264,6 +264,8 @@ pub fn command(win: &MainWindow, pi: usize, cmd: &str) {
             }
         }
         "new-folder" => new_folder(win, pi),
+        "new-text" => new_by_id(win, pi, "txt"),
+        id if id.starts_with("new:") => new_by_id(win, pi, &id["new:".len()..]),
         "properties" => {
             let paths = nav::selected_paths(pi);
             let paths = if paths.is_empty() {
@@ -512,7 +514,9 @@ pub fn window_handle(win: &MainWindow) -> isize {
 }
 
 /// Right-click / Shift+F10 on row `row` (-1 = folder background) at window position (x, y).
-pub fn context_menu(win: &MainWindow, pi: usize, row: i32, x: f32, y: f32) {
+/// `shift` is the right-click with Shift held: the native Windows menu at once
+/// (extended verbs). Shift+F10 passes `false` and keeps our menu.
+pub fn context_menu(win: &MainWindow, pi: usize, row: i32, x: f32, y: f32, shift: bool) {
     nav::activate_pane(win, pi);
     if row >= 0 && !nav::is_selected(pi, row as usize) {
         // Explorer: right-click on an unselected item selects just that item
@@ -525,9 +529,17 @@ pub fn context_menu(win: &MainWindow, pi: usize, row: i32, x: f32, y: f32) {
         Vec::new()
     };
     trace(&format!(
-        "context menu pane={pi} row={row} items={}",
+        "context menu pane={pi} row={row} items={} shift={shift}",
         items.len()
     ));
+    if shift && explorer_shell::SHELL_SUPPORTED {
+        let weak = win.as_weak();
+        slint::Timer::single_shot(Duration::ZERO, move || {
+            let Some(w) = weak.upgrade() else { return };
+            show_menu_now(&w, pi, dir, items, x, y, true);
+        });
+        return;
+    }
     // R8: our own menu in the app's look; "Weitere Optionen" opens the shell's
     // full menu (with third-party entries) at the same place
     let entries = menu_entries(!items.is_empty(), items.len(), win.get_can_paste());
@@ -611,13 +623,7 @@ fn menu_entries(on_items: bool, n: usize, can_paste: bool) -> Vec<CtxItem> {
         ]
     } else {
         vec![
-            entry(
-                "new-folder",
-                tr!("New folder"),
-                tr!("Ctrl+Shift+N"),
-                "new-folder",
-                true,
-            ),
+            entry("new-menu", tr!("New"), "", "new-folder", true),
             entry("paste", tr!("Paste"), tr!("Ctrl+V"), "paste", can_paste),
             entry("refresh", tr!("Refresh"), "F5", "refresh", true),
             separator(),
@@ -633,6 +639,10 @@ fn menu_entries(on_items: bool, n: usize, can_paste: bool) -> Vec<CtxItem> {
 
 /// An entry of our context menu was chosen.
 pub fn ctx_run(win: &MainWindow, id: &str) {
+    if id == "new-menu" {
+        show_new_menu(win);
+        return;
+    }
     win.set_ctx_open(false);
     let Some(c) = CTX.with_borrow_mut(|c| c.take()) else {
         return;
@@ -645,7 +655,7 @@ pub fn ctx_run(win: &MainWindow, id: &str) {
     slint::Timer::single_shot(Duration::ZERO, move || {
         let Some(w) = weak.upgrade() else { return };
         match id.as_str() {
-            "more" => show_menu_now(&w, c.pi, c.dir, c.items, c.x, c.y),
+            "more" => show_menu_now(&w, c.pi, c.dir, c.items, c.x, c.y, false),
             "folder-properties" => {
                 if let Err(e) = explorer_shell::show_properties(window_handle(&w), &[c.dir]) {
                     w.set_error(e.into());
@@ -653,7 +663,12 @@ pub fn ctx_run(win: &MainWindow, id: &str) {
             }
             other => {
                 nav::focus_pane(c.pi);
-                crate::palette::execute(&w, c.pi, other);
+                // `new:<ext>` is a menu id, not a palette command
+                if other.starts_with("new:") {
+                    command(&w, c.pi, other);
+                } else {
+                    crate::palette::execute(&w, c.pi, other);
+                }
             }
         }
     });
@@ -692,10 +707,51 @@ pub fn ctx_close(win: &MainWindow) {
     }
 }
 
-fn show_menu_now(win: &MainWindow, pi: usize, dir: PathBuf, items: Vec<PathBuf>, x: f32, y: f32) {
+/// “New” replaces the open menu with the things that can be created here.
+fn show_new_menu(win: &MainWindow) {
+    if CTX.with_borrow(|c| c.is_none()) {
+        return;
+    }
+    let mut entries = vec![entry(
+        "new:folder",
+        tr!("New folder"),
+        tr!("Ctrl+Shift+N"),
+        "new-folder",
+        true,
+    )];
+    for spec in crate::newmenu::specs() {
+        entries.push(entry(
+            &format!("new:{}", spec.id),
+            &spec.label,
+            "",
+            "file",
+            true,
+        ));
+    }
+    trace(&format!(
+        "context menu own: {}",
+        entries
+            .iter()
+            .map(|e| e.id.as_str())
+            .collect::<Vec<_>>()
+            .join(",")
+    ));
+    win.set_ctx_items(Rc::new(VecModel::from(entries)).into());
+    win.set_ctx_sel(-1);
+}
+
+fn show_menu_now(
+    win: &MainWindow,
+    pi: usize,
+    dir: PathBuf,
+    items: Vec<PathBuf>,
+    x: f32,
+    y: f32,
+    extended: bool,
+) {
     let hwnd = window_handle(win);
     let at = explorer_shell::client_to_screen(hwnd, x, y, win.window().scale_factor());
-    let outcome = explorer_shell::show_context_menu(hwnd, &dir, &items, at);
+    let outcome = explorer_shell::show_context_menu(hwnd, &dir, &items, at, extended);
     trace(&format!("context menu result {outcome:?}"));
     use explorer_shell::{MenuOutcome, OwnVerb};
     match outcome {
@@ -1005,6 +1061,40 @@ pub fn rename_cancel(pi: usize) {
         trace("rename cancelled");
         nav::show_rename(pi, -1, "", 0);
         nav::focus_pane(pi);
+    }
+}
+
+fn new_by_id(win: &MainWindow, pi: usize, id: &str) {
+    if id == "folder" {
+        new_folder(win, pi);
+        return;
+    }
+    let Some(spec) = crate::newmenu::specs().into_iter().find(|s| s.id == id) else {
+        win.set_error(tr!("That item can't be created here.").into());
+        return;
+    };
+    let Some(dir) = nav::pane_dir(pi) else { return };
+    match newitem::create(&dir, &spec) {
+        Ok(created) => {
+            trace(&format!("new file {}", created.path.display()));
+            let redo = created.redo.map(|bytes| Redo::NewFile {
+                path: created.path.clone(),
+                bytes,
+            });
+            let report = Report {
+                done: vec![Done::Created(created.path.clone())],
+                ..Default::default()
+            };
+            push_undo(win, entry_from_report("new-file", &report, redo), false);
+            let name = dir_name(&created.path);
+            nav::refresh_dirs(
+                win,
+                std::slice::from_ref(&dir),
+                &[(dir.clone(), vec![name.clone()])],
+                Some((&dir, &name)),
+            );
+        }
+        Err(msg) => win.set_error(msg.into()),
     }
 }
 
@@ -1425,6 +1515,7 @@ fn run_redo(win: &MainWindow) {
         "move" => "move",
         "rename" => "rename",
         "new-folder" => "new-folder",
+        "new-file" => "new-file",
         _ => "delete",
     };
     match entry.redo {
@@ -1480,6 +1571,35 @@ fn run_redo(win: &MainWindow) {
                         win,
                         &[d.to_path_buf()],
                         &[(d.to_path_buf(), vec![dir_name(&p)])],
+                        None,
+                    );
+                }
+            }
+            Err(e) => win.set_error(tr!("Redo: {0}", e).into()),
+        },
+        Some(Redo::NewFile { path, bytes }) => match std::fs::write(&path, &bytes) {
+            Ok(()) => {
+                let report = Report {
+                    done: vec![Done::Created(path.clone())],
+                    ..Default::default()
+                };
+                push_undo(
+                    win,
+                    entry_from_report(
+                        label,
+                        &report,
+                        Some(Redo::NewFile {
+                            path: path.clone(),
+                            bytes,
+                        }),
+                    ),
+                    true,
+                );
+                if let Some(d) = path.parent() {
+                    nav::refresh_dirs(
+                        win,
+                        &[d.to_path_buf()],
+                        &[(d.to_path_buf(), vec![dir_name(&path)])],
                         None,
                     );
                 }

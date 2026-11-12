@@ -36,8 +36,16 @@ pub struct UndoEntry {
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Redo {
     Job(JobSpec),
-    Rename { from: PathBuf, to: PathBuf },
+    Rename {
+        from: PathBuf,
+        to: PathBuf,
+    },
     NewFolder(PathBuf),
+    /// Write `bytes` back to `path` (a file the New menu created).
+    NewFile {
+        path: PathBuf,
+        bytes: Vec<u8>,
+    },
 }
 
 pub fn entry_from_report(label: &str, report: &Report, redo: Option<Redo>) -> Option<UndoEntry> {

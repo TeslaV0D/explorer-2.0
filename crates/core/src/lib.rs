@@ -12,6 +12,7 @@ pub mod index_roots;
 pub mod inspect;
 pub mod instance;
 pub mod mnemonic;
+pub mod newmenu;
 pub mod places;
 pub mod renderer;
 pub mod searches;

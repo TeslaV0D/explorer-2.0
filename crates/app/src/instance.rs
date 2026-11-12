@@ -174,26 +174,34 @@ fn handle(stream: &mut (impl Read + Write), weak: &slint::Weak<MainWindow>) {
     }
 }
 
-/// Window to the front (restored if minimized).
-fn raise(win: &MainWindow) {
+/// Window to the front. Also undoes a hide (tray / `--background`).
+pub fn raise(win: &MainWindow) {
     use slint::ComponentHandle;
+    let _ = win.show();
     win.window().set_minimized(false);
     #[cfg(windows)]
     {
         use windows_sys::Win32::UI::WindowsAndMessaging::{
-            IsIconic, SetForegroundWindow, ShowWindow, SW_RESTORE,
+            IsIconic, SetForegroundWindow, ShowWindow, SW_RESTORE, SW_SHOW,
         };
         let hwnd = crate::fileops::window_handle(win) as windows_sys::Win32::Foundation::HWND;
         if !hwnd.is_null() {
             // SAFETY: our own window handle.
             unsafe {
-                if IsIconic(hwnd) != 0 {
-                    ShowWindow(hwnd, SW_RESTORE);
-                }
+                let cmd = if IsIconic(hwnd) != 0 {
+                    SW_RESTORE
+                } else {
+                    SW_SHOW
+                };
+                ShowWindow(hwnd, cmd);
                 let ok = SetForegroundWindow(hwnd) != 0;
                 nav::trace_line(&format!("instance: raised foreground={ok}"));
             }
         }
+    }
+    #[cfg(not(windows))]
+    {
+        nav::trace_line("instance: raised");
     }
 }
 

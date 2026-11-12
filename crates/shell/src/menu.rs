@@ -57,14 +57,15 @@ pub fn show_context_menu(
     dir: &Path,
     items: &[PathBuf],
     at: (i32, i32),
+    extended: bool,
 ) -> MenuOutcome {
     #[cfg(windows)]
     {
-        crate::win_menu::show(hwnd, dir, items, at)
+        crate::win_menu::show(hwnd, dir, items, at, extended)
     }
     #[cfg(not(windows))]
     {
-        let _ = (hwnd, dir, items, at);
+        let _ = (hwnd, dir, items, at, extended);
         MenuOutcome::Failed(
             explorer_i18n::tr!("The context menu is only available on Windows.").into(),
         )

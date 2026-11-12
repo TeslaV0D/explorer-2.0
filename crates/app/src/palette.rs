@@ -173,7 +173,7 @@ pub(crate) fn execute(win: &MainWindow, pi: usize, id: &str) {
     match id {
         "open" => act(KeyAction::Open),
         "copy" | "cut" | "paste" | "rename" | "delete" | "delete-permanent" | "new-folder"
-        | "undo" | "redo" | "properties" | "restore" | "empty-trash" => {
+        | "new-text" | "undo" | "redo" | "properties" | "restore" | "empty-trash" => {
             crate::fileops::command(win, pi, id)
         }
         "context-menu" => act(KeyAction::ContextMenu),
@@ -226,6 +226,10 @@ pub(crate) fn execute(win: &MainWindow, pi: usize, id: &str) {
         "toggle-folder-open" => crate::integration::toggle_feature(win, "folder-open"),
         "toggle-context-menu" => crate::integration::toggle_feature(win, "context-menu"),
         "toggle-win-e" => crate::integration::toggle_feature(win, "win-e"),
+        "toggle-open-explore" => crate::integration::toggle_feature(win, "open-explore"),
+        "toggle-start-with-windows" => {
+            crate::integration::toggle_feature(win, "start-with-windows")
+        }
         "toggle-single-instance" => {
             let on = !win.get_opt_single_instance();
             nav::set_option(win, "single_instance", on);

@@ -24,9 +24,22 @@ pub enum Feature {
     ContextMenu,
     /// Win+E (and "open a new window" of File Explorer's start object).
     WinE,
+    /// `ShellExecute` with the verb `open` or `explore` (Steam “Browse local
+    /// files”, browsers, …). Those call the verb by name and never see our
+    /// default verb `explorer2open`. `Directory` and `Drive` only — never
+    /// `Folder` (virtual folders stay with Windows).
+    ExplicitOpen,
+    /// Start with Windows: `HKCU\…\Run` value `Explorer2` = `"exe" --background`.
+    Autostart,
 }
 
-pub const ALL: [Feature; 3] = [Feature::FolderOpen, Feature::ContextMenu, Feature::WinE];
+pub const ALL: [Feature; 5] = [
+    Feature::FolderOpen,
+    Feature::ContextMenu,
+    Feature::WinE,
+    Feature::ExplicitOpen,
+    Feature::Autostart,
+];
 
 /// The shell object Win+E opens a new window of (Windows 10/11).
 pub const WIN_E_CLSID: &str = "{52205FD8-5DFB-447D-801A-D0B52F2E83E1}";
@@ -44,12 +57,26 @@ pub fn command(exe: &Path, arg: &str) -> String {
     format!("\"{}\" \"{arg}\"", exe.display())
 }
 
+/// `"C:\…\explorer2.exe" --background` (no folder: the last session, hidden).
+pub fn background_command(exe: &Path) -> String {
+    format!("\"{}\" --background", exe.display())
+}
+
+/// `HKCU\Software\Microsoft\Windows\CurrentVersion\Run`, value name `Explorer2`.
+pub const RUN_VALUE: &str = "Explorer2";
+
+fn run_key() -> KeyPath {
+    KeyPath::hkcu(r"Software\Microsoft\Windows\CurrentVersion\Run")
+}
+
 impl Feature {
     pub fn id(self) -> &'static str {
         match self {
             Feature::FolderOpen => "folder-open",
             Feature::ContextMenu => "context-menu",
             Feature::WinE => "win-e",
+            Feature::ExplicitOpen => "open-explore",
+            Feature::Autostart => "start-with-windows",
         }
     }
 
@@ -65,6 +92,8 @@ impl Feature {
                 explorer_i18n::tr!("“Open in Explorer 2.0” in the context menu")
             }
             Feature::WinE => explorer_i18n::tr!("Win+E opens Explorer 2.0"),
+            Feature::ExplicitOpen => explorer_i18n::tr!("Also handle Open and Explore"),
+            Feature::Autostart => explorer_i18n::tr!("Start with Windows"),
         }
     }
 
@@ -87,6 +116,16 @@ impl Feature {
             Feature::WinE => vec![Scope::tree(classes(&format!(
                 r"CLSID\{WIN_E_CLSID}\shell\opennewwindow"
             )))],
+            // only the command value, not the rest of the verb
+            Feature::ExplicitOpen => ["Directory", "Drive"]
+                .into_iter()
+                .flat_map(|c| {
+                    ["open", "explore"]
+                        .into_iter()
+                        .map(move |v| Scope::values_of(classes(&format!(r"{c}\shell\{v}\command"))))
+                })
+                .collect(),
+            Feature::Autostart => vec![Scope::values_of(run_key())],
         }
     }
 
@@ -150,6 +189,23 @@ impl Feature {
                     set(key, "DelegateExecute", RegData::sz("")),
                 ]
             }
+            Feature::ExplicitOpen => ["Directory", "Drive"]
+                .into_iter()
+                .flat_map(|class| {
+                    ["open", "explore"].into_iter().map(move |verb| {
+                        set(
+                            classes(&format!(r"{class}\shell\{verb}\command")),
+                            "",
+                            RegData::sz(&command(exe, "%1")),
+                        )
+                    })
+                })
+                .collect(),
+            Feature::Autostart => vec![set(
+                run_key(),
+                RUN_VALUE,
+                RegData::sz(&background_command(exe)),
+            )],
         }
     }
 }

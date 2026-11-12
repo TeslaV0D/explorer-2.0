@@ -1,0 +1,33 @@
+// Tray icon (D-028). Its own file so Menu/MenuItem are the built-in ones:
+// kit.slint's MenuItem is a different component and must not be used here.
+// A SystemTrayIcon does not share globals with the window.
+
+export component AppTray inherits SystemTrayIcon {
+    icon: @image-url("../res/icon/icon-32.png");
+    tooltip: "Explorer 2.0";
+    title: "Explorer 2.0";
+    callback show-window();
+    callback new-window();
+    callback open-settings();
+    callback quit();
+    clicked => { root.show-window(); }
+    Menu {
+        MenuItem {
+            title: @tr("Show window");
+            activated => { root.show-window(); }
+        }
+        MenuItem {
+            title: @tr("New window");
+            activated => { root.new-window(); }
+        }
+        MenuItem {
+            title: @tr("Settings");
+            activated => { root.open-settings(); }
+        }
+        MenuSeparator {}
+        MenuItem {
+            title: @tr("Exit");
+            activated => { root.quit(); }
+        }
+    }
+}

@@ -88,6 +88,8 @@ pub fn refresh(win: &MainWindow) {
                 Feature::FolderOpen => win.set_feat_folder_open(on),
                 Feature::ContextMenu => win.set_feat_context_menu(on),
                 Feature::WinE => win.set_feat_win_e(on),
+                Feature::ExplicitOpen => win.set_feat_open_explore(on),
+                Feature::Autostart => win.set_feat_start_with_windows(on),
             }
             states.push(format!("{}={s:?}", f.id()));
         }
@@ -163,6 +165,8 @@ pub fn toggle_feature(win: &MainWindow, id: &str) {
         Some(Feature::FolderOpen) => win.get_feat_folder_open(),
         Some(Feature::ContextMenu) => win.get_feat_context_menu(),
         Some(Feature::WinE) => win.get_feat_win_e(),
+        Some(Feature::ExplicitOpen) => win.get_feat_open_explore(),
+        Some(Feature::Autostart) => win.get_feat_start_with_windows(),
         None => return,
     };
     // the panel shows the result
