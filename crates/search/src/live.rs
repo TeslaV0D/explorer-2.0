@@ -187,14 +187,25 @@ pub fn recheck_target(work: &Work) -> Option<PathBuf> {
 
 /// `path` lies below `root` (same rules as the index: case only on Unix).
 pub(crate) fn inside(path: &str, root: &str) -> bool {
-    let (p, r) = if crate::CASE_INSENSITIVE {
-        (path.to_lowercase(), root.to_lowercase())
-    } else {
-        (path.to_string(), root.to_string())
+    // A Windows root is stored with `\`, a watcher or an address typed with
+    // `/` must still count as inside it (`C:/Users` and `C:\Users`). Unix
+    // roots keep both characters.
+    let windows = |s: &str| s.contains('\\') || (s.len() >= 2 && s.as_bytes()[1] == b':');
+    let windows = windows(path) || windows(root);
+    let norm = |s: &str| {
+        let s = if crate::CASE_INSENSITIVE {
+            s.to_lowercase()
+        } else {
+            s.to_string()
+        };
+        if windows {
+            s.replace('\\', "/")
+        } else {
+            s
+        }
     };
-    p.len() > r.len()
-        && p.starts_with(&r)
-        && (r.ends_with(['/', '\\']) || p[r.len()..].starts_with(['/', '\\']))
+    let (p, r) = (norm(path), norm(root));
+    p.len() > r.len() && p.starts_with(&r) && (r.ends_with('/') || p[r.len()..].starts_with('/'))
 }
 
 #[cfg(test)]
@@ -258,6 +269,7 @@ mod tests {
             explorer_index::Now {
                 unix: 0,
                 utc_offset: 0,
+                offset_at: None,
             },
         )
         .unwrap();
@@ -311,5 +323,10 @@ mod tests {
             assert!(!inside("/home/a", "/home/a"));
             assert!(!inside("/home/A/b", "/home/a"));
         }
+        // separators, on either platform (the root is a Windows path)
+        assert!(inside(r"C:/Users/foo", r"C:\Users"));
+        assert!(inside(r"C:\Users/foo", "C:/Users"));
+        assert!(!inside(r"C:/Users", r"C:\Users"));
+        assert!(!inside(r"C:/Users2/foo", r"C:\Users"));
     }
 }

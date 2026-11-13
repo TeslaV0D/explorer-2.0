@@ -219,10 +219,11 @@ pub fn ask_reset(win: &MainWindow) {
     }
     crate::fileops::confirm_integration_reset(
         win,
-        &format!(
-            "Alle Windows-Integrationen von Explorer 2.0 entfernen und die vorherigen \
-             Windows-Einstellungen exakt wiederherstellen?\n\n{status}\n\nWerte, die inzwischen \
-             eine andere Software geändert hat, bleiben unangetastet."
+        &tr!(
+            "Remove all Windows integrations of Explorer 2.0 and restore the previous \
+             Windows settings exactly?\n\n{0}\n\nValues that another program has changed \
+             in the meantime are left alone.",
+            status
         ),
     );
 }

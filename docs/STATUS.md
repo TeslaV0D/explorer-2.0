@@ -4,6 +4,14 @@
 
 The app follows the Windows language (D-029). UI labels are quoted as they appear.
 
+## Bug fixes (2026-11-12)
+- Breadcrumbs split `C:/Users/Boss` and `//nas/share/x` the same way as backslash paths.
+- The name index and live updates treat `/` and `\` as the same separator on a Windows root, so a forward-slash path still hits `C:\`.
+- `dm:` day boundaries use the offset of that date when the caller passes one (winter midnight stays winter time while “today” is in summer). The app does.
+- A search reload keeps the selection on the full path. The same file name in two folders no longer jumps to the other row.
+- A cancelled folder walk and a cancelled copy say “Cancelled.” in the current language. The integration-reset question does too.
+- A copy-only drop on the Recycle Bin is refused. The files are not deleted.
+
 ## New menu, tray autostart, Open/Explore, Shift+right-click (2026-11-12)
 - **New menu** (D-030): the folder background menu has “New”. It replaces that menu with “New folder”, a text document, and whatever `HKCR\.<ext>\ShellNew` can create (`NullFile`, `FileName`, `Data`, `Command`). The name goes straight into rename; undo is the same as for a new folder. A COM-only ShellNew handler is skipped. On Linux (no registry) the list is folder + text document. Toolbar and Ctrl+Shift+N still create a folder.
 - **Autostart** (D-028, opt-in): settings + palette. `HKCU\…\CurrentVersion\Run` value `Explorer2` = `"exe" --background`, only through `apply` / the manifest, so reset and recovery remove it. Closing the window hides it. A tray icon (Slint `SystemTrayIcon`) keeps the process: click or “Show window” brings it back, “New window”, “Settings”, “Exit”. `--background` marks the start guard stable immediately and hides the window. Where the tray cannot be created (Linux CI, no StatusNotifier), hiding the window still quits, so the existing tests stay valid.

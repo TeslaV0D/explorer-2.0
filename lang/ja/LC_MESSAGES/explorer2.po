@@ -177,6 +177,7 @@ msgstr "キャンセル"
 msgid "Cancelled – nothing changed."
 msgstr "キャンセルしました。何も変更されていません。"
 
+#: crates/ops/src/exec.rs
 #: crates/setup/src/main.rs
 msgid "Cancelled."
 msgstr "キャンセルしました。"
@@ -1133,6 +1134,20 @@ msgstr "やり直し: {0}"
 msgid "Refresh"
 msgstr "最新の情報に更新"
 
+#: crates/app/src/integration.rs
+msgid ""
+"Remove all Windows integrations of Explorer 2.0 and restore the previous Windows settings exactly?\n"
+"\n"
+"{0}\n"
+"\n"
+"Values that another program has changed in the meantime are left alone."
+msgstr ""
+"Explorer 2.0 の Windows 統合をすべて解除し、以前の Windows の設定をそのまま復元しますか?\n"
+"\n"
+"{0}\n"
+"\n"
+"その間に他のソフトウェアが変更した値はそのまま残します。"
+
 #: crates/integrate/src/bin/explorer2-recover.rs
 msgid "Removing the program folder …"
 msgstr "プログラム フォルダーを削除しています…"
@@ -1229,6 +1244,10 @@ msgstr "検索インデックスを開始しています…"
 #: crates/app/src/search.rs
 msgid "Search index: no folder for the index files."
 msgstr "検索インデックス: インデックス ファイル用のフォルダーがありません。"
+
+#: crates/app/src/search.rs
+msgid "Search was cancelled."
+msgstr "検索をキャンセルしました。"
 
 #: crates/app/src/nav.rs
 msgid "Search {0}"

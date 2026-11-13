@@ -431,13 +431,7 @@ impl Index {
                 continue;
             }
             let rn = self.name(r);
-            let hit = if self.case_insensitive {
-                path.len() >= rn.len()
-                    && path.is_char_boundary(rn.len())
-                    && path[..rn.len()].eq_ignore_ascii_case(rn)
-            } else {
-                path.starts_with(rn)
-            };
+            let hit = Self::root_prefix_eq(path, rn, self.case_insensitive);
             // (only after `hit`: a shorter path must not be sliced)
             let boundary = hit
                 && (path.len() == rn.len()
@@ -452,6 +446,28 @@ impl Index {
             cur = self.child(cur, part)?;
         }
         Some(cur)
+    }
+
+    /// Root prefix of `path`. On a Windows root (`C:\`, `\\server`) `/` and
+    /// `\` are the same separator, so `C:/Users` still matches `C:\`.
+    fn root_prefix_eq(path: &str, root: &str, case_insensitive: bool) -> bool {
+        if path.len() < root.len() || !path.is_char_boundary(root.len()) {
+            return false;
+        }
+        let windows = root.contains('\\') || (root.len() >= 2 && root.as_bytes()[1] == b':');
+        path.as_bytes()[..root.len()]
+            .iter()
+            .zip(root.as_bytes())
+            .all(|(&a, &b)| {
+                if windows && (a == b'/' || a == b'\\') && (b == b'/' || b == b'\\') {
+                    return true;
+                }
+                if case_insensitive {
+                    a.eq_ignore_ascii_case(&b)
+                } else {
+                    a == b
+                }
+            })
     }
 
     /// Removes `id` and everything below it.

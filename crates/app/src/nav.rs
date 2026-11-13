@@ -786,7 +786,35 @@ fn is_server(p: &Path) -> bool {
 }
 
 /// Carries the selection over to a reloaded list of the same folder, matched by name.
-fn remap_selection(old_entries: &[Entry], old: &Selection, new_entries: &[Entry]) -> Selection {
+fn search_paths(v: &VirtualData) -> Option<&[PathBuf]> {
+    match v {
+        VirtualData::Search { paths, .. } => Some(paths),
+        _ => None,
+    }
+}
+
+fn remap_selection(
+    old_entries: &[Entry],
+    old_paths: Option<&[PathBuf]>,
+    old: &Selection,
+    new_entries: &[Entry],
+    new_paths: Option<&[PathBuf]>,
+) -> Selection {
+    // Search hits repeat a name across folders. The full path is the row.
+    if let (Some(old_paths), Some(new_paths)) = (old_paths, new_paths) {
+        if old_paths.len() == old_entries.len() && new_paths.len() == new_entries.len() {
+            let index: HashMap<&Path, usize> = new_paths
+                .iter()
+                .enumerate()
+                .map(|(i, p)| (p.as_path(), i))
+                .collect();
+            return old.remap(new_entries.len(), |i| {
+                old_paths
+                    .get(i)
+                    .and_then(|p| index.get(p.as_path()).copied())
+            });
+        }
+    }
     let index: HashMap<&str, usize> = new_entries
         .iter()
         .enumerate()
@@ -1512,7 +1540,13 @@ fn apply(
                 let mut sel = if path_changed {
                     Selection::new(n)
                 } else {
-                    remap_selection(&t.entries, &t.selection, &entries)
+                    remap_selection(
+                        &t.entries,
+                        search_paths(&t.virtual_data),
+                        &t.selection,
+                        &entries,
+                        search_paths(&vdata),
+                    )
                 };
                 // Select the folder we came from ("up") or pasted/new items, once fully loaded.
                 let mut rename_at = None;
@@ -3757,7 +3791,31 @@ mod tests {
             e("new", false, false),
             e("a", false, false),
         ];
-        let r = remap_selection(&old, &sel, &new);
+        let r = remap_selection(&old, None, &sel, &new, None);
+        assert_eq!(r.selected_indices(), [0]);
+        assert_eq!(r.focus(), Some(0));
+    }
+
+    #[test]
+    fn search_selection_follows_the_path_not_the_name() {
+        let old = vec![e("readme.txt", false, false), e("readme.txt", false, false)];
+        let old_paths = [
+            PathBuf::from("/a/readme.txt"),
+            PathBuf::from("/b/readme.txt"),
+        ];
+        let mut sel = Selection::new(2);
+        sel.click(1);
+        let new = vec![
+            e("readme.txt", false, false),
+            e("other.txt", false, false),
+            e("readme.txt", false, false),
+        ];
+        let new_paths = [
+            PathBuf::from("/b/readme.txt"),
+            PathBuf::from("/c/other.txt"),
+            PathBuf::from("/a/readme.txt"),
+        ];
+        let r = remap_selection(&old, Some(&old_paths), &sel, &new, Some(&new_paths));
         assert_eq!(r.selected_indices(), [0]);
         assert_eq!(r.focus(), Some(0));
     }

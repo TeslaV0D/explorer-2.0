@@ -907,6 +907,15 @@ pub fn drop_files(
     action
 }
 
+/// Recycle Bin only accepts a move. A copy-only source is refused.
+fn recycle_drop_effect(allow_move: bool) -> explorer_shell::DropEffect {
+    if allow_move {
+        explorer_shell::DropEffect::Move
+    } else {
+        explorer_shell::DropEffect::None
+    }
+}
+
 /// OLE drop on pane `pi` / row `row` (-1 = shown folder): decide (and on
 /// `Drop` perform) like Explorer – same drive moves, other drive copies,
 /// Ctrl copies, Shift moves; never into itself.
@@ -918,16 +927,14 @@ pub fn ole_drop(
 ) -> explorer_shell::DropEffect {
     use explorer_shell::{default_effect, DropEffect, DropPhase};
     if nav::pane_place(pi) == Some(VirtualPlace::Trash) {
-        // dropping on the recycle bin deletes (Explorer)
-        if ev.phase == DropPhase::Drop {
+        // dropping on the recycle bin deletes (Explorer). A source that
+        // only allows copy must not be deleted: the cursor already says no.
+        let effect = recycle_drop_effect(ev.allow_move);
+        if ev.phase == DropPhase::Drop && effect == DropEffect::Move {
             trace(&format!("ole drop on trash n={}", ev.paths.len()));
             trash_paths(win, ev.paths.to_vec());
         }
-        return if ev.allow_move {
-            DropEffect::Move
-        } else {
-            DropEffect::None
-        };
+        return effect;
     }
     let Some(dest) = drop_target(pi, row) else {
         return DropEffect::None;
@@ -1615,6 +1622,12 @@ fn run_redo(win: &MainWindow) {
 mod tests {
     use super::*;
     // tests see the English source texts (German comes from lang/de, D-029)
+
+    #[test]
+    fn recycle_bin_refuses_a_copy_only_drop() {
+        assert_eq!(recycle_drop_effect(true), explorer_shell::DropEffect::Move);
+        assert_eq!(recycle_drop_effect(false), explorer_shell::DropEffect::None);
+    }
 
     #[test]
     fn drop_rules() {

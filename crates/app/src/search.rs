@@ -550,6 +550,8 @@ pub fn find(
         explorer_index::Now {
             unix: now,
             utc_offset: explorer_core::local_offset_at(now),
+            // winter and summer dates keep their own midnight, not today's
+            offset_at: Some(explorer_core::local_offset_at),
         },
     )
     .map_err(|e| tr!("Search: {0}", e))?;
@@ -581,7 +583,7 @@ pub fn find(
         w.cancel = Some(cancel);
         let (ix, rep) = explorer_search::walk::build(s, &w);
         if rep.cancelled {
-            return Err("abgebrochen".into());
+            return Err(tr!("Search was cancelled.").into());
         }
         walked = true;
         let mut ids = ix.search(&q, None, by, sort.descending);
