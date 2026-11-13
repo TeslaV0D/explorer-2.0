@@ -3480,7 +3480,7 @@ mod tests {
             assert_eq!(rows[1].kind, "TXT File");
         }
         assert_eq!(rows[1].size, "2 KB");
-        assert_eq!(rows[1].modified, "1970-01-01 00:00");
+        assert_eq!(rows[1].modified, format_local(0).as_str());
         let show = ViewFilter {
             show_hidden: true,
             ..Default::default()

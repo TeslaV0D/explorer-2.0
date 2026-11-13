@@ -358,6 +358,135 @@ pub fn format_decimal(v: f64, places: usize) -> String {
     }
 }
 
+/// Short date and short time, as Windows Explorer's date column shows them
+/// for that language's regional default (before the user customises the
+/// region). `dm:` queries stay ISO; only the display uses this.
+///
+/// Patterns are the Windows NLS defaults (the same ones .NET reports):
+/// en `M/d/yyyy h:mm tt`, de/pl `dd.MM.yyyy HH:mm`, es `dd/MM/yyyy H:mm`,
+/// fr/it `dd/MM/yyyy HH:mm`, ru/uk `dd.MM.yyyy H:mm`, zh `yyyy/M/d H:mm`,
+/// ja `yyyy/MM/dd H:mm`. Anything else (including the `qps` layout locale)
+/// uses the English pattern, which is the widest.
+#[derive(Clone, Copy)]
+struct Stamp {
+    /// `Y`, `M`, `D` in display order (`b"DMY"`, `b"MDY"`, `b"YMD"`).
+    order: [u8; 3],
+    sep: char,
+    pad_date: bool,
+    pad_hour: bool,
+    /// 12-hour clock with `AM` / `PM` (en-US).
+    h12: bool,
+}
+
+fn stamp_of(code: &str) -> Stamp {
+    let dmy = |sep, pad_hour| Stamp {
+        order: *b"DMY",
+        sep,
+        pad_date: true,
+        pad_hour,
+        h12: false,
+    };
+    match code {
+        "de" | "pl" => dmy('.', true),
+        "ru" | "uk" => dmy('.', false),
+        "es" => dmy('/', false),
+        "fr" | "it" => dmy('/', true),
+        "zh" => Stamp {
+            order: *b"YMD",
+            sep: '/',
+            pad_date: false,
+            pad_hour: false,
+            h12: false,
+        },
+        "ja" => Stamp {
+            order: *b"YMD",
+            sep: '/',
+            pad_date: true,
+            pad_hour: false,
+            h12: false,
+        },
+        _ => Stamp {
+            order: *b"MDY",
+            sep: '/',
+            pad_date: false,
+            pad_hour: false,
+            h12: true,
+        },
+    }
+}
+
+fn stamp_num(n: u32, pad: bool) -> String {
+    if pad {
+        format!("{n:02}")
+    } else {
+        n.to_string()
+    }
+}
+
+/// `2026-01-15 13:05` in the current language (`1/15/2026 1:05 PM`,
+/// `15.01.2026 13:05`, …).
+pub fn format_stamp(year: i64, month: u32, day: u32, hour: u32, minute: u32) -> String {
+    format_stamp_in(language(), year, month, day, hour, minute)
+}
+
+/// [`format_stamp`] for an explicit language (tests; the column sample).
+pub fn format_stamp_in(
+    code: &str,
+    year: i64,
+    month: u32,
+    day: u32,
+    hour: u32,
+    minute: u32,
+) -> String {
+    let s = stamp_of(code);
+    let year = if (0..10_000).contains(&year) {
+        format!("{year:04}")
+    } else {
+        year.to_string()
+    };
+    let mut date = String::new();
+    for (i, part) in s.order.iter().enumerate() {
+        if i > 0 {
+            date.push(s.sep);
+        }
+        match *part {
+            b'Y' => date.push_str(&year),
+            b'M' => date.push_str(&stamp_num(month, s.pad_date)),
+            _ => date.push_str(&stamp_num(day, s.pad_date)),
+        }
+    }
+    let (h, ap) = if s.h12 {
+        let ap = if hour < 12 { "AM" } else { "PM" };
+        let h = hour % 12;
+        (if h == 0 { 12 } else { h }, Some(ap))
+    } else {
+        (hour, None)
+    };
+    match ap {
+        Some(ap) => format!(
+            "{date} {}:{} {ap}",
+            stamp_num(h, s.pad_hour),
+            stamp_num(minute, true)
+        ),
+        None => format!(
+            "{date} {}:{}",
+            stamp_num(h, s.pad_hour),
+            stamp_num(minute, true)
+        ),
+    }
+}
+
+/// The widest stamp of the current language (31 Dec, 23:59 or 12:00 PM),
+/// so the date column fits every value.
+pub fn widest_stamp() -> String {
+    let s = stamp_of(language());
+    if s.h12 {
+        format_stamp(2026, 12, 31, 12, 0)
+    } else {
+        format_stamp(2026, 12, 31, 23, 59)
+    }
+}
+
 /// Marks a text for translation without translating it (gettext `N_`):
 /// for `const` tables (command names, shortcuts). The literal stays the
 /// English source; translate where it is shown: `explorer_i18n::translate(x)`.

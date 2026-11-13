@@ -57,7 +57,7 @@ Access keys in the conflict dialog (`core::mnemonic`, Cyrillic like Windows: the
 Recovery tool prompt: `[д/Н]`, accepts “д”, “да” (and always y/yes/j/ja).
 
 ## Numbers and units
-`1 234,5` (no-break space for thousands, comma for decimals); size units **Б, КБ, МБ, ГБ, ТБ** like Russian Windows (“3,1 КБ (3 170 байт)”).
+`1 234,5` (no-break space for thousands, comma for decimals); size units **Б, КБ, МБ, ГБ, ТБ** like Russian Windows (“3,1 КБ (3 170 байт)”). Dates are the Windows short format `dd.MM.yyyy H:mm` (“15.01.2026 13:05”).
 
 ## Deliberately not translated
 - The Start menu entry “Explorer 2.0 – Windows-Standard wiederherstellen” and the folder verb texts in the registry stay German (R-001; TODO “R-001-safe relabel”).

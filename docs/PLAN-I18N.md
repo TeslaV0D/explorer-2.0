@@ -1,6 +1,6 @@
 # Plan: localisation (i18n)
 
-As of 2026-11-12 · Boss: “mach die Lokalisation weiter” · decisions in D-029 (supersedes D-007) · **L0 ✅ (CI #141), L1 ✅ (CI #144), L2 ✅ (CI #146), L3 ✅ (CI #147), L4 ✅ (CI #149), L5 ✅ (CI #152), L6 ✅: es (CI #153), fr (CI #154), ru/uk/pl (CI #157), it, zh, ja**. All ten languages are complete and offered. Native-speaker review of the galleries stays open.
+As of 2026-11-13 · Boss: “mach die Lokalisation weiter” · decisions in D-029 (supersedes D-007) · **L0 ✅ (CI #141), L1 ✅ (CI #144), L2 ✅ (CI #146), L3 ✅ (CI #147), L4 ✅ (CI #149), L5 ✅ (CI #152), L6 ✅: es (CI #153), fr (CI #154), ru/uk/pl (CI #157), it, zh, ja**. All ten languages are complete and offered. Native-speaker review of the galleries stays open. **Dates** follow the Windows short date + short time of the UI language (`explorer_i18n::format_stamp`); `dm:` stays ISO.
 Wish list from 2026-11-08 (`docs/TODO.md`): exact meanings like Windows Explorer in each language, layout robustness, language switchable in the settings (default: Windows language), numbers/dates per locale, mind font coverage.
 
 ## 1. Current state (inventory)
@@ -8,7 +8,7 @@ Wish list from 2026-11-08 (`docs/TODO.md`): exact meanings like Windows Explorer
 |---|---|---|
 | `crates/app/ui/*.slint` | ~400 string literals (not all are UI text: ids, icon names, places) | labels, tooltips, menus, dialogs, settings panel, `accessible-label`s |
 | Rust (`app`, `core`, `ops`, `search`, `index`, `integrate`, `setup`, `fs`) | ~300–500 user-visible strings in ~40 files | status line, errors, dialogs, command names (`core::commands`), Inspector facts, type labels, search status, recovery tool, setup dialogs; many built with `format!` and German plurals (“1 Element” / “2 Elemente”) |
-| Number/date formatting | `core::format_size`, `format_count`, `format_local` | German style hard-coded (`1.234.567`, `3,4 s`, `2026-11-10 06:44`) |
+| Number/date formatting | `core::format_size`, `format_count`, `format_local` | per language: `1,234.5` / `1.234,5` / `1 234,5`; sizes B/KB or o/Ko or Б/КБ; dates = Windows short format (`1/15/2026 1:05 PM`, `15.01.2026 13:05`) |
 | Texts from Windows | shell type names, known folder names, Properties, native menu | already in the Windows language – nothing to do |
 | Tests | 36 names in Linux E2E (`ui_click "Einstellungen"` …), 5 in Windows E2E, many trace/assert texts | tests must pin a language |
 

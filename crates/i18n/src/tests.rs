@@ -296,6 +296,42 @@ fn numbers_follow_the_language() {
 }
 
 #[test]
+fn dates_follow_the_windows_short_format() {
+    // 15 Jan 2026, 13:05 and a single-digit morning, so padding shows.
+    let full = |c| format_stamp_in(c, 2026, 1, 15, 13, 5);
+    let morn = |c| format_stamp_in(c, 2026, 1, 5, 9, 5);
+    assert_eq!(full("en"), "1/15/2026 1:05 PM");
+    assert_eq!(morn("en"), "1/5/2026 9:05 AM");
+    assert_eq!(
+        format_stamp_in("en", 2026, 1, 15, 0, 0),
+        "1/15/2026 12:00 AM"
+    );
+    assert_eq!(
+        format_stamp_in("en", 2026, 1, 15, 12, 0),
+        "1/15/2026 12:00 PM"
+    );
+    assert_eq!(full("de"), "15.01.2026 13:05");
+    assert_eq!(morn("de"), "05.01.2026 09:05");
+    assert_eq!(full("pl"), "15.01.2026 13:05");
+    assert_eq!(morn("es"), "05/01/2026 9:05");
+    assert_eq!(full("es"), "15/01/2026 13:05");
+    assert_eq!(morn("fr"), "05/01/2026 09:05");
+    assert_eq!(full("it"), "15/01/2026 13:05");
+    assert_eq!(morn("ru"), "05.01.2026 9:05");
+    assert_eq!(full("uk"), "15.01.2026 13:05");
+    assert_eq!(morn("zh"), "2026/1/5 9:05");
+    assert_eq!(full("zh"), "2026/1/15 13:05");
+    assert_eq!(morn("ja"), "2026/01/05 9:05");
+    assert_eq!(full("ja"), "2026/01/15 13:05");
+    assert_eq!(
+        full("qps"),
+        full("en"),
+        "the layout locale uses the widest pattern"
+    );
+    assert_eq!(widest_stamp(), "12/31/2026 12:00 PM");
+}
+
+#[test]
 fn offered_choices() {
     let complete: Vec<&str> = LANGS
         .iter()

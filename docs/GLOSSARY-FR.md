@@ -58,7 +58,7 @@ Access keys in the conflict dialog (`core::mnemonic`): **R**emplacer / **F**usio
 Recovery tool prompt: `[o/N]`, accepts “o”, “oui” (and always y/yes/j/ja).
 
 ## Numbers and units
-`1 234,5` (no-break space for thousands, comma for decimals); size units **o, Ko, Mo, Go, To** like French Windows (“3,1 Ko (3 170 octets)”).
+`1 234,5` (no-break space for thousands, comma for decimals); size units **o, Ko, Mo, Go, To** like French Windows (“3,1 Ko (3 170 octets)”). Dates are the Windows short format `dd/MM/yyyy HH:mm` (“15/01/2026 13:05”).
 
 ## Deliberately not translated
 - The Start menu entry “Explorer 2.0 – Windows-Standard wiederherstellen” and the folder verb texts in the registry stay German (R-001; TODO “R-001-safe relabel”).

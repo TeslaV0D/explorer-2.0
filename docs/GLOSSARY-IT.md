@@ -53,7 +53,7 @@ Access keys in the conflict dialog (`core::mnemonic`, the `&` in the catalog): *
 Recovery tool prompt: `[s/N]`, accepts “s”, “sì” (and always y/yes/j/ja).
 
 ## Numbers and units
-`1.234,5` (point for thousands, comma for decimals), `explorer_i18n::separators("it")`. Size units stay **B, KB, MB, GB, TB** like Italian Windows; the spelled unit is “byte” (“3,1 KB (3.170 byte)”).
+`1.234,5` (point for thousands, comma for decimals), `explorer_i18n::separators("it")`. Size units stay **B, KB, MB, GB, TB** like Italian Windows; the spelled unit is “byte” (“3,1 KB (3.170 byte)”). Dates are the Windows short format `dd/MM/yyyy HH:mm` (“15/01/2026 13:05”).
 
 ## Deliberately not translated
 - The Start menu entry “Explorer 2.0 – Windows-Standard wiederherstellen” and the folder verb texts written to the registry stay German (R-001 journal compares them; TODO “R-001-safe relabel”). Texts that name this entry quote it unchanged.

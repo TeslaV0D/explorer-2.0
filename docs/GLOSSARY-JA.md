@@ -53,7 +53,7 @@ Access keys in the conflict dialog (`core::mnemonic`, the `&` in the catalog). T
 Recovery tool prompt stays `[y/N]` (y/yes/j/ja are always accepted). The translated word for “yes” is “はい”.
 
 ## Numbers and units
-`1,234.5` (comma for thousands, point for decimals), `explorer_i18n::separators("ja")`. Size units stay **B, KB, MB, GB, TB**; the spelled unit is “バイト” (“3.1 KB (3,170 バイト)”). One plural form (`nplurals=1`). Quotes use 「」.
+`1,234.5` (comma for thousands, point for decimals), `explorer_i18n::separators("ja")`. Size units stay **B, KB, MB, GB, TB**; the spelled unit is “バイト” (“3.1 KB (3,170 バイト)”). One plural form (`nplurals=1`). Quotes use 「」. Dates are the Windows short format `yyyy/MM/dd H:mm` (“2026/01/15 13:05”).
 
 ## Deliberately not translated
 - The Start menu entry “Explorer 2.0 – Windows-Standard wiederherstellen” and the folder verb texts written to the registry stay German (R-001 journal compares them; TODO “R-001-safe relabel”). Texts that name this entry quote it unchanged.

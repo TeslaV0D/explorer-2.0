@@ -53,7 +53,7 @@ Access keys in the conflict dialog (`core::mnemonic`, the `&` in the catalog). T
 Recovery tool prompt stays `[y/N]` (y/yes/j/ja are always accepted). The translated word for “yes” is “是”.
 
 ## Numbers and units
-`1,234.5` (comma for thousands, point for decimals), `explorer_i18n::separators` default, which is what zh-CN uses. Size units stay **B, KB, MB, GB, TB**; the spelled unit is “字节” (“3.1 KB (3,170 字节)”). One plural form (`nplurals=1`).
+`1,234.5` (comma for thousands, point for decimals), `explorer_i18n::separators` default, which is what zh-CN uses. Size units stay **B, KB, MB, GB, TB**; the spelled unit is “字节” (“3.1 KB (3,170 字节)”). One plural form (`nplurals=1`). Dates are the Windows short format `yyyy/M/d H:mm` (“2026/1/15 13:05”).
 
 ## Deliberately not translated
 - The Start menu entry “Explorer 2.0 – Windows-Standard wiederherstellen” and the folder verb texts written to the registry stay German (R-001 journal compares them; TODO “R-001-safe relabel”). Texts that name this entry quote it unchanged.
