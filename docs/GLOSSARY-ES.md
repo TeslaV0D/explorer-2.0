@@ -54,7 +54,7 @@ Access keys in the conflict dialog (`core::mnemonic`, the `&` in the catalog): *
 Recovery tool prompt: `[s/N]`, accepts “s”, “sí” (and always y/yes/j/ja).
 
 ## Numbers
-`1.234,5` (point for thousands, comma for decimals), sizes “3,1 KB (3.170 bytes)”, `explorer_i18n::separators("es")`.
+`1.234,5` (point for thousands, comma for decimals), sizes “3,1 KB (3.170 bytes)”, `explorer_i18n::separators("es")`. Dates are the Windows short format `dd/MM/yyyy H:mm` (“15/01/2026 13:05”).
 
 ## Deliberately not translated
 - The Start menu entry “Explorer 2.0 – Windows-Standard wiederherstellen” and the folder verb texts written to the registry stay German (R-001 journal compares them; TODO “R-001-safe relabel”). Texts that name this entry quote it unchanged.

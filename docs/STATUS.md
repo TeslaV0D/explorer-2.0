@@ -1,6 +1,6 @@
 # Current state
 
-**As of:** 2026-11-12 · **Phase:** 1 · M0–M7 ✅ (M7.3 postponed) · R-001 ✅ · **M8.1/M8.2 installer ✅ (run #69)** · **M8.3 hardening ✅ (runs #70–#73)** · **Phase 2 search: S1.1 ✅ (run #78), S1.2 ✅ (run #80), S1.3 ✅ (run #83), S1.4 ✅ (run #90), S1.5 ✅ (runs #91/#93) → **S1 complete**, field test ✅ (Boss: “es funktioniert” – it works) · **Redesign: R0 ✅ (run #101), R1 ✅ (run #104), R2 ✅ (run #110), R3 ✅ (run #115), R4 ✅ (run #120), R5 ✅ (run #123), R6 ✅ (run #124), R7 ✅ (run #125), R8 ✅ (run #128), R9 ✅ (run #130), R10 ✅ (run #131) → **redesign complete**, next: field test by Boss (`docs/FIELD-TEST-REDESIGN.md`)** (`docs/PLAN-REDESIGN.md`)** (plan `docs/PLAN-SEARCH.md`) · **Branch:** `claude/eloquent-gauss-sd6qhp`
+**As of:** 2026-11-13 · **Phase:** 1 · M0–M7 ✅ (M7.3 postponed) · R-001 ✅ · **M8.1/M8.2 installer ✅ (run #69)** · **M8.3 hardening ✅ (runs #70–#73)** · **Phase 2 search: S1.1 ✅ (run #78), S1.2 ✅ (run #80), S1.3 ✅ (run #83), S1.4 ✅ (run #90), S1.5 ✅ (runs #91/#93) → **S1 complete**, field test ✅ (Boss: “es funktioniert” – it works) · **Redesign: R0 ✅ (run #101), R1 ✅ (run #104), R2 ✅ (run #110), R3 ✅ (run #115), R4 ✅ (run #120), R5 ✅ (run #123), R6 ✅ (run #124), R7 ✅ (run #125), R8 ✅ (run #128), R9 ✅ (run #130), R10 ✅ (run #131) → **redesign complete**, next: field test by Boss (`docs/FIELD-TEST-REDESIGN.md`)** (`docs/PLAN-REDESIGN.md`)** (plan `docs/PLAN-SEARCH.md`) · **Branch:** `claude/eloquent-gauss-sd6qhp`
 
 The app follows the Windows language (D-029). UI labels are quoted as they appear.
 
@@ -29,7 +29,7 @@ The app follows the Windows language (D-029). UI labels are quoted as they appea
 - Undo and Cancel differ: 撤消 / 取消, 元に戻す / キャンセル. This PC is 此电脑 / PC (Windows 11). Home is 个人文件夹 / 個人用フォルダー, not the Windows 11 start page.
 - Traditional Chinese (`zh-Hant`, `zh-TW`, `zh-HK`, `zh-MO`) stays unmapped, so it is not offered as Simplified.
 - The Linux layout job installs `fonts-noto-cjk`, so the zh/ja overflow check measures real glyph widths. Windows already has YaHei / Yu Gothic. E2E stays on German, so that font cost is not on the default start path.
-- **L6 is complete** (de, en, es, fr, ru, uk, pl, it, zh, ja). Native-speaker review of the galleries stays open. Still separate: R-001-safe relabel of the registry texts, and dates beyond the existing local timestamp.
+- **L6 is complete** (de, en, es, fr, ru, uk, pl, it, zh, ja). Native-speaker review of the galleries stays open. Still separate: R-001-safe relabel of the registry texts. Dates follow the Windows short format of the UI language (see above).
 
 ## Localisation L6 – Italian ✅ (2026-11-12)
 - **Italiano (it-IT)** complete: all 433 texts with the Windows Explorer terms of Italian Windows (Cestino, Questo PC, Accesso rapido, Cartella di file, Data ultima modifica, Rinomina, Svuota Cestino …), informal “tu” in instructions and the infinitive in confirmation questions, like Windows; glossary **`docs/GLOSSARY-IT.md`**. Offered as “Italiano” and palette command “Language: Italiano”. Two plural forms (`n != 1`: “1 elemento”, “0 elementi”, “3 elementi”); “unità” stays the same in both forms. Quotes «…», access keys S/U/I/M/t. Size units stay B/KB/MB/GB/TB; the word is “byte”. Numbers `1.234,5` (already `separators("it")`).

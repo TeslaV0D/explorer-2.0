@@ -97,10 +97,16 @@ pub fn choose(win: &MainWindow, index: usize) {
     switch(win, code);
 }
 
+/// Date column fits the widest stamp of the current language.
+pub fn date_column(win: &MainWindow) {
+    win.set_date_sample(explorer_i18n::widest_stamp().into());
+}
+
 /// Shows the whole window in `code` without a restart.
 pub fn switch(win: &MainWindow, code: &'static str) {
     explorer_i18n::set_language(code);
     apply_ui(code);
+    date_column(win);
     offer(win);
     let keep: Vec<Relabel> = KEEP.with_borrow(|k| k.iter().map(|(_, f)| f.clone()).collect());
     for f in keep {

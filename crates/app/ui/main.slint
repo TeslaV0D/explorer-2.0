@@ -1409,11 +1409,14 @@ export component MainWindow inherits Window {
     in property <bool> sort-desc;
     // default column widths fit the labels of the language (L6: “Fecha de modificación”,
     // “Carpeta de archivos”) – until the user drags a column (the binding is then replaced)
-    in-out property <length> w-date: max(130px, max(probe-date.preferred-width, probe-deleted.preferred-width) + 30px);
+    // widest stamp of the language ("12/31/2026 12:00 PM"); Rust sets it on start and on a switch
+    in property <string> date-sample: "12/31/2026 12:00 PM";
+    in-out property <length> w-date: max(130px, max(probe-date.preferred-width, max(probe-deleted.preferred-width, probe-stamp.preferred-width)) + 30px);
     in-out property <length> w-type: max(110px, probe-folder.preferred-width + 14px);
     in-out property <length> w-size: 80px;
     probe-date := Text { visible: false; font-size: Ui.font; text: @tr("Date modified"); accessible-role: none; }
     probe-deleted := Text { visible: false; font-size: Ui.font; text: @tr("Date deleted"); accessible-role: none; }
+    probe-stamp := Text { visible: false; font-size: Ui.font; text: root.date-sample; accessible-role: none; }
     probe-folder := Text { visible: false; font-size: Ui.font; text: @tr("File folder"); accessible-role: none; }
     // file operations
     in property <[JobRow]> jobs;

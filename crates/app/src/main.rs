@@ -129,6 +129,7 @@ fn main() -> Result<(), slint::PlatformError> {
     let win = MainWindow::new()?;
     nav::trace_line(&format!("window created at={:.1}ms", nav::since_start_ms()));
     lang::apply_ui(language);
+    lang::date_column(&win);
     lang::offer(&win);
     on!(win, on_set_language, |w, i| lang::choose(
         &w,

@@ -303,7 +303,6 @@ pub fn format_count(n: usize) -> String {
     explorer_i18n::format_integer(n as u64)
 }
 
-/// "YYYY-MM-DD HH:MM" in UTC from Unix seconds (local time zone handling comes with the Windows adapter).
 /// Offset of local time from UTC at `unix_secs`, in seconds – for that
 /// date (summer time in July, winter time in January), not for today.
 pub fn local_offset_at(unix_secs: i64) -> i64 {
@@ -316,13 +315,16 @@ pub fn local_offset_at(unix_secs: i64) -> i64 {
     }
 }
 
-/// `format_datetime` in local time (what the list, inspector and dialogs show).
+/// Local time in the current language's short date and short time
+/// (what the list, Inspector and dialogs show). `format_datetime` stays
+/// `YYYY-MM-DD HH:MM` for raw values.
 pub fn format_local(unix_secs: i64) -> String {
-    format_datetime(unix_secs.saturating_add(local_offset_at(unix_secs)))
+    let (y, m, d, h, min) = civil(unix_secs.saturating_add(local_offset_at(unix_secs)));
+    explorer_i18n::format_stamp(y, m, d, h, min)
 }
 
-/// `YYYY-MM-DD HH:MM` of `unix_secs` as given (UTC unless an offset was added).
-pub fn format_datetime(unix_secs: i64) -> String {
+/// Year, month, day, hour, minute of `unix_secs` (UTC unless an offset was added).
+fn civil(unix_secs: i64) -> (i64, u32, u32, u32, u32) {
     let days = unix_secs.div_euclid(86_400);
     let rem = unix_secs.rem_euclid(86_400);
     // Howard Hinnant's civil_from_days
@@ -335,11 +337,19 @@ pub fn format_datetime(unix_secs: i64) -> String {
     let d = doy - (153 * mp + 2) / 5 + 1;
     let m = if mp < 10 { mp + 3 } else { mp - 9 };
     let y = yoe + era * 400 + i64::from(m <= 2);
-    format!(
-        "{y:04}-{m:02}-{d:02} {:02}:{:02}",
-        rem / 3600,
-        rem % 3600 / 60
+    (
+        y,
+        m as u32,
+        d as u32,
+        (rem / 3600) as u32,
+        (rem % 3600 / 60) as u32,
     )
+}
+
+/// `YYYY-MM-DD HH:MM` of `unix_secs` as given (UTC unless an offset was added).
+pub fn format_datetime(unix_secs: i64) -> String {
+    let (y, m, d, h, min) = civil(unix_secs);
+    format!("{y:04}-{m:02}-{d:02} {h:02}:{min:02}")
 }
 
 #[cfg(test)]
@@ -353,8 +363,9 @@ mod tests {
             return;
         }
         // 2026-01-15 12:00 UTC → 13:00 CET; 2026-07-15 12:00 UTC → 14:00 CEST
-        assert_eq!(format_local(1_768_478_400), "2026-01-15 13:00");
-        assert_eq!(format_local(1_784_116_800), "2026-07-15 14:00");
+        // unit tests stay on the English source language
+        assert_eq!(format_local(1_768_478_400), "1/15/2026 1:00 PM");
+        assert_eq!(format_local(1_784_116_800), "7/15/2026 2:00 PM");
     }
 
     #[test]
@@ -362,7 +373,15 @@ mod tests {
         for t in [0, 1_700_000_000, 1_783_000_000, 1_798_000_000] {
             let o = local_offset_at(t);
             assert!(o.abs() <= 14 * 3600 && o % 900 == 0, "offset {o}");
-            assert_eq!(format_local(t), format_datetime(t + o));
+            let (y, m, d, h, min) = civil(t + o);
+            assert_eq!(
+                format_local(t),
+                explorer_i18n::format_stamp(y, m, d, h, min)
+            );
+            assert_eq!(
+                format_datetime(t + o),
+                format!("{y:04}-{m:02}-{d:02} {h:02}:{min:02}")
+            );
         }
         // far outside the representable range: no panic
         let _ = format_local(i64::MAX);
