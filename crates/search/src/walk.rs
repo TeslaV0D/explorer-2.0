@@ -225,6 +225,7 @@ mod tests {
             explorer_index::Now {
                 unix: 0,
                 utc_offset: 0,
+                offset_at: None,
             },
         )
         .unwrap();

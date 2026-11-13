@@ -48,6 +48,7 @@ fn hits(v: &Volume, text: &str) -> usize {
         Now {
             unix: 0,
             utc_offset: 0,
+            offset_at: None,
         },
     )
     .expect("query");

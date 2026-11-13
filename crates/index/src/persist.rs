@@ -525,6 +525,7 @@ mod tests {
     const NOW: Now = Now {
         unix: 1_793_883_600,
         utc_offset: 3600,
+        offset_at: None,
     };
 
     fn hits(ix: &Index, q: &str) -> Vec<String> {

@@ -181,6 +181,7 @@ msgstr "Abbrechen"
 msgid "Cancelled – nothing changed."
 msgstr "Abgebrochen – nichts geändert."
 
+#: crates/ops/src/exec.rs
 #: crates/setup/src/main.rs
 msgid "Cancelled."
 msgstr "Abgebrochen."
@@ -1146,6 +1147,20 @@ msgstr "Wiederholen: {0}"
 msgid "Refresh"
 msgstr "Aktualisieren"
 
+#: crates/app/src/integration.rs
+msgid ""
+"Remove all Windows integrations of Explorer 2.0 and restore the previous Windows settings exactly?\n"
+"\n"
+"{0}\n"
+"\n"
+"Values that another program has changed in the meantime are left alone."
+msgstr ""
+"Alle Windows-Integrationen von Explorer 2.0 entfernen und die vorherigen Windows-Einstellungen exakt wiederherstellen?\n"
+"\n"
+"{0}\n"
+"\n"
+"Werte, die inzwischen eine andere Software geändert hat, bleiben unangetastet."
+
 #: crates/integrate/src/bin/explorer2-recover.rs
 msgid "Removing the program folder …"
 msgstr "Programmordner wird entfernt …"
@@ -1242,6 +1257,10 @@ msgstr "Suchindex startet …"
 #: crates/app/src/search.rs
 msgid "Search index: no folder for the index files."
 msgstr "Suchindex: kein Ordner für die Indexdateien."
+
+#: crates/app/src/search.rs
+msgid "Search was cancelled."
+msgstr "Suche abgebrochen."
 
 #: crates/app/src/nav.rs
 msgid "Search {0}"

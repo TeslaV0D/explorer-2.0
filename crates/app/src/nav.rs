@@ -229,6 +229,14 @@ struct App {
     views: explorer_core::views::FolderViews,
     /// Last Ctrl+wheel size step (wheels/touchpads send bursts of events).
     last_zoom: Option<Instant>,
+    /// Folder listings were dropped, or never loaded (`--background`).
+    /// A show loads the visible tabs again. While set, nothing allocates a listing.
+    folders_released: bool,
+    /// Close or `--background` hid the window. The next show reloads.
+    window_hidden: bool,
+    /// `--background`: the window is still visible for the first frame. Ignore
+    /// that, or the listings load and are thrown away a moment later.
+    hold_hidden: bool,
 }
 
 thread_local! {
@@ -247,6 +255,9 @@ thread_local! {
         default_view: ViewMode::Details,
         views: explorer_core::views::FolderViews::new(cfg!(windows)),
         last_zoom: None,
+        folders_released: false,
+        window_hidden: false,
+        hold_hidden: false,
     });
     // Separate cell: used inside selection changes, which already borrow APP.
     static TYPEAHEAD: RefCell<TypeAhead> = RefCell::new(TypeAhead::default());
@@ -775,7 +786,35 @@ fn is_server(p: &Path) -> bool {
 }
 
 /// Carries the selection over to a reloaded list of the same folder, matched by name.
-fn remap_selection(old_entries: &[Entry], old: &Selection, new_entries: &[Entry]) -> Selection {
+fn search_paths(v: &VirtualData) -> Option<&[PathBuf]> {
+    match v {
+        VirtualData::Search { paths, .. } => Some(paths),
+        _ => None,
+    }
+}
+
+fn remap_selection(
+    old_entries: &[Entry],
+    old_paths: Option<&[PathBuf]>,
+    old: &Selection,
+    new_entries: &[Entry],
+    new_paths: Option<&[PathBuf]>,
+) -> Selection {
+    // Search hits repeat a name across folders. The full path is the row.
+    if let (Some(old_paths), Some(new_paths)) = (old_paths, new_paths) {
+        if old_paths.len() == old_entries.len() && new_paths.len() == new_entries.len() {
+            let index: HashMap<&Path, usize> = new_paths
+                .iter()
+                .enumerate()
+                .map(|(i, p)| (p.as_path(), i))
+                .collect();
+            return old.remap(new_entries.len(), |i| {
+                old_paths
+                    .get(i)
+                    .and_then(|p| index.get(p.as_path()).copied())
+            });
+        }
+    }
     let index: HashMap<&str, usize> = new_entries
         .iter()
         .enumerate()
@@ -962,6 +1001,8 @@ fn request_focus(pi: usize) {
 // ---------------------------------------------------------------- init / session
 
 /// Sets up panes from the session (or a start path) and loads the visible tabs.
+/// `defer_folders`: `--background` — keep the paths, do not read them until the
+/// window is actually shown.
 pub fn init(
     win: &MainWindow,
     filter: ViewFilter,
@@ -969,6 +1010,7 @@ pub fn init(
     start: Option<PathBuf>,
     session: Option<Session>,
     view: ViewMode,
+    defer_folders: bool,
 ) {
     show_view(win, view);
     let show_hidden = filter.show_hidden;
@@ -1060,9 +1102,18 @@ pub fn init(
             s.active_pane
         ));
     }
-    let n = APP.with_borrow(|app| app.panes.len());
-    for pi in 0..n {
-        ensure_loaded(win, pi); // only the visible tab of each pane; others load when selected
+    if defer_folders {
+        APP.with_borrow_mut(|app| {
+            app.folders_released = true;
+            app.window_hidden = true;
+            app.hold_hidden = true;
+        });
+        trace("folders deferred (window hidden)");
+    } else {
+        let n = APP.with_borrow(|app| app.panes.len());
+        for pi in 0..n {
+            ensure_loaded(win, pi); // only the visible tab of each pane; others load when selected
+        }
     }
     sync_all(win);
     let active = APP.with_borrow(|app| app.active_pane);
@@ -1251,6 +1302,12 @@ fn ensure_loaded(win: &MainWindow, pi: usize) {
 }
 
 fn navigate_tab(win: &MainWindow, id: TabId, target: PathBuf, reason: Reason, hist: Hist) {
+    // Hidden window: the path stays on the tab. The show loads it. A refresh
+    // that arrives while parked must not allocate the listing again.
+    if APP.with_borrow(|app| app.folders_released) {
+        with_tab(id, |t, _, _| t.stale = true);
+        return;
+    }
     let place = VirtualPlace::from_input(&target.to_string_lossy());
     let server = explorer_fs::network::server_root(&target.to_string_lossy());
     let library = explorer_core::places::library_of(&target).map(str::to_string);
@@ -1483,7 +1540,13 @@ fn apply(
                 let mut sel = if path_changed {
                     Selection::new(n)
                 } else {
-                    remap_selection(&t.entries, &t.selection, &entries)
+                    remap_selection(
+                        &t.entries,
+                        search_paths(&t.virtual_data),
+                        &t.selection,
+                        &entries,
+                        search_paths(&vdata),
+                    )
                 };
                 // Select the folder we came from ("up") or pasted/new items, once fully loaded.
                 let mut rename_at = None;
@@ -3317,6 +3380,219 @@ pub(crate) fn refresh_dirs(
     }
 }
 
+// ---------------------------------------------------------------- hidden window (D-028)
+
+/// Selected names kept across a hide. A huge selection (Ctrl+A on a big folder)
+/// would be another copy of the listing, so only the focused name stays.
+const MAX_KEPT_SELECTION: usize = 200;
+
+fn kept_selection(selected: &[String], focus: Option<&str>) -> Vec<String> {
+    if selected.len() <= MAX_KEPT_SELECTION {
+        return selected.to_vec();
+    }
+    focus
+        .filter(|n| selected.iter().any(|s| s == n))
+        .map(|n| vec![n.to_string()])
+        .unwrap_or_default()
+}
+
+/// The window was hidden (close button, `--background`). Drop every folder
+/// listing, its watcher and its thumbnails. Tabs, paths and history stay.
+/// Jobs and the search index stay too: the tray process is still the app.
+pub fn on_window_hidden(win: &MainWindow) {
+    APP.with_borrow_mut(|app| {
+        app.hold_hidden = false;
+        app.window_hidden = true;
+    });
+    release_folders(win);
+}
+
+/// The window is on screen again. Load what `on_window_hidden` dropped.
+pub fn on_window_shown(win: &MainWindow) {
+    let reload = APP.with_borrow_mut(|app| {
+        app.hold_hidden = false;
+        let reload = app.window_hidden;
+        app.window_hidden = false;
+        reload
+    });
+    if reload {
+        restore_folders(win);
+    }
+}
+
+/// Visibility from the platform. A minimize stays visible, so it does not park.
+/// `--background` holds the first frame (the window is not hidden yet).
+pub fn note_visibility(win: &MainWindow, visible: bool) {
+    if !visible {
+        return;
+    }
+    let hold = APP.with_borrow(|app| app.hold_hidden);
+    if !hold {
+        on_window_shown(win);
+    }
+}
+
+/// `EXPLORER2_TEST_PARK` = a file. The endurance test writes `park` / `resume`
+/// (Linux has no tray, so hiding the window quits). Production never sets it.
+pub fn poll_test_park(win: &MainWindow) {
+    static PATH: std::sync::OnceLock<Option<PathBuf>> = std::sync::OnceLock::new();
+    let Some(path) = PATH
+        .get_or_init(|| std::env::var_os("EXPLORER2_TEST_PARK").map(PathBuf::from))
+        .as_ref()
+    else {
+        return;
+    };
+    let Ok(text) = std::fs::read_to_string(path) else {
+        return;
+    };
+    let cmd = text.trim();
+    if cmd.is_empty() {
+        return;
+    }
+    thread_local! {
+        static LAST: RefCell<String> = const { RefCell::new(String::new()) };
+    }
+    let changed = LAST.with_borrow_mut(|last| {
+        if last == cmd {
+            return false;
+        }
+        *last = cmd.to_string();
+        true
+    });
+    if !changed {
+        return;
+    }
+    match cmd {
+        "park" => release_folders(win),
+        "resume" => restore_folders(win),
+        _ => trace(&format!("test park: unknown command {cmd:?}")),
+    }
+}
+
+fn release_folders(win: &MainWindow) {
+    if APP.with_borrow(|app| app.folders_released) {
+        return;
+    }
+    APP.with_borrow_mut(|app| app.folders_released = true);
+    SEARCH_CANCEL.with_borrow_mut(|m| {
+        for c in m.values() {
+            c.store(true, std::sync::atomic::Ordering::Relaxed);
+        }
+        m.clear();
+    });
+    let (entries, bytes, selected, tabs) = APP.with_borrow_mut(|app| {
+        app.next_gen += 1;
+        let gen = app.next_gen;
+        let mut entries = 0usize;
+        let mut bytes = 0usize;
+        let mut selected = 0usize;
+        let mut tabs = 0usize;
+        for p in &mut app.panes {
+            p.rename_index = -1;
+            for t in &mut p.tabs {
+                tabs += 1;
+                entries += t.entries.len();
+                bytes += t.entries.capacity() * std::mem::size_of::<Entry>();
+                for e in &t.entries {
+                    bytes += e.name.capacity();
+                }
+                bytes += virtual_bytes(&t.virtual_data);
+                if t.pending_select.is_empty() {
+                    let idxs = t.selection.selected_indices();
+                    let focus = t
+                        .selection
+                        .focus()
+                        .and_then(|i| t.entries.get(i).map(|e| e.name.clone()));
+                    t.pending_select = if idxs.len() <= MAX_KEPT_SELECTION {
+                        let names: Vec<String> = idxs
+                            .into_iter()
+                            .filter_map(|i| t.entries.get(i).map(|e| e.name.clone()))
+                            .collect();
+                        kept_selection(&names, focus.as_deref())
+                    } else {
+                        focus.into_iter().collect()
+                    };
+                }
+                selected += t.pending_select.len();
+                t.loader = None;
+                t.watcher = None;
+                t.entries = Vec::new();
+                t.model.set_vec(Vec::new());
+                t.grid.set_vec(Vec::new());
+                t.virtual_data = VirtualData::None;
+                t.gen = gen;
+                t.stale = true;
+                t.refresh_scheduled = false;
+                t.status_base.clear();
+            }
+        }
+        (entries, bytes, selected, tabs)
+    });
+    let n = APP.with_borrow(|app| app.panes.len());
+    for pi in 0..n {
+        sync_pane(pi);
+    }
+    sync_window(win);
+    crate::thumbs::release();
+    crate::icons::release();
+    crate::inspector::release(win);
+    return_freed_memory();
+    trace(&format!(
+        "parked entries={entries} bytes={bytes} selected={selected} tabs={tabs}"
+    ));
+}
+
+fn virtual_bytes(data: &VirtualData) -> usize {
+    match data {
+        VirtualData::None => 0,
+        VirtualData::Trash(items) => {
+            items.len() * std::mem::size_of::<explorer_ops::trashview::TrashEntry>()
+        }
+        VirtualData::Targets(map) => map.values().map(|p| p.capacity()).sum(),
+        VirtualData::Library(_, map) => map.values().map(|p| p.capacity()).sum(),
+        VirtualData::Search { paths, .. } => paths.iter().map(|p| p.capacity()).sum(),
+    }
+}
+
+fn restore_folders(win: &MainWindow) {
+    let released = APP.with_borrow_mut(|app| std::mem::replace(&mut app.folders_released, false));
+    if !released {
+        return;
+    }
+    crate::thumbs::allow();
+    crate::icons::allow();
+    let n = APP.with_borrow(|app| app.panes.len());
+    for pi in 0..n {
+        ensure_loaded(win, pi);
+    }
+    sync_all(win);
+    crate::inspector::changed(win);
+    trace("resumed");
+}
+
+/// Give freed listing memory back to the OS. The search index stays mapped:
+/// this only returns memory that is already free (glibc `malloc_trim`,
+/// the Windows heap's `HeapCompact`).
+fn return_freed_memory() {
+    // SAFETY: malloc_trim(0) only returns already-freed heap pages to the OS.
+    // No pointer is passed. Linux/glibc; other unix targets keep the pages.
+    #[cfg(target_os = "linux")]
+    unsafe {
+        libc::malloc_trim(0);
+    }
+    // SAFETY: the process heap, flags 0. Compacts free blocks so a large
+    // listing actually leaves the working set. Does not touch live allocations
+    // (the search index stays mapped).
+    #[cfg(windows)]
+    unsafe {
+        use windows_sys::Win32::System::Memory::{GetProcessHeap, HeapCompact};
+        let heap = GetProcessHeap();
+        if !heap.is_null() {
+            HeapCompact(heap, 0);
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -3333,6 +3609,16 @@ mod tests {
         assert_eq!(folder_label(Path::new("/home/boss/Docs"), Some(s)), "Docs");
         assert_eq!(folder_label(Path::new("/srv/x"), Some(s)), "/srv/x");
         assert_eq!(folder_label(Path::new("/srv/x"), None), "/srv/x");
+    }
+
+    #[test]
+    fn parked_selection_keeps_a_small_set_and_only_the_focus_of_a_huge_one() {
+        let few = vec!["a".to_string(), "b".to_string()];
+        assert_eq!(kept_selection(&few, Some("b")), few);
+        let many: Vec<String> = (0..500).map(|i| format!("f{i}")).collect();
+        assert_eq!(kept_selection(&many, Some("f3")), vec!["f3".to_string()]);
+        assert!(kept_selection(&many, Some("missing")).is_empty());
+        assert!(kept_selection(&many, None).is_empty());
     }
 
     #[test]
@@ -3505,7 +3791,31 @@ mod tests {
             e("new", false, false),
             e("a", false, false),
         ];
-        let r = remap_selection(&old, &sel, &new);
+        let r = remap_selection(&old, None, &sel, &new, None);
+        assert_eq!(r.selected_indices(), [0]);
+        assert_eq!(r.focus(), Some(0));
+    }
+
+    #[test]
+    fn search_selection_follows_the_path_not_the_name() {
+        let old = vec![e("readme.txt", false, false), e("readme.txt", false, false)];
+        let old_paths = [
+            PathBuf::from("/a/readme.txt"),
+            PathBuf::from("/b/readme.txt"),
+        ];
+        let mut sel = Selection::new(2);
+        sel.click(1);
+        let new = vec![
+            e("readme.txt", false, false),
+            e("other.txt", false, false),
+            e("readme.txt", false, false),
+        ];
+        let new_paths = [
+            PathBuf::from("/b/readme.txt"),
+            PathBuf::from("/c/other.txt"),
+            PathBuf::from("/a/readme.txt"),
+        ];
+        let r = remap_selection(&old, Some(&old_paths), &sel, &new, Some(&new_paths));
         assert_eq!(r.selected_indices(), [0]);
         assert_eq!(r.focus(), Some(0));
     }

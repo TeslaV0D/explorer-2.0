@@ -4,15 +4,18 @@
 
 The app follows the Windows language (D-029). UI labels are quoted as they appear.
 
-## Dates per language (2026-11-13)
-- The list, the Inspector and dialogs show the **Windows short date and short time** of the UI language (`explorer_i18n::format_stamp`, via `format_local`). English `1/15/2026 1:05 PM`, German `15.01.2026 13:05`, Spanish `15/01/2026 13:05` (hour not padded), French/Italian `15/01/2026 13:05`, Polish `15.01.2026 13:05`, Russian/Ukrainian `15.01.2026 13:05` (hour not padded), Chinese `2026/1/15 13:05`, Japanese `2026/01/15 13:05`. A live switch rewrites the visible rows.
-- `format_datetime` stays `YYYY-MM-DD HH:MM` (raw). Search queries `dm:` stay ISO on purpose.
-- The date column grows to the widest stamp of the language (`12/31/2026 12:00 PM` in English), on start and on a language switch, until the user drags the column.
-- Still separate: R-001-safe relabel of the registry texts. Native-speaker review of the galleries stays open.
+## Bug fixes (2026-11-12)
+- Breadcrumbs split `C:/Users/Boss` and `//nas/share/x` the same way as backslash paths.
+- The name index and live updates treat `/` and `\` as the same separator on a Windows root, so a forward-slash path still hits `C:\`.
+- `dm:` day boundaries use the offset of that date when the caller passes one (winter midnight stays winter time while “today” is in summer). The app does.
+- A search reload keeps the selection on the full path. The same file name in two folders no longer jumps to the other row.
+- A cancelled folder walk and a cancelled copy say “Cancelled.” in the current language. The integration-reset question does too.
+- A copy-only drop on the Recycle Bin is refused. The files are not deleted.
 
 ## New menu, tray autostart, Open/Explore, Shift+right-click (2026-11-12)
 - **New menu** (D-030): the folder background menu has “New”. It replaces that menu with “New folder”, a text document, and whatever `HKCR\.<ext>\ShellNew` can create (`NullFile`, `FileName`, `Data`, `Command`). The name goes straight into rename; undo is the same as for a new folder. A COM-only ShellNew handler is skipped. On Linux (no registry) the list is folder + text document. Toolbar and Ctrl+Shift+N still create a folder.
-- **Autostart** (D-028, opt-in): settings + palette. `HKCU\…\CurrentVersion\Run` value `Explorer2` = `"exe" --background`, only through `apply` / the manifest, so reset and recovery remove it. Closing the window hides it. A tray icon (Slint `SystemTrayIcon`) keeps the process: click or “Show window” brings it back, “New window”, “Settings”, “Exit”. `--background` marks the start guard stable immediately and hides the window. Where the tray cannot be created (Linux CI, no StatusNotifier), hiding the window still quits, so the existing tests stay valid. The hidden window keeps its tabs; freeing that memory while hidden is still open.
+- **Autostart** (D-028, opt-in): settings + palette. `HKCU\…\CurrentVersion\Run` value `Explorer2` = `"exe" --background`, only through `apply` / the manifest, so reset and recovery remove it. Closing the window hides it. A tray icon (Slint `SystemTrayIcon`) keeps the process: click or “Show window” brings it back, “New window”, “Settings”, “Exit”. `--background` marks the start guard stable immediately and hides the window. Where the tray cannot be created (Linux CI, no StatusNotifier), hiding the window still quits, so the existing tests stay valid.
+- **Idle memory:** hiding the window (and `--background`, which never loads them) drops every folder listing, its watcher and the thumbnail cache. Tabs, paths, history and a small selection (focused name, if more than 200 were selected) stay. Showing the window loads the visible tabs again. Jobs and the search index stay. Linux endurance [75f]–[75k] drives the same release through `EXPLORER2_TEST_PARK` (no tray in CI). Windows [S8]–[S12]. Login-time measurement on a real machine is still open.
 - **Open and Explore** (route 1): a separate switch writes `Directory` and `Drive` `shell\open\command` and `shell\explore\command`. `Folder` (Control Panel, Recycle Bin, …) is not touched. Route 2 (`explorer.exe` / IFEO, M7.3) stays postponed. Route 3 (`SHOpenFolderAndSelectItems`) is a known gap.
 - **Shift+right-click** opens the native Windows menu immediately, including extended verbs (`CMF_EXTENDEDVERBS`, “Copy as path”). Shift+F10 stays the in-app menu.
 

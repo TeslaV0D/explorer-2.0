@@ -15,11 +15,26 @@ use crate::{Index, EXT_NONE, EXT_OTHER, FLAG_DIR, FLAG_DIRTY, FLAG_GONE, NONE, S
 use memchr::memmem::Finder;
 
 /// "Now" for relative dates (`dm:today`): Unix seconds + the local UTC offset.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy)]
 pub struct Now {
     pub unix: i64,
+    /// Offset used for every date when [`offset_at`](Self::offset_at) is `None`.
     pub utc_offset: i64,
+    /// Offset of local time at a Unix timestamp. Set this so a date in winter
+    /// is not measured with today's summer offset (and the other way round).
+    /// `None` keeps [`utc_offset`](Self::utc_offset) for every boundary.
+    pub offset_at: Option<fn(i64) -> i64>,
 }
+
+impl PartialEq for Now {
+    fn eq(&self, other: &Self) -> bool {
+        self.unix == other.unix
+            && self.utc_offset == other.utc_offset
+            && self.offset_at.is_some() == other.offset_at.is_some()
+    }
+}
+
+impl Eq for Now {}
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct ParseError(pub String);
@@ -657,7 +672,7 @@ fn civil_from_days(z: i64) -> (i64, i64, i64) {
 
 /// A period as local days `[a, b)`.
 fn period_days(s: &str, now: Now) -> Option<(i64, i64)> {
-    let today = (now.unix + now.utc_offset).div_euclid(86_400);
+    let today = (now.unix + offset_of(now, now.unix)).div_euclid(86_400);
     let (y, m, _) = civil_from_days(today);
     let month = |y: i64, m: i64| {
         (days_from_civil(y, m, 1), {
@@ -715,12 +730,36 @@ fn period_days(s: &str, now: Now) -> Option<(i64, i64)> {
     })
 }
 
+fn offset_of(now: Now, unix: i64) -> i64 {
+    match now.offset_at {
+        Some(f) => f(unix),
+        None => now.utc_offset,
+    }
+}
+
+/// UTC timestamp of local midnight on civil day `days` (days since 1970-01-01).
+///
+/// The offset is taken at noon of that day, then corrected if local midnight
+/// itself is in the other offset (a summer-time change falls between them).
+fn local_midnight_utc(days: i64, now: Now) -> i64 {
+    if now.offset_at.is_none() {
+        return days * 86_400 - now.utc_offset;
+    }
+    let off = offset_of(now, days * 86_400 + 12 * 3600);
+    let midnight = days * 86_400 - off;
+    let off_mid = offset_of(now, midnight);
+    if off_mid != off {
+        days * 86_400 - off_mid
+    } else {
+        midnight
+    }
+}
+
 fn parse_date(s: &str, now: Now) -> Option<(i64, i64)> {
-    let to_utc = |days: i64| days * 86_400 - now.utc_offset;
     ranged(
         s,
         |p| period_days(p, now),
-        |(a, b)| (to_utc(a), to_utc(b)),
+        |(a, b)| (local_midnight_utc(a, now), local_midnight_utc(b, now)),
         i64::MIN,
         i64::MAX,
     )
@@ -1106,6 +1145,7 @@ mod tests {
         // 2026-11-05 13:00 UTC, Berlin +1 h
         unix: 1_793_883_600,
         utc_offset: 3600,
+        offset_at: None,
     };
 
     #[test]
@@ -1144,6 +1184,40 @@ mod tests {
         ] {
             assert_eq!(parse_date(bad, NOW), None, "{bad}");
         }
+    }
+
+    /// Winter +1 h before 2026-03-29 00:00 UTC, summer +2 h from then on.
+    fn dst_offset(unix: i64) -> i64 {
+        if unix >= days_from_civil(2026, 3, 29) * 86_400 {
+            7200
+        } else {
+            3600
+        }
+    }
+
+    #[test]
+    fn a_winter_date_keeps_the_winter_offset_in_summer() {
+        let now = Now {
+            unix: days_from_civil(2026, 7, 15) * 86_400 + 10 * 3600,
+            utc_offset: 7200,
+            offset_at: Some(dst_offset),
+        };
+        let (a, b) = parse_date("2026-01-15", now).unwrap();
+        assert_eq!(a, days_from_civil(2026, 1, 15) * 86_400 - 3600);
+        assert_eq!(b, days_from_civil(2026, 1, 16) * 86_400 - 3600);
+        // today's offset is still the summer one
+        let today = parse_date("today", now).unwrap();
+        assert_eq!(today.0, days_from_civil(2026, 7, 15) * 86_400 - 7200);
+        assert_eq!(today.1 - today.0, 86_400);
+        // without a per-date offset, January is shifted by the summer hour
+        let flat = Now {
+            offset_at: None,
+            ..now
+        };
+        assert_eq!(
+            parse_date("2026-01-15", flat).unwrap().0,
+            days_from_civil(2026, 1, 15) * 86_400 - 7200
+        );
     }
 
     #[test]

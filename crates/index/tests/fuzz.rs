@@ -6,6 +6,7 @@ use explorer_index::{Index, Meta, Now, Query, SortBy};
 const NOW: Now = Now {
     unix: 1_793_883_600,
     utc_offset: 3600,
+    offset_at: None,
 };
 
 struct Rng(u64);

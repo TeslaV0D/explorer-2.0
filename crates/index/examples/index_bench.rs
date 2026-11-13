@@ -134,6 +134,7 @@ fn main() {
     let now = Now {
         unix: 1_793_883_600,
         utc_offset: 3600,
+        offset_at: None,
     };
     let threads = std::thread::available_parallelism().map_or(1, |t| t.get());
 

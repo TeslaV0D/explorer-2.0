@@ -203,6 +203,8 @@ pub fn raise(win: &MainWindow) {
     {
         nav::trace_line("instance: raised");
     }
+    // A hide dropped the folder listings. The window is visible again: load them.
+    nav::on_window_shown(win);
 }
 
 /// The running window listens for second starts (background thread). If

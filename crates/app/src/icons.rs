@@ -117,6 +117,8 @@ struct Ui {
     worker: Option<mpsc::Sender<(u32, IconKey)>>,
     loaded: usize,
     started: Option<Instant>,
+    /// Window is hidden: drop pixels, ignore results until `allow`.
+    paused: bool,
 }
 
 thread_local! {
@@ -126,6 +128,7 @@ thread_local! {
         worker: None,
         loaded: 0,
         started: None,
+        paused: false,
     });
 }
 
@@ -181,7 +184,10 @@ pub fn init(win: &MainWindow) {
 }
 
 fn apply(batch: Batch) {
-    let (n, total, ms) = UI.with_borrow_mut(|u| {
+    let Some((n, total, ms)) = UI.with_borrow_mut(|u| {
+        if u.paused {
+            return None;
+        }
         for (id, buf) in batch.iter() {
             let id = *id as usize;
             if id < u.model.row_count() {
@@ -194,12 +200,17 @@ fn apply(batch: Batch) {
             .started
             .map(|t| t.elapsed().as_secs_f64() * 1000.0)
             .unwrap_or(0.0);
-        (batch.len(), u.loaded, ms)
-    });
+        Some((batch.len(), u.loaded, ms))
+    }) else {
+        return;
+    };
     crate::nav::trace_line(&format!("icons loaded n={n} total={total} after={ms:.1}ms"));
 }
 
 fn request(u: &mut Ui, id: u32, key: IconKey) {
+    if u.paused {
+        return;
+    }
     if let Some(tx) = &u.worker {
         if u.requested.insert(id) {
             u.started.get_or_insert_with(Instant::now);
@@ -238,6 +249,24 @@ pub fn need(ids: impl IntoIterator<Item = i32>) {
             }
         }
     });
+}
+
+/// Window hidden: drop the decoded pixels. Ids stay, so the sidebar keeps its
+/// numbers and the next show asks for the pixels again.
+pub fn release() {
+    UI.with_borrow_mut(|u| {
+        u.paused = true;
+        u.requested.clear();
+        for i in 0..u.model.row_count() {
+            u.model.set_row_data(i, slint::Image::default());
+        }
+    });
+}
+
+/// Window shown again: shared icons (extensions, folder) load at once.
+pub fn allow() {
+    UI.with_borrow_mut(|u| u.paused = false);
+    sync();
 }
 
 /// Id for an icon shown right away (sidebar): registered and requested now
