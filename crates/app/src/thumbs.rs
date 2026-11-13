@@ -49,6 +49,8 @@ struct Ui {
     loaded_total: usize,
     /// Real content previews among them (the rest are large icons).
     previews: usize,
+    /// Window is hidden: drop decoded images and ignore results until `allow`.
+    released: bool,
 }
 
 thread_local! {
@@ -62,6 +64,7 @@ thread_local! {
         queue: None,
         loaded_total: 0,
         previews: 0,
+        released: false,
     });
 }
 
@@ -120,6 +123,9 @@ fn skipped(id: u32) {
 
 fn loaded(id: u32, img: Option<(slint::SharedPixelBuffer<slint::Rgba8Pixel>, bool)>) {
     UI.with_borrow_mut(|u| {
+        if u.released {
+            return;
+        }
         let Some((buf, preview)) = img else {
             return; // no image: keep `requested`, the tile shows its icon
         };
@@ -162,6 +168,9 @@ pub fn want(keys: Vec<ThumbKey>) -> Vec<i32> {
         return vec![0; keys.len()];
     }
     UI.with_borrow_mut(|u| {
+        if u.released {
+            return vec![0; keys.len()];
+        }
         let mut out = Vec::with_capacity(keys.len());
         let mut new_jobs = Vec::new();
         let mut wanted = HashSet::new();
@@ -191,4 +200,30 @@ pub fn want(keys: Vec<ThumbKey>) -> Vec<i32> {
         }
         out
     })
+}
+
+/// Window hidden: drop every decoded thumbnail (the 96 MB budget) and skip
+/// work already queued. The tiles ask again when the window is shown.
+pub fn release() {
+    UI.with_borrow_mut(|u| {
+        u.released = true;
+        u.ids.clear();
+        u.sizes.clear();
+        u.lru.clear();
+        u.bytes = 0;
+        u.requested.clear();
+        u.model.set_vec(vec![slint::Image::default()]);
+        if let Some(shared) = &u.queue {
+            let (lock, cv) = &**shared;
+            let mut q = lock.lock().unwrap_or_else(|e| e.into_inner());
+            q.jobs.clear();
+            q.wanted.clear();
+            cv.notify_all();
+        }
+    });
+}
+
+/// Window shown again. Visible tiles request their thumbnails as before.
+pub fn allow() {
+    UI.with_borrow_mut(|u| u.released = false);
 }

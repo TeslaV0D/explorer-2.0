@@ -128,4 +128,77 @@ Check "[S7] nothing else came to the front (the rounds only navigate, never open
 $p.Refresh()
 Check "[S6] process alive, no panic" { -not $p.HasExited -and (Get-Content $log -Raw) -notmatch '(?i)panic' }
 if (-not $p.HasExited) { Stop-Process -Id $p.Id -Force }
+
+# D-028: hidden window drops the folder listing. The same release the close
+# button uses, driven by EXPLORER2_TEST_PARK (the navigation run above stays
+# untouched). EXPLORER2_INDEX=off so the index does not hide the drop.
+Write-Host "== [S8] idle memory: drop the folder listing (4 park/resume cycles)"
+$big = Join-Path $Work 'park-big'
+New-Item -ItemType Directory -Force $big | Out-Null
+foreach ($i in 1..20000) {
+  [IO.File]::WriteAllBytes((Join-Path $big ('f{0:d5}.dat' -f $i)), [byte[]]::new(0))
+}
+$ctl = Join-Path $Work 'park-cmd'
+Set-Content -Path $ctl -Value '' -Encoding ascii
+$plog = Join-Path $Work 'trace-park.log'
+$env:EXPLORER2_INDEX = 'off'
+$env:EXPLORER2_TEST_PARK = $ctl
+$env:EXPLORER2_CONFIG_DIR = Join-Path $Work 'cfg-park'
+$pp = Start-Process -FilePath $Exe -ArgumentList "`"$big`"" -PassThru -RedirectStandardError $plog
+function PCount([string]$pat) { @(Select-String -Path $plog -Pattern $pat -SimpleMatch).Count }
+function PWait([string]$pat, [int]$want) {
+  foreach ($i in 1..80) {
+    if ((PCount $pat) -ge $want) { return $true }
+    Start-Sleep -Milliseconds 250
+  }
+  Write-Host "    timeout: wanted $want x '$pat', have $(PCount $pat)"
+  return $false
+}
+$hi = @(); $lo = @()
+if (PWait 'done tab=' 1) {
+  Start-Sleep -Milliseconds 500
+  $pp.Refresh(); $hwnd = $pp.MainWindowHandle
+  [void][S]::ShowWindow($hwnd, 3)
+  [S]::keybd_event(0x12, 0, 0, [UIntPtr]::Zero); [S]::keybd_event(0x12, 0, 2, [UIntPtr]::Zero)
+  [void][S]::SetForegroundWindow($hwnd)
+  Start-Sleep -Milliseconds 200
+  K '{DOWN}'
+  Start-Sleep -Milliseconds 300
+} else { Fail "[S8] the big folder loaded" }
+for ($n = 1; $n -le 4; $n++) {
+  Set-Content -Path $ctl -Value 'park' -Encoding ascii
+  if (-not (PWait 'parked entries=' $n)) { Fail "[S8] park $n"; break }
+  Start-Sleep -Milliseconds 400
+  $pp.Refresh(); $lo += $pp.PrivateMemorySize64
+  $before = PCount 'done tab='
+  Set-Content -Path $ctl -Value 'resume' -Encoding ascii
+  if (-not (PWait 'resumed' $n)) { Fail "[S8] resume $n"; break }
+  $back = $false
+  foreach ($i in 1..40) {
+    if ((PCount 'done tab=') -gt $before) { $back = $true; break }
+    Start-Sleep -Milliseconds 250
+  }
+  if (-not $back) { Fail "[S8] reload $n"; break }
+  Start-Sleep -Milliseconds 400
+  $pp.Refresh(); $hi += $pp.PrivateMemorySize64
+}
+$parkLine = @(Select-String -Path $plog -Pattern 'parked entries=' | Select-Object -First 1)
+Write-Host "    $($parkLine.Line)"
+$ent = 0; $byt = 0; $sel = 0
+if ($parkLine.Line -match 'entries=(\d+) bytes=(\d+) selected=(\d+)') {
+  $ent = [int]$Matches[1]; $byt = [int]$Matches[2]; $sel = [int]$Matches[3]
+}
+Check "[S8] park dropped the listing ($ent entries, $byt bytes)" { $ent -ge 15000 -and $byt -ge 1000000 }
+Check "[S9] the focused name is kept (selected=$sel)" { $sel -ge 1 }
+if ($hi.Count -ge 4 -and $lo.Count -ge 4) {
+  $drop = [math]::Round(($hi[0] - $lo[0]) / 1MB, 1)
+  $grow = [math]::Round(($hi[3] - $hi[0]) / 1MB, 1)
+  $pgrow = [math]::Round(($lo[3] - $lo[0]) / 1MB, 1)
+  Write-Host "    drop on first park: $drop MiB | shown growth: $grow MiB | parked growth: $pgrow MiB"
+  Check "[S10] parking frees memory ($drop MiB, at least 2)" { ($hi[0] - $lo[0]) -ge 2MB }
+  Check "[S11] reloading does not leak (shown +$grow MiB, parked +$pgrow MiB, limit +16)" { ($hi[3] - $hi[0]) -lt 16MB -and ($lo[3] - $lo[0]) -lt 16MB }
+} else { Fail "[S10] park/resume cycles did not finish" }
+$pp.Refresh()
+Check "[S12] process alive, no panic" { -not $pp.HasExited -and (Get-Content $plog -Raw) -notmatch '(?i)panic' }
+if (-not $pp.HasExited) { Stop-Process -Id $pp.Id -Force }
 exit $script:fail
